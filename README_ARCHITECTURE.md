@@ -23,7 +23,7 @@
 
 Dieses Repository (`DA_2026_dev_dito`) ist **Stack-G** der modularen Multi-Stack-Docker-Architektur.
 
-```
+```sketch
 GESAMTSYSTEM: 9 Docker-Compose-Stacks (A-I)
               ↓
 DEV DITO:     Stack-G (extension-dev-dito-services)
@@ -37,21 +37,21 @@ DEV DITO:     Stack-G (extension-dev-dito-services)
 
 ## Stack-Zuordnung: Dev Dito
 
-| Stack | Name | Dev Dito Beziehung |
-|-------|------|-------------------|
-| **Stack-G** | `extension-dev-dito-services` | **DIESES REPOSITORY** |
-| Stack-D | `extensions-ai-core-services` | Dev Dito **nutzt** Qdrant aus Stack-D |
-| Stack-H | `extension-mcp-servers-services` | Dev Dito **stellt** MCP Server bereit |
-| Stack-I | `extension-leonidas-services` | Leonidas **konsumiert** Dev Dito Services |
+| Stack       | Name                             | Dev Dito Beziehung                        |
+| ----------- | -------------------------------- | ----------------------------------------- |
+| **Stack-G** | `extension-dev-dito-services`    | **DIESES REPOSITORY**                     |
+| Stack-D     | `extensions-ai-core-services`    | Dev Dito **nutzt** Qdrant aus Stack-D     |
+| Stack-H     | `extension-mcp-servers-services` | Dev Dito **stellt** MCP Server bereit     |
+| Stack-I     | `extension-leonidas-services`    | Leonidas **konsumiert** Dev Dito Services |
 
 ---
 
 ## Multi-Stack-Architektur (Gesamtsystem)
 
-```
+```sketch
 <INFRASTRUCTURE_STACKS>
   ┌─────────────────────────────────────────────────────────────────────────────┐
-  │                    SHARED DOCKER NETWORK (external: true)                    │
+  │                    SHARED DOCKER NETWORK (external: true)                   │
   ├─────────────────────────────────────────────────────────────────────────────┤
   │                                                                             │
   │  ┌───────────────────┐   ┌───────────────────┐   ┌───────────────────────┐  │
@@ -116,13 +116,13 @@ networks:
 
 ### Service Discovery
 
-| Service | Container Name | Erreichbar via |
-|---------|---------------|----------------|
-| Qdrant (Stack-D) | `qdrant-main-vector-db` | `qdrant-main-vector-db:6333` |
-| MCP Server (Stack-H) | `semantic-search-wiki-core` | `semantic-search-wiki-core:3000` |
-| Keycloak (Stack-B) | `keycloak-server` | `keycloak-server:8080` |
-| Wiki Sandbox (Stack-A) | `wiki-sandbox` | `wiki-sandbox:80` |
-| Dev Dito Wiki (Stack-G) | `dev-dito-wiki` | `dev-dito-wiki:80` |
+| Service                 | Container Name              | Erreichbar via                   |
+| ----------------------- | --------------------------- | -------------------------------- |
+| Qdrant (Stack-D)        | `qdrant-main-vector-db`     | `qdrant-main-vector-db:6333`     |
+| MCP Server (Stack-H)    | `semantic-search-wiki-core` | `semantic-search-wiki-core:3000` |
+| Keycloak (Stack-B)      | `keycloak-server`           | `keycloak-server:8080`           |
+| Wiki Sandbox (Stack-A)  | `wiki-sandbox`              | `wiki-sandbox:80`                |
+| Dev Dito Wiki (Stack-G) | `dev-dito-wiki`             | `dev-dito-wiki:80`               |
 
 ---
 
@@ -130,7 +130,7 @@ networks:
 
 ### Stack-G Komponenten
 
-```
+```xml
 <STACK_G name="extension-dev-dito-services">
   <CORE_SERVICE name="dev-dito-core">
     <type>DokuWiki Action Plugin</type>
@@ -214,23 +214,23 @@ networks:
 
 ### Dev Dito NUTZT (Dependencies)
 
-| Stack | Service | Verwendung |
-|-------|---------|-----------|
-| **Stack-D** | `qdrant-main-vector-db` | Speichert Wiki-Embeddings |
-| **Stack-D** | `lmstudio/ollama` | LLM fuer Evaluation (optional) |
-| **Stack-B** | `keycloak-server` | Auth fuer Admin-Zugriff |
+| Stack       | Service                 | Verwendung                     |
+| ----------- | ----------------------- | ------------------------------ |
+| **Stack-D** | `qdrant-main-vector-db` | Speichert Wiki-Embeddings      |
+| **Stack-D** | `lmstudio/ollama`       | LLM fuer Evaluation (optional) |
+| **Stack-B** | `keycloak-server`       | Auth fuer Admin-Zugriff        |
 
 ### Dev Dito STELLT BEREIT (Provides)
 
-| Service | Consumer | Zweck |
-|---------|----------|-------|
-| `devdito_mcp_server` | Stack-H, Stack-I | MCP Tools (semantic_search) |
-| `qdrant_init` | Stack-D | Initialisiert wiki_embeddings Collection |
-| Pipeline Scripts | Manual/N8N | Wiki-Content-Processing |
+| Service              | Consumer         | Zweck                                    |
+| -------------------- | ---------------- | ---------------------------------------- |
+| `devdito_mcp_server` | Stack-H, Stack-I | MCP Tools (semantic_search)              |
+| `qdrant_init`        | Stack-D          | Initialisiert wiki_embeddings Collection |
+| Pipeline Scripts     | Manual/N8N       | Wiki-Content-Processing                  |
 
 ### Abhaengigkeitsdiagramm
 
-```
+```sketch
                     ┌─────────────────┐
                     │    Stack-D      │
                     │ qdrant-main-db  │
@@ -239,7 +239,7 @@ networks:
                              │
               nutzt Qdrant   │   nutzt LLM (optional)
                              ▼
-          ┌──────────────────────────────────────┐
+          ┌───────────────────────────────────────┐
           │           Stack-G (DEV DITO)          │
           │                                       │
           │  ┌─────────────┐  ┌────────────────┐  │
@@ -267,17 +267,17 @@ networks:
 
 ### NICHT DUPLIZIEREN - Diese Services existieren bereits
 
-| Service | Existiert in | NICHT in Dev Dito |
-|---------|-------------|-------------------|
-| `qdrant_db` | Stack-D | Nur `qdrant_init` verwenden |
-| `prometheus` | Stack-E, Stack-F | Nicht erneut erstellen |
-| `grafana` | Stack-E, Stack-F | Nicht erneut erstellen |
-| `keycloak` | Stack-B | Nur nutzen, nicht neu erstellen |
-| `nginx` | Stack-B, Stack-C | Nur nutzen |
+| Service      | Existiert in     | NICHT in Dev Dito               |
+| ------------ | ---------------- | ------------------------------- |
+| `qdrant_db`  | Stack-D          | Nur `qdrant_init` verwenden     |
+| `prometheus` | Stack-E, Stack-F | Nicht erneut erstellen          |
+| `grafana`    | Stack-E, Stack-F | Nicht erneut erstellen          |
+| `keycloak`   | Stack-B          | Nur nutzen, nicht neu erstellen |
+| `nginx`      | Stack-B, Stack-C | Nur nutzen                      |
 
 ### Checkliste vor Implementierung
 
-```
+```text
 [ ] Service existiert bereits in anderem Stack?
     → JA: depends_on + network verbinden
     → NEIN: In Stack-G implementieren
@@ -300,7 +300,7 @@ networks:
 
 ### Container Naming Convention
 
-```
+```text
 Stack-G Container:
   devdito_*           # Alle Dev Dito eigenen Container
 
@@ -312,15 +312,15 @@ Beispiele:
 
 ### Port-Zuweisung (Stack-G reserviert)
 
-| Port | Service | Beschreibung |
-|------|---------|--------------|
-| 3000 | MCP Server | JSON-RPC Endpoint |
-| 3001 | (Reserve) | Weitere MCP Endpoints |
-| 8085 | (Reserve) | Dev Dito Admin API |
+| Port | Service    | Beschreibung          |
+| ---- | ---------- | --------------------- |
+| 3000 | MCP Server | JSON-RPC Endpoint     |
+| 3001 | (Reserve)  | Weitere MCP Endpoints |
+| 8085 | (Reserve)  | Dev Dito Admin API    |
 
 ### Pfad-Konventionen
 
-```
+```tree
 D:\_Repositories\_Diploma_Thesis_Repositories\dev_dito\
 ├── backend_services/          # Docker Services
 ├── dokuwiki_plugin/           # DokuWiki Plugin Code
@@ -359,7 +359,7 @@ PI_DEPLOY_PATH=/home/pi/leonidas/embeddings
 
 Stand: 2026-01-24
 
-```
+```text
 NAMES                       STATUS          PORTS
 dev-dito-wiki               Up (healthy)    8080:80
 wiki-sandbox                Up (healthy)    8090:80
