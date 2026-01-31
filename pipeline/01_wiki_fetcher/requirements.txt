@@ -1,0 +1,18 @@
+# HTTP requests
+requests>=2.31.0
+
+# HTML parsing for link extraction
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# RSS feed parsing for recent changes
+feedparser>=6.0.0
+
+# YAML config parsing
+pyyaml>=6.0
+
+# Document analysis (optional - for PDF/PPTX/DOCX/XLSX deep analysis)
+PyPDF2>=3.0.0
+python-pptx>=0.6.21
+python-docx>=0.8.11
+openpyxl>=3.1.0

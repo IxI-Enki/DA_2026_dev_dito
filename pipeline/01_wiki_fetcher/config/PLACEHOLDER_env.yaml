@@ -1,0 +1,138 @@
+# Wiki Fetching Configuration - EXAMPLE
+# ======================================
+# Copy this file to env.yaml and adjust the values.
+# Variable placeholders ${var} are resolved at runtime.
+
+APP:
+  name: full_wiki_fetching
+  version: 0.2.0
+  description: Utilizes the DokuWiki JSON-RPC API to fetch the entire LeoWiki
+  status: development
+  author:
+    name: Your Name
+    github: https://github.com/your-username
+  created_at: "2025-01-01T00:00:00"
+
+# =============================================================================
+# PATHS - Adjust these to your local setup
+# =============================================================================
+PATHS:
+  # Use forward slashes - works on Windows too!
+  root_dir: D:/_your_path/wiki_fetching
+  config_dir: ${root_dir}/config
+  output_dir: ${root_dir}/content_output
+  script_dir: ${root_dir}/script
+
+# =============================================================================
+# JSONRPC - API connection settings
+# =============================================================================
+JSONRPC:
+  api:
+    # Main API endpoint
+    url: https://your-wiki.example.com/lib/exe/jsonrpc.php
+    # Base URL for the wiki (without path)
+    base_url: https://your-wiki.example.com
+    # URL for fetching media files
+    fetch_url: https://your-wiki.example.com/lib/exe/fetch.php
+    # RSS feed URL for recent changes
+    feed_url: https://your-wiki.example.com/feed.php
+    authentication:
+      type: bearer
+      # Path to file containing the API token (just the token, no KEY= prefix)
+      token_file: ${config_dir}/json_rpc_api.token
+    # Path to SSL certificate (PEM format, no leading spaces!)
+    certificate: ${config_dir}/ssl.cert
+
+# =============================================================================
+# FETCH - Main fetching configuration
+# =============================================================================
+FETCH:
+
+  # ---------------------------------------------------------------------------
+  # PERFORMANCE - Tune these based on server response times
+  # ---------------------------------------------------------------------------
+  timeout: 30                    # Request timeout in seconds
+  max_retries: 3                 # Number of retry attempts on failure
+  retry_delay: 2                 # Wait time between retries (seconds)
+  delay_between_requests: 0.05   # Pause between requests (be nice to server)
+  batch_progress_interval: 20    # Show progress every N items
+
+  # ---------------------------------------------------------------------------
+  # NAMESPACE SCANNING - Controls how deep to scan for media
+  # ---------------------------------------------------------------------------
+  # IMPORTANT: DokuWiki's core.listMedia only returns media in the EXACT
+  # namespace specified. To find media in sub-namespaces like "teacher:forms",
+  # we need to scan each level separately.
+  #
+  # max_namespace_depth: 3 means:
+  #   - "teacher" (depth 1)
+  #   - "teacher:forms" (depth 2)
+  #   - "teacher:forms:templates" (depth 3)
+  #
+  max_namespace_depth: 3         # Maximum depth for sub-namespaces (1-5)
+  scan_all_sub_namespaces: true  # Scan all sub-namespaces for media
+
+  # ---------------------------------------------------------------------------
+  # CONTENT SELECTION - What data to fetch
+  # ---------------------------------------------------------------------------
+  content:
+    fetch_html: true             # Rendered HTML version of pages
+    fetch_acl: true              # Access control permissions per page
+    fetch_links: true            # Extract links from HTML
+    fetch_recent_changes: true   # Fetch RSS feed for recent changes
+
+  # ---------------------------------------------------------------------------
+  # MEDIA OPTIONS - Control media file downloading
+  # ---------------------------------------------------------------------------
+  media:
+    enabled: true                # Enable/disable media download entirely
+    max_file_size_mb: 50         # Skip files larger than this (0 = no limit)
+    from_listings: true          # Get media from core.listMedia API
+    from_page_links: true        # Also download media referenced in page links
+                                 # (catches media missed by namespace scanning)
+    
+    # File type filtering (use lowercase extensions without dot)
+    # Empty list = include all types
+    include_types: []            # Only these types, e.g.: [pdf, docx, png]
+    exclude_types: []            # Exclude these types, e.g.: [exe, zip]
+
+  # ---------------------------------------------------------------------------
+  # FILTERING - Limit what gets fetched
+  # ---------------------------------------------------------------------------
+  filter:
+    # Namespace filtering (empty = all namespaces)
+    include_namespaces: []       # Only fetch these namespaces
+    exclude_namespaces:          # Skip these namespaces
+      - playground               # Test namespace
+      - wiki                     # DokuWiki system pages
+    
+    # Page filtering
+    exclude_pages: []            # Skip specific pages by ID
+
+  # ---------------------------------------------------------------------------
+  # OUTPUT - Control output format and contents
+  # ---------------------------------------------------------------------------
+  output:
+    # Pattern for output directory name
+    # Available variables: {timestamp}, {date}, {time}
+    directory_pattern: "fetched_at_{timestamp}"
+    
+    save_raw_responses: true     # Save raw JSON-RPC responses
+    generate_report: true        # Generate analysis report
+    report_format: "txt"         # Report format: txt, json, md
+
+  # ---------------------------------------------------------------------------
+  # QUALITY - Data quality and validation options
+  # ---------------------------------------------------------------------------
+  quality:
+    validate_internal_links: true   # Check if internal link targets exist
+    report_broken_links: true       # Include broken links in report
+    verify_media_integrity: false   # Verify downloaded files (slower)
+
+# =============================================================================
+# TESTING - Default values for test scripts
+# =============================================================================
+TESTING:
+  default_page: "start"          # Default page for testing
+  default_namespace: ""          # Default namespace (empty = root)
+  default_media: "wiki:logo.png" # Default media file for testing

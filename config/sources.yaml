@@ -1,0 +1,164 @@
+# local sources — Dev Dito Pipeline
+# Complete reference of all scripts, configs, outputs across the techstack
+
+full_paths:
+
+  # ==========================================================================
+  # 1. WIKI FETCHER (JSON-RPC API)
+  # ==========================================================================
+  - leo_wiki_fetcher:
+      # --- Scripts ---
+      scripts:
+        - fetch_full_wiki_extended: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/fetch_full_wiki_extended.py
+        - fetch_full_wiki: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/fetch_full_wiki.py
+        - resume_fetch: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/resume_fetch.py
+        - api_client: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/api_client.py
+        - config: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/config.py
+        - document_analyzer: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/document_analyzer.py
+        - analyze_fetched_data: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/analyze_fetched_data.py
+        - create_wiki_inventory: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/create_wiki_inventory.py
+        - extract_links_from_html: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/extract_links_from_html.py
+        - fetch_recent_changes: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/fetch_recent_changes.py
+        - media_cache: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/media_cache.py
+        - download_media_only: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/download_media_only.py
+        - test_all_api_methods: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/test_all_api_methods.py
+      requirements: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/requirements.txt
+      readme: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/README.md
+      # --- Config ---
+      config:
+        env: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/config/env.yaml
+        settings: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/config/settings.json
+        ssl_cert: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/config/ssl.cert
+        api_token: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/config/json_rpc_api.token
+        # Placeholders for new setups:
+        placeholder_env: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/config/PLACEHOLDER_env.yaml
+        placeholder_cert: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/config/PLACEHOLDER_ssl.cert
+        placeholder_token: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/config/PLACEHOLDER_api.token
+      # --- Output ---
+      output_dirs:
+        general: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/content_output/
+        last_fetches:
+          - fetched_at_20251231_180730:
+              base: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/content_output/fetched_at_20251231_180730/
+              statistics: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/content_output/fetched_at_20251231_180730/fetch_statistics.json
+              analysis_report: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/content_output/fetched_at_20251231_180730/wiki_analysis_report.txt
+              inventory: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/content_output/fetched_at_20251231_180730/wiki_inventory.json
+              media_usage_index: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/content_output/fetched_at_20251231_180730/media_usage_index.json
+              # Subdirs: raw_json/ (414), page_content/ (207), page_metadata/ (414),
+              #          page_html/ (206), page_links/ (206), page_backlinks/ (207),
+              #          namespaces/ (1), changes/ (2), media/ (661)
+      # deps: requests, beautifulsoup4, lxml, feedparser, pyyaml, PyPDF2, python-pptx, python-docx, openpyxl
+
+  # ==========================================================================
+  # 2. FETCHED DATA EVALUATION (Deep Analysis)
+  # ==========================================================================
+  - fetched_data_evaluation:
+      # --- Scripts ---
+      scripts:
+        # Main runners
+        - run_deep_evaluation: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/run_deep_evaluation.py
+        - run_evaluation: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/run_evaluation.py
+        - run_strategy_generation: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/run_strategy_generation.py
+        - report_generator: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/report_generator.py
+        # Analyzers
+        - content_classifier: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/analyzers/content_classifier.py
+        - format_quality_analyzer: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/analyzers/format_quality_analyzer.py
+        - query_generator: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/analyzers/query_generator.py
+        - rag_readiness_checker: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/analyzers/rag_readiness_checker.py
+        - temporal_analyzer: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/analyzers/temporal_analyzer.py
+        - document_deep_analyzer: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/analyzers/document_deep_analyzer.py
+        - media_deep_analyzer: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/analyzers/media_deep_analyzer.py
+        - wiki_deep_analyzer: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/analyzers/wiki_deep_analyzer.py
+        # Core modules
+        - file_handler: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/core/file_handler.py
+        - llm_client: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/core/llm_client.py
+        # Generators
+        - strategy_generator: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/generators/strategy_generator.py
+        # Utilities
+        - config: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/config.py
+        - check_models: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/check_models.py
+        - cleanup_strategies: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/cleanup_strategies.py
+      # --- Config ---
+      config:
+        env: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/config/env.yaml
+      # --- Results ---
+      results:
+        log: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/results/deep_evaluation.log
+        latest:
+          - deep_eval_20260103_112716:
+              base: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/results/deep_eval_20260103_112716/
+              report_md: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/results/deep_eval_20260103_112716/ANALYSIS_REPORT_20260103_112716.md
+              report_pdf: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/results/deep_eval_20260103_112716/ANALYSIS_REPORT_20260103_112716.pdf
+              results_json: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/results/deep_eval_20260103_112716/deep_analysis_results.json
+              strategies: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/results/deep_eval_20260103_112716/preprocessing_strategies.yaml
+              strategies_cleaned: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/results/deep_eval_20260103_112716/preprocessing_strategies_cleaned.yaml
+        archived: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/results/.archived__evaluations/
+        # 5 archived runs: eval_20260103_070820, eval_20260103_080200,
+        #   deep_eval_20260103_091822, deep_eval_20260103_100032, deep_eval_20260103_102157
+
+  # ==========================================================================
+  # 3. TEST SUITE (JSON-RPC API)
+  # ==========================================================================
+  - test_suite:
+      script: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/test_suite__json_rpc_api/run_tests.ps1
+      result: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/test_suite__json_rpc_api/test_results.txt
+
+  # ==========================================================================
+  # 4. QDRANT (Embeddings + Collection Management)
+  # ==========================================================================
+  - qdrant:
+      # --- Embeddings Creator Pipeline (Active v2.0.0) ---
+      embeddings_creator:
+        scripts:
+          - main: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/script/main.py
+          - pipeline: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/script/pipeline.py
+          - embedder: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/script/embedder.py
+          - document_loader: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/script/document_loader.py
+          - content_aware_chunker: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/script/content_aware_chunker.py
+          - config: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/script/config.py
+        config:
+          env: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/config/env.yaml
+        requirements: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/requirements.txt
+        output:
+          embedded_chunks: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/output/embedded_chunks.jsonl
+          embedding_statistics: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/output/embedding_statistics.json
+        logs:
+          embedding_process: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/logs/embedding_process.log
+        # Pipeline stats (last run 2026-01-06):
+        #   docs: 497 (197 pages + 300 media) | chunks: 3417 | cost: $0.095
+        #   model: text-embedding-3-large | dimensions: 3072
+
+      # --- Qdrant Collection Init (Docker Service) ---
+      collection_init:
+        scripts:
+          - init_collection: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/init_collection.py
+        dockerfile: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/Dockerfile
+        requirements: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/requirements.txt
+        readme: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/README.md
+        # Runs as qdrant_init service in Docker, populates wiki_embeddings collection
+
+      # --- RAG Preprocessing Output (Input for Embeddings Creator) ---
+      rag_preprocessing_output:
+        base_dir: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/ragflow/test_suite_rag_preprocessing/output/for_qdrant/
+        last_upload:
+          manifest: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/ragflow/test_suite_rag_preprocessing/output/for_qdrant/upload_at_20260106_161841/manifest.json
+          pages_dir: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/ragflow/test_suite_rag_preprocessing/output/for_qdrant/upload_at_20260106_161841/pages/
+          media_dir: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/ragflow/test_suite_rag_preprocessing/output/for_qdrant/upload_at_20260106_161841/media/
+        # 348 pages (.md) + 106 media (.txt) = 454 preprocessed documents
+
+      # --- Archived (v1.0.0 - reference only) ---
+      archived:
+        scripts:
+          - create_embeddings: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/.archived_scripts/create_embeddings.py
+          - test_config: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/.archived_scripts/test_config.py
+        config:
+          env: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/.archived_scripts/env.yaml
+        output:
+          pages_jsonl: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/.archived_embedded_chunks/pages.jsonl
+          media_jsonl: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/.archived_embedded_chunks/media.jsonl
+          statistics: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/.archived_scripts/embedding_statistics.json
+
+      # --- Research / Planning Documents ---
+      research_documents:
+        - qdrant_embeddings_improvement: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/qdrant_embeddings_improvement.md
+        - pipeline_manager_plan: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/.cursor/plans/dev_dito_pipeline_manager_6f2b3d9b.plan.md
