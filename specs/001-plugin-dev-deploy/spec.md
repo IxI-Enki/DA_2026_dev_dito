@@ -107,7 +107,7 @@ Als Entwickler moechte ich ALLE Einstellungen an EINER Stelle konfigurieren, dam
 
 **Config-Struktur (Pflicht)**:
 
-```
+```tree
 dev_dito/
 ├── config/                          # ZENTRALE CONFIG
 │   ├── env.yaml                     # MASTER CONFIG (gitignored)

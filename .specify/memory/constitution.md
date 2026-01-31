@@ -92,7 +92,7 @@ dem gleichen Pattern wie der Wiki Fetcher: Eine zentrale `config.py`/`config.php
 Werte aus `env.yaml`, loest Platzhalter (`${var}`) auf und stellt typisierte Exports bereit.
 
 **Pattern (aus Wiki Fetcher uebernommen):**
-```
+```tree
 module/
 ├── config/
 │   ├── env.yaml              # Aktive Konfiguration (in .gitignore)
