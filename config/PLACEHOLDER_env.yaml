@@ -1,0 +1,164 @@
+# Dev Dito - Zentrale Konfiguration
+# ==================================
+# Kopiere diese Datei nach env.yaml und passe die Werte an.
+# NIEMALS env.yaml committen! (ist in .gitignore)
+#
+# Variable placeholders ${var} werden zur Laufzeit aufgeloest.
+# Constitution Article II-B: Alle Konfiguration zentral hier.
+
+# =============================================================================
+# APP - Projekt-Metadaten
+# =============================================================================
+APP:
+  name: dev_dito
+  version: "0.1.0"
+  description: "Wiki Embedding Pipeline & Service Gateway fuer DokuWiki"
+  status: development
+  author:
+    name: Jan Ritt, Imre Obermueller
+    github: https://github.com/IxI-Enki/syp_leonidas
+  created_at: "2026-01-31"
+
+# =============================================================================
+# PATHS - Alle Pfade zentral (Forward Slashes auch auf Windows!)
+# =============================================================================
+PATHS:
+  # Repository-Root (anpassen fuer deine Umgebung!)
+  root_dir: D:/_Repositories/_Diploma_Thesis_Repositories/dev_dito
+  
+  # Abgeleitete Pfade
+  config_dir: ${root_dir}/config
+  secrets_dir: ${config_dir}/secrets
+  output_dir: ${root_dir}/output
+  pipeline_dir: ${root_dir}/pipeline
+  data_dir: ${root_dir}/data
+
+# =============================================================================
+# SOURCE_WIKI - JSON-RPC API zum Quell-Wiki (Schul-Wiki)
+# =============================================================================
+SOURCE_WIKI:
+  name: "HTL Leonding LeoWiki"
+  api:
+    # JSON-RPC Endpoint
+    url: https://your-wiki.example.com/lib/exe/jsonrpc.php
+    # Base URL (ohne Pfad)
+    base_url: https://your-wiki.example.com
+    # Media Fetch URL
+    fetch_url: https://your-wiki.example.com/lib/exe/fetch.php
+    # RSS Feed URL
+    feed_url: https://your-wiki.example.com/feed.php
+  authentication:
+    type: bearer
+    # Token in separater Datei (siehe secrets/README.md)
+    token_file: ${secrets_dir}/json_rpc_api.token
+  # SSL Zertifikat fuer HTTPS (PEM Format)
+  certificate: ${secrets_dir}/ssl.cert
+
+# =============================================================================
+# SERVICES - Externe Service-Verbindungen (Stack-D, Stack-H)
+# =============================================================================
+SERVICES:
+  # MCP Server (Stack-H: extension-mcp-servers-services)
+  mcp_server:
+    url: http://wiki_dev_mcp_server:3000
+    timeout: 30
+  
+  # Qdrant Vector DB (Stack-D: extensions-ai-core-services)
+  qdrant:
+    host: qdrant_db
+    port: 6333
+    collection: wiki_embeddings
+  
+  # OpenAI API (fuer Embeddings)
+  openai:
+    token_file: ${secrets_dir}/openai.token
+    embedding_model: text-embedding-3-large
+    dimensions: 3072
+
+# =============================================================================
+# PIPELINE - Fetcher, Evaluator, Embedder, Deploy Settings
+# =============================================================================
+PIPELINE:
+  # -------------------------------------------------------------------------
+  # 01_wiki_fetcher - Holt Wiki-Inhalte via JSON-RPC
+  # -------------------------------------------------------------------------
+  fetcher:
+    timeout: 30                    # Request timeout in seconds
+    max_retries: 3                 # Retry attempts on failure
+    retry_delay: 2                 # Wait time between retries
+    delay_between_requests: 0.05   # Pause between requests
+    batch_progress_interval: 20    # Show progress every N items
+    max_namespace_depth: 3         # How deep to scan namespaces
+    scan_all_sub_namespaces: true
+    
+    content:
+      fetch_html: true
+      fetch_acl: true
+      fetch_links: true
+      fetch_backlinks: true
+      fetch_recent_changes: true
+    
+    media:
+      enabled: true
+      max_file_size_mb: 50
+      from_listings: true
+      from_page_links: true
+      include_types: []            # Empty = all types
+      exclude_types: []
+    
+    filter:
+      include_namespaces: []       # Empty = all namespaces
+      exclude_namespaces:
+        - playground
+        - wiki
+      exclude_pages: []
+    
+    output:
+      directory_pattern: "fetched_at_{timestamp}"
+      save_raw_responses: true
+      generate_report: true
+      report_format: "txt"
+  
+  # -------------------------------------------------------------------------
+  # 02_deep_evaluation - Analysiert gefetchte Daten
+  # -------------------------------------------------------------------------
+  evaluator:
+    llm_provider: openai           # openai, ollama, lmstudio
+    model: gpt-4o-mini
+    temperature: 0.1
+    max_tokens: 4000
+  
+  # -------------------------------------------------------------------------
+  # 03_embeddings_creator - Erstellt Vektor-Embeddings
+  # -------------------------------------------------------------------------
+  embedder:
+    chunk_size: 512
+    chunk_overlap: 50
+    batch_size: 100
+    embedding_model: text-embedding-3-large
+    dimensions: 3072
+  
+  # -------------------------------------------------------------------------
+  # 04_deploy - Deployed Embeddings zu Qdrant
+  # -------------------------------------------------------------------------
+  deploy:
+    target: qdrant
+    collection_name: wiki_embeddings
+    upsert_batch_size: 100
+    recreate_collection: false     # true = Loescht bestehende Collection!
+
+# =============================================================================
+# PLUGIN - DokuWiki Plugin UI-Settings
+# =============================================================================
+PLUGIN:
+  enabled: true
+  panel_position: right            # left, right
+  search_results_limit: 5
+
+# =============================================================================
+# TESTING - Defaults fuer Tests
+# =============================================================================
+TESTING:
+  default_page: "start"
+  default_namespace: ""
+  default_media: "wiki:logo.png"

@@ -16,6 +16,10 @@ declare(strict_types=1);
 
 use dokuwiki\Extension\AdminPlugin;
 
+// Load ConfigLoader for centralized configuration (Constitution Article II-B)
+require_once __DIR__ . '/lib/ConfigLoader.php';
+use dokuwiki\plugin\devdito\lib\ConfigLoader;
+
 if (!defined('DOKU_INC')) {
     die();
 }
@@ -185,7 +189,7 @@ class admin_plugin_devdito extends AdminPlugin
      */
     private function testMcpServer(): array
     {
-        $mcpUrl = $this->getConf('devdito_mcp_url');
+        $mcpUrl = $this->getMcpUrl();
         if (empty($mcpUrl)) {
             return ['ok' => false, 'message' => 'MCP URL not configured'];
         }
@@ -236,9 +240,10 @@ class admin_plugin_devdito extends AdminPlugin
      */
     private function testQdrant(): array
     {
-        // Qdrant is typically accessed via the MCP server
-        // For direct testing, we'd need the Qdrant URL
-        $qdrantUrl = 'http://qdrant_db:6333/collections';
+        // Get Qdrant URL from central config (Constitution Article II-B)
+        $qdrantHost = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
+        $qdrantPort = ConfigLoader::get('SERVICES.qdrant.port', 6333);
+        $qdrantUrl = 'http://' . $qdrantHost . ':' . $qdrantPort . '/collections';
 
         $startTime = microtime(true);
 
@@ -339,13 +344,35 @@ class admin_plugin_devdito extends AdminPlugin
     }
 
     /**
+     * Get the configured MCP server URL (DokuWiki config -> Central config).
+     *
+     * @return string|null The URL or null if not configured
+     */
+    private function getMcpUrl(): ?string
+    {
+        // First try DokuWiki config (for admin overrides)
+        $url = $this->getConf('devdito_mcp_url');
+        if (!empty($url)) {
+            return $url;
+        }
+
+        // Fallback to central config (Constitution Article II-B)
+        $centralUrl = ConfigLoader::get('SERVICES.mcp_server.url');
+        if (!empty($centralUrl)) {
+            return $centralUrl;
+        }
+
+        return null;
+    }
+
+    /**
      * Render service status section.
      *
      * @return void
      */
     private function renderServiceStatusSection(): void
     {
-        $mcpUrl = $this->getConf('devdito_mcp_url') ?: 'Not configured';
+        $mcpUrl = $this->getMcpUrl() ?? 'Not configured';
 
         echo '<div class="devdito-card">';
         echo '<h2>Service Status</h2>';
@@ -387,25 +414,42 @@ class admin_plugin_devdito extends AdminPlugin
     /**
      * Render configuration section.
      *
+     * Shows both DokuWiki config and central config values.
+     *
      * @return void
      */
     private function renderConfigurationSection(): void
     {
+        // DokuWiki config values
         $enabled = $this->getConf('devdito_enabled') ? 'Enabled' : 'Disabled';
-        $mcpUrl = $this->getConf('devdito_mcp_url') ?: 'Not configured';
-        $position = $this->getConf('devdito_panel_position') ?: 'right';
+        $mcpUrl = $this->getMcpUrl() ?? 'Not configured';
+        $position = $this->getConf('devdito_panel_position');
+        if (!$position) {
+            $position = ConfigLoader::get('PLUGIN.panel_position', 'right');
+        }
+
+        // Central config info
+        $configValid = ConfigLoader::isValid();
+        $appVersion = ConfigLoader::get('APP.version', 'unknown');
+        $qdrantHost = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
+        $qdrantPort = ConfigLoader::get('SERVICES.qdrant.port', 6333);
+        $qdrantCollection = ConfigLoader::get('SERVICES.qdrant.collection', 'wiki_embeddings');
 
         echo '<div class="devdito-card">';
         echo '<h2>Current Configuration</h2>';
         echo '<table class="devdito-config-table">';
-        echo '<tr><th>Setting</th><th>Value</th></tr>';
-        echo '<tr><td>Plugin Status</td><td><span class="devdito-config-value">' . hsc($enabled) . '</span></td></tr>';
-        echo '<tr><td>MCP Server URL</td><td><span class="devdito-config-value">' . hsc($mcpUrl) . '</span></td></tr>';
-        echo '<tr><td>Panel Position</td><td><span class="devdito-config-value">' . hsc($position) . '</span></td></tr>';
-        echo '<tr><td>Plugin Version</td><td><span class="devdito-config-value">' . self::VERSION . '</span></td></tr>';
+        echo '<tr><th>Setting</th><th>Value</th><th>Source</th></tr>';
+        echo '<tr><td>Plugin Status</td><td><span class="devdito-config-value">' . hsc($enabled) . '</span></td><td>DokuWiki</td></tr>';
+        echo '<tr><td>MCP Server URL</td><td><span class="devdito-config-value">' . hsc($mcpUrl) . '</span></td><td>Central/DokuWiki</td></tr>';
+        echo '<tr><td>Panel Position</td><td><span class="devdito-config-value">' . hsc($position) . '</span></td><td>Central/DokuWiki</td></tr>';
+        echo '<tr><td>Qdrant</td><td><span class="devdito-config-value">' . hsc($qdrantHost . ':' . $qdrantPort . '/' . $qdrantCollection) . '</span></td><td>Central</td></tr>';
+        echo '<tr><td>Plugin Version</td><td><span class="devdito-config-value">' . self::VERSION . '</span></td><td>-</td></tr>';
+        echo '<tr><td>App Version (env.yaml)</td><td><span class="devdito-config-value">' . hsc($appVersion) . '</span></td><td>Central</td></tr>';
+        echo '<tr><td>Central Config</td><td><span class="devdito-config-value">' . ($configValid ? 'Valid' : 'Invalid/Missing') . '</span></td><td>-</td></tr>';
         echo '</table>';
         echo '<p style="margin-top: 16px; color: #666; font-size: 13px;">';
-        echo 'To change these settings, go to <a href="' . wl('', ['do' => 'admin', 'page' => 'config']) . '#plugin____devdito">Configuration Manager</a>.';
+        echo 'DokuWiki settings: <a href="' . wl('', ['do' => 'admin', 'page' => 'config']) . '#plugin____devdito">Configuration Manager</a> | ';
+        echo 'Central settings: <code>config/env.yaml</code>';
         echo '</p>';
         echo '</div>';
     }

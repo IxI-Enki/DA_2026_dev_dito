@@ -45,14 +45,31 @@ env/
 .settings/
 
 # =============================================================================
-# Environment & Secrets
+# Environment & Secrets (Constitution Article II-B, VI)
 # =============================================================================
 .env
 .env.local
 .env.*.local
 *.env
-env.yaml
-!config/env.example.yaml
+
+# Zentrale Konfiguration - NIE committen!
+config/env.yaml
+config/settings.json
+!config/PLACEHOLDER_env.yaml
+
+# Secrets-Verzeichnis (Inhalte, nicht Struktur)
+config/secrets/*
+!config/secrets/.gitkeep
+!config/secrets/README.md
+
+# Legacy Secrets in Pipeline-Modulen
+pipeline/*/config/env.yaml
+pipeline/*/config/settings.json
+pipeline/*/config/*.token
+pipeline/*/config/*.cert
+!pipeline/*/config/PLACEHOLDER_*
+
+# Secret-Dateien (allgemein)
 *.pem
 *.key
 *.cert

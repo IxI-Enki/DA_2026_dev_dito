@@ -84,7 +84,8 @@ $requiredFiles = @(
     "action.php",
     "admin.php",
     "conf\default.php",
-    "conf\metadata.php"
+    "conf\metadata.php",
+    "lib\ConfigLoader.php"
 )
 
 Write-Host ""
@@ -104,6 +105,29 @@ foreach ($file in $requiredFiles) {
 if ($missingFiles.Count -gt 0) {
     Write-Status "Missing required files. Aborting." -Type "ERROR"
     exit 1
+}
+
+# Generate settings.json from env.yaml (Constitution Article II-B)
+Write-Host ""
+Write-Status "Generating settings.json from central config..."
+
+$configPy = Join-Path $RepoRoot "config.py"
+$settingsJson = Join-Path $RepoRoot "config\settings.json"
+
+if (Test-Path $configPy) {
+    $result = python $configPy 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        if (Test-Path $settingsJson) {
+            Write-Status "  settings.json generated successfully" -Type "OK"
+        } else {
+            Write-Status "  settings.json not created (check env.yaml)" -Type "WARN"
+        }
+    } else {
+        Write-Status "  Failed to generate settings.json: $result" -Type "WARN"
+        Write-Status "  Plugin will use fallback config values" -Type "WARN"
+    }
+} else {
+    Write-Status "  config.py not found at $configPy" -Type "WARN"
 }
 
 # PHP Syntax Check
@@ -195,12 +219,26 @@ if ($pluginInfo -match "version\s+(.+)") {
     Write-Status "  Version: $version" -Type "OK"
 }
 
+# Copy settings.json if exists
+if (Test-Path $settingsJson) {
+    $configTarget = Join-Path $TargetDir "..\..\..\config"
+    if (-not (Test-Path $configTarget)) {
+        New-Item -ItemType Directory -Path $configTarget -Force | Out-Null
+    }
+    Copy-Item -Path $settingsJson -Destination $configTarget -Force
+    Write-Status "  Copied: config/settings.json" -Type "OK"
+}
+
 # Summary
 Write-Header "Deployment Complete"
 
 Write-Host ""
 Write-Host "  Plugin deployed to:"
 Write-Host "  $TargetDir"
+Write-Host ""
+Write-Host "  Configuration:"
+Write-Host "  - Central config: config/env.yaml (source)"
+Write-Host "  - Generated:      config/settings.json (for PHP)"
 Write-Host ""
 Write-Host "  Next steps:"
 Write-Host "  1. Start the wiki if not running:"
@@ -210,6 +248,10 @@ Write-Host ""
 Write-Host "  2. Open wiki in browser and log in as admin"
 Write-Host ""
 Write-Host "  3. Check Admin -> Dev Dito Core Setup"
+Write-Host ""
+Write-Host "  To change settings:"
+Write-Host "  - Edit config/env.yaml, then run: python config.py"
+Write-Host "  - Re-deploy: .\scripts\deploy-plugin.ps1"
 Write-Host ""
 
 exit 0

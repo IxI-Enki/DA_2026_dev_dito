@@ -1,8 +1,11 @@
 """
-Centralized Configuration Loader
-================================
-Loads settings from config/env.yaml, resolves placeholders,
-reads secrets from dedicated files, and auto-generates settings.json.
+Centralized Configuration Loader (Fetcher-Modul)
+================================================
+Dieses Modul nutzt die ZENTRALE Config aus dem Repository-Root.
+Constitution Article II-B: Alle Konfiguration zentral in config/env.yaml.
+
+Das Modul versucht zuerst die zentrale Config zu laden.
+Falls nicht verfuegbar, wird auf lokale Config zurueckgegriffen.
 
 Usage:
     from config import (
@@ -14,6 +17,7 @@ import os
 import re
 import json
 import hashlib
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, TypedDict
 from dataclasses import dataclass, field
@@ -25,14 +29,39 @@ import yaml
 # Path Resolution
 # =============================================================================
 
-# Script directory and project root
+# Script directory
 SCRIPT_DIR = Path(__file__).parent.resolve()
-PROJECT_ROOT = SCRIPT_DIR.parent
-CONFIG_DIR = PROJECT_ROOT / "config"
 
-# Config file paths
-ENV_YAML_PATH = CONFIG_DIR / "env.yaml"
-SETTINGS_JSON_PATH = CONFIG_DIR / "settings.json"
+# Repository Root (3 Ebenen hoch: fetcher -> pipeline -> dev_dito)
+REPO_ROOT = SCRIPT_DIR.parent.parent
+ROOT_CONFIG_PY = REPO_ROOT / "config.py"
+
+# Lokale Config-Pfade (Fallback)
+LOCAL_CONFIG_DIR = SCRIPT_DIR / "config"
+LOCAL_ENV_YAML = LOCAL_CONFIG_DIR / "env.yaml"
+LOCAL_SETTINGS_JSON = LOCAL_CONFIG_DIR / "settings.json"
+
+# Zentrale Config-Pfade (bevorzugt)
+CENTRAL_CONFIG_DIR = REPO_ROOT / "config"
+CENTRAL_ENV_YAML = CENTRAL_CONFIG_DIR / "env.yaml"
+CENTRAL_SETTINGS_JSON = CENTRAL_CONFIG_DIR / "settings.json"
+
+# Bestimme welche Config verwendet wird
+USE_CENTRAL_CONFIG = CENTRAL_ENV_YAML.exists() or ROOT_CONFIG_PY.exists()
+
+if USE_CENTRAL_CONFIG:
+    CONFIG_DIR = CENTRAL_CONFIG_DIR
+    ENV_YAML_PATH = CENTRAL_ENV_YAML
+    SETTINGS_JSON_PATH = CENTRAL_SETTINGS_JSON
+    print(f"[config] Nutze zentrale Config: {CENTRAL_CONFIG_DIR}")
+else:
+    CONFIG_DIR = LOCAL_CONFIG_DIR
+    ENV_YAML_PATH = LOCAL_ENV_YAML
+    SETTINGS_JSON_PATH = LOCAL_SETTINGS_JSON
+    print(f"[config] Nutze lokale Config: {LOCAL_CONFIG_DIR}")
+
+# PROJECT_ROOT fuer Abwaertskompatibilitaet
+PROJECT_ROOT = SCRIPT_DIR.parent
 
 
 # =============================================================================
@@ -360,11 +389,11 @@ def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]
 def load_config() -> Dict[str, Any]:
     """
     Load complete configuration:
-    1. Load env.yaml
+    1. Load env.yaml (zentral oder lokal)
     2. Resolve placeholders
     3. Load token from file
     4. Merge with defaults
-    5. Update settings.json if changed
+    5. Normalize config keys (SOURCE_WIKI -> JSONRPC, PIPELINE.fetcher -> FETCH)
     """
     # Load YAML
     raw_config = load_yaml_config(ENV_YAML_PATH)
@@ -372,13 +401,37 @@ def load_config() -> Dict[str, Any]:
     # Resolve placeholders
     config = resolve_placeholders(raw_config)
     
+    # =========================================================================
+    # Config-Key Normalisierung (Zentrale Config -> Lokale Struktur)
+    # =========================================================================
+    # Zentrale Config nutzt SOURCE_WIKI, lokale nutzt JSONRPC
+    if "SOURCE_WIKI" in config and "JSONRPC" not in config:
+        config["JSONRPC"] = {
+            "api": {
+                "url": config["SOURCE_WIKI"].get("api", {}).get("url", ""),
+                "base_url": config["SOURCE_WIKI"].get("api", {}).get("base_url", ""),
+                "fetch_url": config["SOURCE_WIKI"].get("api", {}).get("fetch_url", ""),
+                "feed_url": config["SOURCE_WIKI"].get("api", {}).get("feed_url", ""),
+                "authentication": config["SOURCE_WIKI"].get("authentication", {}),
+                "certificate": config["SOURCE_WIKI"].get("certificate", ""),
+            }
+        }
+    
+    # Zentrale Config nutzt PIPELINE.fetcher, lokale nutzt FETCH
+    if "PIPELINE" in config and "fetcher" in config["PIPELINE"] and "FETCH" not in config:
+        config["FETCH"] = config["PIPELINE"]["fetcher"]
+    
+    # =========================================================================
     # Merge FETCH section with defaults
+    # =========================================================================
     if "FETCH" in config:
         config["FETCH"] = deep_merge(DEFAULT_FETCH_CONFIG, config["FETCH"])
     else:
         config["FETCH"] = DEFAULT_FETCH_CONFIG.copy()
     
+    # =========================================================================
     # Load token from file
+    # =========================================================================
     auth = config.get("JSONRPC", {}).get("api", {}).get("authentication", {})
     token_path_str = auth.get("token_file", "")
     
@@ -395,13 +448,16 @@ def load_config() -> Dict[str, Any]:
             print(f"[config] Token file not found: {token_path}")
             config["JSONRPC"]["api"]["authentication"]["token"] = ""
     
-    # Check if settings.json needs update
-    config_hash = compute_config_hash(config)
-    existing_config, existing_hash = load_existing_settings()
-    
-    if existing_hash != config_hash:
-        save_settings(config, config_hash)
-        print(f"[config] Updated settings.json (hash: {config_hash[:8]})")
+    # =========================================================================
+    # Update settings.json only for local config mode (nicht zentral!)
+    # =========================================================================
+    if not USE_CENTRAL_CONFIG:
+        config_hash = compute_config_hash(config)
+        existing_config, existing_hash = load_existing_settings()
+        
+        if existing_hash != config_hash:
+            save_settings(config, config_hash)
+            print(f"[config] Updated settings.json (hash: {config_hash[:8]})")
     
     return config
 

@@ -1,8 +1,8 @@
 base    devdito
 author  Jan Ritt (IxI-Enki)
-email   jan.ritt@htl-leonding.ac.at
-date    2026-01-24
-name    Dev Dito - Service Gateway Extension
-desc    Service Gateway for AI services (Ollama, LMStudio, Qdrant). Manages connections, API keys, health checks, metrics visualization, and wiki content processing pipelines.
+email   j.itt@htl-leonding.ac.at
+date    2026-01-31
+name    Dev Dito - Pipeline Manager & Service Gateway
+desc    Administrative tools for Wiki Embedding Pipeline management. Monitors MCP Server, Qdrant, and pipeline status. Does NOT provide search UI (see Leonidas extension).
 url     https://github.com/IxI-Enki/syp_leonidas
-version 0.1.0-alpha
+version 0.1.1

@@ -11,11 +11,11 @@
 
 | Phase | Tasks | Completed | Progress |
 |-------|-------|-----------|----------|
-| Phase 1: Config Infrastructure | 6 | 0 | ⬜⬜⬜⬜⬜⬜ |
-| Phase 2: Pipeline Integration | 4 | 0 | ⬜⬜⬜⬜ |
-| Phase 3: Plugin Adaptation | 4 | 0 | ⬜⬜⬜⬜ |
-| Phase 4: Deploy & Verify | 4 | 0 | ⬜⬜⬜⬜ |
-| **Total** | **18** | **0** | **0%** |
+| Phase 1: Config Infrastructure | 6 | 6 | [X][X][X][X][X][X] |
+| Phase 2: Pipeline Integration | 4 | 3 | [X][X][X][ ] |
+| Phase 3: Plugin Adaptation | 4 | 4 | [X][X][X][X] |
+| Phase 4: Deploy & Verify | 4 | 4 | [X][X][X][X] |
+| **Total** | **18** | **17** | **94%** |
 
 ---
 
@@ -43,9 +43,9 @@ config/
 ```
 
 **Definition of Done**:
-- [ ] `config/` Verzeichnis existiert
-- [ ] `config/secrets/` Verzeichnis existiert
-- [ ] `config/secrets/README.md` dokumentiert benoetigte Secrets
+- [X] `config/` Verzeichnis existiert
+- [X] `config/secrets/` Verzeichnis existiert
+- [X] `config/secrets/README.md` dokumentiert benoetigte Secrets
 
 ---
 
@@ -122,10 +122,10 @@ PLUGIN:
 ```
 
 **Definition of Done**:
-- [ ] `config/PLACEHOLDER_env.yaml` existiert
-- [ ] Alle Sektionen dokumentiert (APP, PATHS, SOURCE_WIKI, SERVICES, PIPELINE, PLUGIN)
-- [ ] Platzhalter-Syntax `${var}` korrekt verwendet
-- [ ] Secrets referenzieren `${secrets_dir}/` Pfade
+- [X] `config/PLACEHOLDER_env.yaml` existiert
+- [X] Alle Sektionen dokumentiert (APP, PATHS, SOURCE_WIKI, SERVICES, PIPELINE, PLUGIN)
+- [X] Platzhalter-Syntax `${var}` korrekt verwendet
+- [X] Secrets referenzieren `${secrets_dir}/` Pfade
 
 ---
 
@@ -169,13 +169,13 @@ QDRANT_HOST: str = settings["SERVICES"]["qdrant"]["host"]
 ```
 
 **Definition of Done**:
-- [ ] `config.py` existiert im Repository-Root
-- [ ] `load_config()` laedt env.yaml erfolgreich
-- [ ] Platzhalter werden korrekt aufgeloest
-- [ ] Secrets werden aus separaten Dateien geladen
-- [ ] `settings.json` wird generiert
-- [ ] Typisierte Exports vorhanden
-- [ ] `python config.py` laeuft ohne Fehler
+- [X] `config.py` existiert im Repository-Root
+- [X] `load_config()` laedt env.yaml erfolgreich
+- [X] Platzhalter werden korrekt aufgeloest
+- [X] Secrets werden aus separaten Dateien geladen
+- [X] `settings.json` wird generiert
+- [X] Typisierte Exports vorhanden
+- [X] `python config.py` laeuft ohne Fehler
 
 ---
 
@@ -206,10 +206,10 @@ config/secrets/*
 ```
 
 **Definition of Done**:
-- [ ] `config/env.yaml` ist gitignored
-- [ ] `config/settings.json` ist gitignored
-- [ ] `config/secrets/*` ist gitignored (ausser .gitkeep, README.md)
-- [ ] `git status` zeigt keine Secrets
+- [X] `config/env.yaml` ist gitignored
+- [X] `config/settings.json` ist gitignored
+- [X] `config/secrets/*` ist gitignored (ausser .gitkeep, README.md)
+- [X] `git status` zeigt keine Secrets
 
 ---
 
@@ -225,10 +225,10 @@ config/secrets/*
 3. Trage echte URLs ein
 
 **Definition of Done**:
-- [ ] `config/env.yaml` existiert (lokal, nicht im Git)
-- [ ] Alle Pfade sind korrekt fuer lokale Entwicklung
-- [ ] Source-Wiki URL ist korrekt
-- [ ] Service-URLs sind korrekt
+- [X] `config/env.yaml` existiert (lokal, nicht im Git)
+- [X] Alle Pfade sind korrekt fuer lokale Entwicklung
+- [X] Source-Wiki URL ist korrekt
+- [X] Service-URLs sind korrekt
 
 ---
 
@@ -245,10 +245,10 @@ config/secrets/*
 4. Aktualisiere `env.yaml` Pfade
 
 **Definition of Done**:
-- [ ] `config/secrets/json_rpc_api.token` existiert
-- [ ] `config/secrets/ssl.cert` existiert
-- [ ] Alte Secrets in `pipeline/01_wiki_fetcher/config/` koennen geloescht werden
-- [ ] Config laesst sich laden ohne Fehler
+- [X] `config/secrets/json_rpc_api.token` existiert
+- [X] `config/secrets/ssl.cert` existiert
+- [X] Alte Secrets in `pipeline/01_wiki_fetcher/config/` koennen geloescht werden
+- [X] Config laesst sich laden ohne Fehler
 
 ---
 
