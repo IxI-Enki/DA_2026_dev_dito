@@ -1,0 +1,79 @@
+[
+  {
+    "job_id": "fetch_20260131_220922",
+    "status": "error",
+    "updated_at": "2026-01-31T21:09:24.129341",
+    "stage": "fetch",
+    "started_at": "2026-01-31T22:09:22.798693",
+    "error": "pathlib.py\", line 1120, in mkdir\n    self.parent.mkdir(parents=True, exist_ok=True)\n  File \"/usr/local/lib/python3.11/pathlib.py\", line 1120, in mkdir\n    self.parent.mkdir(parents=True, exist_ok=True)\n  File \"/usr/local/lib/python3.11/pathlib.py\", line 1120, in mkdir\n    self.parent.mkdir(parents=True, exist_ok=True)\n  [Previous line repeated 4 more times]\n  File \"/usr/local/lib/python3.11/pathlib.py\", line 1116, in mkdir\n    os.mkdir(self, mode)\nOSError: [Errno 30] Read-only file system: 'D:'\n",
+    "finished_at": "2026-01-31T21:09:24.129357",
+    "duration_seconds": -3598
+  },
+  {
+    "job_id": "fetch_20260131_210941",
+    "stage": "fetch",
+    "started_at": "2026-01-31T21:09:41.454287",
+    "status": "error",
+    "updated_at": "2026-01-31T21:09:41.927298",
+    "error": "pathlib.py\", line 1120, in mkdir\n    self.parent.mkdir(parents=True, exist_ok=True)\n  File \"/usr/local/lib/python3.11/pathlib.py\", line 1120, in mkdir\n    self.parent.mkdir(parents=True, exist_ok=True)\n  File \"/usr/local/lib/python3.11/pathlib.py\", line 1120, in mkdir\n    self.parent.mkdir(parents=True, exist_ok=True)\n  [Previous line repeated 4 more times]\n  File \"/usr/local/lib/python3.11/pathlib.py\", line 1116, in mkdir\n    os.mkdir(self, mode)\nOSError: [Errno 30] Read-only file system: 'D:'\n",
+    "finished_at": "2026-01-31T21:09:41.927311",
+    "duration_seconds": 0
+  },
+  {
+    "job_id": "fetch_20260131_211108",
+    "stage": "fetch",
+    "started_at": "2026-01-31T21:11:08.661020",
+    "status": "error",
+    "updated_at": "2026-01-31T21:11:09.107517",
+    "error": "pathlib.py\", line 1120, in mkdir\n    self.parent.mkdir(parents=True, exist_ok=True)\n  File \"/usr/local/lib/python3.11/pathlib.py\", line 1120, in mkdir\n    self.parent.mkdir(parents=True, exist_ok=True)\n  File \"/usr/local/lib/python3.11/pathlib.py\", line 1120, in mkdir\n    self.parent.mkdir(parents=True, exist_ok=True)\n  [Previous line repeated 4 more times]\n  File \"/usr/local/lib/python3.11/pathlib.py\", line 1116, in mkdir\n    os.mkdir(self, mode)\nOSError: [Errno 30] Read-only file system: 'D:'\n",
+    "finished_at": "2026-01-31T21:11:09.107529",
+    "duration_seconds": 0
+  },
+  {
+    "job_id": "test_job_001",
+    "stage": "fetch",
+    "started_at": "2026-01-31T21:13:39.744923",
+    "status": "error",
+    "updated_at": "2026-01-31T21:13:58.302737",
+    "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/pipeline/01_wiki_fetcher/api_client.py\", line 276, in _handle_transient_error\n    raise TransientError(f\"Skipped: {error_msg}\")\napi_client.TransientError: Skipped: HTTPSConnectionPool(host='leowiki.htl-leonding.ac.at', port=443): Max retries exceeded with url: /lib/exe/jsonrpc.php (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get issuer certificate (_ssl.c:1016)')))\n",
+    "finished_at": "2026-01-31T21:13:58.302752",
+    "duration_seconds": 18
+  },
+  {
+    "job_id": "test_docker_002",
+    "stage": "fetch",
+    "started_at": "2026-01-31T21:16:01.605326",
+    "status": "error",
+    "updated_at": "2026-01-31T21:16:30.152081",
+    "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/pipeline/01_wiki_fetcher/api_client.py\", line 276, in _handle_transient_error\n    raise TransientError(f\"Skipped: {error_msg}\")\napi_client.TransientError: Skipped: HTTPSConnectionPool(host='leowiki.htl-leonding.ac.at', port=443): Max retries exceeded with url: /lib/exe/jsonrpc.php (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get issuer certificate (_ssl.c:1016)')))\n",
+    "finished_at": "2026-01-31T21:16:30.152097",
+    "duration_seconds": 28
+  },
+  {
+    "job_id": "test_ssl_001",
+    "stage": "fetch",
+    "started_at": "2026-01-31T21:18:46.339466",
+    "status": "error",
+    "updated_at": "2026-01-31T21:19:14.524128",
+    "error": "^^^^^^^^^^^^^^^^^\n  File \"/pipeline/01_wiki_fetcher/api_client.py\", line 276, in _handle_transient_error\n    raise TransientError(f\"Skipped: {error_msg}\")\napi_client.TransientError: Skipped: HTTPSConnectionPool(host='leowiki.htl-leonding.ac.at', port=443): Max retries exceeded with url: /lib/exe/jsonrpc.php (Caused by ConnectTimeoutError(<HTTPSConnection(host='leowiki.htl-leonding.ac.at', port=443) at 0x7823e2d398d0>, 'Connection to leowiki.htl-leonding.ac.at timed out. (connect timeout=4.5)'))\n",
+    "finished_at": "2026-01-31T21:19:14.524143",
+    "duration_seconds": 28
+  },
+  {
+    "job_id": "test_ssl_002",
+    "stage": "fetch",
+    "started_at": "2026-01-31T21:19:40.877279",
+    "status": "error",
+    "updated_at": "2026-01-31T21:20:01.736030",
+    "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/pipeline/01_wiki_fetcher/api_client.py\", line 276, in _handle_transient_error\n    raise TransientError(f\"Skipped: {error_msg}\")\napi_client.TransientError: Skipped: HTTPSConnectionPool(host='leowiki.htl-leonding.ac.at', port=443): Max retries exceeded with url: /lib/exe/jsonrpc.php (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get issuer certificate (_ssl.c:1016)')))\n",
+    "finished_at": "2026-01-31T21:20:01.736042",
+    "duration_seconds": 20
+  },
+  {
+    "job_id": "test_final_001",
+    "stage": "fetch",
+    "started_at": "2026-01-31T21:23:04.926846",
+    "status": "running",
+    "updated_at": "2026-01-31T21:23:04.926853"
+  }
+]

@@ -11,11 +11,9 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -25,6 +23,12 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Python dist/ and lib/ EXCEPT in dokuwiki_plugin/
+/dist/
+/lib/
+!/dokuwiki_plugin/dist/
+!/dokuwiki_plugin/lib/
 
 # Virtual environments
 venv/
@@ -55,7 +59,11 @@ env/
 # Zentrale Konfiguration - NIE committen!
 config/env.yaml
 config/settings.json
+
+# Config-Vorlagen und Beispiele (WERDEN committet)
 !config/PLACEHOLDER_env.yaml
+!config/env.minimal.yaml
+!config/env.development.yaml
 
 # Secrets-Verzeichnis (Inhalte, nicht Struktur)
 config/secrets/*
@@ -79,11 +87,19 @@ secrets/
 # =============================================================================
 # Data & Output (large files)
 # =============================================================================
-data/fetched/
-data/evaluated/
-data/embeddings/*.jsonl
+# Pipeline output directories (contents ignored, structure kept)
+data/fetched/*
+!data/fetched/.gitkeep
+data/evaluated/*
+!data/evaluated/.gitkeep
+data/embeddings/*
+!data/embeddings/.gitkeep
+
+# Pipeline logs (keep status tracking, ignore large logs)
 data/logs/*.log
-!data/**/.gitkeep
+!data/logs/.gitkeep
+!data/logs/pipeline_runs.json
+!data/logs/pipeline_runs.schema.json
 
 # Fetched wiki content (large)
 content_output/
@@ -93,10 +109,14 @@ fetched_at_*/
 # Logs
 # =============================================================================
 *.log
-logs/
+/logs/
 !logs/.gitkeep
 pipeline/*/logs/
 !pipeline/*/logs/.gitkeep
+
+# Keep data/logs/ directory and tracking files
+!data/logs/
+data/logs/*.log
 
 # =============================================================================
 # Docker

@@ -1,0 +1,47 @@
+# =============================================================================
+# Dev Dito Pipeline Module - Dockerfile Template
+# =============================================================================
+# Kopiere dieses Template fuer jeden neuen Pipeline-Container.
+# Constitution Article VII: Nur Thin Wrappers, keine Business-Logik!
+#
+# Mount Points:
+#   /config   - Zentrale env.yaml (read-only)
+#   /data     - Pipeline Output (read-write)
+#   /pipeline - Bestehende Skripte (read-only)
+# =============================================================================
+
+FROM python:3.11-slim
+
+# Metadata
+LABEL maintainer="Jan Ritt <j.ritt@htl-leonding.ac.at>"
+LABEL description="Dev Dito Pipeline Module"
+LABEL version="0.1.0"
+
+# Environment
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV CONFIG_PATH=/config/env.yaml
+ENV DATA_PATH=/data
+ENV PIPELINE_PATH=/pipeline
+
+WORKDIR /app
+
+# System dependencies (minimal)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Entrypoint script (Thin Wrapper)
+COPY entrypoint.py .
+
+# Healthcheck (optional)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "print('OK')" || exit 1
+
+# Default entrypoint
+ENTRYPOINT ["python", "entrypoint.py"]

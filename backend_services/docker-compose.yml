@@ -82,10 +82,100 @@ services:
       timeout: 10s
       retries: 3
 
+  # ==========================================================================
+  # Pipeline Module: Wiki Fetcher
+  # ==========================================================================
+  # Usage: docker compose --profile pipeline run --rm module_fetcher <job_id>
+  module_fetcher:
+    build:
+      context: ./module_fetcher
+      dockerfile: Dockerfile
+    container_name: dev-dito-module-fetcher
+    profiles: ["pipeline"]
+    volumes:
+      - ../config:/config:ro
+      - ../data:/data
+      - ../pipeline/01_wiki_fetcher:/pipeline/01_wiki_fetcher:ro
+      # Root config.py for central configuration
+      - ../config.py:/app/config.py:ro
+    environment:
+      - CONFIG_PATH=/config/env.yaml
+      - DATA_PATH=/data
+      - PIPELINE_PATH=/pipeline/01_wiki_fetcher
+      # Override Windows paths for container
+      - OUTPUT_DIR=/data/fetched
+      - TOKEN_PATH=/config/secrets/json_rpc_api.token
+      - SSL_CERT_PATH=/config/secrets/ssl.cert
+      # SSL certificate trust for Python requests
+      - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+      - SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+    networks:
+      - devdito_network
+
+  # ==========================================================================
+  # Pipeline Module: Deep Evaluator (Placeholder)
+  # ==========================================================================
+  # module_evaluator:
+  #   build:
+  #     context: ./module_evaluator
+  #     dockerfile: Dockerfile
+  #   container_name: dev-dito-module-evaluator
+  #   profiles: ["pipeline"]
+  #   volumes:
+  #     - ../config:/config:ro
+  #     - ../data:/data
+  #     - ../pipeline/02_deep_evaluation:/pipeline/02_deep_evaluation:ro
+  #   environment:
+  #     - CONFIG_PATH=/config/env.yaml
+  #     - OLLAMA_HOST=${OLLAMA_HOST:-ollama}
+  #   networks:
+  #     - devdito_network
+
+  # ==========================================================================
+  # Pipeline Module: Embeddings Creator (Placeholder)
+  # ==========================================================================
+  # module_embedder:
+  #   build:
+  #     context: ./module_embedder
+  #     dockerfile: Dockerfile
+  #   container_name: dev-dito-module-embedder
+  #   profiles: ["pipeline"]
+  #   volumes:
+  #     - ../config:/config:ro
+  #     - ../data:/data
+  #     - ../pipeline/03_embeddings_creator:/pipeline/03_embeddings_creator:ro
+  #   environment:
+  #     - CONFIG_PATH=/config/env.yaml
+  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
+  #   networks:
+  #     - devdito_network
+
+  # ==========================================================================
+  # Pipeline Module: Qdrant Deployer (Placeholder)
+  # ==========================================================================
+  # module_deployer:
+  #   build:
+  #     context: ./module_deployer
+  #     dockerfile: Dockerfile
+  #   container_name: dev-dito-module-deployer
+  #   profiles: ["pipeline"]
+  #   depends_on:
+  #     qdrant_db:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ../config:/config:ro
+  #     - ../data:/data
+  #   environment:
+  #     - CONFIG_PATH=/config/env.yaml
+  #     - QDRANT_HOST=qdrant_db
+  #     - QDRANT_PORT=6333
+  #   networks:
+  #     - devdito_network
+
 volumes:
   qdrant_storage:
     name: devdito_qdrant_storage
 
 networks:
-  default:
+  devdito_network:
     name: devdito_network

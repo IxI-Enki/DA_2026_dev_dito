@@ -219,14 +219,15 @@ if ($pluginInfo -match "version\s+(.+)") {
     Write-Status "  Version: $version" -Type "OK"
 }
 
-# Copy settings.json if exists
+# Copy settings.json to plugin's config directory
 if (Test-Path $settingsJson) {
-    $configTarget = Join-Path $TargetDir "..\..\..\config"
-    if (-not (Test-Path $configTarget)) {
-        New-Item -ItemType Directory -Path $configTarget -Force | Out-Null
+    # Create config/ directory inside the plugin
+    $pluginConfigDir = Join-Path $TargetDir "config"
+    if (-not (Test-Path $pluginConfigDir)) {
+        New-Item -ItemType Directory -Path $pluginConfigDir -Force | Out-Null
     }
-    Copy-Item -Path $settingsJson -Destination $configTarget -Force
-    Write-Status "  Copied: config/settings.json" -Type "OK"
+    Copy-Item -Path $settingsJson -Destination $pluginConfigDir -Force
+    Write-Status "  Copied: settings.json to plugin/config/" -Type "OK"
 }
 
 # Summary

@@ -431,9 +431,10 @@ def load_config() -> Dict[str, Any]:
     
     # =========================================================================
     # Load token from file
+    # In Docker: TOKEN_PATH environment variable takes precedence
     # =========================================================================
     auth = config.get("JSONRPC", {}).get("api", {}).get("authentication", {})
-    token_path_str = auth.get("token_file", "")
+    token_path_str = os.environ.get("TOKEN_PATH", auth.get("token_file", ""))
     
     if token_path_str:
         token_path = Path(token_path_str)
@@ -594,7 +595,9 @@ API_FEED_URL: str = settings.get("JSONRPC", {}).get("api", {}).get("feed_url", "
 API_TOKEN: str = settings.get("JSONRPC", {}).get("api", {}).get("authentication", {}).get("token", "")
 
 # SSL Certificate
-CA_CERT_PATH: str = settings.get("JSONRPC", {}).get("api", {}).get("certificate", "")
+# In Docker: SSL_CERT_PATH environment variable takes precedence
+_cert_from_settings = settings.get("JSONRPC", {}).get("api", {}).get("certificate", "")
+CA_CERT_PATH: str = os.environ.get("SSL_CERT_PATH", _cert_from_settings)
 
 # Request Headers
 HEADERS: Dict[str, str] = {
@@ -603,7 +606,10 @@ HEADERS: Dict[str, str] = {
 }
 
 # Output Directory
-OUTPUT_BASE_DIR: str = settings.get("PATHS", {}).get("output_dir", str(PROJECT_ROOT / "content_output"))
+# In Docker: Environment variable OUTPUT_DIR takes precedence
+# This allows container mounts to override Windows paths from env.yaml
+_output_from_settings = settings.get("PATHS", {}).get("output_dir", str(PROJECT_ROOT / "content_output"))
+OUTPUT_BASE_DIR: str = os.environ.get("OUTPUT_DIR", _output_from_settings)
 
 # Fetch Configuration (flat exports for backward compatibility)
 TIMEOUT: int = FETCH_CONFIG.timeout

@@ -148,6 +148,48 @@ PIPELINE:
     recreate_collection: false     # true = Loescht bestehende Collection!
 
 # =============================================================================
+# PIPELINE_ORCHESTRATION - Docker-basierte Pipeline-Ausfuehrung
+# =============================================================================
+PIPELINE_ORCHESTRATION:
+  # HTTP Orchestrator API (laeuft auf Host, nicht in Container)
+  # WICHTIG: host.docker.internal fuer Zugriff vom Docker-Container auf Host
+  orchestrator:
+    url: http://host.docker.internal:8089
+    timeout: 30
+  
+  # Docker Compose Einstellungen
+  docker:
+    compose_path: ${root_dir}/backend_services
+    network: devdito_network
+  
+  # Stage-spezifische Container
+  stages:
+    fetch:
+      container: dev-dito-module-fetcher
+      timeout_seconds: 3600      # 1 Stunde max
+      description: "Fetcht Wiki-Inhalte via JSON-RPC API"
+    evaluate:
+      container: dev-dito-module-evaluator
+      timeout_seconds: 7200      # 2 Stunden max
+      description: "LLM-gestuetzte Inhaltsanalyse"
+    embed:
+      container: dev-dito-module-embedder
+      timeout_seconds: 3600
+      batch_size: 100
+      description: "Generiert Embeddings via OpenAI/lokales Model"
+    deploy:
+      container: dev-dito-module-deployer
+      timeout_seconds: 1800
+      default_mode: replace      # replace | upsert
+      description: "Laedt Embeddings in Qdrant hoch"
+  
+  # Job-Tracking
+  logging:
+    status_file: ${data_dir}/logs/pipeline_runs.json
+    max_log_entries: 100
+    poll_interval_seconds: 5
+
+# =============================================================================
 # PLUGIN - DokuWiki Plugin UI-Settings
 # =============================================================================
 PLUGIN:
