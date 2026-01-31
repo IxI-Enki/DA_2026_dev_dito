@@ -75,7 +75,8 @@ def format_bytes(size_bytes: int | float) -> str:
 class ExtendedWikiFetcher:
     """Extended wiki fetcher with ACL, links, and media support"""
     
-    def __init__(self, output_dir: str | None = None, verbose: bool = True, use_cache: bool = True):
+    def __init__(self, output_dir: str | None = None, verbose: bool = True, 
+                 use_cache: bool = True, interactive: bool = True):
         # Load config
         self.config = get_fetch_config()
         
@@ -88,7 +89,7 @@ class ExtendedWikiFetcher:
         self.output_dir = output_dir
         self.verbose = verbose
         self.use_cache = use_cache and self.config.cache.enabled
-        self.client = WikiAPIClient(verbose=False)
+        self.client = WikiAPIClient(verbose=False, interactive=interactive)
         self.link_extractor = LinkExtractor()
         
         # Media cache for fast-mode downloads
@@ -1916,13 +1917,16 @@ def main():
                         help="Disable cache (always download fresh, ignore archived files)")
     parser.add_argument("--quiet", action="store_true",
                         help="Suppress verbose output")
+    parser.add_argument("--auto-skip", action="store_true",
+                        help="Non-interactive mode: auto-skip all permanent errors (4xx)")
     
     args = parser.parse_args()
     
     fetcher = ExtendedWikiFetcher(
         output_dir=args.output_dir, 
         verbose=not args.quiet,
-        use_cache=not args.no_cache
+        use_cache=not args.no_cache,
+        interactive=not args.auto_skip
     )
     _current_fetcher = fetcher  # Set global reference for signal handler
     

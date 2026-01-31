@@ -151,6 +151,11 @@ PIPELINE:
 # PIPELINE_ORCHESTRATION - Docker-basierte Pipeline-Ausfuehrung
 # =============================================================================
 PIPELINE_ORCHESTRATION:
+  # HTTP Orchestrator API (laeuft auf Host, nicht in Container)
+  orchestrator:
+    url: http://localhost:8089
+    timeout: 30
+  
   # Docker Compose Einstellungen
   docker:
     compose_path: ${root_dir}/backend_services

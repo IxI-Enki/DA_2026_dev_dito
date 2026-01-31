@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace dokuwiki\plugin\devdito\lib;
 
 /**
- * PipelineOrchestrator - Executes pipeline stages via Docker
+ * PipelineOrchestrator - Executes pipeline stages via HTTP Orchestrator API
  *
  * This class handles the execution of pipeline modules and status reporting.
- * Constitution Article I: No direct PHP→Python calls (uses Docker exec)
+ * PHP cannot directly run Docker commands (security restriction), so it calls
+ * the HTTP Orchestrator service running on the host.
+ *
+ * Constitution Article I: No direct PHP→Python calls
  * Constitution Article VII: Thin wrappers only
  *
  * @license    GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
@@ -44,8 +47,8 @@ class PipelineOrchestrator
     /** @var JobStatusManager */
     private JobStatusManager $statusManager;
 
-    /** @var string Docker compose path */
-    private string $dockerComposePath;
+    /** @var string Orchestrator API URL */
+    private string $orchestratorUrl;
 
     /**
      * Constructor
@@ -54,15 +57,11 @@ class PipelineOrchestrator
     {
         $this->statusManager = new JobStatusManager();
         
-        // Get Docker compose path from config
-        $configPath = ConfigLoader::get('PIPELINE_ORCHESTRATION.docker.compose_path');
-        if ($configPath && is_dir($configPath)) {
-            $this->dockerComposePath = $configPath;
-        } else {
-            // Fallback to relative path
-            $pluginDir = dirname(__DIR__);
-            $this->dockerComposePath = dirname($pluginDir) . '/backend_services';
-        }
+        // Get Orchestrator URL from config (default: localhost:8089)
+        $this->orchestratorUrl = ConfigLoader::get(
+            'PIPELINE_ORCHESTRATION.orchestrator.url',
+            'http://localhost:8089'
+        );
     }
 
     /**
@@ -72,8 +71,19 @@ class PipelineOrchestrator
      */
     public function getStatus(): array
     {
+        // Try to get status from Orchestrator API first
+        $apiStatus = $this->callOrchestratorApi('GET', '/status');
+        
+        if ($apiStatus && isset($apiStatus['stages'])) {
+            // Orchestrator is running - use its status
+            $apiStatus['orchestrator_status'] = 'running';
+            $apiStatus['orchestrator_url'] = $this->orchestratorUrl;
+            $apiStatus['qdrant_info'] = $this->getQdrantInfo();
+            return $apiStatus;
+        }
+        
+        // Fallback: Read status from local file
         $stages = [];
-
         foreach (self::STAGES as $id => $info) {
             $lastRun = $this->statusManager->getLastRun($id);
 
@@ -94,12 +104,13 @@ class PipelineOrchestrator
             'stages' => $stages,
             'active_job' => $this->statusManager->getActiveJob(),
             'qdrant_info' => $this->getQdrantInfo(),
-            'docker_compose_path' => $this->dockerComposePath,
+            'orchestrator_status' => 'not_running',
+            'orchestrator_url' => $this->orchestratorUrl,
         ];
     }
 
     /**
-     * Start a pipeline stage
+     * Start a pipeline stage via HTTP Orchestrator
      *
      * @param string $stage Stage ID (fetch, evaluate, embed, deploy)
      * @param array $options Optional parameters
@@ -116,45 +127,32 @@ class PipelineOrchestrator
             ];
         }
 
-        // Check if another job is running
-        if ($this->statusManager->hasActiveJob()) {
-            $activeJob = $this->statusManager->getActiveJob();
+        // Call Orchestrator API to run the stage
+        $result = $this->callOrchestratorApi('POST', "/run/$stage");
+        
+        if ($result === null) {
             return [
                 'success' => false,
                 'job_id' => '',
-                'message' => "Eine andere Pipeline laeuft bereits: " . ($activeJob['job_id'] ?? 'unknown')
+                'message' => "Orchestrator nicht erreichbar ({$this->orchestratorUrl}). " .
+                            "Starte ihn mit: python backend_services/orchestrator/server.py"
             ];
         }
-
-        // Check Docker availability
-        if (!$this->isDockerAvailable()) {
-            return [
-                'success' => false,
-                'job_id' => '',
-                'message' => 'Docker ist nicht verfuegbar. Pruefe Docker Desktop.'
-            ];
-        }
-
-        // Generate job ID
-        $jobId = $stage . '_' . date('Ymd_His');
-        $container = self::STAGES[$stage]['container'];
-
-        // Build and execute Docker command
-        $result = $this->executeDockerRun($container, $jobId, $options);
-
-        if ($result['success']) {
+        
+        if (isset($result['success']) && $result['success']) {
             return [
                 'success' => true,
-                'job_id' => $jobId,
-                'message' => self::STAGES[$stage]['name'] . " gestartet. Job-ID: $jobId"
-            ];
-        } else {
-            return [
-                'success' => false,
-                'job_id' => $jobId,
-                'message' => 'Fehler beim Starten: ' . ($result['error'] ?? 'Unbekannter Fehler')
+                'job_id' => $result['job_id'] ?? '',
+                'message' => $result['message'] ?? self::STAGES[$stage]['name'] . " gestartet"
             ];
         }
+        
+        // Error from API
+        return [
+            'success' => false,
+            'job_id' => $result['job_id'] ?? '',
+            'message' => $result['detail'] ?? $result['message'] ?? 'Unbekannter Fehler'
+        ];
     }
 
     /**
@@ -165,64 +163,47 @@ class PipelineOrchestrator
      */
     public function getJobStatus(string $jobId): ?array
     {
+        // Try API first
+        $result = $this->callOrchestratorApi('GET', "/job/$jobId");
+        if ($result !== null) {
+            return $result;
+        }
+        
+        // Fallback to local status file
         $this->statusManager->clearCache();
         return $this->statusManager->getJob($jobId);
     }
 
     /**
-     * Check if Docker is available
+     * Call the Orchestrator HTTP API
      *
-     * @return bool
+     * @param string $method HTTP method (GET, POST)
+     * @param string $endpoint API endpoint (e.g., /status, /run/fetch)
+     * @param array|null $data POST data (optional)
+     * @return array|null Response data or null on error
      */
-    private function isDockerAvailable(): bool
+    private function callOrchestratorApi(string $method, string $endpoint, ?array $data = null): ?array
     {
-        $output = [];
-        $returnCode = 0;
+        $url = rtrim($this->orchestratorUrl, '/') . $endpoint;
         
-        exec('docker --version 2>&1', $output, $returnCode);
+        $context = stream_context_create([
+            'http' => [
+                'method' => $method,
+                'header' => "Content-Type: application/json\r\n",
+                'content' => $data ? json_encode($data) : '',
+                'timeout' => 5,
+                'ignore_errors' => true  // Get response even on 4xx/5xx
+            ]
+        ]);
         
-        return $returnCode === 0;
-    }
-
-    /**
-     * Execute Docker run command
-     *
-     * @param string $container Container name
-     * @param string $jobId Job identifier
-     * @param array $options Additional options
-     * @return array{success: bool, error?: string}
-     */
-    private function executeDockerRun(string $container, string $jobId, array $options = []): array
-    {
-        // Build Docker compose command
-        // Using --profile pipeline to start only pipeline services
-        $composeFile = escapeshellarg($this->dockerComposePath . '/docker-compose.yml');
-        $containerArg = escapeshellarg($container);
-        $jobIdArg = escapeshellarg($jobId);
-
-        // Command: docker compose -f <file> --profile pipeline run --rm -d <container> <job_id>
-        // Note: -d runs detached (background)
-        $cmd = "docker compose -f $composeFile --profile pipeline run --rm -d $containerArg $jobIdArg 2>&1";
-
-        // Log the command (without sensitive data)
-        error_log("[DevDito] Executing: docker compose run $container $jobId");
-
-        // Execute
-        $output = [];
-        $returnCode = 0;
-        exec($cmd, $output, $returnCode);
-
-        $outputStr = implode("\n", $output);
-
-        if ($returnCode !== 0) {
-            error_log("[DevDito] Docker command failed: $outputStr");
-            return [
-                'success' => false,
-                'error' => $outputStr
-            ];
+        $response = @file_get_contents($url, false, $context);
+        
+        if ($response === false) {
+            return null;  // Connection failed
         }
-
-        return ['success' => true];
+        
+        $decoded = json_decode($response, true);
+        return is_array($decoded) ? $decoded : null;
     }
 
     /**
