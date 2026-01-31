@@ -438,44 +438,162 @@ class admin_plugin_devdito extends AdminPlugin
     /**
      * Render configuration section.
      *
-     * Shows both DokuWiki config and central config values.
+     * Shows central config values and available config files.
      *
      * @return void
      */
     private function renderConfigurationSection(): void
     {
-        // DokuWiki config values
-        $enabled = $this->getConf('devdito_enabled') ? 'Enabled' : 'Disabled';
-        $mcpUrl = $this->getMcpUrl() ?? 'Not configured';
-        $position = $this->getConf('devdito_panel_position');
-        if (!$position) {
-            $position = ConfigLoader::get('PLUGIN.panel_position', 'right');
-        }
-
         // Central config info
         $configValid = ConfigLoader::isValid();
         $appVersion = ConfigLoader::get('APP.version', 'unknown');
-        $qdrantHost = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
+        
+        // Service settings
+        $qdrantHost = ConfigLoader::get('SERVICES.qdrant.host', 'localhost');
         $qdrantPort = ConfigLoader::get('SERVICES.qdrant.port', 6333);
         $qdrantCollection = ConfigLoader::get('SERVICES.qdrant.collection', 'wiki_embeddings');
+        $mcpUrl = ConfigLoader::get('SERVICES.mcp_server.url', 'Not configured');
+        
+        // Source Wiki settings
+        $sourceWikiUrl = ConfigLoader::get('SOURCE_WIKI.api.url', 'Not configured');
+        $sourceWikiName = ConfigLoader::get('SOURCE_WIKI.name', 'Unknown');
+        
+        // Pipeline settings
+        $fetcherTimeout = ConfigLoader::get('PIPELINE.fetcher.timeout', 30);
+        $embedderModel = ConfigLoader::get('SERVICES.openai.embedding_model', 'text-embedding-3-large');
+        
+        // Paths
+        $rootDir = ConfigLoader::get('PATHS.root_dir', 'Unknown');
+        $dataDir = ConfigLoader::get('PATHS.data_dir', 'Unknown');
+
+        // Available config files
+        $configFiles = $this->getAvailableConfigFiles();
 
         echo '<div class="devdito-card">';
-        echo '<h2>Current Configuration</h2>';
-        echo '<table class="devdito-config-table">';
-        echo '<tr><th>Setting</th><th>Value</th><th>Source</th></tr>';
-        echo '<tr><td>Plugin Status</td><td><span class="devdito-config-value">' . hsc($enabled) . '</span></td><td>DokuWiki</td></tr>';
-        echo '<tr><td>MCP Server URL</td><td><span class="devdito-config-value">' . hsc($mcpUrl) . '</span></td><td>Central/DokuWiki</td></tr>';
-        echo '<tr><td>Panel Position</td><td><span class="devdito-config-value">' . hsc($position) . '</span></td><td>Central/DokuWiki</td></tr>';
-        echo '<tr><td>Qdrant</td><td><span class="devdito-config-value">' . hsc($qdrantHost . ':' . $qdrantPort . '/' . $qdrantCollection) . '</span></td><td>Central</td></tr>';
-        echo '<tr><td>Plugin Version</td><td><span class="devdito-config-value">' . self::VERSION . '</span></td><td>-</td></tr>';
-        echo '<tr><td>App Version (env.yaml)</td><td><span class="devdito-config-value">' . hsc($appVersion) . '</span></td><td>Central</td></tr>';
-        echo '<tr><td>Central Config</td><td><span class="devdito-config-value">' . ($configValid ? 'Valid' : 'Invalid/Missing') . '</span></td><td>-</td></tr>';
-        echo '</table>';
-        echo '<p style="margin-top: 16px; color: #666; font-size: 13px;">';
-        echo 'DokuWiki settings: <a href="' . wl('', ['do' => 'admin', 'page' => 'config']) . '#plugin____devdito">Configuration Manager</a> | ';
-        echo 'Central settings: <code>config/env.yaml</code>';
-        echo '</p>';
+        echo '<h2>Configuration</h2>';
+        
+        // Config file selector
+        echo '<div class="devdito-config-selector" style="margin-bottom: 20px; padding: 16px; background: #f0f4f8; border-radius: 6px;">';
+        echo '<h3 style="margin: 0 0 12px 0; font-size: 14px; color: #333;">Aktive Konfigurationsdatei</h3>';
+        echo '<div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">';
+        echo '<select id="devdito-config-select" class="devdito-select" style="flex: 1; min-width: 200px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">';
+        foreach ($configFiles as $file) {
+            $selected = ($file['active'] ?? false) ? 'selected' : '';
+            echo '<option value="' . hsc($file['path']) . '" ' . $selected . '>' . hsc($file['name']) . '</option>';
+        }
+        echo '</select>';
+        echo '<span style="color: #666; font-size: 12px;">Aenderungen erfordern Neustart von config.py</span>';
         echo '</div>';
+        echo '</div>';
+        
+        // Current settings table
+        echo '<h3 style="margin: 16px 0 12px 0; font-size: 14px; color: #555;">Aktuelle Einstellungen</h3>';
+        echo '<table class="devdito-config-table">';
+        echo '<tr><th>Einstellung</th><th>Wert</th><th>Kategorie</th></tr>';
+        
+        // App
+        echo '<tr><td>App Version</td><td><span class="devdito-config-value">' . hsc($appVersion) . '</span></td><td>APP</td></tr>';
+        echo '<tr><td>Config Status</td><td><span class="devdito-config-value ' . ($configValid ? 'valid' : 'invalid') . '">' . ($configValid ? 'Gueltig' : 'Ungueltig') . '</span></td><td>-</td></tr>';
+        
+        // Paths
+        echo '<tr><td>Root Directory</td><td><span class="devdito-config-value" title="' . hsc($rootDir) . '">' . hsc($this->truncatePath($rootDir)) . '</span></td><td>PATHS</td></tr>';
+        echo '<tr><td>Data Directory</td><td><span class="devdito-config-value" title="' . hsc($dataDir) . '">' . hsc($this->truncatePath($dataDir)) . '</span></td><td>PATHS</td></tr>';
+        
+        // Source Wiki
+        echo '<tr><td>Source Wiki</td><td><span class="devdito-config-value">' . hsc($sourceWikiName) . '</span></td><td>SOURCE_WIKI</td></tr>';
+        echo '<tr><td>Wiki API URL</td><td><span class="devdito-config-value" style="font-size: 11px;">' . hsc($sourceWikiUrl) . '</span></td><td>SOURCE_WIKI</td></tr>';
+        
+        // Services
+        echo '<tr><td>Qdrant</td><td><span class="devdito-config-value">' . hsc($qdrantHost . ':' . $qdrantPort) . '</span></td><td>SERVICES</td></tr>';
+        echo '<tr><td>Qdrant Collection</td><td><span class="devdito-config-value">' . hsc($qdrantCollection) . '</span></td><td>SERVICES</td></tr>';
+        echo '<tr><td>MCP Server</td><td><span class="devdito-config-value">' . hsc($mcpUrl) . '</span></td><td>SERVICES</td></tr>';
+        echo '<tr><td>Embedding Model</td><td><span class="devdito-config-value">' . hsc($embedderModel) . '</span></td><td>SERVICES</td></tr>';
+        
+        // Pipeline
+        echo '<tr><td>Fetcher Timeout</td><td><span class="devdito-config-value">' . hsc($fetcherTimeout) . 's</span></td><td>PIPELINE</td></tr>';
+        
+        echo '</table>';
+        
+        echo '<div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">';
+        echo '<a href="' . wl('', ['do' => 'admin', 'page' => 'config']) . '#plugin____devdito" class="devdito-btn devdito-btn-secondary">DokuWiki Config</a>';
+        echo '<button class="devdito-btn devdito-btn-secondary" onclick="devditoShowConfigPath()">Zeige Config-Pfad</button>';
+        echo '</div>';
+        
+        echo '</div>';
+    }
+
+    /**
+     * Get available config files in config/ directory.
+     *
+     * @return array List of config files with metadata
+     */
+    private function getAvailableConfigFiles(): array
+    {
+        $configDir = ConfigLoader::get('PATHS.config_dir');
+        if (!$configDir) {
+            // Fallback path
+            $pluginDir = dirname(__DIR__);
+            $configDir = dirname($pluginDir) . '/config';
+        }
+
+        $files = [];
+        
+        // Check for env.yaml (active)
+        if (file_exists($configDir . '/env.yaml')) {
+            $files[] = [
+                'name' => 'env.yaml (aktiv)',
+                'path' => $configDir . '/env.yaml',
+                'active' => true
+            ];
+        }
+        
+        // Check for env.development.yaml
+        if (file_exists($configDir . '/env.development.yaml')) {
+            $files[] = [
+                'name' => 'env.development.yaml (Development)',
+                'path' => $configDir . '/env.development.yaml',
+                'active' => false
+            ];
+        }
+        
+        // Check for env.minimal.yaml
+        if (file_exists($configDir . '/env.minimal.yaml')) {
+            $files[] = [
+                'name' => 'env.minimal.yaml (Minimal)',
+                'path' => $configDir . '/env.minimal.yaml',
+                'active' => false
+            ];
+        }
+        
+        // Check for PLACEHOLDER
+        if (file_exists($configDir . '/PLACEHOLDER_env.yaml')) {
+            $files[] = [
+                'name' => 'PLACEHOLDER_env.yaml (Template)',
+                'path' => $configDir . '/PLACEHOLDER_env.yaml',
+                'active' => false
+            ];
+        }
+
+        return $files;
+    }
+
+    /**
+     * Truncate long paths for display.
+     *
+     * @param string $path Full path
+     * @param int $maxLength Maximum display length
+     * @return string Truncated path
+     */
+    private function truncatePath(string $path, int $maxLength = 50): string
+    {
+        if (strlen($path) <= $maxLength) {
+            return $path;
+        }
+        
+        // Keep beginning and end
+        $start = substr($path, 0, 20);
+        $end = substr($path, -25);
+        return $start . '...' . $end;
     }
 
     /**
@@ -504,7 +622,11 @@ class admin_plugin_devdito extends AdminPlugin
      */
     private function renderScripts(): void
     {
+        $configDir = ConfigLoader::get('PATHS.config_dir', 'config/');
+
         echo '<script>';
+        echo 'var DEVDITO_CONFIG_DIR = ' . json_encode($configDir) . ';';
+        
         echo 'function devditoTestService(service) {';
         echo '  var indicator = document.getElementById("devdito-indicator-" + service);';
         echo '  var detail = document.getElementById("devdito-detail-" + service);';
@@ -521,10 +643,16 @@ class admin_plugin_devdito extends AdminPlugin
         echo '      detail.textContent = "Error: " + e.message;';
         echo '    });';
         echo '}';
+        
         echo 'function devditoTestAll() {';
         echo '  devditoTestService("mcp");';
         echo '  devditoTestService("qdrant");';
         echo '}';
+        
+        echo 'function devditoShowConfigPath() {';
+        echo '  alert("Config Directory:\\n" + DEVDITO_CONFIG_DIR + "\\n\\nAktive Datei: env.yaml\\n\\nZum Aendern:\\n1. Kopiere env.development.yaml nach env.yaml\\n2. Fuehre python config.py aus\\n3. Lade diese Seite neu");';
+        echo '}';
+        
         echo 'document.addEventListener("DOMContentLoaded", devditoTestAll);';
         echo '</script>';
     }

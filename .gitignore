@@ -59,7 +59,11 @@ env/
 # Zentrale Konfiguration - NIE committen!
 config/env.yaml
 config/settings.json
+
+# Config-Vorlagen und Beispiele (WERDEN committet)
 !config/PLACEHOLDER_env.yaml
+!config/env.minimal.yaml
+!config/env.development.yaml
 
 # Secrets-Verzeichnis (Inhalte, nicht Struktur)
 config/secrets/*
