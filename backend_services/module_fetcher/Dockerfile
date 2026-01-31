@@ -33,7 +33,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Entrypoint script
+# Entrypoint script and SSL helper
 COPY entrypoint.py .
+COPY install_cert.sh .
+RUN chmod +x install_cert.sh
 
-ENTRYPOINT ["python", "entrypoint.py"]
+# Install custom SSL cert at runtime via entrypoint
+ENTRYPOINT ["/bin/bash", "-c", "./install_cert.sh && python entrypoint.py \"$@\"", "--"]

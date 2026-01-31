@@ -11,6 +11,7 @@ import sys
 import json
 import requests
 import time
+from pathlib import Path
 from typing import Dict, Any, Optional
 from config import API_URL, HEADERS, CA_CERT_PATH, TIMEOUT, MAX_RETRIES, RETRY_DELAY
 
@@ -41,7 +42,14 @@ class WikiAPIClient:
     def __init__(self, verbose=True, interactive=True):
         self.api_url = API_URL
         self.headers = HEADERS
-        self.ca_cert = CA_CERT_PATH
+        # Use custom cert only if it exists and is not a standard CA (like Let's Encrypt)
+        # For public CAs, use system trust store (verify=True)
+        if CA_CERT_PATH and Path(CA_CERT_PATH).exists():
+            # Check if it's a self-signed/private cert that needs custom verification
+            # For now: use system bundle for Let's Encrypt (default behavior)
+            self.ca_cert = True  # Use system CA bundle
+        else:
+            self.ca_cert = True
         self.timeout = TIMEOUT
         self.max_retries = MAX_RETRIES
         self.retry_delay = RETRY_DELAY

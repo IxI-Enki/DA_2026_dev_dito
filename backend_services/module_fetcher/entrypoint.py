@@ -193,19 +193,22 @@ def main():
     
     try:
         # Prepare environment for fetcher
+        # IMPORTANT: Override all Windows paths from env.yaml with container paths
         env = os.environ.copy()
         env["CONFIG_PATH"] = str(CONFIG_PATH)
         env["OUTPUT_DIR"] = str(DATA_PATH / "fetched")
+        env["SSL_CERT_PATH"] = "/config/secrets/ssl.cert"
+        env["TOKEN_PATH"] = "/config/secrets/json_rpc_api.token"
         
         # Add pipeline directory to PYTHONPATH
         python_path = env.get("PYTHONPATH", "")
         env["PYTHONPATH"] = f"{PIPELINE_PATH}:{PIPELINE_PATH.parent.parent}:{python_path}"
         
-        print(f"[INFO] Executing: python {fetch_script}")
+        print(f"[INFO] Executing: python {fetch_script} --auto-skip")
         
-        # Run the fetcher
+        # Run the fetcher with --auto-skip for non-interactive mode
         result = subprocess.run(
-            [sys.executable, str(fetch_script)],
+            [sys.executable, str(fetch_script), "--auto-skip"],
             cwd=str(PIPELINE_PATH),
             capture_output=True,
             text=True,
