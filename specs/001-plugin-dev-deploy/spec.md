@@ -14,11 +14,14 @@ Dev Dito ist eine DokuWiki Extension (Plugin) die als **Service Gateway** fungie
   - Qdrant (Stack-D) - fuer Health-Checks
   - Ollama/LMStudio (Stack-D) - fuer LLM-Status
 - **Admin-Dashboard** fuer Service-Monitoring und -Konfiguration
-- **Pipeline-Steuerung** (zukuenftig): Fetcher, Evaluator, Embedder, Deploy
+- **Pipeline-Steuerung**: Fetcher, Evaluator, Embedder, Deploy
+- **Zentrale Konfiguration**: EINE `config/env.yaml` fuer ALLE Komponenten
 
-**Architektur-Hinweis (Constitution v1.1.0):**
-> Dev Dito ist Stack-G und **VERBINDET sich mit** externen Services.
-> Der MCP Server ist **NICHT Teil** von Dev Dito (gehoert zu Stack-H).
+**Architektur-Hinweise (Constitution v1.2.0):**
+> - Dev Dito ist Stack-G und **VERBINDET sich mit** externen Services
+> - Der MCP Server ist **NICHT Teil** von Dev Dito (gehoert zu Stack-H)
+> - **ALLE Konfiguration** in zentraler `config/env.yaml` (Article II-B)
+> - **KEINE hardcodierten Variablen** im Code
 
 **Source**: `D:\_Repositories\_Diploma_Thesis_Repositories\dev_dito\dokuwiki_plugin\`  
 **Target Wiki**: `D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\development\first_own_dokuwiki`  
@@ -84,6 +87,59 @@ Als Entwickler moechte ich die Plugin-Version konsistent aktualisieren koennen, 
 
 ---
 
+### User Story 4 - Zentrale Konfiguration (Priority: P1)
+
+Als Entwickler moechte ich ALLE Einstellungen an EINER Stelle konfigurieren, damit ich nicht mehrere Dateien editieren muss.
+
+**Why this priority**: Basis-Architektur die VOR allen anderen Features stehen muss. Constitution Article II-B Compliance.
+
+**Independent Test**: `config/env.yaml` editieren, alle Komponenten nutzen die neuen Werte.
+
+**Acceptance Scenarios**:
+
+1. **Given** zentrale `config/env.yaml` existiert, **When** ein Wert geaendert wird, **Then** nutzen ALLE Komponenten (Plugin, Pipeline, Docker) den neuen Wert
+
+2. **Given** `config/env.yaml` mit Source-Wiki URL, **When** Wiki Fetcher laeuft, **Then** nutzt er die URL aus der zentralen Config
+
+3. **Given** `config/env.yaml` mit MCP Server URL, **When** Plugin Search ausgefuehrt wird, **Then** nutzt es die URL aus der zentralen Config (via `settings.json`)
+
+4. **Given** Secret-Dateien in `config/secrets/`, **When** Config geladen wird, **Then** werden Secrets aus separaten Dateien gelesen (nicht aus YAML direkt)
+
+**Config-Struktur (Pflicht)**:
+
+```
+dev_dito/
+├── config/                          # ZENTRALE CONFIG
+│   ├── env.yaml                     # MASTER CONFIG (gitignored)
+│   ├── PLACEHOLDER_env.yaml         # Template mit Dokumentation
+│   ├── settings.json                # Auto-generiert fuer PHP
+│   └── secrets/                     # Alle Secrets (gitignored)
+│       ├── json_rpc_api.token       # Wiki JSON-RPC API Key
+│       ├── ssl.cert                 # SSL Zertifikat
+│       └── openai.token             # OpenAI API Key
+├── config.py                        # Root-Level Config Loader
+```
+
+---
+
+### User Story 5 - Wiki Fetcher Integration (Priority: P2)
+
+Als Entwickler moechte ich das Schul-Wiki (LeoWiki) ueber JSON-RPC API fetchen koennen, konfiguriert ueber die zentrale Config.
+
+**Why this priority**: Kern-Feature von Dev Dito, aber abhaengig von User Story 4 (Zentrale Config).
+
+**Independent Test**: Fetcher-Script ausfuehren, Wiki-Inhalt wird in `output/` gespeichert.
+
+**Acceptance Scenarios**:
+
+1. **Given** `config/env.yaml` mit SOURCE_WIKI Einstellungen, **When** `python pipeline/01_wiki_fetcher/fetch.py` laeuft, **Then** wird das konfigurierte Wiki gefetcht
+
+2. **Given** API Token in `config/secrets/json_rpc_api.token`, **When** Fetcher laeuft, **Then** authentifiziert er sich erfolgreich
+
+3. **Given** SSL Zertifikat in `config/secrets/ssl.cert`, **When** Fetcher laeuft, **Then** nutzt er das Zertifikat fuer HTTPS
+
+---
+
 ### Edge Cases
 
 - Was passiert wenn Target-Wiki nicht laeuft? → Warning ausgeben, Dateien trotzdem kopieren
@@ -93,7 +149,7 @@ Als Entwickler moechte ich die Plugin-Version konsistent aktualisieren koennen, 
 
 ## Requirements *(mandatory)*
 
-### Functional Requirements
+### Functional Requirements - Deployment
 
 - **FR-001**: System MUSS PowerShell-Script `deploy-plugin.ps1` bereitstellen das Plugin korrekt deployed
 - **FR-002**: System MUSS DokuWiki Plugin-Struktur exakt einhalten (siehe DokuWiki Plugin Guidelines)
@@ -103,11 +159,29 @@ Als Entwickler moechte ich die Plugin-Version konsistent aktualisieren koennen, 
 - **FR-006**: System MUSS PHP Syntax-Check vor Deploy durchfuehren (`php -l`)
 - **FR-007**: System MUSS Erfolgsmeldung mit geprueften Dateien ausgeben
 
+### Functional Requirements - Zentrale Konfiguration (Constitution Article II-B)
+
+- **FR-100**: System MUSS zentrale `config/env.yaml` als EINZIGE Konfig-Quelle nutzen
+- **FR-101**: System MUSS `config/PLACEHOLDER_env.yaml` als dokumentiertes Template bereitstellen
+- **FR-102**: System MUSS `config.py` (Root-Level) bereitstellen das env.yaml laedt und typisierte Exports bietet
+- **FR-103**: System MUSS `config/settings.json` auto-generieren fuer PHP-Komponenten
+- **FR-104**: System MUSS Secrets in separaten Dateien (`config/secrets/`) speichern, NICHT in env.yaml
+- **FR-105**: System MUSS Platzhalter (`${var}`) in env.yaml zur Laufzeit aufloesen
+- **FR-106**: System DARF KEINE hardcodierten URLs, Pfade oder Ports im Code haben
+
+### Functional Requirements - Wiki Fetcher
+
+- **FR-200**: System MUSS Source-Wiki JSON-RPC URL aus zentraler Config lesen
+- **FR-201**: System MUSS API Token aus `config/secrets/json_rpc_api.token` laden
+- **FR-202**: System MUSS SSL Zertifikat aus `config/secrets/ssl.cert` nutzen
+- **FR-203**: System MUSS Fetch-Output in konfigurierbares Output-Verzeichnis schreiben
+
 ### Non-Functional Requirements
 
 - **NFR-001**: Deploy-Zeit unter 5 Sekunden
 - **NFR-002**: Scripts muessen ohne Admin-Rechte laufen
-- **NFR-003**: Keine externen Dependencies ausser PHP CLI
+- **NFR-003**: Keine externen Dependencies ausser PHP CLI und PyYAML
+- **NFR-004**: Config-Dateien (env.yaml, secrets/*) MUESSEN in .gitignore sein
 
 ### DokuWiki Plugin Struktur (Pflicht)
 
@@ -141,7 +215,7 @@ devdito/
 
 ## Success Criteria *(mandatory)*
 
-### Measurable Outcomes
+### Measurable Outcomes - Deployment
 
 - **SC-001**: Deploy-Script laeuft fehlerfrei durch in < 5 Sekunden
 - **SC-002**: Plugin erscheint in DokuWiki Admin → Extension Manager
@@ -149,6 +223,20 @@ devdito/
 - **SC-004**: Search-Button erscheint fuer eingeloggte User
 - **SC-005**: Keine PHP Errors/Warnings im DokuWiki Error-Log nach Deploy
 - **SC-006**: `phpcs --standard=PSR12` zeigt keine Errors (Constitution Article IV)
+
+### Measurable Outcomes - Zentrale Konfiguration
+
+- **SC-100**: `config/env.yaml` existiert und ist vollstaendig dokumentiert
+- **SC-101**: `config/PLACEHOLDER_env.yaml` existiert als Template
+- **SC-102**: `python config.py` generiert `config/settings.json` ohne Fehler
+- **SC-103**: `grep -r "http://" pipeline/` findet KEINE hardcodierten URLs (nur in Kommentaren)
+- **SC-104**: `grep -r ":3000\|:6333\|:8080" pipeline/` findet KEINE hardcodierten Ports
+- **SC-105**: `.gitignore` enthaelt `config/env.yaml`, `config/secrets/`, `*.token`, `*.cert`
+
+### Measurable Outcomes - Wiki Fetcher
+
+- **SC-200**: `python pipeline/01_wiki_fetcher/fetch.py --dry-run` liest Config korrekt
+- **SC-201**: Fetcher authentifiziert sich erfolgreich gegen Source-Wiki
 
 ## Referenzen
 

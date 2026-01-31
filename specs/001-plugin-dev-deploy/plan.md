@@ -7,20 +7,23 @@
 
 Dev Dito ist eine DokuWiki Extension die als **Service Gateway** (HTTP-Client) zu externen
 AI-Services fungiert. Das Plugin **verbindet sich mit** MCP Server (Stack-H), Qdrant (Stack-D)
-und LLM Services - es **enthaelt diese nicht**. Dieses Feature etabliert die Development-
-Infrastruktur: automatisiertes Deployment vom Source-Repository (`dokuwiki_plugin/`) zum
-lokalen Test-Wiki (`plugins_dev/devdito/`).
+und LLM Services - es **enthaelt diese nicht**. Dieses Feature etabliert:
 
-**Architektur-Klarstellung (Constitution v1.1.0):**
+1. **Zentrale Konfiguration** - EINE `config/env.yaml` fuer ALLE Komponenten
+2. **Development-Infrastruktur** - Deployment vom Source zum Test-Wiki
+3. **Wiki Fetcher Integration** - JSON-RPC API zum Quell-Wiki
+
+**Architektur-Klarstellung (Constitution v1.2.0):**
 - Dev Dito Plugin = HTTP-Client zu externen Services
 - MCP Server = Separater Stack-H (nicht Teil von Dev Dito)
-- `backend_services/` = Nur fuer lokale Entwicklung/Tests
+- **ALLE Konfiguration** in zentraler `config/env.yaml` (Article II-B)
+- **KEINE hardcodierten Variablen** im Code
 
 **Kernkomponenten:**
-1. PowerShell Deploy-Script mit PHP Syntax-Validierung
-2. DokuWiki-konforme Plugin-Struktur (Action + Admin Plugin)
-3. Asset-Management (CSS/JS minification)
-4. Version-Synchronisation ueber alle Dateien
+1. **Zentrale Config** - `config/env.yaml` + `config.py` Loader
+2. PowerShell Deploy-Script mit PHP Syntax-Validierung
+3. DokuWiki-konforme Plugin-Struktur (Action + Admin Plugin)
+4. Wiki Fetcher mit JSON-RPC API Authentifizierung
 
 ## Technical Context
 
@@ -35,22 +38,24 @@ lokalen Test-Wiki (`plugins_dev/devdito/`).
 
 ## Constitution Check
 
-*GATE: Validated against `.specify/memory/constitution.md` (v1.1.0)*
+*GATE: Validated against `.specify/memory/constitution.md` (v1.2.0)*
 
-| Article                            | Requirement                                                  | Status                                                       |
-| ---------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| **I: Layered Module Architecture** | DokuWiki Plugin kommuniziert nur via HTTP mit externen Services | ✅ Plugin ist HTTP-Client zu MCP (Stack-H), Qdrant (Stack-D) |
-| **II: JSON Interface Standard**    | JSON-RPC 2.0 fuer externe Service-Kommunikation              | ✅ Implementiert in `action.php` (Client-seitig)             |
-| **IV: Language Standards**         | PHP PSR-12, `declare(strict_types=1)`                        | ✅ Alle PHP-Dateien konform                                  |
-| **V: Pragmatic Documentation**     | README fuer Scripts                                          | ✅ `scripts/README.md` erstellt                              |
-| **VI: Secret Containment**         | Keine Secrets in Code                                        | ✅ Service-URLs via DokuWiki Config                          |
-| **VII: Integration Simplicity**    | Thin Wrapper, keine eigene Abstraktionen                     | ✅ Direkte DokuWiki API Nutzung                              |
-| **VIII: Direct Framework Usage**   | DokuWiki APIs direkt nutzen                                  | ✅ `ActionPlugin`, `AdminPlugin` extends                     |
+| Article                             | Requirement                                                     | Status                                                         |
+| ----------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------- |
+| **I: Layered Module Architecture**  | DokuWiki Plugin kommuniziert nur via HTTP mit externen Services | ✅ Plugin ist HTTP-Client zu MCP (Stack-H), Qdrant (Stack-D)   |
+| **II: JSON Interface Standard**     | JSON-RPC 2.0 fuer externe Service-Kommunikation                 | ✅ Implementiert in `action.php` (Client-seitig)               |
+| **II-B: Centralized YAML Config**   | ALLE Config in `config/env.yaml`, KEINE hardcodierten Werte     | 🔧 ZU IMPLEMENTIEREN                                           |
+| **IV: Language Standards**          | PHP PSR-12, `declare(strict_types=1)`                           | ✅ Alle PHP-Dateien konform                                    |
+| **V: Pragmatic Documentation**      | README fuer Scripts, PLACEHOLDER_env.yaml als Template          | 🔧 ZU IMPLEMENTIEREN                                           |
+| **VI: Secret Containment**          | Secrets in separaten Dateien, nicht in YAML                     | 🔧 ZU IMPLEMENTIEREN                                           |
+| **VII: Integration Simplicity**     | Thin Wrapper, keine eigene Abstraktionen                        | ✅ Direkte DokuWiki API Nutzung                                |
+| **VIII: Direct Framework Usage**    | DokuWiki APIs direkt nutzen                                     | ✅ `ActionPlugin`, `AdminPlugin` extends                       |
 
-**Scope-Compliance (Constitution v1.1.0):**
+**Scope-Compliance (Constitution v1.2.0):**
 - ✅ Plugin ist HTTP-Client (Service Gateway)
 - ✅ MCP Server ist OUT OF SCOPE (gehoert zu Stack-H)
 - ✅ Pipeline-Integration ist IN SCOPE (Admin-Interface zur Steuerung)
+- 🔧 Zentrale Config ist IN SCOPE und MUSS implementiert werden
 
 **Workflow Gates (aus Constitution):**
 
@@ -74,36 +79,37 @@ specs/001-plugin-dev-deploy/
 
 ```tree
 dev_dito/
-├── dokuwiki_plugin/                    # Plugin Source (EDITIERT HIER)
+│
+├── config/                             # ★ ZENTRALE KONFIGURATION ★
+│   ├── env.yaml                        # MASTER CONFIG (gitignored) 🔧
+│   ├── PLACEHOLDER_env.yaml            # Template mit Dokumentation 🔧
+│   ├── settings.json                   # Auto-generiert fuer PHP 🔧
+│   └── secrets/                        # Alle Secrets (gitignored) 🔧
+│       ├── json_rpc_api.token          # Wiki JSON-RPC API Key
+│       ├── ssl.cert                    # SSL Zertifikat
+│       └── openai.token                # OpenAI API Key
+│
+├── config.py                           # ★ ROOT-LEVEL CONFIG LOADER ★ 🔧
+│                                       # Laedt env.yaml, generiert settings.json
+│
+├── dokuwiki_plugin/                    # Plugin Source
 │   ├── plugin.info.txt                 # Plugin-Metadaten
 │   ├── action.php                      # Action Plugin (742 LOC)
-│   │   ├── register()                  # Event-Handler registrieren
-│   │   ├── handleRegisterAssets()      # CSS/JS laden
-│   │   ├── handleInjectPanel()         # Search-Panel UI
-│   │   ├── handleAjax()                # AJAX Endpoints
-│   │   ├── handlePingRequest()         # MCP Health Check
-│   │   └── handleSearchRequest()       # Semantische Suche
 │   ├── admin.php                       # Admin Plugin (463 LOC)
-│   │   ├── html()                      # Dashboard rendern
-│   │   ├── renderServiceStatusSection()# Service-Status Grid
-│   │   ├── renderConfigurationSection()# Config-Tabelle
-│   │   ├── testMcpServer()             # MCP Connection Test
-│   │   └── testQdrant()                # Qdrant Connection Test
+│   ├── lib/
+│   │   └── ConfigLoader.php            # Liest config/settings.json 🔧
 │   ├── conf/
-│   │   ├── default.php                 # Defaults: enabled=1, mcp_url, position
-│   │   └── metadata.php                # Schema: onoff, string, multichoice
-│   ├── lang/
-│   │   ├── de/                         # Deutsche Strings
-│   │   │   ├── lang.php                # UI-Texte
-│   │   │   └── settings.php            # Config-Labels
-│   │   └── en/                         # Englische Strings
-│   │       ├── lang.php
-│   │       └── settings.php
+│   │   ├── default.php                 # DokuWiki UI-Settings only
+│   │   └── metadata.php                # Schema fuer UI-Settings
+│   ├── lang/                           # Sprachdateien
 │   ├── dist/                           # Kompilierte Assets
-│   │   ├── devdito.min.css             # Spinner, Highlight, Print
-│   │   └── devdito.min.js              # Panel UI, AJAX Search
-│   ├── lib/                            # (leer, fuer zukuenftige Klassen)
-│   └── logo.png                        # 72x72 Plugin-Logo
+│   └── logo.png                        # Plugin-Logo
+│
+├── pipeline/                           # Pipeline-Module
+│   ├── 01_wiki_fetcher/                # Importiert: from config import ...
+│   ├── 02_deep_evaluation/             # Importiert: from config import ...
+│   ├── 03_embeddings_creator/          # Importiert: from config import ...
+│   └── 04_deploy/                      # Importiert: from config import ...
 │
 ├── scripts/                            # Development Scripts
 │   ├── deploy-plugin.ps1               # Deploy zum Test-Wiki ✅
@@ -115,8 +121,10 @@ dev_dito/
         └── plugins_dev\devdito\        # Deployment-Ziel
 ```
 
+**Legende**: ✅ = existiert, 🔧 = muss erstellt werden
+
 **Structure Decision**: Single DokuWiki Plugin mit zwei Plugin-Typen (Action + Admin).
-Kein separates Frontend/Backend da DokuWiki selbst das Frontend ist.
+Zentrale Config fuer ALLE Komponenten (Plugin + Pipeline).
 
 ## Component Architecture
 
@@ -211,15 +219,127 @@ Kein separates Frontend/Backend da DokuWiki selbst das Frontend ist.
                                          └───────────────┘
 ```
 
+### Zentrale Config-Architektur (Constitution Article II-B)
+
+```sketch
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         config/env.yaml (MASTER)                            │
+│  ┌────────────────────────────────────────────────────────────────────────┐ │
+│  │ APP:                                                                    │ │
+│  │   name: dev_dito                                                       │ │
+│  │   version: "0.1.0"                                                     │ │
+│  │                                                                        │ │
+│  │ PATHS:                                                                 │ │
+│  │   root_dir: D:/_Repositories/_Diploma_Thesis_Repositories/dev_dito    │ │
+│  │   config_dir: ${root_dir}/config                                      │ │
+│  │   secrets_dir: ${config_dir}/secrets                                  │ │
+│  │                                                                        │ │
+│  │ SOURCE_WIKI:                           # JSON-RPC API zum Schul-Wiki  │ │
+│  │   api:                                                                 │ │
+│  │     url: https://leowiki.htl-leonding.ac.at/lib/exe/jsonrpc.php       │ │
+│  │   authentication:                                                      │ │
+│  │     token_file: ${secrets_dir}/json_rpc_api.token  ← Separate Datei   │ │
+│  │   certificate: ${secrets_dir}/ssl.cert             ← Separate Datei   │ │
+│  │                                                                        │ │
+│  │ SERVICES:                              # Externe Service-Verbindungen │ │
+│  │   mcp_server:                                                          │ │
+│  │     url: http://wiki_dev_mcp_server:3000                              │ │
+│  │   qdrant:                                                              │ │
+│  │     host: qdrant_db                                                   │ │
+│  │     port: 6333                                                        │ │
+│  │                                                                        │ │
+│  │ PIPELINE:                              # Fetcher/Embedder Settings    │ │
+│  │   fetcher:                                                             │ │
+│  │     timeout: 30                                                       │ │
+│  │     exclude_namespaces: [playground, wiki]                            │ │
+│  └────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      │ Wird geladen von
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            config.py (Root-Level)                           │
+│  ┌────────────────────────────────────────────────────────────────────────┐ │
+│  │ def load_config():                                                      │ │
+│  │     # 1. Load env.yaml                                                 │ │
+│  │     # 2. Resolve ${var} placeholders                                   │ │
+│  │     # 3. Load secrets from files                                       │ │
+│  │     # 4. Generate settings.json for PHP                                │ │
+│  │     return config                                                      │ │
+│  │                                                                        │ │
+│  │ # Typisierte Exports                                                   │ │
+│  │ SOURCE_WIKI_URL = settings["SOURCE_WIKI"]["api"]["url"]                │ │
+│  │ MCP_SERVER_URL = settings["SERVICES"]["mcp_server"]["url"]             │ │
+│  │ QDRANT_HOST = settings["SERVICES"]["qdrant"]["host"]                   │ │
+│  └────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+          │                                           │
+          │ Python Import                             │ Auto-generiert
+          ▼                                           ▼
+┌─────────────────────────┐              ┌─────────────────────────────────────┐
+│   Pipeline-Module       │              │   config/settings.json              │
+│ ┌─────────────────────┐ │              │ ┌─────────────────────────────────┐ │
+│ │ from config import  │ │              │ │ {                               │ │
+│ │   SOURCE_WIKI_URL,  │ │              │ │   "SERVICES": {                 │ │
+│ │   QDRANT_HOST       │ │              │ │     "mcp_server": {             │ │
+│ └─────────────────────┘ │              │ │       "url": "http://..."       │ │
+│ • 01_wiki_fetcher       │              │ │     }                           │ │
+│ • 02_deep_evaluation    │              │ │   }                             │ │
+│ • 03_embeddings_creator │              │ │ }                               │ │
+│ • 04_deploy             │              │ └─────────────────────────────────┘ │
+└─────────────────────────┘              └─────────────────────────────────────┘
+                                                      │
+                                                      │ PHP liest JSON
+                                                      ▼
+                                         ┌─────────────────────────────────────┐
+                                         │   dokuwiki_plugin/lib/ConfigLoader  │
+                                         │ ┌─────────────────────────────────┐ │
+                                         │ │ function getConfig(): array     │ │
+                                         │ │   $json = file_get_contents(    │ │
+                                         │ │     '../config/settings.json'   │ │
+                                         │ │   );                            │ │
+                                         │ │   return json_decode($json);    │ │
+                                         │ └─────────────────────────────────┘ │
+                                         └─────────────────────────────────────┘
+```
+
 ## Configuration Schema
 
-### DokuWiki Plugin Configuration
+### Zentrale Configuration (config/env.yaml)
 
-| Setting                  | Type        | Default                           | Description                        |
-| ------------------------ | ----------- | --------------------------------- | ---------------------------------- |
-| `devdito_enabled`        | onoff       | `1`                               | Plugin aktivieren/deaktivieren     |
-| `devdito_mcp_url`        | string      | `http://wiki_dev_mcp_server:3000` | MCP Server URL (JSON-RPC Endpoint) |
-| `devdito_panel_position` | multichoice | `right`                           | Panel-Position (left/right)        |
+| Section | Key | Type | Description |
+| ------- | --- | ---- | ----------- |
+| `APP` | `name` | string | Projektname ("dev_dito") |
+| `APP` | `version` | string | Aktuelle Version |
+| `PATHS` | `root_dir` | path | Repository-Root |
+| `PATHS` | `config_dir` | path | `${root_dir}/config` |
+| `PATHS` | `secrets_dir` | path | `${config_dir}/secrets` |
+| `PATHS` | `output_dir` | path | `${root_dir}/output` |
+| `SOURCE_WIKI.api` | `url` | url | JSON-RPC Endpoint des Quell-Wikis |
+| `SOURCE_WIKI.api` | `base_url` | url | Base URL des Quell-Wikis |
+| `SOURCE_WIKI.authentication` | `token_file` | path | Pfad zum API Token |
+| `SOURCE_WIKI` | `certificate` | path | Pfad zum SSL Zertifikat |
+| `SERVICES.mcp_server` | `url` | url | MCP Server URL |
+| `SERVICES.mcp_server` | `timeout` | int | Request Timeout (Sekunden) |
+| `SERVICES.qdrant` | `host` | string | Qdrant Hostname |
+| `SERVICES.qdrant` | `port` | int | Qdrant Port |
+| `SERVICES.qdrant` | `collection` | string | Collection Name |
+| `SERVICES.openai` | `token_file` | path | Pfad zum OpenAI Token |
+| `SERVICES.openai` | `embedding_model` | string | Embedding Model Name |
+| `PIPELINE.fetcher` | `timeout` | int | Fetch Timeout |
+| `PIPELINE.fetcher` | `exclude_namespaces` | list | Auszuschliessende Namespaces |
+| `PIPELINE.embedder` | `chunk_size` | int | Chunk-Groesse |
+| `PLUGIN` | `enabled` | bool | Plugin aktivieren |
+| `PLUGIN` | `panel_position` | string | Panel-Position (left/right) |
+
+### DokuWiki Plugin UI-Settings (conf/default.php)
+
+Diese Settings sind NUR fuer die DokuWiki Admin UI - Werte werden aus `settings.json` ueberschrieben:
+
+| Setting                  | Type        | Default | Description                    |
+| ------------------------ | ----------- | ------- | ------------------------------ |
+| `devdito_enabled`        | onoff       | `1`     | Plugin aktivieren (UI toggle)  |
+| `devdito_panel_position` | multichoice | `right` | Panel-Position (UI selector)   |
 
 ### Deploy Script Configuration
 
@@ -351,28 +471,39 @@ conf/metadata.php
 
 ### Manual Testing Checklist
 
-1. **Deploy-Verification**
+1. **Zentrale Config (User Story 4)**
+   - [ ] `config/env.yaml` existiert und ist vollstaendig
+   - [ ] `config/PLACEHOLDER_env.yaml` existiert als Template
+   - [ ] `python config.py` generiert `config/settings.json`
+   - [ ] Keine hardcodierten URLs/Ports in Pipeline-Code
+   - [ ] Secrets in `config/secrets/` sind gitignored
+
+2. **Wiki Fetcher (User Story 5)**
+   - [ ] `python pipeline/01_wiki_fetcher/fetch.py --dry-run` liest zentrale Config
+   - [ ] Authentifizierung gegen Quell-Wiki funktioniert
+   - [ ] SSL Zertifikat wird korrekt geladen
+
+3. **Deploy-Verification (User Story 1)**
    - [ ] `deploy-plugin.ps1` laeuft ohne Fehler
-   - [ ] Alle 12 Dateien im Ziel-Verzeichnis
+   - [ ] Alle Dateien im Ziel-Verzeichnis
    - [ ] Version korrekt in Output
 
-2. **Plugin-Funktionalitaet**
+4. **Plugin-Funktionalitaet**
    - [ ] Admin-Menu "Dev Dito Core Setup" sichtbar
    - [ ] Dashboard zeigt Service-Status
-   - [ ] "Test All Services" Button funktioniert
+   - [ ] Plugin liest URLs aus `settings.json` (nicht hardcoded)
    - [ ] Search-Button in User Tools (eingeloggt)
-   - [ ] Panel oeffnet/schliesst mit Toggle
-   - [ ] Keyboard Shortcut Ctrl+Shift+F
 
-3. **Error Handling**
+5. **Error Handling**
    - [ ] Suche ohne MCP zeigt Fehler-Message
-   - [ ] Suche ohne Login zeigt 401
+   - [ ] Fehlende Config-Datei zeigt klare Fehlermeldung
 
-### Automated Checks (in Deploy-Script)
+### Automated Checks
 
-- PHP Syntax: `php -l` fuer alle .php Dateien
-- File Count: 12 Dateien erwartet
-- Version: Aus plugin.info.txt extrahiert
+- **Config Validation**: `python config.py --validate`
+- **No Hardcoding**: `grep -r "http://" pipeline/` findet nur Kommentare
+- **PHP Syntax**: `php -l` fuer alle .php Dateien
+- **Gitignore Check**: `git status` zeigt keine Secrets
 
 ## Complexity Tracking
 
@@ -388,6 +519,12 @@ Keine Constitution-Violations - Feature ist straightforward:
 ## Next Steps
 
 Nach Plan-Approval:
-1. `/tasks` Command ausfuehren fuer Task-Breakdown
-2. Fehlende Scripts implementieren (bump-version.ps1)
-3. User Story 2 (Asset Build) implementieren wenn noetig
+
+1. **`/tasks` Command ausfuehren** fuer detaillierten Task-Breakdown
+2. **Zentrale Config erstellen** (User Story 4 - P1):
+   - `config/env.yaml` + `PLACEHOLDER_env.yaml`
+   - `config.py` Root-Level Loader
+   - `config/secrets/` Verzeichnis
+3. **Pipeline-Module umstellen** auf zentrale Config
+4. **Wiki Fetcher Integration** (User Story 5 - P2)
+5. Deployment Scripts finalisieren

@@ -222,15 +222,26 @@ bleibt eher aktuell als externe Dokumente.
 
 ### Article VI: Secret Containment
 
-**Mandate**: Secrets (API Keys, Tokens, Passwoerter) werden ausschliesslich ueber `.env`
-Dateien und `env.yaml` verwaltet. Beide Dateiformate sind in `.gitignore` eingetragen.
-Placeholder-Dateien (`env.example.yaml`, `.env.example`) dokumentieren die benoetigten
-Variablen ohne Werte. Secrets werden niemals in Source Code, Commit Messages oder
-Log-Output geschrieben.
+**Mandate**: Secrets (API Keys, Tokens, Passwoerter) werden NIEMALS direkt in `env.yaml`
+gespeichert. Stattdessen referenziert `env.yaml` separate Secret-Dateien (siehe Article II-B):
 
-**Rationale**: Das Repository ist privat, aber API-Keys (OpenAI, SSH) duerfen trotzdem
-nicht im Git-Verlauf landen. Die aktuelle `.env`/`env.yaml`-Loesung ist fuer den
-Diplomarbeits-Kontext angemessen. Bei Bedarf kann auf Docker Secrets migriert werden.
+```yaml
+# RICHTIG: Token in separater Datei
+authentication:
+  token_file: ${config_dir}/api.token    # ← Datei enthaelt nur den Token
+
+# FALSCH: Token direkt in YAML
+authentication:
+  token: "sk-abc123..."                   # ← NIE SO!
+```
+
+Placeholder-Dateien (`PLACEHOLDER_*.yaml`, `PLACEHOLDER_*.token`) dokumentieren die
+benoetigten Werte ohne echte Secrets. Secrets werden niemals in Source Code, Commit
+Messages oder Log-Output geschrieben.
+
+**Rationale**: Das Repository ist privat, aber API-Keys (OpenAI, DokuWiki JSON-RPC, SSH)
+duerfen trotzdem nicht im Git-Verlauf landen. Separate Token-Dateien ermoeglichen
+einfaches Rotieren ohne YAML-Aenderung.
 
 **Enforcement**:
 - [ ] `.gitignore` enthaelt `*.env`, `env.yaml`, `*.token`, `*.cert`, `*.key`
@@ -416,11 +427,12 @@ Aenderungen an der Constitution erfordern:
 
 ## Amendment Log
 
-| Datum      | Version | Aenderung                       | Begruendung                                                                                                                                                                              |
-| ---------- | ------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-01-31 | 1.0.0   | Initiale Constitution erstellt  | Grundlage fuer Spec-Kit-basierte Entwicklung                                                                                                                                             |
-| 2026-01-31 | 1.1.0   | MCP Server Zuordnung korrigiert | MCP Server gehoert zu Stack-H (nicht Stack-G). Dev Dito ist Service Gateway (Client), nicht MCP Server (Provider). Architektur-Klarstellung hinzugefuegt. Scope Boundaries aktualisiert. |
+| Datum      | Version | Aenderung                            | Begruendung                                                                                                                                                                              |
+| ---------- | ------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-01-31 | 1.0.0   | Initiale Constitution erstellt       | Grundlage fuer Spec-Kit-basierte Entwicklung                                                                                                                                             |
+| 2026-01-31 | 1.1.0   | MCP Server Zuordnung korrigiert      | MCP Server gehoert zu Stack-H (nicht Stack-G). Dev Dito ist Service Gateway (Client), nicht MCP Server (Provider). Architektur-Klarstellung hinzugefuegt. Scope Boundaries aktualisiert. |
+| 2026-01-31 | 1.2.0   | Article II-B: Centralized YAML Config | ALLE Konfiguration in YAML auslagern, KEINE hardcodierten Variablen. Wiki Fetcher config.py Pattern als Standard fuer alle Module. |
 
 ---
 
-**Version**: 1.1.0 | **Ratified**: 2026-01-31 | **Last Amended**: 2026-01-31
+**Version**: 1.2.0 | **Ratified**: 2026-01-31 | **Last Amended**: 2026-01-31
