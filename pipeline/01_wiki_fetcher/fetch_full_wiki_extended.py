@@ -25,6 +25,14 @@ from config import (
     FETCH_CONFIG, get_fetch_config, get_setting
 )
 
+# Try to import progress tracker (may not be available in all environments)
+try:
+    from progress_tracker import ProgressTracker, create_tracker_from_env
+    PROGRESS_TRACKING_AVAILABLE = True
+except ImportError:
+    PROGRESS_TRACKING_AVAILABLE = False
+    ProgressTracker = None
+
 # Global fetcher reference for signal handler
 _current_fetcher: Optional["ExtendedWikiFetcher"] = None
 
@@ -76,9 +84,18 @@ class ExtendedWikiFetcher:
     """Extended wiki fetcher with ACL, links, and media support"""
     
     def __init__(self, output_dir: str | None = None, verbose: bool = True, 
-                 use_cache: bool = True, interactive: bool = True):
+                 use_cache: bool = True, interactive: bool = True,
+                 job_id: str | None = None):
         # Load config
         self.config = get_fetch_config()
+        
+        # Initialize progress tracker if available and job_id provided
+        self.tracker: Optional[ProgressTracker] = None
+        if PROGRESS_TRACKING_AVAILABLE and job_id:
+            self.tracker = ProgressTracker(job_id=job_id, stage="fetch")
+        elif PROGRESS_TRACKING_AVAILABLE:
+            # Try to create from environment
+            self.tracker = create_tracker_from_env()
         
         # Generate output directory name if not provided
         if output_dir is None:
@@ -231,6 +248,8 @@ class ExtendedWikiFetcher:
     
     def fetch_all_pages(self) -> List[Dict]:
         """Fetch complete page list using multiple methods for 100% coverage"""
+        if self.tracker:
+            self.tracker.set_step("[1/10] Fetching page list", 1)
         self.log("\n[1/10] Fetching page list...")
         self.log("-" * 50)
         
@@ -391,6 +410,8 @@ class ExtendedWikiFetcher:
     
     def extract_namespaces(self, pages: List[Dict]) -> Dict[str, List[str]]:
         """Extract namespace structure with detailed analysis"""
+        if self.tracker:
+            self.tracker.set_step("[2/10] Analyzing namespaces", 2)
         self.log("\n[2/10] Analyzing namespaces...")
         self.log("-" * 50)
         
@@ -470,6 +491,8 @@ class ExtendedWikiFetcher:
         and not just "teacher" for media files.
         """
         max_depth = self.config.max_namespace_depth
+        if self.tracker:
+            self.tracker.set_step("[3/10] Extracting namespaces for media", 3)
         self.log(f"\n[3/10] Extracting namespaces for media scanning (depth={max_depth})...")
         self.log("-" * 50)
         
@@ -501,6 +524,8 @@ class ExtendedWikiFetcher:
     
     def fetch_media_inventory(self, namespaces_to_scan: Set[str]) -> List[Dict]:
         """Fetch media files for ALL namespaces with detailed type analysis"""
+        if self.tracker:
+            self.tracker.set_step("[4/10] Fetching media inventory", 4)
         self.log("\n[4/10] Fetching media inventory...")
         self.log("-" * 50)
         
@@ -743,6 +768,8 @@ class ExtendedWikiFetcher:
         if self.use_cache and self.media_cache is None:
             self._init_media_cache()
         
+        if self.tracker:
+            self.tracker.set_step("[6/10] Downloading media files", 6)
         self.log("\n[6/10] Downloading media files...")
         self.log("-" * 50)
         if self.use_cache and self.media_cache:
@@ -798,6 +825,9 @@ class ExtendedWikiFetcher:
             if i % progress_interval == 0 or i == total:
                 cache_status = f" [Cache: {cached_count} hits]" if cached_count > 0 else ""
                 self.log(f"  Progress: {i}/{total} media files...{cache_status}")
+                # Update progress tracker
+                if self.tracker:
+                    self.tracker.update_progress(i, total, f"Media: {i}/{total}{cache_status}")
             
             # Try cache first
             if self.use_cache and self.media_cache:
@@ -1220,6 +1250,10 @@ class ExtendedWikiFetcher:
         """
         self.stats["fetch_info"]["start_time"] = datetime.now().isoformat()
         
+        # Start progress tracking
+        if self.tracker:
+            self.tracker.start(total_steps=10)
+        
         self.log("=" * 60)
         self.log("EXTENDED WIKI FETCH - 100% Coverage Goal")
         self.log("=" * 60)
@@ -1259,6 +1293,8 @@ class ExtendedWikiFetcher:
             }, f, indent=2, ensure_ascii=False)
         
         # 5. Fetch all page data first (to get links)
+        if self.tracker:
+            self.tracker.set_step("[7/10] Fetching page content", 7)
         self.log("\n[7/10] Fetching page content, metadata, ACL, and links...")
         self.log("-" * 50)
         
@@ -1269,6 +1305,9 @@ class ExtendedWikiFetcher:
         for i, page in enumerate(pages, 1):
             if i % progress_interval == 0 or i == total:
                 self.log(f"  Progress: {i}/{total} pages...")
+                # Update progress tracker
+                if self.tracker:
+                    self.tracker.update_progress(i, total, f"Seiten: {i}/{total}")
             
             self.fetch_and_save_page(page)
             time.sleep(request_delay)
@@ -1287,11 +1326,15 @@ class ExtendedWikiFetcher:
         self.collect_recent_changes()
         
         # 8. Finalize statistics
+        if self.tracker:
+            self.tracker.set_step("[8/10] Finalizing statistics", 8)
         self.log("\n[8/10] Finalizing statistics...")
         self.log("-" * 50)
         self._finalize_statistics()
         
         # 9. Create wiki inventory and reports
+        if self.tracker:
+            self.tracker.set_step("[9/10] Creating inventory and reports", 9)
         self.log("\n[9/10] Creating inventory and reports...")
         self.log("-" * 50)
         self._create_wiki_inventory()
@@ -1314,6 +1357,19 @@ class ExtendedWikiFetcher:
         
         # Print summary
         self.print_summary()
+        
+        # Mark progress as complete
+        if self.tracker:
+            final_stats = {
+                "pages_total": self.stats["pages"]["total"],
+                "pages_successful": self.stats["pages"]["successful"],
+                "pages_failed": self.stats["pages"]["failed"],
+                "media_total": self.stats["media"]["total"],
+                "media_downloaded": self.stats["media"]["downloaded"],
+                "duration_seconds": self.stats["fetch_info"]["duration_seconds"]
+            }
+            success = self.stats["pages"]["failed"] == 0
+            self.tracker.complete(stats=final_stats, success=success)
         
         return self.stats
     
@@ -1919,14 +1975,20 @@ def main():
                         help="Suppress verbose output")
     parser.add_argument("--auto-skip", action="store_true",
                         help="Non-interactive mode: auto-skip all permanent errors (4xx)")
+    parser.add_argument("--job-id", type=str, default=None,
+                        help="Job ID for progress tracking (used by orchestrator)")
     
     args = parser.parse_args()
+    
+    # Get job_id from args or environment
+    job_id = args.job_id or os.environ.get("JOB_ID")
     
     fetcher = ExtendedWikiFetcher(
         output_dir=args.output_dir, 
         verbose=not args.quiet,
         use_cache=not args.no_cache,
-        interactive=not args.auto_skip
+        interactive=not args.auto_skip,
+        job_id=job_id
     )
     _current_fetcher = fetcher  # Set global reference for signal handler
     

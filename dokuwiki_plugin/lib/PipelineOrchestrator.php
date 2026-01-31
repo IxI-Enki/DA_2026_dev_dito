@@ -176,6 +176,27 @@ class PipelineOrchestrator
     }
 
     /**
+     * Get live progress for current/specific job
+     *
+     * @param string|null $jobId Optional job ID (null = current progress)
+     * @return array Progress data
+     */
+    public function getProgress(?string $jobId = null): array
+    {
+        $endpoint = $jobId ? "/progress/$jobId" : "/progress";
+        $result = $this->callOrchestratorApi('GET', $endpoint);
+        
+        if ($result === null) {
+            return [
+                'status' => 'orchestrator_offline',
+                'message' => 'Orchestrator nicht erreichbar'
+            ];
+        }
+        
+        return $result;
+    }
+
+    /**
      * Call the Orchestrator HTTP API
      *
      * @param string $method HTTP method (GET, POST)

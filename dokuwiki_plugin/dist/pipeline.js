@@ -12,11 +12,20 @@ const DevDitoPipeline = {
     /** @type {number|null} Polling interval ID */
     pollInterval: null,
 
+    /** @type {number|null} Progress polling interval ID */
+    progressPollInterval: null,
+
     /** @type {number} Polling interval in milliseconds */
     pollIntervalMs: 5000,
 
+    /** @type {number} Progress polling interval in milliseconds (faster) */
+    progressPollIntervalMs: 2000,
+
     /** @type {boolean} Whether polling is active */
     isPolling: false,
+
+    /** @type {string|null} Current active job ID */
+    activeJobId: null,
 
     /**
      * Initialize the pipeline dashboard
@@ -40,8 +49,118 @@ const DevDitoPipeline = {
                 }
                 return response.json();
             })
-            .then(data => this.renderStages(data))
+            .then(data => {
+                this.renderStages(data);
+                
+                // Start progress polling if job is running
+                if (data.active_job && data.active_job.job_id) {
+                    this.activeJobId = data.active_job.job_id;
+                    this.startProgressPolling();
+                } else {
+                    this.activeJobId = null;
+                    this.stopProgressPolling();
+                }
+            })
             .catch(error => this.renderError(error));
+    },
+
+    /**
+     * Load live progress from server
+     */
+    loadProgress: function() {
+        const url = DOKU_BASE + 'lib/exe/ajax.php?call=devdito_progress';
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'running' || data.progress) {
+                    this.updateProgressDisplay(data);
+                } else if (data.status === 'success' || data.status === 'error') {
+                    // Job completed - reload full status
+                    this.stopProgressPolling();
+                    this.loadStatus();
+                }
+            })
+            .catch(error => {
+                console.error('[DevDito] Progress fetch error:', error);
+            });
+    },
+
+    /**
+     * Start polling for live progress
+     */
+    startProgressPolling: function() {
+        if (this.progressPollInterval) return;
+
+        console.log('[DevDito] Starting progress polling');
+        this.loadProgress(); // Initial load
+        this.progressPollInterval = setInterval(() => this.loadProgress(), this.progressPollIntervalMs);
+    },
+
+    /**
+     * Stop progress polling
+     */
+    stopProgressPolling: function() {
+        if (this.progressPollInterval) {
+            clearInterval(this.progressPollInterval);
+            this.progressPollInterval = null;
+            console.log('[DevDito] Stopped progress polling');
+        }
+    },
+
+    /**
+     * Update progress display with live data
+     * @param {Object} progress Progress data from server
+     */
+    updateProgressDisplay: function(progress) {
+        const container = document.querySelector('.devdito-active-job');
+        if (!container) return;
+
+        let html = `
+            <h3><span class="devdito-spinner"></span> ${this.escapeHtml(progress.current_step || 'Laeuft...')}</h3>
+            <p><strong>Job-ID:</strong> ${this.escapeHtml(progress.job_id || this.activeJobId)}</p>
+            <p><strong>Stufe:</strong> ${this.escapeHtml(progress.stage || '?')}</p>
+        `;
+
+        if (progress.started_at) {
+            const start = new Date(progress.started_at);
+            html += `<p><strong>Gestartet:</strong> ${start.toLocaleString('de-DE')}</p>`;
+        }
+
+        // Progress bar
+        const p = progress.progress || {};
+        const percent = p.percentage || 0;
+        const current = p.current || 0;
+        const total = p.total || 0;
+
+        html += `
+            <div class="devdito-progress">
+                <div class="devdito-progress-bar" style="width: ${percent}%"></div>
+            </div>
+            <p class="devdito-progress-text">${current} / ${total || '?'} (${percent}%)</p>
+        `;
+
+        // Message
+        if (progress.message) {
+            html += `<p class="devdito-progress-msg">${this.escapeHtml(progress.message)}</p>`;
+        }
+
+        // Substeps
+        if (progress.substeps && progress.substeps.length > 0) {
+            html += '<div class="devdito-substeps"><strong>Schritte:</strong><ul>';
+            progress.substeps.slice(-5).forEach(step => {
+                const icon = step.status === 'complete' ? '[OK]' : (step.status === 'running' ? '[...]' : '[ ]');
+                html += `<li>${icon} ${this.escapeHtml(step.step)}</li>`;
+            });
+            html += '</ul></div>';
+        }
+
+        // Errors
+        if (progress.errors && progress.errors.length > 0) {
+            html += `<p class="devdito-progress-errors">Fehler: ${progress.errors.length}</p>`;
+        }
+
+        container.innerHTML = html;
     },
 
     /**

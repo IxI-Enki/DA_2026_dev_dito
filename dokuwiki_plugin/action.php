@@ -133,6 +133,10 @@ class action_plugin_devdito extends ActionPlugin
                 $this->handleJobStatus();
                 return true;
 
+            case 'devdito_progress':
+                $this->handleProgress();
+                return true;
+
             default:
                 return false;
         }
@@ -209,6 +213,23 @@ class action_plugin_devdito extends ActionPlugin
         }
 
         $this->sendJsonResponse(['ok' => true, 'job' => $job]);
+    }
+
+    /**
+     * Handle live progress request.
+     * Returns real-time progress of current/specific job.
+     *
+     * @return void
+     */
+    private function handleProgress(): void
+    {
+        global $INPUT;
+        $jobId = $INPUT->str('job_id', '');
+
+        $orchestrator = new PipelineOrchestrator();
+        $progress = $orchestrator->getProgress($jobId ?: null);
+
+        $this->sendJsonResponse($progress);
     }
 
     /**

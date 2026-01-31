@@ -35,6 +35,7 @@ import uvicorn
 REPO_ROOT = Path(__file__).parent.parent.parent
 COMPOSE_FILE = REPO_ROOT / "backend_services" / "docker-compose.yml"
 STATUS_FILE = REPO_ROOT / "data" / "logs" / "pipeline_runs.json"
+PROGRESS_FILE = REPO_ROOT / "data" / "logs" / "pipeline_progress.json"
 
 # Pipeline stages
 STAGES = {
@@ -197,12 +198,16 @@ async def run_stage(stage: str):
     )
     
     try:
-        # Build docker compose command
+        # Build docker compose command with environment variables for progress tracking
+        # Use -p stack-g-devdito to match the main DokuWiki stack
         cmd = [
             "docker", "compose",
+            "-p", "stack-g-devdito",
             "-f", str(COMPOSE_FILE),
             "--profile", "pipeline",
             "run", "--rm",
+            "-e", f"JOB_ID={job_id}",
+            "-e", f"STAGE={stage}",
             container,
             job_id
         ]
@@ -242,6 +247,53 @@ async def get_job_status(job_id: str):
         raise HTTPException(status_code=404, detail=f"Job not found: {job_id}")
     
     return job
+
+
+@app.get("/progress")
+async def get_progress():
+    """Get current job progress (live updates from progress file)"""
+    if not PROGRESS_FILE.exists():
+        return {
+            "status": "no_progress",
+            "message": "No progress file found"
+        }
+    
+    try:
+        data = json.loads(PROGRESS_FILE.read_text())
+        return data
+    except json.JSONDecodeError:
+        return {
+            "status": "error",
+            "message": "Could not parse progress file"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/progress/{job_id}")
+async def get_job_progress(job_id: str):
+    """Get progress for a specific job"""
+    progress = await get_progress()
+    
+    # Check if progress is for the requested job
+    if progress.get("job_id") == job_id:
+        return progress
+    
+    # If not, check if job exists in status file
+    runs = load_status()
+    job = next((r for r in runs if r.get("job_id") == job_id), None)
+    
+    if job:
+        return {
+            "job_id": job_id,
+            "status": job.get("status", "unknown"),
+            "message": "Progress not available for this job"
+        }
+    
+    raise HTTPException(status_code=404, detail=f"Job not found: {job_id}")
 
 
 @app.post("/cancel/{job_id}")
