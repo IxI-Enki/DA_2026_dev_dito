@@ -1,0 +1,327 @@
+/**
+ * Dev Dito Pipeline Dashboard Styles
+ * ===================================
+ * 
+ * @license    GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * @author     Jan Ritt <j.ritt@htl-leonding.ac.at>
+ * @version    0.1.0
+ */
+
+/* Pipeline Grid */
+.devdito-pipeline-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Stage Card */
+.devdito-stage-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.devdito-stage-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Status colors on card border */
+.devdito-stage-card.status-success {
+    border-left: 4px solid #28a745;
+}
+
+.devdito-stage-card.status-error {
+    border-left: 4px solid #dc3545;
+}
+
+.devdito-stage-card.status-running {
+    border-left: 4px solid #007bff;
+}
+
+.devdito-stage-card.status-pending {
+    border-left: 4px solid #6c757d;
+}
+
+/* Stage Header */
+.devdito-stage-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.devdito-stage-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: #495057;
+    color: #fff;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 0.875rem;
+}
+
+.devdito-stage-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+/* Stage Description */
+.devdito-stage-desc {
+    color: #666;
+    font-size: 0.875rem;
+    margin: 0 0 0.75rem 0;
+}
+
+/* Stage Status */
+.devdito-stage-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Status Badge */
+.devdito-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.devdito-status-badge.status-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.devdito-status-badge.status-error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.devdito-status-badge.status-running {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.devdito-status-badge.status-pending {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* Last Run Time */
+.devdito-last-run {
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+/* Stage Stats */
+.devdito-stage-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 0.5rem 0;
+    font-size: 0.875rem;
+}
+
+.devdito-stage-stats span {
+    color: #495057;
+}
+
+.devdito-stage-stats strong {
+    color: #333;
+}
+
+/* Stage Error */
+.devdito-stage-error {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    font-size: 0.75rem;
+    color: #856404;
+    word-break: break-word;
+}
+
+/* Stage Duration */
+.devdito-stage-duration {
+    color: #6c757d;
+    font-size: 0.75rem;
+    margin: 0.25rem 0;
+}
+
+/* Run Button */
+.devdito-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.devdito-btn-run {
+    background: #007bff;
+    color: #fff;
+    width: 100%;
+    margin-top: 0.75rem;
+}
+
+.devdito-btn-run:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.devdito-btn-run:disabled {
+    background: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Spinner */
+.devdito-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: devdito-spin 0.75s linear infinite;
+}
+
+@keyframes devdito-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Qdrant Info Box */
+.devdito-qdrant-info {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.devdito-qdrant-info h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1rem;
+    color: #495057;
+}
+
+.devdito-qdrant-info p {
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
+}
+
+.devdito-qdrant-info .status-success {
+    color: #28a745;
+}
+
+.devdito-qdrant-info .status-error {
+    color: #dc3545;
+}
+
+/* Active Job Info */
+.devdito-active-job {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.devdito-active-job h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem 0;
+    font-size: 1rem;
+    color: #1565c0;
+}
+
+.devdito-active-job p {
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
+}
+
+/* Progress Bar */
+.devdito-progress {
+    background: #e0e0e0;
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+}
+
+.devdito-progress-bar {
+    background: #007bff;
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.devdito-progress-msg {
+    color: #666;
+    font-size: 0.75rem;
+    font-style: italic;
+}
+
+/* Error Box */
+.devdito-error-box {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.devdito-error-box h3 {
+    color: #721c24;
+    margin: 0 0 0.5rem 0;
+}
+
+.devdito-error-box p {
+    color: #856404;
+    margin: 0 0 1rem 0;
+}
+
+/* Warning */
+.devdito-warning {
+    color: #856404;
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    padding: 0.75rem;
+    text-align: center;
+}
+
+/* Loading */
+.devdito-loading {
+    text-align: center;
+    color: #6c757d;
+    padding: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .devdito-pipeline-grid {
+        grid-template-columns: 1fr;
+    }
+}

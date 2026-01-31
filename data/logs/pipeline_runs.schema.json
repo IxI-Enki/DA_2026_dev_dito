@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pipeline Runs",
+  "description": "Schema for pipeline_runs.json - tracks all pipeline job executions",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["job_id", "stage", "status", "started_at"],
+    "properties": {
+      "job_id": {
+        "type": "string",
+        "pattern": "^(fetch|evaluate|embed|deploy)_\\d{8}_\\d{6}$",
+        "description": "Unique job identifier: {stage}_{YYYYMMDD}_{HHMMSS}"
+      },
+      "stage": {
+        "type": "string",
+        "enum": ["fetch", "evaluate", "embed", "deploy"],
+        "description": "Pipeline stage identifier"
+      },
+      "status": {
+        "type": "string",
+        "enum": ["running", "success", "error", "interrupted"],
+        "description": "Current job status"
+      },
+      "started_at": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp when job started"
+      },
+      "finished_at": {
+        "type": ["string", "null"],
+        "format": "date-time",
+        "description": "ISO 8601 timestamp when job finished (null if still running)"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp of last status update"
+      },
+      "duration_seconds": {
+        "type": ["number", "null"],
+        "description": "Total execution time in seconds"
+      },
+      "output_dir": {
+        "type": ["string", "null"],
+        "description": "Relative path to output directory"
+      },
+      "stats": {
+        "type": ["object", "null"],
+        "description": "Stage-specific statistics",
+        "properties": {
+          "pages": { "type": "number" },
+          "media": { "type": "number" },
+          "chunks": { "type": "number" },
+          "vectors": { "type": "number" }
+        }
+      },
+      "error": {
+        "type": ["string", "null"],
+        "description": "Error message if status is 'error'"
+      },
+      "progress": {
+        "type": ["object", "null"],
+        "description": "Progress information for running jobs",
+        "properties": {
+          "current": { "type": "number" },
+          "total": { "type": "number" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}

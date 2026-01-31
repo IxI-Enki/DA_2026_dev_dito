@@ -36,7 +36,7 @@ if (!defined('DOKU_INC')) {
 class admin_plugin_devdito extends AdminPlugin
 {
     /** @var string Current plugin version */
-    private const VERSION = '0.1.0';
+    private const VERSION = '0.2.0';
 
     /**
      * HTL Color Palette Constants
@@ -129,6 +129,7 @@ class admin_plugin_devdito extends AdminPlugin
 
         $this->renderStyles();
         $this->renderHeader();
+        $this->renderPipelineSection();
         $this->renderServiceStatusSection();
         $this->renderConfigurationSection();
         $this->renderQuickActionsSection();
@@ -339,7 +340,30 @@ class admin_plugin_devdito extends AdminPlugin
         echo '<div class="devdito-admin">';
         echo '<div class="devdito-admin-header">';
         echo '<h1>Dev Dito Core Setup</h1>';
-        echo '<p>Manage extension configuration, service connections, and system status</p>';
+        echo '<p>Manage Wiki Embedding Pipeline, service connections, and system status</p>';
+        echo '</div>';
+    }
+
+    /**
+     * Render pipeline orchestration section.
+     *
+     * @return void
+     */
+    private function renderPipelineSection(): void
+    {
+        // Load pipeline CSS and JS
+        echo '<link rel="stylesheet" type="text/css" href="' . DOKU_BASE . 'lib/plugins/devdito/dist/pipeline.css">';
+        echo '<script src="' . DOKU_BASE . 'lib/plugins/devdito/dist/pipeline.js" defer></script>';
+
+        echo '<div class="devdito-card devdito-pipeline-card">';
+        echo '<h2>Wiki Embedding Pipeline</h2>';
+        echo '<p style="color: #666; margin-bottom: 16px;">Manage the Wiki content processing pipeline: Fetch, Evaluate, Embed, Deploy.</p>';
+        
+        // Container for JavaScript to populate
+        echo '<div id="devdito-pipeline-stages">';
+        echo '<p class="devdito-loading">Lade Pipeline-Status...</p>';
+        echo '</div>';
+        
         echo '</div>';
     }
 

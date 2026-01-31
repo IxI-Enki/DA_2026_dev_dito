@@ -21,9 +21,14 @@ use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\Event;
 use dokuwiki\Extension\EventHandler;
 
-// Load ConfigLoader for centralized configuration (Constitution Article II-B)
+// Load library classes (Constitution Article II-B)
 require_once __DIR__ . '/lib/ConfigLoader.php';
+require_once __DIR__ . '/lib/JobStatusManager.php';
+require_once __DIR__ . '/lib/PipelineOrchestrator.php';
+
 use dokuwiki\plugin\devdito\lib\ConfigLoader;
+use dokuwiki\plugin\devdito\lib\JobStatusManager;
+use dokuwiki\plugin\devdito\lib\PipelineOrchestrator;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -66,8 +71,8 @@ class action_plugin_devdito extends ActionPlugin
     {
         $action = $event->data;
 
-        // Only handle devdito admin AJAX calls
-        if (!str_starts_with($action, 'devdito_admin_')) {
+        // Only handle devdito AJAX calls
+        if (!str_starts_with($action, 'devdito_')) {
             return;
         }
 
@@ -76,7 +81,18 @@ class action_plugin_devdito extends ActionPlugin
 
         header('Content-Type: application/json; charset=utf-8');
 
-        // Check admin authorization
+        // Pipeline endpoints (public read, admin write)
+        if ($this->handlePipelineAjax($action)) {
+            return;
+        }
+
+        // Admin-only endpoints
+        if (!str_starts_with($action, 'devdito_admin_')) {
+            $this->sendJsonResponse(['ok' => false, 'error' => 'unknown_action'], 400);
+            return;
+        }
+
+        // Check admin authorization for admin_ endpoints
         global $INFO;
         if (!isset($INFO['isadmin']) || !$INFO['isadmin']) {
             $this->sendJsonResponse(['ok' => false, 'error' => 'unauthorized'], 401);
@@ -94,6 +110,106 @@ class action_plugin_devdito extends ActionPlugin
             default:
                 $this->sendJsonResponse(['ok' => false, 'error' => 'unknown_action'], 400);
         }
+    }
+
+    /**
+     * Handle Pipeline AJAX endpoints.
+     *
+     * @param string $action AJAX action name
+     * @return bool True if handled, false otherwise
+     */
+    private function handlePipelineAjax(string $action): bool
+    {
+        switch ($action) {
+            case 'devdito_pipeline_status':
+                $this->handlePipelineStatus();
+                return true;
+
+            case 'devdito_run_stage':
+                $this->handleRunStage();
+                return true;
+
+            case 'devdito_job_status':
+                $this->handleJobStatus();
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Handle pipeline status request.
+     * Returns status of all pipeline stages.
+     *
+     * @return void
+     */
+    private function handlePipelineStatus(): void
+    {
+        $orchestrator = new PipelineOrchestrator();
+        $status = $orchestrator->getStatus();
+        $this->sendJsonResponse($status);
+    }
+
+    /**
+     * Handle run stage request.
+     * Starts a pipeline stage as background job.
+     * Requires admin authorization.
+     *
+     * @return void
+     */
+    private function handleRunStage(): void
+    {
+        // Admin check
+        global $INFO;
+        if (!isset($INFO['isadmin']) || !$INFO['isadmin']) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Admin-Berechtigung erforderlich'], 401);
+            return;
+        }
+
+        // Get stage from POST body
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+
+        if (!isset($data['stage'])) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Stage parameter fehlt'], 400);
+            return;
+        }
+
+        $stage = $data['stage'];
+        $options = $data['options'] ?? [];
+
+        $orchestrator = new PipelineOrchestrator();
+        $result = $orchestrator->runStage($stage, $options);
+
+        $this->sendJsonResponse($result);
+    }
+
+    /**
+     * Handle job status request.
+     * Returns status of a specific job.
+     *
+     * @return void
+     */
+    private function handleJobStatus(): void
+    {
+        global $INPUT;
+        $jobId = $INPUT->str('job_id');
+
+        if (empty($jobId)) {
+            $this->sendJsonResponse(['ok' => false, 'error' => 'job_id parameter fehlt'], 400);
+            return;
+        }
+
+        $orchestrator = new PipelineOrchestrator();
+        $job = $orchestrator->getJobStatus($jobId);
+
+        if ($job === null) {
+            $this->sendJsonResponse(['ok' => false, 'error' => 'Job nicht gefunden'], 404);
+            return;
+        }
+
+        $this->sendJsonResponse(['ok' => true, 'job' => $job]);
     }
 
     /**
