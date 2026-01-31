@@ -160,9 +160,8 @@ class action_plugin_devdito extends ActionPlugin
      */
     private function handleRunStage(): void
     {
-        // Admin check
-        global $INFO;
-        if (!isset($INFO['isadmin']) || !$INFO['isadmin']) {
+        // Admin check - use auth_isadmin() for AJAX context
+        if (!$this->isUserAdmin()) {
             $this->sendJsonResponse(['success' => false, 'message' => 'Admin-Berechtigung erforderlich'], 401);
             return;
         }
@@ -402,6 +401,45 @@ class action_plugin_devdito extends ActionPlugin
             return $timeout;
         }
         return 30;
+    }
+
+    /**
+     * Check if current user is admin.
+     * Works in both regular page and AJAX context.
+     *
+     * @return bool True if user is admin
+     */
+    private function isUserAdmin(): bool
+    {
+        // Method 1: Try DokuWiki's auth_isadmin() function
+        if (function_exists('auth_isadmin')) {
+            global $USERINFO;
+            global $conf;
+            
+            // auth_isadmin needs username and groups
+            if (isset($_SERVER['REMOTE_USER'])) {
+                $user = $_SERVER['REMOTE_USER'];
+                $groups = $USERINFO['grps'] ?? [];
+                return auth_isadmin($user, $groups);
+            }
+        }
+        
+        // Method 2: Check $INFO (works on regular pages)
+        global $INFO;
+        if (isset($INFO['isadmin']) && $INFO['isadmin']) {
+            return true;
+        }
+        
+        // Method 3: Direct superuser check
+        global $conf;
+        if (isset($_SERVER['REMOTE_USER']) && isset($conf['superuser'])) {
+            $superusers = array_map('trim', explode(',', $conf['superuser']));
+            if (in_array($_SERVER['REMOTE_USER'], $superusers)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**
