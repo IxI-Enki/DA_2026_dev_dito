@@ -530,46 +530,47 @@ class admin_plugin_devdito extends AdminPlugin
     private function getAvailableConfigFiles(): array
     {
         $configDir = ConfigLoader::get('PATHS.config_dir');
-        if (!$configDir) {
-            // Fallback path
-            $pluginDir = dirname(__DIR__);
-            $configDir = dirname($pluginDir) . '/config';
+        
+        // Normalize path for Windows (forward slashes to backslashes)
+        if ($configDir) {
+            $configDir = str_replace('/', DIRECTORY_SEPARATOR, $configDir);
+        } else {
+            // Fallback: Can't determine config dir
+            return [
+                [
+                    'name' => 'Config nicht gefunden',
+                    'path' => '',
+                    'active' => false
+                ]
+            ];
         }
 
         $files = [];
         
-        // Check for env.yaml (active)
-        if (file_exists($configDir . '/env.yaml')) {
-            $files[] = [
-                'name' => 'env.yaml (aktiv)',
-                'path' => $configDir . '/env.yaml',
-                'active' => true
-            ];
+        // Define config files to check
+        $configFiles = [
+            'env.yaml' => ['name' => 'env.yaml (aktiv)', 'active' => true],
+            'env.development.yaml' => ['name' => 'env.development.yaml (Development)', 'active' => false],
+            'env.minimal.yaml' => ['name' => 'env.minimal.yaml (Minimal)', 'active' => false],
+            'PLACEHOLDER_env.yaml' => ['name' => 'PLACEHOLDER_env.yaml (Template)', 'active' => false],
+        ];
+        
+        foreach ($configFiles as $filename => $meta) {
+            $fullPath = $configDir . DIRECTORY_SEPARATOR . $filename;
+            if (file_exists($fullPath)) {
+                $files[] = [
+                    'name' => $meta['name'],
+                    'path' => $fullPath,
+                    'active' => $meta['active']
+                ];
+            }
         }
         
-        // Check for env.development.yaml
-        if (file_exists($configDir . '/env.development.yaml')) {
+        // If no files found, show the config dir for debugging
+        if (empty($files)) {
             $files[] = [
-                'name' => 'env.development.yaml (Development)',
-                'path' => $configDir . '/env.development.yaml',
-                'active' => false
-            ];
-        }
-        
-        // Check for env.minimal.yaml
-        if (file_exists($configDir . '/env.minimal.yaml')) {
-            $files[] = [
-                'name' => 'env.minimal.yaml (Minimal)',
-                'path' => $configDir . '/env.minimal.yaml',
-                'active' => false
-            ];
-        }
-        
-        // Check for PLACEHOLDER
-        if (file_exists($configDir . '/PLACEHOLDER_env.yaml')) {
-            $files[] = [
-                'name' => 'PLACEHOLDER_env.yaml (Template)',
-                'path' => $configDir . '/PLACEHOLDER_env.yaml',
+                'name' => 'Keine Config in: ' . $configDir,
+                'path' => $configDir,
                 'active' => false
             ];
         }

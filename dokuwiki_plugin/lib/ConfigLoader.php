@@ -99,9 +99,11 @@ class ConfigLoader
     public static function getConfigPath(): string
     {
         if (self::$configPath === null) {
-            // Plugin is in dokuwiki_plugin/, config is in config/
-            // Path: dokuwiki_plugin/lib/ConfigLoader.php -> ../../config/settings.json
-            self::$configPath = dirname(__DIR__, 2) . '/config/settings.json';
+            // When deployed: lib/ConfigLoader.php -> ../config/settings.json
+            // Structure: devdito/lib/ConfigLoader.php
+            //           devdito/config/settings.json
+            $pluginDir = dirname(__DIR__);  // Go from lib/ to plugin root
+            self::$configPath = $pluginDir . '/config/settings.json';
         }
         return self::$configPath;
     }
