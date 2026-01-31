@@ -1,6 +1,6 @@
 # Feature Specification: DokuWiki Plugin Dev Dito - Development & Deployment
 
-**Feature Branch**: `001-wiki-fetcher-integration`  
+**Feature Branch**: `001-plugin-dev-deploy`  
 **Created**: 2026-01-31  
 **Status**: Draft  
 **Input**: User description: "DokuWiki Extension Development mit automatischem Deployment zum lokalen Test-Wiki"
