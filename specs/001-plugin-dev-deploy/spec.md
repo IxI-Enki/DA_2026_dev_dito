@@ -7,10 +7,18 @@
 
 ## Kontext
 
-Dev Dito ist eine DokuWiki Extension (Plugin) die:
-- Service Gateway fuer AI Services (Ollama, LMStudio, Qdrant) bereitstellt
-- Semantische Wiki-Suche via MCP Server ermoeglicht
-- Admin-Dashboard fuer Service-Monitoring bietet
+Dev Dito ist eine DokuWiki Extension (Plugin) die als **Service Gateway** fungiert:
+
+- **HTTP-Client** zu externen AI-Services (verbindet sich mit, enthaelt nicht):
+  - MCP Server (Stack-H) - fuer semantische Suche
+  - Qdrant (Stack-D) - fuer Health-Checks
+  - Ollama/LMStudio (Stack-D) - fuer LLM-Status
+- **Admin-Dashboard** fuer Service-Monitoring und -Konfiguration
+- **Pipeline-Steuerung** (zukuenftig): Fetcher, Evaluator, Embedder, Deploy
+
+**Architektur-Hinweis (Constitution v1.1.0):**
+> Dev Dito ist Stack-G und **VERBINDET sich mit** externen Services.
+> Der MCP Server ist **NICHT Teil** von Dev Dito (gehoert zu Stack-H).
 
 **Source**: `D:\_Repositories\_Diploma_Thesis_Repositories\dev_dito\dokuwiki_plugin\`  
 **Target Wiki**: `D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\development\first_own_dokuwiki`  

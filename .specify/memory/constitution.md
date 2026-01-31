@@ -1,10 +1,15 @@
 # Dev Dito Constitution
 
-> Dev Dito ist ein Service Addon fuer DokuWiki zur Verwaltung der Wiki-Embedding-Pipeline
-> und zugehoeriger Backend-Services. Es integriert bestehende Pipeline-Module (Wiki Fetcher,
+> Dev Dito ist ein Service Gateway Addon fuer DokuWiki zur Verwaltung der Wiki-Embedding-Pipeline
+> und externer AI-Services. Es integriert bestehende Pipeline-Module (Wiki Fetcher,
 > Deep Evaluation, Embeddings Creator, Deploy) in eine steuerbare Einheit mit DokuWiki
-> Admin-Interface, MCP Server und Qdrant-Anbindung. Dev Dito ist Stack-G einer 9-Stack
-> Docker-Architektur und stellt Backend-Infrastruktur fuer Leonidas (AI Chat Frontend) bereit.
+> Admin-Interface. Dev Dito ist Stack-G einer 9-Stack Docker-Architektur.
+>
+> **Wichtige Architektur-Klarstellung:**
+> - Dev Dito **VERBINDET sich mit** externen Services (MCP Server, Qdrant, LLM)
+> - Dev Dito **ENTHAELT NICHT** den MCP Server (dieser ist Teil von Stack-H)
+> - Das `backend_services/` Verzeichnis dient nur der lokalen Entwicklung/Tests
+> - In Production laufen MCP Server, Qdrant etc. in separaten Stacks (D, H)
 >
 > Diese Constitution gilt ausschliesslich fuer das `dev_dito` Repository. Sie regelt die
 > Integration bestehender Pipeline-Skripte, die DokuWiki-Plugin-Entwicklung und die
@@ -13,16 +18,16 @@
 
 ## Project Identity
 
-| Eigenschaft | Wert |
-|-------------|------|
-| **Projekt** | Dev Dito - Wiki Embedding Pipeline & Service Addon |
-| **Team** | Jan Ritt (IxI-Enki), Imre Obermüller |
-| **Kontext** | Diplomarbeit 2026, HTL Leonding |
-| **Stack** | Python 3.11+ (Pipeline), PHP (DokuWiki Plugin), Docker/Docker Compose |
-| **Deployment** | Docker lokal + Raspberry Pi (SSH Deploy) |
-| **Zielgruppe** | Wiki-Administrator (primaer Entwickler selbst) |
-| **Architektur-Rolle** | Stack-G in Multi-Stack Docker-Architektur (Stacks A-I) |
-| **Version** | 0.1.0-alpha |
+| Eigenschaft           | Wert                                                                  |
+| --------------------- | --------------------------------------------------------------------- |
+| **Projekt**           | Dev Dito - Wiki Embedding Pipeline & Service Addon                    |
+| **Team**              | Jan Ritt (IxI-Enki), Imre Obermüller                                  |
+| **Kontext**           | Diplomarbeit 2026, HTL Leonding                                       |
+| **Stack**             | Python 3.11+ (Pipeline), PHP (DokuWiki Plugin), Docker/Docker Compose |
+| **Deployment**        | Docker lokal + Raspberry Pi (SSH Deploy)                              |
+| **Zielgruppe**        | Wiki-Administrator (primaer Entwickler selbst)                        |
+| **Architektur-Rolle** | Stack-G in Multi-Stack Docker-Architektur (Stacks A-I)                |
+| **Version**           | 0.1.0-alpha                                                           |
 
 ---
 
@@ -79,22 +84,82 @@ von Qdrant und OpenAI APIs bereits verwendet.
 
 ---
 
+### Article II-B: Centralized YAML Configuration (No Hardcoding)
+
+**Mandate**: ALLE Konfigurationswerte werden in YAML-Dateien (`config/env.yaml`) ausgelagert.
+Es gibt KEINE hardcodierten Variablen im Code. Jedes Modul (Pipeline, Plugin, Service) folgt
+dem gleichen Pattern wie der Wiki Fetcher: Eine zentrale `config.py`/`config.php` laedt
+Werte aus `env.yaml`, loest Platzhalter (`${var}`) auf und stellt typisierte Exports bereit.
+
+**Pattern (aus Wiki Fetcher uebernommen):**
+```
+module/
+├── config/
+│   ├── env.yaml              # Aktive Konfiguration (in .gitignore)
+│   ├── PLACEHOLDER_env.yaml  # Template mit Dokumentation
+│   ├── settings.json         # Auto-generiert aus env.yaml
+│   └── *.token, *.cert       # Secrets (in .gitignore)
+└── config.py                 # Laedt env.yaml, exportiert typisierte Werte
+```
+
+**Rationale**: Der Wiki Fetcher demonstriert das ideale Config-Pattern:
+- Alle Werte zentral und dokumentiert
+- Platzhalter fuer Pfad-Aufloesung (`${root_dir}/config`)
+- Secrets in separaten Dateien (nicht in YAML)
+- Auto-generiertes `settings.json` fuer Debugging
+- Type-sichere Exports im Code
+
+**Enforcement**:
+- [ ] Kein String-Literal im Code, das eine URL, einen Pfad oder einen Port enthaelt
+- [ ] Jedes Modul hat `config/env.yaml` und `config/PLACEHOLDER_env.yaml`
+- [ ] Python-Module haben `config.py` mit `load_config()` Funktion
+- [ ] PHP-Dateien lesen Config ueber DokuWiki `$conf[]` ODER eigene `config.php`
+- [ ] Alle `.yaml`, `.token`, `.cert`, `.key` Dateien in `.gitignore`
+- [ ] Docker-Services nutzen `${VARIABLE}` Syntax in `docker-compose.yml`
+
+**Standard-Struktur fuer env.yaml:**
+```yaml
+APP:
+  name: module_name
+  version: "1.0.0"
+
+PATHS:
+  root_dir: /path/to/module
+  config_dir: ${root_dir}/config
+  output_dir: ${root_dir}/output
+
+API:
+  url: https://example.com/api
+  authentication:
+    type: bearer
+    token_file: ${config_dir}/api.token
+  certificate: ${config_dir}/ssl.cert
+
+# Module-spezifische Einstellungen...
+```
+
+**References**:
+- Wiki Fetcher config.py: `pipeline/01_wiki_fetcher/config.py`
+- [PyYAML Documentation](https://pyyaml.org/wiki/PyYAMLDocumentation)
+- [12-Factor App Config](https://12factor.net/config)
+
+---
+
 ### Article III: Critical-Path Unit Testing
 
 **Mandate**: Unit-Tests sind fuer kritische Logik erforderlich: Embedding-Pipeline
-(Chunking, Embedding-Generierung), MCP Server (Tool-Routing, Query-Verarbeitung) und
-Qdrant-Integration (Collection-Init, Upsert-Logik). Nicht-kritische Hilfsfunktionen,
-UI-Code und Konfigurationslogik erfordern keine Tests. Health-Checks fuer Docker-Services
-sind als Smoke-Tests implementiert.
+(Chunking, Embedding-Generierung), HTTP-Client-Integration (MCP-Aufrufe, Qdrant-Health-Checks)
+und Pipeline-Orchestrierung. Nicht-kritische Hilfsfunktionen, UI-Code und Konfigurationslogik
+erfordern keine Tests. Health-Checks fuer Docker-Services sind als Smoke-Tests implementiert.
 
 **Rationale**: Vollstaendige Testabdeckung waere fuer eine Diplomarbeit mit zwei Entwicklern
 unverhältnismaessig. Tests dort, wo Fehler schwer zu diagnostizieren sind (Embedding-Qualitaet,
-Vektor-Dimensionen, JSON-RPC-Routing), liefern den hoechsten Nutzen.
+Vektor-Dimensionen, HTTP-Timeouts), liefern den hoechsten Nutzen.
 
 **Enforcement**:
 - [ ] `pipeline/03_embeddings_creator/` hat Unit-Tests fuer Chunking und Embedding-Output-Format
-- [ ] `backend_services/wiki_dev_mcp_server/` hat Tests fuer Tool-Discovery und Tool-Invocation
-- [ ] `backend_services/qdrant_db/` hat Tests fuer Collection-Schema-Validierung
+- [ ] `dokuwiki_plugin/` HTTP-Client-Code hat Tests fuer JSON-RPC Request/Response-Format
+- [ ] `backend_services/qdrant_db/` hat Tests fuer Collection-Schema-Validierung (lokale Dev)
 - [ ] Docker-Services definieren `healthcheck` in `docker-compose.yml`
 - [ ] Tests sind mit `pytest` (Python) bzw. `phpunit` (PHP) ausfuehrbar
 
@@ -231,10 +296,10 @@ Vorteil direkter Framework-Nutzung.
 ### Article IX: Realistic Integration Testing
 
 **Mandate**: Integration-Tests laufen gegen echte Docker-Services, nicht gegen Mocks.
-Qdrant-Tests verwenden eine Test-Collection im laufenden Qdrant-Container. MCP-Server-Tests
-senden echte JSON-RPC-Requests. Pipeline-Integration-Tests verwenden einen reduzierten
-Datensatz (10-20 Seiten statt des gesamten Wikis). OpenAI-API-Aufrufe in Tests verwenden
-einen Mock oder gecachte Responses, um Kosten zu vermeiden.
+Qdrant-Tests verwenden eine Test-Collection im laufenden Qdrant-Container. HTTP-Client-Tests
+im Plugin senden echte Requests gegen lokale Dev-Services. Pipeline-Integration-Tests
+verwenden einen reduzierten Datensatz (10-20 Seiten statt des gesamten Wikis).
+OpenAI-API-Aufrufe in Tests verwenden einen Mock oder gecachte Responses, um Kosten zu vermeiden.
 
 **Rationale**: Dev Dito ist ein Integrationsprojekt -- die meisten Fehler entstehen an den
 Schnittstellen zwischen Komponenten, nicht innerhalb einzelner Funktionen. Mocks fuer
@@ -243,7 +308,7 @@ Docker-Services verschleiern genau die Fehler, die in Produktion auftreten.
 **Enforcement**:
 - [ ] `docker-compose.yml` oder separates `docker-compose.test.yml` fuer Test-Umgebung
 - [ ] Qdrant-Tests erstellen und loeschen eigene Test-Collections
-- [ ] MCP-Server-Tests validieren JSON-RPC Request/Response-Format
+- [ ] Plugin HTTP-Client-Tests validieren JSON-RPC Request/Response-Format gegen lokale Services
 - [ ] OpenAI-Embedding-Aufrufe in Tests sind gemockt oder verwenden gecachte Responses
 - [ ] Test-Datensatz ist ein definiertes Subset (max. 20 Wiki-Seiten)
 
@@ -301,32 +366,35 @@ Pipeline-Fehler werden wie folgt behandelt:
 
 ## Naming Conventions
 
-| Kontext | Convention | Beispiel |
-|---------|-----------|---------|
-| Docker Container | `devdito_*` Praefix | `devdito_mcp_server`, `devdito_qdrant_init` |
-| Pipeline-Module | `NN_name` Nummerierung | `01_wiki_fetcher`, `02_deep_evaluation` |
-| Python Packages | `snake_case` | `embeddings_creator`, `wiki_fetcher` |
-| PHP Klassen | `PascalCase` | `ServiceGateway`, `AdminPanel` |
-| DokuWiki Seiten | `devdito:name` Namespace | `devdito:dashboard`, `devdito:services` |
-| Docker Ports (Stack-G) | 3000-3001, 8085 | MCP Server: 3000, Reserve: 3001 |
+| Kontext                | Convention               | Beispiel                                    |
+| ---------------------- | ------------------------ | ------------------------------------------- |
+| Docker Container       | `devdito_*` Praefix      | `devdito_mcp_server`, `devdito_qdrant_init` |
+| Pipeline-Module        | `NN_name` Nummerierung   | `01_wiki_fetcher`, `02_deep_evaluation`     |
+| Python Packages        | `snake_case`             | `embeddings_creator`, `wiki_fetcher`        |
+| PHP Klassen            | `PascalCase`             | `ServiceGateway`, `AdminPanel`              |
+| DokuWiki Seiten        | `devdito:name` Namespace | `devdito:dashboard`, `devdito:services`     |
+| Docker Ports (Stack-G) | 3000-3001, 8085          | MCP Server: 3000, Reserve: 3001             |
 
 ---
 
 ## Scope Boundaries
 
 ### In Scope
-- Integration der Pipeline-Module als Thin Wrappers in Dev Dito
-- DokuWiki Plugin Entwicklung (Admin-Interface, Button-Aktionen, AJAX-Endpoints)
-- Docker-Service-Konfiguration (docker-compose.yml, Dockerfiles)
-- MCP Server Entwicklung und Wartung
-- Qdrant Collection-Management (Init, Upsert, Health-Check)
+- DokuWiki Plugin Entwicklung (Admin-Interface, Service-Dashboard, AJAX-Endpoints)
+- Integration der Pipeline-Module als Thin Wrappers (Fetcher, Evaluator, Embedder, Deploy)
+- Pipeline-Orchestrierung via Admin-Interface (Start, Stop, Monitor)
+- HTTP-Client-Integration zu externen Services (MCP Server, Qdrant, LLM)
+- Docker-Service-Konfiguration fuer **Stack-G** (docker-compose.yml, Dockerfiles)
+- Lokale Entwicklungs-Services in `backend_services/` (NUR fuer lokale Tests)
 - SSH Deploy zum Raspberry Pi
 
 ### Out of Scope
+- **MCP Server Entwicklung** → Gehoert zu Stack-H (extension-mcp-servers-services)
+- **Qdrant Server Setup** → Gehoert zu Stack-D (extensions-ai-core-services)
+- **LLM Server Setup** (Ollama/LMStudio) → Gehoert zu Stack-D
 - Ueberarbeitung der bestehenden Pipeline-Skripte (`research/techstack/` Verzeichnis)
-- Leonidas Frontend Plugin Entwicklung (separates Projekt)
-- Keycloak Konfiguration (Stack-B)
-- LLM Server Setup (Ollama/LMStudio -- extern)
+- Leonidas ChatBot Plugin Entwicklung → Gehoert zu Stack-I (separates Projekt)
+- Keycloak Konfiguration → Gehoert zu Stack-B
 - Andere Stacks (A-F, H-I) ausser deren dokumentierte Schnittstellen
 
 ---
@@ -348,10 +416,11 @@ Aenderungen an der Constitution erfordern:
 
 ## Amendment Log
 
-| Datum | Version | Aenderung | Begruendung |
-|-------|---------|-----------|-------------|
-| 2026-01-31 | 1.0.0 | Initiale Constitution erstellt | Grundlage fuer Spec-Kit-basierte Entwicklung |
+| Datum      | Version | Aenderung                       | Begruendung                                                                                                                                                                              |
+| ---------- | ------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-01-31 | 1.0.0   | Initiale Constitution erstellt  | Grundlage fuer Spec-Kit-basierte Entwicklung                                                                                                                                             |
+| 2026-01-31 | 1.1.0   | MCP Server Zuordnung korrigiert | MCP Server gehoert zu Stack-H (nicht Stack-G). Dev Dito ist Service Gateway (Client), nicht MCP Server (Provider). Architektur-Klarstellung hinzugefuegt. Scope Boundaries aktualisiert. |
 
 ---
 
-**Version**: 1.0.0 | **Ratified**: 2026-01-31 | **Last Amended**: 2026-01-31
+**Version**: 1.1.0 | **Ratified**: 2026-01-31 | **Last Amended**: 2026-01-31
