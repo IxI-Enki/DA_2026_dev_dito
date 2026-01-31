@@ -57,10 +57,11 @@ class PipelineOrchestrator
     {
         $this->statusManager = new JobStatusManager();
         
-        // Get Orchestrator URL from config (default: localhost:8089)
+        // Get Orchestrator URL from config
+        // Default uses host.docker.internal for Docker container → Host communication
         $this->orchestratorUrl = ConfigLoader::get(
             'PIPELINE_ORCHESTRATION.orchestrator.url',
-            'http://localhost:8089'
+            'http://host.docker.internal:8089'
         );
     }
 
