@@ -113,64 +113,72 @@ services:
       - devdito_network
 
   # ==========================================================================
-  # Pipeline Module: Deep Evaluator (Placeholder)
+  # Pipeline Module: Content Evaluator
   # ==========================================================================
-  # module_evaluator:
-  #   build:
-  #     context: ./module_evaluator
-  #     dockerfile: Dockerfile
-  #   container_name: dev-dito-module-evaluator
-  #   profiles: ["pipeline"]
-  #   volumes:
-  #     - ../config:/config:ro
-  #     - ../data:/data
-  #     - ../pipeline/02_deep_evaluation:/pipeline/02_deep_evaluation:ro
-  #   environment:
-  #     - CONFIG_PATH=/config/env.yaml
-  #     - OLLAMA_HOST=${OLLAMA_HOST:-ollama}
-  #   networks:
-  #     - devdito_network
+  # Usage: docker compose --profile pipeline run --rm module_evaluator <job_id>
+  module_evaluator:
+    build:
+      context: ./module_evaluator
+      dockerfile: Dockerfile
+    container_name: dev-dito-module-evaluator
+    profiles: ["pipeline"]
+    volumes:
+      - ../config:/config:ro
+      - ../data:/data
+      - ../pipeline/02_deep_evaluation:/pipeline/02_deep_evaluation:ro
+    environment:
+      - CONFIG_PATH=/config/env.yaml
+      - DATA_PATH=/data
+      - PIPELINE_PATH=/pipeline/02_deep_evaluation
+    networks:
+      - devdito_network
 
   # ==========================================================================
-  # Pipeline Module: Embeddings Creator (Placeholder)
+  # Pipeline Module: Embeddings Creator
   # ==========================================================================
-  # module_embedder:
-  #   build:
-  #     context: ./module_embedder
-  #     dockerfile: Dockerfile
-  #   container_name: dev-dito-module-embedder
-  #   profiles: ["pipeline"]
-  #   volumes:
-  #     - ../config:/config:ro
-  #     - ../data:/data
-  #     - ../pipeline/03_embeddings_creator:/pipeline/03_embeddings_creator:ro
-  #   environment:
-  #     - CONFIG_PATH=/config/env.yaml
-  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
-  #   networks:
-  #     - devdito_network
+  # Usage: docker compose --profile pipeline run --rm module_embedder <job_id>
+  module_embedder:
+    build:
+      context: ./module_embedder
+      dockerfile: Dockerfile
+    container_name: dev-dito-module-embedder
+    profiles: ["pipeline"]
+    volumes:
+      - ../config:/config:ro
+      - ../data:/data
+      - ../pipeline/03_embeddings_creator:/pipeline/03_embeddings_creator:ro
+    environment:
+      - CONFIG_PATH=/config/env.yaml
+      - DATA_PATH=/data
+      - PIPELINE_PATH=/pipeline/03_embeddings_creator
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    networks:
+      - devdito_network
 
   # ==========================================================================
-  # Pipeline Module: Qdrant Deployer (Placeholder)
+  # Pipeline Module: Qdrant Deployer
   # ==========================================================================
-  # module_deployer:
-  #   build:
-  #     context: ./module_deployer
-  #     dockerfile: Dockerfile
-  #   container_name: dev-dito-module-deployer
-  #   profiles: ["pipeline"]
-  #   depends_on:
-  #     qdrant_db:
-  #       condition: service_healthy
-  #   volumes:
-  #     - ../config:/config:ro
-  #     - ../data:/data
-  #   environment:
-  #     - CONFIG_PATH=/config/env.yaml
-  #     - QDRANT_HOST=qdrant_db
-  #     - QDRANT_PORT=6333
-  #   networks:
-  #     - devdito_network
+  # Usage: docker compose --profile pipeline run --rm module_deployer <job_id>
+  module_deployer:
+    build:
+      context: ./module_deployer
+      dockerfile: Dockerfile
+    container_name: dev-dito-module-deployer
+    profiles: ["pipeline"]
+    depends_on:
+      qdrant_db:
+        condition: service_healthy
+    volumes:
+      - ../config:/config:ro
+      - ../data:/data
+    environment:
+      - CONFIG_PATH=/config/env.yaml
+      - DATA_PATH=/data
+      - QDRANT_HOST=qdrant_db
+      - QDRANT_PORT=6333
+      - COLLECTION_NAME=wiki_embeddings
+    networks:
+      - devdito_network
 
 volumes:
   qdrant_storage:
