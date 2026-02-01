@@ -107,17 +107,17 @@ function Wait-ForDockerReady {
 
 function Test-NetworkExists {
     $networks = docker network ls --format "{{.Name}}" 2>&1
-    return $networks -contains "htl-wiki-network"
+    return $networks -contains "leonidas-network"
 }
 
 function New-HtlWikiNetwork {
     if (Test-NetworkExists) {
-        Write-Host "[OK] Network 'htl-wiki-network' already exists" -ForegroundColor Green
+        Write-Host "[OK] Network 'leonidas-network' already exists" -ForegroundColor Green
         return $true
     }
     
-    Write-Host "[INFO] Creating network 'htl-wiki-network'..." -ForegroundColor Cyan
-    docker network create --driver bridge --attachable htl-wiki-network 2>&1 | Out-Null
+    Write-Host "[INFO] Creating network 'leonidas-network'..." -ForegroundColor Cyan
+    docker network create --driver bridge --attachable leonidas-network 2>&1 | Out-Null
     return $LASTEXITCODE -eq 0
 }
 
@@ -189,7 +189,7 @@ function Step-Network {
     }
     
     # Show connected containers
-    $containers = docker network inspect htl-wiki-network --format '{{range .Containers}}{{.Name}} {{end}}' 2>&1
+    $containers = docker network inspect leonidas-network --format '{{range .Containers}}{{.Name}} {{end}}' 2>&1
     if ($containers -and $LASTEXITCODE -eq 0) {
         $containerList = ($containers -split '\s+' | Where-Object { $_ })
         if ($containerList.Count -gt 0) {

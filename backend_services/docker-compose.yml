@@ -36,7 +36,7 @@ services:
       - DATA_PATH=/data
       - DOCKER_HOST=unix:///var/run/docker.sock
     networks:
-      - htl-wiki-network
+      - leonidas-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8089/health"]
       interval: 30s
@@ -68,7 +68,7 @@ services:
       - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
       - SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
     networks:
-      - htl-wiki-network
+      - leonidas-network
 
   # ==========================================================================
   # Pipeline Module: Content Evaluator
@@ -89,7 +89,7 @@ services:
       - DATA_PATH=/data
       - PIPELINE_PATH=/pipeline/02_deep_evaluation
     networks:
-      - htl-wiki-network
+      - leonidas-network
 
   # ==========================================================================
   # Pipeline Module: RAG Preprocessor
@@ -110,7 +110,7 @@ services:
       - DATA_PATH=/data
       - PIPELINE_PATH=/pipeline/03_rag_preprocessing
     networks:
-      - htl-wiki-network
+      - leonidas-network
 
   # ==========================================================================
   # Pipeline Module: Embeddings Creator
@@ -132,7 +132,7 @@ services:
       - PIPELINE_PATH=/pipeline/03_embeddings_creator
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     networks:
-      - htl-wiki-network
+      - leonidas-network
 
   # ==========================================================================
   # Pipeline Module: Qdrant Deployer
@@ -155,7 +155,7 @@ services:
       - QDRANT_PORT=6333
       - COLLECTION_NAME=wiki_embeddings
     networks:
-      - htl-wiki-network
+      - leonidas-network
 
 # =============================================================================
 # Networks
@@ -167,6 +167,6 @@ services:
 # - stack-h-mcp (Semantic Search)
 # =============================================================================
 networks:
-  htl-wiki-network:
+  leonidas-network:
     external: true
-    name: htl-wiki-network
+    name: leonidas-network
