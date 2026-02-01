@@ -204,6 +204,31 @@
     background: #5a6268;
 }
 
+/* Cancel button */
+.devdito-btn-cancel {
+    background: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background 0.2s;
+}
+
+.devdito-btn-cancel:hover {
+    background: #c82333;
+}
+
+/* Job actions container */
+.devdito-job-actions {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: flex-end;
+}
+
 /* Stage buttons container */
 .devdito-stage-buttons {
     display: flex;

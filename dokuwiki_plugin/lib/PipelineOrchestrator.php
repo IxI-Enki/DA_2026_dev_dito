@@ -207,6 +207,34 @@ class PipelineOrchestrator
     }
 
     /**
+     * Cancel a running job
+     *
+     * @param string $jobId Job identifier
+     * @return array{success: bool, message: string}
+     */
+    public function cancelJob(string $jobId): array
+    {
+        // Try to cancel via Orchestrator API
+        $result = $this->callOrchestratorApi('POST', "/cancel/$jobId");
+        
+        if ($result !== null) {
+            return $result;
+        }
+        
+        // Fallback: Update status locally
+        $this->statusManager->updateJobStatus($jobId, [
+            'status' => 'cancelled',
+            'finished_at' => date('c'),
+            'error' => 'Manuell abgebrochen'
+        ]);
+        
+        return [
+            'success' => true,
+            'message' => 'Job als abgebrochen markiert (Prozess laeuft evtl. noch)'
+        ];
+    }
+
+    /**
      * Call the Orchestrator HTTP API
      *
      * @param string $method HTTP method (GET, POST)

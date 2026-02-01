@@ -141,28 +141,37 @@ const DevDitoPipeline = {
             return;
         }
 
-        let html = '<div class="devdito-pipeline-grid">';
-
+        // Check if container already has structure (avoid full rebuild)
+        let gridContainer = container.querySelector('.devdito-pipeline-grid');
+        let jobContainer = document.getElementById('devdito-active-job-container');
+        
+        // Build stages grid HTML
+        let gridHtml = '';
         if (data.stages && data.stages.length > 0) {
             data.stages.forEach((stage, index) => {
-                html += this.renderStageCard(stage, index, data);
+                gridHtml += this.renderStageCard(stage, index, data);
             });
         } else {
-            html += '<p class="devdito-warning">Keine Pipeline-Stufen gefunden.</p>';
+            gridHtml = '<p class="devdito-warning">Keine Pipeline-Stufen gefunden.</p>';
         }
 
-        html += '</div>';
+        // Only rebuild if structure doesn't exist yet
+        if (!gridContainer || !jobContainer) {
+            let html = '<div class="devdito-pipeline-grid">' + gridHtml + '</div>';
 
-        // Qdrant info
-        if (data.qdrant_info) {
-            html += this.renderQdrantInfo(data.qdrant_info);
+            // Qdrant info
+            if (data.qdrant_info) {
+                html += this.renderQdrantInfo(data.qdrant_info);
+            }
+
+            // Active job container (persistent - never destroyed)
+            html += '<div id="devdito-active-job-container"></div>';
+
+            container.innerHTML = html;
+        } else {
+            // Just update the grid content, preserve job container
+            gridContainer.innerHTML = gridHtml;
         }
-
-        // Active job placeholder (will be updated by progress polling)
-        // Always render the container to avoid flickering
-        html += '<div id="devdito-active-job-container"></div>';
-
-        container.innerHTML = html;
         
         // Update active job section separately (no flicker)
         this.updateActiveJobSection(data.active_job);
@@ -397,8 +406,54 @@ const DevDitoPipeline = {
             html += `<p class="devdito-progress-errors">Fehler: ${p.errors.length}</p>`;
         }
 
+        // Cancel button
+        html += `
+            <div class="devdito-job-actions">
+                <button 
+                    class="devdito-btn devdito-btn-cancel"
+                    onclick="DevDitoPipeline.cancelJob('${this.escapeHtml(job.job_id)}')"
+                    title="Job abbrechen"
+                >
+                    Abbrechen
+                </button>
+            </div>
+        `;
+
         html += '</div>';
         return html;
+    },
+    
+    /**
+     * Cancel a running job
+     * @param {string} jobId Job identifier
+     */
+    cancelJob: function(jobId) {
+        if (!confirm('Job wirklich abbrechen?')) {
+            return;
+        }
+        
+        const url = DOKU_BASE + 'lib/exe/ajax.php?call=devdito_cancel_job';
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ job_id: jobId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.showNotification('info', 'Job wird abgebrochen...');
+                this.stopProgressPolling();
+                this.loadStatus();
+            } else {
+                this.showNotification('error', 'Fehler: ' + (data.message || 'Konnte Job nicht abbrechen'));
+            }
+        })
+        .catch(error => {
+            this.showNotification('error', 'Request fehlgeschlagen: ' + error.message);
+        });
     },
     
     /**
