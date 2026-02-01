@@ -75,10 +75,20 @@ const DevDitoPipeline = {
             .then(data => {
                 if (data.status === 'running' || data.progress) {
                     this.updateProgressDisplay(data);
-                } else if (data.status === 'success' || data.status === 'error' || data.status === 'not_found') {
-                    // Job completed or not found - stop polling and reload status
+                } else if (data.status === 'success' || data.status === 'error' || data.status === 'not_found' || data.status === 'orchestrator_offline') {
+                    // Job completed or not found - clear display and stop polling
                     this.lastProgressData = null;
+                    this.activeJobId = null;
+                    this.activeJobData = null;
                     this.stopProgressPolling();
+                    
+                    // Clear the job container
+                    const container = document.getElementById('devdito-active-job-container');
+                    if (container) {
+                        container.innerHTML = '';
+                    }
+                    
+                    // Reload full status to update stage cards
                     this.loadStatus();
                 }
             })
@@ -322,43 +332,37 @@ const DevDitoPipeline = {
         const container = document.getElementById('devdito-active-job-container');
         if (!container) return;
         
+        // CRITICAL: If progress polling is active, let IT handle all rendering
+        // Status polling should NOT touch the display to avoid toggle/flicker
+        if (this.progressPollInterval) {
+            // Just update the stored job data for reference
+            if (job) {
+                this.activeJobData = job;
+            }
+            return; // Progress polling handles the display
+        }
+        
         // If no active job from status endpoint
         if (!job) {
-            // BUT: Don't clear if progress polling has recent data (avoid flicker)
-            // Progress endpoint is more reliable for running jobs
-            if (this.lastProgressData && 
-                this.lastProgressData.status === 'running' &&
-                this.progressPollInterval) {
-                // Keep showing progress data, don't clear
-                return;
-            }
-            
-            // Really no job - clear display
+            // Clear display
             container.innerHTML = '';
             this.activeJobId = null;
             this.activeJobData = null;
             this.lastProgressData = null;
-            this.stopProgressPolling();
             return;
         }
         
-        // Store job info for progress updates
+        // Store job info
         this.activeJobId = job.job_id;
         this.activeJobData = job;
         
-        // Start progress polling if not already
+        // Start progress polling - it will take over rendering
         this.startProgressPolling();
         
-        // Don't re-render if progress polling is active and has data for this job
-        // (progress updates will handle the rendering - they have fresher data)
-        if (this.lastProgressData && 
-            this.lastProgressData.job_id === job.job_id &&
-            container.innerHTML !== '') {
-            return;
+        // Initial render only if container is empty (first time)
+        if (container.innerHTML === '') {
+            container.innerHTML = this.renderActiveJobHtml(job, null);
         }
-        
-        // Initial render with basic job info
-        container.innerHTML = this.renderActiveJobHtml(job, null);
     },
     
     /**
