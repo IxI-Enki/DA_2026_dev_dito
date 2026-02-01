@@ -175,16 +175,34 @@ class Config:
         """Load and parse configuration."""
         raw = load_config(config_path)
         
-        paths = PathsConfig(
-            root_dir=raw['PATHS']['root_dir'],
-            config_dir=raw['PATHS']['config_dir'],
-            script_dir=raw['PATHS']['script_dir'],
-            output_dir=raw['PATHS']['output_dir'],
-            log_dir=raw['PATHS']['log_dir'],
-            preprocessing_base=raw['PATHS'].get('preprocessing_base', raw['PATHS']['input_dir']),
-            input_dir=raw['PATHS']['input_dir'],
-            input_fallback=raw['PATHS']['input_fallback'],
-        )
+        # Check for container environment variables (Docker overrides)
+        data_path = os.environ.get('DATA_PATH')
+        pipeline_path = os.environ.get('PIPELINE_PATH')
+        
+        if data_path and pipeline_path:
+            # Running in Docker container - use container paths
+            paths = PathsConfig(
+                root_dir=pipeline_path,
+                config_dir=pipeline_path,
+                script_dir=pipeline_path,
+                output_dir=f"{data_path}/embeddings",
+                log_dir=f"{data_path}/logs",
+                preprocessing_base=f"{data_path}/preprocessed",
+                input_dir=f"{data_path}/preprocessed",
+                input_fallback=f"{data_path}/evaluated/for_qdrant",
+            )
+        else:
+            # Running locally - use paths from env.yaml
+            paths = PathsConfig(
+                root_dir=raw['PATHS']['root_dir'],
+                config_dir=raw['PATHS']['config_dir'],
+                script_dir=raw['PATHS']['script_dir'],
+                output_dir=raw['PATHS']['output_dir'],
+                log_dir=raw['PATHS']['log_dir'],
+                preprocessing_base=raw['PATHS'].get('preprocessing_base', raw['PATHS']['input_dir']),
+                input_dir=raw['PATHS']['input_dir'],
+                input_fallback=raw['PATHS']['input_fallback'],
+            )
         
         openai = OpenAIConfig(
             api_key_env=raw['OPENAI']['api_key_env'],
@@ -214,6 +232,15 @@ class Config:
             include_metadata=raw['OUTPUT']['include_metadata'],
         )
         
+        # Get logging and statistics configs
+        logging_config = raw['LOGGING'].copy()
+        statistics_config = raw['STATISTICS'].copy()
+        
+        # Override paths in logging/statistics if running in container
+        if data_path and pipeline_path:
+            logging_config['file'] = f"{data_path}/logs/embedding_process.log"
+            statistics_config['output_file'] = f"{data_path}/embeddings/embedding_statistics.json"
+        
         return cls(
             app=raw['APP'],
             paths=paths,
@@ -221,8 +248,8 @@ class Config:
             chunking=chunking,
             text_prep=raw['TEXT_PREP'],
             output=output,
-            statistics=raw['STATISTICS'],
-            logging=raw['LOGGING'],
+            statistics=statistics_config,
+            logging=logging_config,
             processing=raw['PROCESSING'],
             validation=raw['VALIDATION'],
             _raw=raw,

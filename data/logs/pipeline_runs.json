@@ -108,5 +108,65 @@
       "output_media": 223,
       "output_dir": "/data/preprocessed/preprocess_at_20260201_194727"
     }
+  },
+  {
+    "job_id": "embed_20260201_215213",
+    "status": "error",
+    "updated_at": "2026-02-01T20:52:14.858625",
+    "stage": "embed",
+    "started_at": "2026-02-01T21:52:13.185167",
+    "error": "Exit code: 1",
+    "finished_at": "2026-02-01T20:52:14.858631",
+    "duration_seconds": -3598
+  },
+  {
+    "job_id": "test_embed_debug",
+    "stage": "embed",
+    "started_at": "2026-02-01T20:54:18.666052",
+    "status": "error",
+    "updated_at": "2026-02-01T20:54:19.362045",
+    "error": "Exit code: 1",
+    "finished_at": "2026-02-01T20:54:19.362053",
+    "duration_seconds": 0
+  },
+  {
+    "job_id": "test_embed_fix",
+    "stage": "embed",
+    "started_at": "2026-02-01T20:56:40.161236",
+    "status": "error",
+    "updated_at": "2026-02-01T20:56:40.816796",
+    "error": "Exit code: 1",
+    "finished_at": "2026-02-01T20:56:40.816802",
+    "duration_seconds": 0
+  },
+  {
+    "job_id": "test_verbose",
+    "stage": "embed",
+    "started_at": "2026-02-01T20:57:33.104942",
+    "status": "error",
+    "updated_at": "2026-02-01T20:57:34.004497",
+    "error": "Exit code: 1",
+    "finished_at": "2026-02-01T20:57:34.004504",
+    "duration_seconds": 0
+  },
+  {
+    "job_id": "test_logfix",
+    "stage": "embed",
+    "started_at": "2026-02-01T20:58:22.557870",
+    "status": "error",
+    "updated_at": "2026-02-01T21:00:55.129622",
+    "error": " chunks=4800]\nEmbedding:  91%|\u001b[32m█████████ \u001b[0m| 48/53 [02:19<00:14,  2.82s/it, chunks=4800]\nEmbedding:  91%|\u001b[32m█████████ \u001b[0m| 48/53 [02:21<00:14,  2.82s/it, chunks=4900]\nEmbedding:  92%|\u001b[32m█████████▏\u001b[0m| 49/53 [02:21<00:11,  2.84s/it, chunks=4900]\nEmbedding:  92%|\u001b[32m█████████▏\u001b[0m| 49/53 [02:24<00:11,  2.84s/it, chunks=5000]\nEmbedding:  94%|\u001b[32m█████████▍\u001b[0m| 50/53 [02:24<00:08,  2.77s/it, chunks=5000]\nEmbedding:  94%|\u001b[32m█████████▍\u001b[0m| 50/53 [02:29<00:08,  3.00s/it, chunks=5000]\n",
+    "finished_at": "2026-02-01T21:00:55.129646",
+    "duration_seconds": 152
+  },
+  {
+    "job_id": "test_batch20",
+    "stage": "embed",
+    "started_at": "2026-02-01T21:01:37.782763",
+    "status": "error",
+    "updated_at": "2026-02-01T21:08:31.801879",
+    "error": "]\nEmbedding:  95%|\u001b[32m█████████▌\u001b[0m| 249/261 [06:46<00:19,  1.66s/it, chunks=4980]\nEmbedding:  95%|\u001b[32m█████████▌\u001b[0m| 249/261 [06:48<00:19,  1.66s/it, chunks=5000]\nEmbedding:  96%|\u001b[32m█████████▌\u001b[0m| 250/261 [06:48<00:18,  1.64s/it, chunks=5000]\nEmbedding:  96%|\u001b[32m█████████▌\u001b[0m| 250/261 [06:49<00:18,  1.64s/it, chunks=5020]\nEmbedding:  96%|\u001b[32m█████████▌\u001b[0m| 251/261 [06:49<00:16,  1.63s/it, chunks=5020]\nEmbedding:  96%|\u001b[32m█████████▌\u001b[0m| 251/261 [06:51<00:16,  1.64s/it, chunks=5020]\n",
+    "finished_at": "2026-02-01T21:08:31.801886",
+    "duration_seconds": 414
   }
 ]

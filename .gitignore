@@ -161,3 +161,4 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+pipeline/03_embeddings_creator/env.yaml

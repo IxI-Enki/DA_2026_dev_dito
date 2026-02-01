@@ -16,6 +16,29 @@ name: stack-g-devdito
 
 services:
   # ==========================================================================
+  # Qdrant Vector Database (Dev Dito Default)
+  # Local vector DB for Dev Dito pipeline - can also use external stack-d
+  # ==========================================================================
+  qdrant:
+    image: qdrant/qdrant:v1.13.2
+    container_name: dev-dito-qdrant
+    restart: unless-stopped
+    ports:
+      - "6334:6333"   # Different port to avoid conflict with stack-d (6333)
+      - "6335:6334"   # gRPC
+    volumes:
+      - dev-dito-qdrant-storage:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    networks:
+      - leonidas-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================================================
   # Orchestrator API
   # Manages pipeline execution and provides status API for DokuWiki plugin
   # ==========================================================================
@@ -136,7 +159,8 @@ services:
 
   # ==========================================================================
   # Pipeline Module: Qdrant Deployer
-  # Uploads embeddings to Qdrant vector database (stack-d-ai-core)
+  # Uploads embeddings to Qdrant vector database
+  # Default: dev-dito-qdrant (Stack-G), can also use stack-d-ai-core
   # ==========================================================================
   module_deployer:
     build:
@@ -144,18 +168,32 @@ services:
       dockerfile: Dockerfile
     container_name: dev-dito-module-deployer
     profiles: ["pipeline"]
+    depends_on:
+      qdrant:
+        condition: service_healthy
     volumes:
       - ../config:/config:ro
       - ../data:/data
     environment:
       - CONFIG_PATH=/config/env.yaml
       - DATA_PATH=/data
-      # Connect to Qdrant in stack-d-ai-core via shared network
-      - QDRANT_HOST=qdrant-main-vector-db
+      # Default: Local Qdrant in Stack-G (can be overridden via dashboard)
+      - QDRANT_HOST=dev-dito-qdrant
       - QDRANT_PORT=6333
       - COLLECTION_NAME=wiki_embeddings
+      # Alternative targets (set via orchestrator):
+      # - QDRANT_HOST=qdrant-main-vector-db (Stack-D)
+      # - DEPLOY_MODE=local|remote|file
+      # - REMOTE_HOST=raspberry-pi-hostname
     networks:
       - leonidas-network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  dev-dito-qdrant-storage:
+    name: dev-dito-qdrant-storage
 
 # =============================================================================
 # Networks
