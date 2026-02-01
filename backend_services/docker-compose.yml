@@ -134,6 +134,27 @@ services:
       - devdito_network
 
   # ==========================================================================
+  # Pipeline Module: RAG Preprocessor
+  # ==========================================================================
+  # Usage: docker compose --profile pipeline run --rm module_preprocessor <job_id>
+  module_preprocessor:
+    build:
+      context: ./module_preprocessor
+      dockerfile: Dockerfile
+    container_name: dev-dito-module-preprocessor
+    profiles: ["pipeline"]
+    volumes:
+      - ../config:/config:ro
+      - ../data:/data
+      - ../pipeline/03_rag_preprocessing:/pipeline/03_rag_preprocessing:ro
+    environment:
+      - CONFIG_PATH=/config/env.yaml
+      - DATA_PATH=/data
+      - PIPELINE_PATH=/pipeline/03_rag_preprocessing
+    networks:
+      - devdito_network
+
+  # ==========================================================================
   # Pipeline Module: Embeddings Creator
   # ==========================================================================
   # Usage: docker compose --profile pipeline run --rm module_embedder <job_id>

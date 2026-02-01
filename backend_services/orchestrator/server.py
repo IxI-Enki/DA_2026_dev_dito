@@ -37,7 +37,7 @@ COMPOSE_FILE = REPO_ROOT / "backend_services" / "docker-compose.yml"
 STATUS_FILE = REPO_ROOT / "data" / "logs" / "pipeline_runs.json"
 PROGRESS_FILE = REPO_ROOT / "data" / "logs" / "pipeline_progress.json"
 
-# Pipeline stages
+# Pipeline stages (in execution order)
 STAGES = {
     "fetch": {
         "name": "Wiki Fetcher",
@@ -48,6 +48,11 @@ STAGES = {
         "name": "Fetch Evaluation", 
         "container": "module_evaluator",
         "description": "Qualitaetsbewertung der gefetchten Daten"
+    },
+    "preprocess": {
+        "name": "RAG Preprocessing",
+        "container": "module_preprocessor",
+        "description": "Konvertiert Wiki-Syntax zu Markdown mit Frontmatter"
     },
     "embed": {
         "name": "Embeddings Creator",

@@ -5,11 +5,11 @@
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Core Preprocessing | completed | 20/20 |
-| Phase 2: Preprocessing Evaluation | pending | 0/8 |
+| Phase 2: Preprocessing Evaluation | in_progress | 0/8 |
 | Phase 3: Embedder Integration | completed | 6/6 |
-| Phase 4: Docker Integration | pending | 0/8 |
-| Phase 5: Dashboard Integration | pending | 0/4 |
-| **Total** | | **26/46** |
+| Phase 4: Docker Integration | completed | 8/8 |
+| Phase 5: Dashboard Integration | completed | 4/4 |
+| **Total** | | **38/46** |
 
 ---
 
@@ -114,30 +114,30 @@
 ## Phase 4: Docker Integration
 
 ### 4.1 Module Preprocessor
-- [ ] **T-054**: Create `backend_services/module_preprocessor/` directory
-- [ ] **T-055**: Create `Dockerfile` for preprocessor
-- [ ] **T-056**: Create `entrypoint.py` with progress tracking
-- [ ] **T-057**: Create `requirements.txt`
+- [x] **T-054**: Create `backend_services/module_preprocessor/` directory
+- [x] **T-055**: Create `Dockerfile` for preprocessor
+- [x] **T-056**: Create `entrypoint.py` with progress tracking
+- [x] **T-057**: Create `requirements.txt`
 
 ### 4.2 Docker Compose
-- [ ] **T-058**: Add `module_preprocessor` service to docker-compose.yml
-- [ ] **T-059**: Configure volumes (config, data, pipeline)
-- [ ] **T-060**: Add to `stack-g-devdito` profile
+- [x] **T-058**: Add `module_preprocessor` service to docker-compose.yml
+- [x] **T-059**: Configure volumes (config, data, pipeline)
+- [x] **T-060**: Add to `stack-g-devdito` profile
 
 ### 4.3 Orchestrator Updates
-- [ ] **T-061**: Add "preprocess" stage to orchestrator/server.py
+- [x] **T-061**: Add "preprocess" stage to orchestrator/server.py
 
 ---
 
 ## Phase 5: Dashboard Integration
 
 ### 5.1 UI Updates
-- [ ] **T-062**: Add "RAG Preprocessing" stage card to dashboard
-- [ ] **T-063**: Update pipeline.js for new stage
-- [ ] **T-064**: Add preprocessing quality display
+- [x] **T-062**: Add "RAG Preprocessing" stage card to dashboard
+- [x] **T-063**: Update pipeline.js for new stage (dynamic - no changes needed)
+- [x] **T-064**: Add preprocessing quality display (via frontmatter stats)
 
 ### 5.2 PHP Updates
-- [ ] **T-065**: Update PipelineOrchestrator.php with preprocess stage
+- [x] **T-065**: Update PipelineOrchestrator.php with preprocess stage
 
 ---
 
