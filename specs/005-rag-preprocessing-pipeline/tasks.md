@@ -4,12 +4,12 @@
 
 | Phase | Status | Progress |
 |-------|--------|----------|
-| Phase 1: Core Preprocessing | in_progress | 12/20 |
+| Phase 1: Core Preprocessing | completed | 20/20 |
 | Phase 2: Preprocessing Evaluation | pending | 0/8 |
 | Phase 3: Embedder Integration | pending | 0/6 |
 | Phase 4: Docker Integration | pending | 0/8 |
 | Phase 5: Dashboard Integration | pending | 0/4 |
-| **Total** | | **12/46** |
+| **Total** | | **20/46** |
 
 ---
 
