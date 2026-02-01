@@ -4,21 +4,21 @@
 
 | Phase | Status | Progress |
 |-------|--------|----------|
-| Phase 1: Core Preprocessing | pending | 0/20 |
+| Phase 1: Core Preprocessing | in_progress | 12/20 |
 | Phase 2: Preprocessing Evaluation | pending | 0/8 |
 | Phase 3: Embedder Integration | pending | 0/6 |
 | Phase 4: Docker Integration | pending | 0/8 |
 | Phase 5: Dashboard Integration | pending | 0/4 |
-| **Total** | | **0/46** |
+| **Total** | | **12/46** |
 
 ---
 
 ## Phase 1: RAG Preprocessing Core
 
 ### 1.1 Project Setup
-- [ ] **T-001**: Create `pipeline/03_rag_preprocessing/` directory
-- [ ] **T-002**: Create `__init__.py` with module docstring
-- [ ] **T-003**: Create `requirements.txt` with dependencies:
+- [x] **T-001**: Create `pipeline/03_rag_preprocessing/` directory
+- [x] **T-002**: Create `__init__.py` with module docstring
+- [x] **T-003**: Create `requirements.txt` with dependencies:
   - pyyaml>=6.0
   - beautifulsoup4>=4.12.0
   - lxml>=4.9.0
@@ -26,29 +26,29 @@
   - python-docx>=1.0.0
   - openpyxl>=3.1.0
   - pytesseract>=0.3.10
-- [ ] **T-004**: Create `env.yaml` configuration file
+- [x] **T-004**: Create `env.yaml` configuration file
 
 ### 1.2 Configuration
-- [ ] **T-005**: Create `config.py` with ConfigLoader class
-- [ ] **T-006**: Define input/output paths in config
-- [ ] **T-007**: Add content_type processing parameters
+- [x] **T-005**: Create `config.py` with ConfigLoader class
+- [x] **T-006**: Define input/output paths in config
+- [x] **T-007**: Add content_type processing parameters
 
 ### 1.3 Page Processor
-- [ ] **T-008**: Create `page_processor.py` skeleton
-- [ ] **T-009**: Implement heading conversion (====== → #)
-- [ ] **T-010**: Implement text formatting (bold, italic, underline)
-- [ ] **T-011**: Implement link conversion ([[page|text]] → [text](page))
-- [ ] **T-012**: Implement image/media reference conversion
-- [ ] **T-013**: Implement code block conversion
-- [ ] **T-014**: Implement table conversion (^ ... ^ → | ... |)
-- [ ] **T-015**: Implement list conversion
+- [x] **T-008**: Create `page_processor.py` skeleton
+- [x] **T-009**: Implement heading conversion (====== → #)
+- [x] **T-010**: Implement text formatting (bold, italic, underline)
+- [x] **T-011**: Implement link conversion ([[page|text]] → [text](page))
+- [x] **T-012**: Implement image/media reference conversion
+- [x] **T-013**: Implement code block conversion
+- [x] **T-014**: Implement table conversion (^ ... ^ → | ... |)
+- [x] **T-015**: Implement list conversion
 - [ ] **T-016**: Add edge case handling for complex wiki syntax
 
 ### 1.4 Metadata Enricher
-- [ ] **T-017**: Create `metadata_enricher.py` skeleton
-- [ ] **T-018**: Implement YAML frontmatter generation
-- [ ] **T-019**: Load metadata from `page_metadata/*.json`
-- [ ] **T-020**: Integrate evaluation results (content_type, quality_score)
+- [x] **T-017**: Create `metadata_enricher.py` skeleton
+- [x] **T-018**: Implement YAML frontmatter generation
+- [x] **T-019**: Load metadata from `page_metadata/*.json`
+- [x] **T-020**: Integrate evaluation results (content_type, quality_score)
 
 ### 1.5 Strategy Loader
 - [ ] **T-021**: Create `strategy_loader.py`
@@ -71,10 +71,10 @@
 - [ ] **T-034**: Add statistics (file counts, processing time)
 
 ### 1.8 Main Entrypoint
-- [ ] **T-035**: Create `main.py` with CLI interface
-- [ ] **T-036**: Add --input-dir argument (fetched data)
-- [ ] **T-037**: Add --evaluation-file argument (Stage 2 output)
-- [ ] **T-038**: Add --output-dir argument
+- [x] **T-035**: Create `main.py` with CLI interface
+- [x] **T-036**: Add --input-dir argument (fetched data)
+- [x] **T-037**: Add --evaluation-file argument (Stage 2 output)
+- [x] **T-038**: Add --output-dir argument
 - [ ] **T-039**: Add progress tracking integration
 
 ---

@@ -1,0 +1,21 @@
+# RAG Preprocessing Pipeline Dependencies
+# ========================================
+
+# Core
+pyyaml>=6.0
+
+# HTML/Wiki parsing
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Document extraction
+pypdf2>=3.0.0
+python-docx>=1.0.0
+openpyxl>=3.1.0
+python-pptx>=2.0.0
+
+# OCR fallback (optional)
+# pytesseract>=0.3.10
+
+# Progress tracking
+tqdm>=4.65.0
