@@ -529,48 +529,38 @@ class admin_plugin_devdito extends AdminPlugin
      */
     private function getAvailableConfigFiles(): array
     {
-        $configDir = ConfigLoader::get('PATHS.config_dir');
+        $configDir = ConfigLoader::get('PATHS.config_dir', '');
         
-        // Normalize path for Windows (forward slashes to backslashes)
-        if ($configDir) {
-            $configDir = str_replace('/', DIRECTORY_SEPARATOR, $configDir);
-        } else {
-            // Fallback: Can't determine config dir
-            return [
-                [
-                    'name' => 'Config nicht gefunden',
-                    'path' => '',
-                    'active' => false
-                ]
-            ];
-        }
-
+        // Note: When running in Docker, the host's config files are not directly accessible.
+        // The plugin uses settings.json which is copied into the container at deploy time.
+        // This dropdown shows available configurations for reference only.
+        
         $files = [];
         
-        // Define config files to check
-        $configFiles = [
-            'env.yaml' => ['name' => 'env.yaml (aktiv)', 'active' => true],
-            'env.development.yaml' => ['name' => 'env.development.yaml (Development)', 'active' => false],
-            'env.minimal.yaml' => ['name' => 'env.minimal.yaml (Minimal)', 'active' => false],
-            'PLACEHOLDER_env.yaml' => ['name' => 'PLACEHOLDER_env.yaml (Template)', 'active' => false],
-        ];
+        // Show currently loaded config info
+        $appVersion = ConfigLoader::get('APP.version', 'unknown');
+        $configValid = ConfigLoader::isValid();
         
-        foreach ($configFiles as $filename => $meta) {
-            $fullPath = $configDir . DIRECTORY_SEPARATOR . $filename;
-            if (file_exists($fullPath)) {
+        if ($configValid) {
+            // Config is loaded from settings.json - show what's active
+            $files[] = [
+                'name' => '✓ settings.json (geladen, v' . $appVersion . ')',
+                'path' => 'settings.json',
+                'active' => true
+            ];
+            
+            // Show available configs on host (for reference)
+            if ($configDir) {
                 $files[] = [
-                    'name' => $meta['name'],
-                    'path' => $fullPath,
-                    'active' => $meta['active']
+                    'name' => '📁 Host Config: ' . basename($configDir),
+                    'path' => $configDir,
+                    'active' => false
                 ];
             }
-        }
-        
-        // If no files found, show the config dir for debugging
-        if (empty($files)) {
+        } else {
             $files[] = [
-                'name' => 'Keine Config in: ' . $configDir,
-                'path' => $configDir,
+                'name' => '⚠ Config nicht geladen',
+                'path' => '',
                 'active' => false
             ];
         }

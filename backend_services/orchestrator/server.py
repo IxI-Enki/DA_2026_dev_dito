@@ -8,8 +8,8 @@ This service runs on the HOST (not in a container) and has access to Docker comm
 The DokuWiki PHP plugin calls this API to start/monitor pipeline jobs.
 
 Usage:
-    python server.py                    # Start on default port 8081
-    python server.py --port 8082        # Custom port
+    python server.py                    # Start on default port 8089
+    python server.py --port 8090        # Custom port
 
 Endpoints:
     GET  /health                        - Health check
@@ -325,7 +325,7 @@ async def cancel_job(job_id: str):
 def main():
     parser = argparse.ArgumentParser(description="Dev Dito Pipeline Orchestrator")
     parser.add_argument("--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=8081, help="Port to listen on (default: 8081)")
+    parser.add_argument("--port", type=int, default=8089, help="Port to listen on (default: 8089)")
     args = parser.parse_args()
     
     print(f"""

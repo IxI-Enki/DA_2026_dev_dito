@@ -26,6 +26,12 @@ const DevDitoPipeline = {
 
     /** @type {string|null} Current active job ID */
     activeJobId: null,
+    
+    /** @type {Object|null} Current active job data */
+    activeJobData: null,
+    
+    /** @type {Object|null} Last received progress data */
+    lastProgressData: null,
 
     /**
      * Initialize the pipeline dashboard
@@ -52,14 +58,8 @@ const DevDitoPipeline = {
             .then(data => {
                 this.renderStages(data);
                 
-                // Start progress polling if job is running
-                if (data.active_job && data.active_job.job_id) {
-                    this.activeJobId = data.active_job.job_id;
-                    this.startProgressPolling();
-                } else {
-                    this.activeJobId = null;
-                    this.stopProgressPolling();
-                }
+                // Note: progress polling is managed by updateActiveJobSection
+                // to avoid duplicate polling and flickering
             })
             .catch(error => this.renderError(error));
     },
@@ -75,8 +75,9 @@ const DevDitoPipeline = {
             .then(data => {
                 if (data.status === 'running' || data.progress) {
                     this.updateProgressDisplay(data);
-                } else if (data.status === 'success' || data.status === 'error') {
-                    // Job completed - reload full status
+                } else if (data.status === 'success' || data.status === 'error' || data.status === 'not_found') {
+                    // Job completed or not found - stop polling and reload status
+                    this.lastProgressData = null;
                     this.stopProgressPolling();
                     this.loadStatus();
                 }
@@ -113,54 +114,20 @@ const DevDitoPipeline = {
      * @param {Object} progress Progress data from server
      */
     updateProgressDisplay: function(progress) {
-        const container = document.querySelector('.devdito-active-job');
+        // Store progress data for merge with job data
+        this.lastProgressData = progress;
+        
+        const container = document.getElementById('devdito-active-job-container');
         if (!container) return;
-
-        let html = `
-            <h3><span class="devdito-spinner"></span> ${this.escapeHtml(progress.current_step || 'Laeuft...')}</h3>
-            <p><strong>Job-ID:</strong> ${this.escapeHtml(progress.job_id || this.activeJobId)}</p>
-            <p><strong>Stufe:</strong> ${this.escapeHtml(progress.stage || '?')}</p>
-        `;
-
-        if (progress.started_at) {
-            const start = new Date(progress.started_at);
-            html += `<p><strong>Gestartet:</strong> ${start.toLocaleString('de-DE')}</p>`;
-        }
-
-        // Progress bar
-        const p = progress.progress || {};
-        const percent = p.percentage || 0;
-        const current = p.current || 0;
-        const total = p.total || 0;
-
-        html += `
-            <div class="devdito-progress">
-                <div class="devdito-progress-bar" style="width: ${percent}%"></div>
-            </div>
-            <p class="devdito-progress-text">${current} / ${total || '?'} (${percent}%)</p>
-        `;
-
-        // Message
-        if (progress.message) {
-            html += `<p class="devdito-progress-msg">${this.escapeHtml(progress.message)}</p>`;
-        }
-
-        // Substeps
-        if (progress.substeps && progress.substeps.length > 0) {
-            html += '<div class="devdito-substeps"><strong>Schritte:</strong><ul>';
-            progress.substeps.slice(-5).forEach(step => {
-                const icon = step.status === 'complete' ? '[OK]' : (step.status === 'running' ? '[...]' : '[ ]');
-                html += `<li>${icon} ${this.escapeHtml(step.step)}</li>`;
-            });
-            html += '</ul></div>';
-        }
-
-        // Errors
-        if (progress.errors && progress.errors.length > 0) {
-            html += `<p class="devdito-progress-errors">Fehler: ${progress.errors.length}</p>`;
-        }
-
-        container.innerHTML = html;
+        
+        // Use the unified render function with both job and progress data
+        const job = this.activeJobData || {
+            job_id: progress.job_id || this.activeJobId || 'unknown',
+            stage: progress.stage || '?',
+            started_at: progress.started_at
+        };
+        
+        container.innerHTML = this.renderActiveJobHtml(job, progress);
     },
 
     /**
@@ -191,12 +158,14 @@ const DevDitoPipeline = {
             html += this.renderQdrantInfo(data.qdrant_info);
         }
 
-        // Active job info
-        if (data.active_job) {
-            html += this.renderActiveJob(data.active_job);
-        }
+        // Active job placeholder (will be updated by progress polling)
+        // Always render the container to avoid flickering
+        html += '<div id="devdito-active-job-container"></div>';
 
         container.innerHTML = html;
+        
+        // Update active job section separately (no flicker)
+        this.updateActiveJobSection(data.active_job);
     },
 
     /**
@@ -336,40 +305,108 @@ const DevDitoPipeline = {
     },
 
     /**
-     * Render active job info
-     * @param {Object} job Active job data
+     * Update the active job section without causing flicker
+     * Merges basic job info with live progress data
+     * @param {Object} job Basic job data from status endpoint
+     */
+    updateActiveJobSection: function(job) {
+        const container = document.getElementById('devdito-active-job-container');
+        if (!container) return;
+        
+        // If no active job, hide the section
+        if (!job) {
+            container.innerHTML = '';
+            this.activeJobId = null;
+            this.stopProgressPolling();
+            return;
+        }
+        
+        // Store job info for progress updates
+        this.activeJobId = job.job_id;
+        this.activeJobData = job;
+        
+        // Start progress polling if not already
+        this.startProgressPolling();
+        
+        // Don't re-render if progress polling is active and has data
+        // (progress updates will handle the rendering)
+        if (this.lastProgressData && this.lastProgressData.job_id === job.job_id) {
+            return;
+        }
+        
+        // Initial render with basic job info
+        container.innerHTML = this.renderActiveJobHtml(job, null);
+    },
+    
+    /**
+     * Render active job HTML (used by both status and progress updates)
+     * @param {Object} job Basic job data
+     * @param {Object} progress Live progress data (optional)
      * @returns {string} HTML string
      */
-    renderActiveJob: function(job) {
+    renderActiveJobHtml: function(job, progress) {
+        const p = progress || {};
+        const currentStep = p.current_step || 'Laufender Job';
+        
         let html = `
             <div class="devdito-active-job">
-                <h3><span class="devdito-spinner"></span> Laufender Job</h3>
+                <h3><span class="devdito-spinner"></span> ${this.escapeHtml(currentStep)}</h3>
                 <p><strong>Job-ID:</strong> ${this.escapeHtml(job.job_id)}</p>
                 <p><strong>Stufe:</strong> ${this.escapeHtml(job.stage)}</p>
         `;
 
-        if (job.started_at) {
-            const start = new Date(job.started_at);
+        const startTime = p.started_at || job.started_at;
+        if (startTime) {
+            const start = new Date(startTime);
             html += `<p><strong>Gestartet:</strong> ${start.toLocaleString('de-DE')}</p>`;
         }
 
-        if (job.progress) {
-            const percent = job.progress.total > 0 
-                ? Math.round((job.progress.current / job.progress.total) * 100) 
-                : 0;
-            html += `
-                <div class="devdito-progress">
-                    <div class="devdito-progress-bar" style="width: ${percent}%"></div>
-                </div>
-                <p>${job.progress.current || 0} / ${job.progress.total || '?'} (${percent}%)</p>
-            `;
-            if (job.progress.message) {
-                html += `<p class="devdito-progress-msg">${this.escapeHtml(job.progress.message)}</p>`;
-            }
+        // Progress bar - prefer live progress data
+        const progData = p.progress || job.progress || {};
+        const percent = progData.percentage || (progData.total > 0 
+            ? Math.round((progData.current / progData.total) * 100) 
+            : 0);
+        const current = progData.current || 0;
+        const total = progData.total || '?';
+        
+        html += `
+            <div class="devdito-progress">
+                <div class="devdito-progress-bar" style="width: ${percent}%"></div>
+            </div>
+            <p class="devdito-progress-text">${current} / ${total} (${percent}%)</p>
+        `;
+        
+        // Message
+        const message = p.message || (job.progress && job.progress.message);
+        if (message) {
+            html += `<p class="devdito-progress-msg">${this.escapeHtml(message)}</p>`;
+        }
+
+        // Substeps (from live progress)
+        if (p.substeps && p.substeps.length > 0) {
+            html += '<div class="devdito-substeps"><strong>Schritte:</strong><ul>';
+            p.substeps.slice(-5).forEach(step => {
+                const icon = step.status === 'complete' ? '[OK]' : (step.status === 'running' ? '[...]' : '[ ]');
+                html += `<li>${icon} ${this.escapeHtml(step.step)}</li>`;
+            });
+            html += '</ul></div>';
+        }
+
+        // Errors
+        if (p.errors && p.errors.length > 0) {
+            html += `<p class="devdito-progress-errors">Fehler: ${p.errors.length}</p>`;
         }
 
         html += '</div>';
         return html;
+    },
+    
+    /**
+     * Legacy render function for compatibility
+     * @deprecated Use updateActiveJobSection instead
+     */
+    renderActiveJob: function(job) {
+        return this.renderActiveJobHtml(job, null);
     },
 
     /**
