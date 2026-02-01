@@ -143,6 +143,21 @@ def get_last_run(stage: str) -> Optional[dict]:
     return sorted(stage_runs, key=lambda x: x.get("started_at", ""), reverse=True)[0]
 
 
+def check_manifest_exists() -> bool:
+    """Check if any fetch has a manifest file (for incremental fetch)"""
+    fetched_dir = REPO_ROOT / "data" / "fetched"
+    if not fetched_dir.exists():
+        return False
+    
+    # Look for fetch directories with manifests
+    for d in sorted(fetched_dir.iterdir(), reverse=True):
+        if d.is_dir() and d.name.startswith("fetched_at_"):
+            manifest = d / "fetch_manifest.json"
+            if manifest.exists():
+                return True
+    return False
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
@@ -153,10 +168,11 @@ async def health_check():
 async def get_pipeline_status():
     """Get status of all pipeline stages"""
     stages = []
+    has_manifest = check_manifest_exists()
     
     for stage_id, info in STAGES.items():
         last_run = get_last_run(stage_id)
-        stages.append({
+        stage_data = {
             "id": stage_id,
             "name": info["name"],
             "description": info["description"],
@@ -164,7 +180,13 @@ async def get_pipeline_status():
             "last_run": last_run.get("finished_at") if last_run else None,
             "duration_seconds": last_run.get("duration") if last_run else None,
             "stats": last_run.get("stats") if last_run else None
-        })
+        }
+        
+        # Add manifest info for fetch stage
+        if stage_id == "fetch":
+            stage_data["has_manifest"] = has_manifest
+        
+        stages.append(stage_data)
     
     return {
         "stages": stages,

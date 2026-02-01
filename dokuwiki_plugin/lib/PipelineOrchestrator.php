@@ -83,12 +83,15 @@ class PipelineOrchestrator
             return $apiStatus;
         }
         
+        // Check if manifest exists for incremental fetch
+        $hasManifest = $this->checkManifestExists();
+        
         // Fallback: Read status from local file
         $stages = [];
         foreach (self::STAGES as $id => $info) {
             $lastRun = $this->statusManager->getLastRun($id);
 
-            $stages[] = [
+            $stageData = [
                 'id' => $id,
                 'name' => $info['name'],
                 'description' => $info['description'],
@@ -99,6 +102,13 @@ class PipelineOrchestrator
                 'stats' => $lastRun['stats'] ?? null,
                 'error' => $lastRun['error'] ?? null,
             ];
+            
+            // Add manifest info for fetch stage
+            if ($id === 'fetch') {
+                $stageData['has_manifest'] = $hasManifest;
+            }
+            
+            $stages[] = $stageData;
         }
 
         return [
@@ -287,6 +297,51 @@ class PipelineOrchestrator
                 'error' => $e->getMessage()
             ];
         }
+    }
+
+    /**
+     * Check if a fetch manifest exists (for incremental fetch)
+     *
+     * @return bool True if manifest exists
+     */
+    private function checkManifestExists(): bool
+    {
+        // Get data directory from config
+        $dataDir = ConfigLoader::get('PATHS.data_dir', '');
+        
+        if (empty($dataDir)) {
+            return false;
+        }
+        
+        // Normalize path for the OS
+        $dataDir = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $dataDir);
+        $fetchedDir = $dataDir . DIRECTORY_SEPARATOR . 'fetched';
+        
+        if (!is_dir($fetchedDir)) {
+            return false;
+        }
+        
+        // Scan for directories with fetch_manifest.json
+        $dirs = @scandir($fetchedDir, SCANDIR_SORT_DESCENDING);
+        if ($dirs === false) {
+            return false;
+        }
+        
+        foreach ($dirs as $dir) {
+            if ($dir === '.' || $dir === '..') {
+                continue;
+            }
+            
+            // Check if this is a fetch directory with a manifest
+            if (strpos($dir, 'fetched_at_') === 0) {
+                $manifestPath = $fetchedDir . DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR . 'fetch_manifest.json';
+                if (file_exists($manifestPath)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     /**
