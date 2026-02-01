@@ -185,16 +185,22 @@ class ContentEvaluator:
     ):
         self.verbose = verbose
         
-        # Get config
+        # Get config - evaluation can work without full config
         if config:
             self.config = config
         else:
-            self.config = get_config()
+            try:
+                self.config = get_config()
+            except (ValueError, FileNotFoundError) as e:
+                # Basic evaluation doesn't need full config
+                self.log(f"[WARN] Config load warning: {e}")
+                self.log("[INFO] Using minimal config for evaluation")
+                self.config = None
         
         # Set fetch directory
         if fetch_dir:
             self.fetch_dir = Path(fetch_dir)
-        elif self.config.fetched_data_dir:
+        elif self.config and hasattr(self.config, 'fetched_data_dir') and self.config.fetched_data_dir:
             self.fetch_dir = Path(self.config.fetched_data_dir)
         else:
             raise ValueError("No fetch directory specified")
