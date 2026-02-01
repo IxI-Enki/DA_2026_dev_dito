@@ -322,10 +322,22 @@ const DevDitoPipeline = {
         const container = document.getElementById('devdito-active-job-container');
         if (!container) return;
         
-        // If no active job, hide the section
+        // If no active job from status endpoint
         if (!job) {
+            // BUT: Don't clear if progress polling has recent data (avoid flicker)
+            // Progress endpoint is more reliable for running jobs
+            if (this.lastProgressData && 
+                this.lastProgressData.status === 'running' &&
+                this.progressPollInterval) {
+                // Keep showing progress data, don't clear
+                return;
+            }
+            
+            // Really no job - clear display
             container.innerHTML = '';
             this.activeJobId = null;
+            this.activeJobData = null;
+            this.lastProgressData = null;
             this.stopProgressPolling();
             return;
         }
@@ -337,9 +349,11 @@ const DevDitoPipeline = {
         // Start progress polling if not already
         this.startProgressPolling();
         
-        // Don't re-render if progress polling is active and has data
-        // (progress updates will handle the rendering)
-        if (this.lastProgressData && this.lastProgressData.job_id === job.job_id) {
+        // Don't re-render if progress polling is active and has data for this job
+        // (progress updates will handle the rendering - they have fresher data)
+        if (this.lastProgressData && 
+            this.lastProgressData.job_id === job.job_id &&
+            container.innerHTML !== '') {
             return;
         }
         
