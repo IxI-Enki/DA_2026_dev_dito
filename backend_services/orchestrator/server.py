@@ -45,9 +45,9 @@ STAGES = {
         "description": "Fetcht Wiki-Inhalte via JSON-RPC API"
     },
     "evaluate": {
-        "name": "Deep Evaluation", 
+        "name": "Fetch Evaluation", 
         "container": "module_evaluator",
-        "description": "LLM-gestuetzte Inhaltsanalyse"
+        "description": "Qualitaetsbewertung der gefetchten Daten"
     },
     "embed": {
         "name": "Embeddings Creator",

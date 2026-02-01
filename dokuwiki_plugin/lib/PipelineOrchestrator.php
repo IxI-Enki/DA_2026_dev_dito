@@ -29,8 +29,8 @@ class PipelineOrchestrator
         ],
         'evaluate' => [
             'container' => 'dev-dito-module-evaluator',
-            'name' => 'Deep Evaluation',
-            'description' => 'LLM-gestuetzte Inhaltsanalyse'
+            'name' => 'Fetch Evaluation',
+            'description' => 'Qualitaetsbewertung der gefetchten Daten'
         ],
         'embed' => [
             'container' => 'dev-dito-module-embedder',
