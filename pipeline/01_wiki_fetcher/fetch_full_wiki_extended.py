@@ -24,6 +24,7 @@ from config import (
     API_BASE_URL, API_FETCH_URL,
     FETCH_CONFIG, get_fetch_config, get_setting
 )
+from manifest import FetchManifest, PageEntry, MediaEntry, EntryStatus
 
 # Try to import progress tracker (may not be available in all environments)
 try:
@@ -111,6 +112,12 @@ class ExtendedWikiFetcher:
         
         # Media cache for fast-mode downloads
         self.media_cache: MediaCache | None = None
+        
+        # Fetch manifest for incremental updates
+        self.manifest = FetchManifest(
+            wiki_url=API_BASE_URL,
+            fetch_id=output_dir or self._generate_manifest_id()
+        )
         
         # Setup paths
         self.base_path = Path(OUTPUT_BASE_DIR) / output_dir
@@ -232,6 +239,12 @@ class ExtendedWikiFetcher:
         self._page_link_counts: List[Dict[str, Any]] = []
         self._all_media_ids: Set[str] = set()  # Track all discovered media
         self._media_from_links: Set[str] = set()  # Media found in page links
+    
+    def _generate_manifest_id(self) -> str:
+        """Generate unique manifest ID from timestamp"""
+        pattern = self.config.output.directory_pattern
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        return pattern.replace("{timestamp}", timestamp)
     
     def log(self, message: str):
         """Print if verbose"""
@@ -864,6 +877,17 @@ class ExtendedWikiFetcher:
                     with open(meta_path, 'w', encoding='utf-8') as f:
                         json.dump(metadata, f, indent=2, ensure_ascii=False)
                     
+                    # Add to manifest (cache hit)
+                    media_entry = MediaEntry(
+                        id=media_id,
+                        hash=copy_result.get("hash", ""),
+                        size_bytes=file_size,
+                        namespace=namespace.replace("/", ":"),
+                        discovery_method=media.get("discovery_method", "listing"),
+                        source="cache",
+                    )
+                    self.manifest.add_media(media_entry)
+                    
                     continue  # Skip download, file came from cache
             
             # Cache miss - download from server
@@ -913,6 +937,17 @@ class ExtendedWikiFetcher:
                 meta_path = self.paths["media_metadata"] / f"{safe_name}_info.json"
                 with open(meta_path, 'w', encoding='utf-8') as f:
                     json.dump(metadata, f, indent=2, ensure_ascii=False)
+                
+                # Add to manifest (fresh download)
+                media_entry = MediaEntry(
+                    id=media_id,
+                    hash=media.get("hash", ""),
+                    size_bytes=file_size,
+                    namespace=namespace.replace("/", ":"),
+                    discovery_method=media.get("discovery_method", "listing"),
+                    source="download",
+                )
+                self.manifest.add_media(media_entry)
                 
                 # Small delay to be nice to the server
                 time.sleep(request_delay)
@@ -1143,6 +1178,20 @@ class ExtendedWikiFetcher:
                     json.dump(combined_data, f, indent=2, ensure_ascii=False)
             
             self.stats["pages"]["successful"] += 1
+            
+            # Add to manifest
+            page_entry = PageEntry(
+                id=page_id,
+                revision=page_info.get("revision", 0),
+                content_hash=self.manifest.compute_content_hash(page_content),
+                size_bytes=content_size,
+                namespace=page_id.split(":")[0] if ":" in page_id else "root",
+                has_html=self.config.content.fetch_html and html_size > 0,
+                has_history=self.config.content.fetch_history,
+                has_backlinks=self.config.content.fetch_backlinks,
+            )
+            self.manifest.add_page(page_entry)
+            
             return True
         
         except UserAbortError:
@@ -1350,6 +1399,9 @@ class ExtendedWikiFetcher:
         stats_path = self.base_path / "fetch_statistics.json"
         with open(stats_path, 'w', encoding='utf-8') as f:
             json.dump(self.stats, f, indent=2, ensure_ascii=False)
+        
+        # Save fetch manifest for incremental updates
+        self._save_manifest()
         
         # Save detailed analysis report
         if self.config.output.generate_report:
@@ -1657,6 +1709,45 @@ class ExtendedWikiFetcher:
             for p in self._page_sizes
         ]
         return sorted(pages_with_depth, key=lambda x: x["depth"], reverse=True)[:limit]
+    
+    def _save_manifest(self):
+        """Save fetch manifest for incremental updates"""
+        self.log("\n[9.5/10] Saving fetch manifest...")
+        
+        # Update manifest stats from fetch stats
+        self.manifest.stats.fetch_type = "full"
+        self.manifest.stats.started_at = self.stats["fetch_info"]["start_time"]
+        self.manifest.stats.completed_at = self.stats["fetch_info"]["end_time"]
+        self.manifest.stats.duration_seconds = self.stats["fetch_info"]["duration_seconds"]
+        
+        self.manifest.stats.pages_total = self.stats["pages"]["total"]
+        self.manifest.stats.pages_successful = self.stats["pages"]["successful"]
+        self.manifest.stats.pages_failed = self.stats["pages"]["failed"]
+        
+        self.manifest.stats.media_total = self.stats["media"]["total"]
+        self.manifest.stats.media_downloaded = self.stats["media"]["downloaded"]
+        self.manifest.stats.media_failed = self.stats["media"]["download_failed"]
+        self.manifest.stats.media_skipped = self.stats["media"]["download_skipped"]
+        
+        if "cache" in self.stats["media"]:
+            self.manifest.stats.media_from_cache = self.stats["media"]["cache"]["hits"]
+        
+        self.manifest.stats.total_content_bytes = self.stats["pages"]["total_content_bytes"]
+        self.manifest.stats.total_media_bytes = self.stats["media"]["total_size_bytes"]
+        
+        self.manifest.stats.error_count = len(self.stats["errors"])
+        self.manifest.stats.errors = self.stats["errors"][:20]  # Limit stored errors
+        
+        # Update namespaces
+        self.manifest.namespaces = self.stats["namespaces"]["list"]
+        
+        # Save manifest
+        manifest_path = self.base_path / "fetch_manifest.json"
+        self.manifest.save(manifest_path)
+        
+        self.log(f"  Saved manifest: {manifest_path}")
+        self.log(f"    Pages: {self.manifest.page_count}")
+        self.log(f"    Media: {self.manifest.media_count}")
     
     def _save_analysis_report(self):
         """Save detailed human-readable analysis report"""
@@ -1977,8 +2068,76 @@ def main():
                         help="Non-interactive mode: auto-skip all permanent errors (4xx)")
     parser.add_argument("--job-id", type=str, default=None,
                         help="Job ID for progress tracking (used by orchestrator)")
+    parser.add_argument("--no-manifest", action="store_true",
+                        help="Skip manifest generation (for testing)")
+    parser.add_argument("--show-manifest", type=str, metavar="PATH",
+                        help="Show manifest summary and exit")
+    parser.add_argument("--verify-manifest", type=str, metavar="PATH",
+                        help="Verify manifest integrity and exit")
+    parser.add_argument("--compare-manifests", nargs=2, metavar=("CURRENT", "PREVIOUS"),
+                        help="Compare two manifests and show changes")
     
     args = parser.parse_args()
+    
+    # Handle manifest-only commands
+    if args.show_manifest:
+        from manifest import FetchManifest
+        manifest = FetchManifest.load(Path(args.show_manifest))
+        summary = manifest.get_summary()
+        print("=" * 60)
+        print(f"MANIFEST: {summary['fetch_id']}")
+        print("=" * 60)
+        print(f"Wiki URL:     {summary['wiki_url']}")
+        print(f"Created:      {summary['created_at']}")
+        print(f"Updated:      {summary['updated_at']}")
+        print(f"Pages:        {summary['pages']['total']}")
+        print(f"  By status:  {summary['pages']['by_status']}")
+        print(f"Media:        {summary['media']['total']}")
+        print(f"  By status:  {summary['media']['by_status']}")
+        print(f"Namespaces:   {summary['namespaces']}")
+        print("=" * 60)
+        return 0
+    
+    if args.verify_manifest:
+        from manifest import FetchManifest
+        manifest = FetchManifest.load(Path(args.verify_manifest))
+        errors = manifest.validate()
+        if errors:
+            print("[ERROR] Manifest validation failed:")
+            for err in errors:
+                print(f"  - {err}")
+            return 1
+        print(f"[OK] Manifest valid: {manifest.fetch_id}")
+        print(f"     Pages: {manifest.page_count}, Media: {manifest.media_count}")
+        return 0
+    
+    if args.compare_manifests:
+        from manifest import FetchManifest
+        current = FetchManifest.load(Path(args.compare_manifests[0]))
+        previous = FetchManifest.load(Path(args.compare_manifests[1]))
+        
+        page_changes = current.get_page_changes(previous)
+        media_changes = current.get_media_changes(previous)
+        
+        print("=" * 60)
+        print("MANIFEST COMPARISON")
+        print("=" * 60)
+        print(f"Current:  {current.fetch_id} ({current.page_count} pages)")
+        print(f"Previous: {previous.fetch_id} ({previous.page_count} pages)")
+        print()
+        print("PAGE CHANGES:")
+        print(f"  Added:     {len(page_changes['added'])}")
+        print(f"  Modified:  {len(page_changes['modified'])}")
+        print(f"  Deleted:   {len(page_changes['deleted'])}")
+        print(f"  Unchanged: {len(page_changes['unchanged'])}")
+        print()
+        print("MEDIA CHANGES:")
+        print(f"  Added:     {len(media_changes['added'])}")
+        print(f"  Modified:  {len(media_changes['modified'])}")
+        print(f"  Deleted:   {len(media_changes['deleted'])}")
+        print(f"  Unchanged: {len(media_changes['unchanged'])}")
+        print("=" * 60)
+        return 0
     
     # Get job_id from args or environment
     job_id = args.job_id or os.environ.get("JOB_ID")

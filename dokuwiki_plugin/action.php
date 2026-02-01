@@ -137,6 +137,10 @@ class action_plugin_devdito extends ActionPlugin
                 $this->handleProgress();
                 return true;
 
+            case 'devdito_cancel_job':
+                $this->handleCancelJob();
+                return true;
+
             default:
                 return false;
         }
@@ -230,6 +234,37 @@ class action_plugin_devdito extends ActionPlugin
         $progress = $orchestrator->getProgress($jobId ?: null);
 
         $this->sendJsonResponse($progress);
+    }
+
+    /**
+     * Handle cancel job request.
+     * Cancels a running pipeline job.
+     * Requires admin authorization.
+     *
+     * @return void
+     */
+    private function handleCancelJob(): void
+    {
+        // Admin check
+        if (!$this->isUserAdmin()) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Admin-Berechtigung erforderlich'], 401);
+            return;
+        }
+
+        // Get job_id from POST body
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true) ?: [];
+        $jobId = $data['job_id'] ?? '';
+
+        if (empty($jobId)) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'job_id fehlt'], 400);
+            return;
+        }
+
+        $orchestrator = new PipelineOrchestrator();
+        $result = $orchestrator->cancelJob($jobId);
+
+        $this->sendJsonResponse($result);
     }
 
     /**

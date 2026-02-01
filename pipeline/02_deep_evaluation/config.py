@@ -43,9 +43,15 @@ def load_env_yaml(config_path: Optional[Path] = None) -> Dict[str, Any]:
         Dictionary mit allen Konfigurationen
     """
     if config_path is None:
-        # Suche config/env.yaml relativ zum script-Ordner
+        # Suche ZENTRALE config/env.yaml im Repository-Root
         script_dir = Path(__file__).parent
-        config_path = script_dir.parent / "config" / "env.yaml"
+        # 02_deep_evaluation -> pipeline -> dev_dito (root)
+        repo_root = script_dir.parent.parent
+        config_path = repo_root / "config" / "env.yaml"
+        
+        # Fallback: lokale config falls zentrale nicht existiert
+        if not config_path.exists():
+            config_path = script_dir.parent / "config" / "env.yaml"
 
     if not config_path.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")

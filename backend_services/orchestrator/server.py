@@ -8,8 +8,8 @@ This service runs on the HOST (not in a container) and has access to Docker comm
 The DokuWiki PHP plugin calls this API to start/monitor pipeline jobs.
 
 Usage:
-    python server.py                    # Start on default port 8081
-    python server.py --port 8082        # Custom port
+    python server.py                    # Start on default port 8089
+    python server.py --port 8090        # Custom port
 
 Endpoints:
     GET  /health                        - Health check
@@ -45,9 +45,9 @@ STAGES = {
         "description": "Fetcht Wiki-Inhalte via JSON-RPC API"
     },
     "evaluate": {
-        "name": "Deep Evaluation", 
+        "name": "Fetch Evaluation", 
         "container": "module_evaluator",
-        "description": "LLM-gestuetzte Inhaltsanalyse"
+        "description": "Qualitaetsbewertung der gefetchten Daten"
     },
     "embed": {
         "name": "Embeddings Creator",
@@ -143,6 +143,21 @@ def get_last_run(stage: str) -> Optional[dict]:
     return sorted(stage_runs, key=lambda x: x.get("started_at", ""), reverse=True)[0]
 
 
+def check_manifest_exists() -> bool:
+    """Check if any fetch has a manifest file (for incremental fetch)"""
+    fetched_dir = REPO_ROOT / "data" / "fetched"
+    if not fetched_dir.exists():
+        return False
+    
+    # Look for fetch directories with manifests
+    for d in sorted(fetched_dir.iterdir(), reverse=True):
+        if d.is_dir() and d.name.startswith("fetched_at_"):
+            manifest = d / "fetch_manifest.json"
+            if manifest.exists():
+                return True
+    return False
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
@@ -153,10 +168,11 @@ async def health_check():
 async def get_pipeline_status():
     """Get status of all pipeline stages"""
     stages = []
+    has_manifest = check_manifest_exists()
     
     for stage_id, info in STAGES.items():
         last_run = get_last_run(stage_id)
-        stages.append({
+        stage_data = {
             "id": stage_id,
             "name": info["name"],
             "description": info["description"],
@@ -164,7 +180,13 @@ async def get_pipeline_status():
             "last_run": last_run.get("finished_at") if last_run else None,
             "duration_seconds": last_run.get("duration") if last_run else None,
             "stats": last_run.get("stats") if last_run else None
-        })
+        }
+        
+        # Add manifest info for fetch stage
+        if stage_id == "fetch":
+            stage_data["has_manifest"] = has_manifest
+        
+        stages.append(stage_data)
     
     return {
         "stages": stages,
@@ -325,7 +347,7 @@ async def cancel_job(job_id: str):
 def main():
     parser = argparse.ArgumentParser(description="Dev Dito Pipeline Orchestrator")
     parser.add_argument("--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=8081, help="Port to listen on (default: 8081)")
+    parser.add_argument("--port", type=int, default=8089, help="Port to listen on (default: 8089)")
     args = parser.parse_args()
     
     print(f"""
