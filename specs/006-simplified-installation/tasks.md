@@ -2,16 +2,16 @@
 
 ## Phase 1: Docker Integration Refactoring
 
-- [ ] **T1.1** Update `backend_services/docker-compose.yml`
-  - [ ] Add explicit `name: stack-g-devdito` at top level
-  - [ ] Add `htl-wiki-network` as external network
-  - [ ] Update all service names to `dev-dito-{service}` format
-  - [ ] Update container_name for each service
-  - [ ] Add network configuration to each service
+- [x] **T1.1** Update `backend_services/docker-compose.yml`
+  - [x] Add explicit `name: stack-g-devdito` at top level
+  - [x] Add `htl-wiki-network` as external network
+  - [x] Update all service names to `dev-dito-{service}` format
+  - [x] Update container_name for each service
+  - [x] Add network configuration to each service
 
-- [ ] **T1.2** Update orchestrator configuration
-  - [ ] Update service discovery to use new container names
-  - [ ] Update docker-compose commands to use `-p stack-g-devdito`
+- [x] **T1.2** Update orchestrator configuration
+  - [x] Update service discovery to use new container names
+  - [x] Update docker-compose commands to use `-p stack-g-devdito`
 
 - [ ] **T1.3** Update DokuWiki plugin configuration
   - [ ] Update `PipelineOrchestrator.php` with new service URLs
@@ -19,36 +19,36 @@
 
 ## Phase 2: Installation Scripts
 
-- [ ] **T2.1** Create `scripts/docker_manager.ps1`
-  - [ ] `Test-DockerInstalled` function
-  - [ ] `Test-DockerRunning` function
-  - [ ] `Start-DockerDesktop` function
-  - [ ] `Wait-ForDockerReady` function (with timeout)
-  - [ ] `Get-DockerDownloadUrl` function
+- [x] **T2.1** Create `scripts/docker_manager.ps1`
+  - [x] `Test-DockerInstalled` function
+  - [x] `Test-DockerRunning` function
+  - [x] `Start-DockerDesktop` function
+  - [x] `Wait-ForDockerReady` function (with timeout)
+  - [x] `Get-DockerDownloadUrl` function
 
-- [ ] **T2.2** Create `scripts/network_setup.ps1`
-  - [ ] `Test-NetworkExists` function
-  - [ ] `New-HtlWikiNetwork` function
-  - [ ] `Get-ConnectedStacks` function
-  - [ ] `Show-NetworkStatus` function
+- [x] **T2.2** Create `scripts/network_setup.ps1`
+  - [x] `Test-NetworkExists` function
+  - [x] `New-HtlWikiNetwork` function
+  - [x] `Get-ConnectedStacks` function
+  - [x] `Show-NetworkStatus` function
 
-- [ ] **T2.3** Create `scripts/migration.ps1`
-  - [ ] `Find-ExistingDevDitoSetup` function
-  - [ ] `Get-SetupVersion` function
-  - [ ] `Backup-ExistingData` function
-  - [ ] `Migrate-ToCurrentStructure` function
-  - [ ] `Remove-LegacyContainers` function
+- [x] **T2.3** Create `scripts/migration.ps1`
+  - [x] `Find-ExistingDevDitoSetup` function
+  - [x] `Get-SetupVersion` function
+  - [x] `Backup-ExistingData` function
+  - [x] `Migrate-ToCurrentStructure` function
+  - [x] `Remove-LegacyContainers` function
 
-- [ ] **T2.4** Create `install.ps1` main script
-  - [ ] Welcome banner with version info
-  - [ ] Docker check workflow
-  - [ ] Network setup workflow
-  - [ ] Migration detection workflow
-  - [ ] Image build/pull workflow
-  - [ ] Stack startup workflow
-  - [ ] Plugin deployment workflow
-  - [ ] Health check workflow
-  - [ ] Success message with next steps
+- [x] **T2.4** Create `install.ps1` main script
+  - [x] Welcome banner with version info
+  - [x] Docker check workflow
+  - [x] Network setup workflow
+  - [x] Migration detection workflow
+  - [x] Image build/pull workflow
+  - [x] Stack startup workflow
+  - [x] Plugin deployment workflow
+  - [x] Health check workflow
+  - [x] Success message with next steps
 
 ## Phase 3: Plugin Integration
 
