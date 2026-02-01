@@ -194,6 +194,69 @@
     opacity: 0.6;
 }
 
+/* Secondary button variant */
+.devdito-btn-secondary {
+    background: #6c757d;
+    color: #fff;
+}
+
+.devdito-btn-secondary:hover:not(:disabled) {
+    background: #5a6268;
+}
+
+/* Stage buttons container */
+.devdito-stage-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.devdito-stage-buttons .devdito-btn-run {
+    flex: 1;
+    margin-top: 0;
+}
+
+.devdito-stage-buttons .devdito-btn-secondary {
+    flex: 0.75;
+}
+
+/* Change Summary Panel */
+.devdito-change-summary {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.devdito-change-summary h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+    color: #2e7d32;
+}
+
+.devdito-change-summary-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.devdito-change-summary-stats span {
+    font-size: 0.75rem;
+}
+
+.devdito-change-added {
+    color: #2e7d32;
+}
+
+.devdito-change-modified {
+    color: #f57c00;
+}
+
+.devdito-change-deleted {
+    color: #c62828;
+}
+
 /* Spinner */
 .devdito-spinner {
     display: inline-block;

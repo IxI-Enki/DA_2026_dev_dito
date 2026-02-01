@@ -247,17 +247,41 @@ const DevDitoPipeline = {
             html += `<div class="devdito-stage-duration">Dauer: ${this.formatDuration(stage.duration_seconds)}</div>`;
         }
 
-        // Run button
-        html += `
-            <button 
-                class="devdito-btn devdito-btn-run"
-                ${!canRun ? 'disabled' : ''}
-                onclick="DevDitoPipeline.runStage('${stage.id}')"
-            >
-                ${isRunning ? 'Laeuft...' : 'Starten'}
-            </button>
-        </div>
-        `;
+        // Run buttons
+        if (stage.id === 'fetch') {
+            // Fetch stage gets two buttons: Full and Incremental
+            html += `
+                <div class="devdito-stage-buttons">
+                    <button 
+                        class="devdito-btn devdito-btn-run"
+                        ${!canRun ? 'disabled' : ''}
+                        onclick="DevDitoPipeline.runStage('${stage.id}', {mode: 'full'})"
+                        title="Fetch all pages from wiki"
+                    >
+                        ${isRunning ? 'Laeuft...' : 'Full Fetch'}
+                    </button>
+                    <button 
+                        class="devdito-btn devdito-btn-run devdito-btn-secondary"
+                        ${!canRun || !stage.has_manifest ? 'disabled' : ''}
+                        onclick="DevDitoPipeline.runStage('${stage.id}', {mode: 'incremental'})"
+                        title="Only fetch changed pages (requires previous fetch)"
+                    >
+                        Incremental
+                    </button>
+                </div>
+            `;
+        } else {
+            html += `
+                <button 
+                    class="devdito-btn devdito-btn-run"
+                    ${!canRun ? 'disabled' : ''}
+                    onclick="DevDitoPipeline.runStage('${stage.id}')"
+                >
+                    ${isRunning ? 'Laeuft...' : 'Starten'}
+                </button>
+            `;
+        }
+        html += '</div>';
 
         return html;
     },
@@ -351,19 +375,25 @@ const DevDitoPipeline = {
     /**
      * Run a pipeline stage
      * @param {string} stageId Stage identifier
+     * @param {Object} options Optional parameters (e.g., { mode: 'incremental' })
      */
-    runStage: function(stageId) {
+    runStage: function(stageId, options) {
         const url = DOKU_BASE + 'lib/exe/ajax.php?call=devdito_run_stage';
 
         // Disable all run buttons during request
         document.querySelectorAll('.devdito-btn-run').forEach(btn => btn.disabled = true);
+
+        const body = { stage: stageId };
+        if (options) {
+            Object.assign(body, options);
+        }
 
         fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ stage: stageId })
+            body: JSON.stringify(body)
         })
         .then(response => response.json())
         .then(data => {
