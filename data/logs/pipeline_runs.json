@@ -33,7 +33,7 @@
   {
     "job_id": "evaluate_20260201_142724",
     "status": "success",
-    "updated_at": "2026-02-01T13:27:29.127330",
+    "updated_at": "2026-02-01T13:27:29.12733",
     "stage": "evaluate",
     "started_at": "2026-02-01T14:27:24.557414",
     "output_dir": "data/evaluated",
@@ -59,9 +59,54 @@
   },
   {
     "job_id": "deploy_20260201_142956",
-    "status": "running",
+    "status": "error",
     "updated_at": "2026-02-01T14:29:56.939576",
     "stage": "deploy",
     "started_at": "2026-02-01T14:29:56.939453"
+  },
+  {
+    "job_id": "preprocess_20260201_153326",
+    "status": "cancelled",
+    "updated_at": "2026-02-01T20:20:04.925783",
+    "stage": "preprocess",
+    "started_at": "2026-02-01T15:33:26.542830",
+    "finished_at": "2026-02-01T20:20:04.925373"
+  },
+  {
+    "job_id": "preprocess_20260201_203056",
+    "status": "cancelled",
+    "updated_at": "2026-02-01T20:45:16.239254",
+    "stage": "preprocess",
+    "started_at": "2026-02-01T20:30:56.892999",
+    "finished_at": "2026-02-01T20:45:16.238883"
+  },
+  {
+    "job_id": "test_fix_001",
+    "stage": "preprocess",
+    "status": "success",
+    "started_at": "2026-02-01T19:43:25.537266",
+    "completed_at": "2026-02-01T19:44:08.565840",
+    "result": {
+      "input_pages": 209,
+      "input_media": 671,
+      "output_pages": 208,
+      "output_media": 223,
+      "output_dir": "/data/preprocessed/preprocess_at_20260201_194325"
+    }
+  },
+  {
+    "job_id": "preprocess_20260201_204726",
+    "status": "success",
+    "updated_at": "2026-02-01T20:47:26.269756",
+    "stage": "preprocess",
+    "started_at": "2026-02-01T19:47:27.011168",
+    "completed_at": "2026-02-01T19:48:09.582835",
+    "result": {
+      "input_pages": 209,
+      "input_media": 671,
+      "output_pages": 208,
+      "output_media": 223,
+      "output_dir": "/data/preprocessed/preprocess_at_20260201_194727"
+    }
   }
 ]

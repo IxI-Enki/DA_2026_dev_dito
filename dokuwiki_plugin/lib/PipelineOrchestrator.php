@@ -20,7 +20,7 @@ namespace dokuwiki\plugin\devdito\lib;
  */
 class PipelineOrchestrator
 {
-    /** @var array Stage definitions */
+    /** @var array Stage definitions (in execution order) */
     private const STAGES = [
         'fetch' => [
             'container' => 'dev-dito-module-fetcher',
@@ -31,6 +31,11 @@ class PipelineOrchestrator
             'container' => 'dev-dito-module-evaluator',
             'name' => 'Fetch Evaluation',
             'description' => 'Qualitaetsbewertung der gefetchten Daten'
+        ],
+        'preprocess' => [
+            'container' => 'dev-dito-module-preprocessor',
+            'name' => 'RAG Preprocessing',
+            'description' => 'Konvertiert Wiki-Syntax zu Markdown mit Frontmatter'
         ],
         'embed' => [
             'container' => 'dev-dito-module-embedder',

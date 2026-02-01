@@ -48,6 +48,9 @@ env/
 .pydevproject
 .settings/
 
+# Cursor IDE
+.cursor/
+
 # =============================================================================
 # Environment & Secrets (Constitution Article II-B, VI)
 # =============================================================================
@@ -92,11 +95,14 @@ data/fetched/*
 !data/fetched/.gitkeep
 data/evaluated/*
 !data/evaluated/.gitkeep
+data/preprocessed/*
+!data/preprocessed/.gitkeep
 data/embeddings/*
 !data/embeddings/.gitkeep
 
 # Pipeline logs (keep status tracking, ignore large logs)
 data/logs/*.log
+data/logs/pipeline_progress.json
 !data/logs/.gitkeep
 !data/logs/pipeline_runs.json
 !data/logs/pipeline_runs.schema.json

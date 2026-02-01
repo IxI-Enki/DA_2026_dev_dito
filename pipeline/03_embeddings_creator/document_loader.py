@@ -65,17 +65,24 @@ class DocumentLoader:
         Find the input directory with preprocessed documents.
         
         Returns:
-            Path to the latest upload_at_* directory
+            Path to the latest preprocess_at_* directory (from Stage 3 RAG Preprocessing)
         """
-        # Try primary input directory (for_qdrant)
+        # Try primary input directory (data/preprocessed)
         input_dir = Path(self.config.paths.input_dir)
         if input_dir.exists():
+            # Look for preprocess_at_* directories (Stage 3 output)
+            latest = get_latest_timestamped_path(str(input_dir), 'preprocess_at')
+            if latest:
+                logger.info(f"Using preprocessed directory: {latest}")
+                return latest
+            
+            # Legacy fallback: upload_at_* directories
             latest = get_latest_timestamped_path(str(input_dir), 'upload_at')
             if latest:
-                logger.info(f"Using input directory: {latest}")
+                logger.info(f"Using legacy upload directory: {latest}")
                 return latest
         
-        # Try fallback (for_upload)
+        # Try fallback directory (for_qdrant legacy path)
         fallback = Path(self.config.paths.input_fallback)
         if fallback.exists():
             latest = get_latest_timestamped_path(str(fallback), 'upload_at')
@@ -85,7 +92,7 @@ class DocumentLoader:
         
         raise FileNotFoundError(
             f"No input directory found. Checked:\n"
-            f"  - {input_dir}\n"
+            f"  - {input_dir} (preprocess_at_* or upload_at_*)\n"
             f"  - {fallback}"
         )
     
