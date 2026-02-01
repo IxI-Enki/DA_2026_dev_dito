@@ -5,11 +5,11 @@
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Core Preprocessing | completed | 20/20 |
-| Phase 2: Preprocessing Evaluation | in_progress | 0/8 |
+| Phase 2: Preprocessing Evaluation | completed | 8/8 |
 | Phase 3: Embedder Integration | completed | 6/6 |
 | Phase 4: Docker Integration | completed | 8/8 |
 | Phase 5: Dashboard Integration | completed | 4/4 |
-| **Total** | | **38/46** |
+| **Total** | | **46/46** |
 
 ---
 
@@ -82,16 +82,16 @@
 ## Phase 2: Preprocessing Evaluation
 
 ### 2.1 Evaluator Core
-- [ ] **T-040**: Create `pipeline/03b_preprocessing_eval/` directory
-- [ ] **T-041**: Create `evaluator.py` skeleton
-- [ ] **T-042**: Implement information preservation metric
-- [ ] **T-043**: Implement link integrity check
-- [ ] **T-044**: Implement structure preservation check
+- [x] **T-040**: Create `pipeline/03b_preprocessing_eval/` directory
+- [x] **T-041**: Create `evaluator.py` skeleton
+- [x] **T-042**: Implement information preservation metric
+- [x] **T-043**: Implement link integrity check
+- [x] **T-044**: Implement structure preservation check
 
 ### 2.2 Quality Thresholds
-- [ ] **T-045**: Define quality thresholds in config
-- [ ] **T-046**: Generate quality report
-- [ ] **T-047**: Flag files below threshold
+- [x] **T-045**: Define quality thresholds in config
+- [x] **T-046**: Generate quality report
+- [x] **T-047**: Flag files below threshold
 
 ---
 
@@ -143,12 +143,12 @@
 
 ## Definition of Done
 
-- [ ] All 209 pages converted to Markdown
-- [ ] All .md files have valid YAML frontmatter
-- [ ] Embedder successfully reads preprocessed data
-- [ ] Full pipeline produces embeddings
-- [ ] Docker integration working
-- [ ] Dashboard shows all stages
+- [x] All 209 pages converted to Markdown (208 success, 1 empty skipped)
+- [x] All .md files have valid YAML frontmatter (100% valid)
+- [x] Embedder successfully reads preprocessed data (tested)
+- [ ] Full pipeline produces embeddings (requires OpenAI API key)
+- [x] Docker integration working (module_preprocessor created)
+- [x] Dashboard shows all stages (5 stages including RAG Preprocessing)
 
 ---
 
