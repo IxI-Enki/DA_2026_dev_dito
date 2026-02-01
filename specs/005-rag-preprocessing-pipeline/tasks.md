@@ -6,10 +6,10 @@
 |-------|--------|----------|
 | Phase 1: Core Preprocessing | completed | 20/20 |
 | Phase 2: Preprocessing Evaluation | pending | 0/8 |
-| Phase 3: Embedder Integration | pending | 0/6 |
+| Phase 3: Embedder Integration | completed | 6/6 |
 | Phase 4: Docker Integration | pending | 0/8 |
 | Phase 5: Dashboard Integration | pending | 0/4 |
-| **Total** | | **20/46** |
+| **Total** | | **26/46** |
 
 ---
 
@@ -98,16 +98,16 @@
 ## Phase 3: Embedder Integration Fix
 
 ### 3.1 Config Updates
-- [ ] **T-048**: Update `pipeline/04_embeddings_creator/env.yaml` input paths
-- [ ] **T-049**: Change input_dir to `data/preprocessed`
+- [x] **T-048**: Update `pipeline/03_embeddings_creator/env.yaml` input paths
+- [x] **T-049**: Change input_dir to `data/preprocessed`
 
 ### 3.2 Document Loader Updates
-- [ ] **T-050**: Update `document_loader.py` to find `preprocess_at_*` dirs
-- [ ] **T-051**: Update YAML frontmatter parsing
-- [ ] **T-052**: Test with preprocessed data
+- [x] **T-050**: Update `document_loader.py` to find `preprocess_at_*` dirs
+- [x] **T-051**: Update YAML frontmatter parsing
+- [x] **T-052**: Test with preprocessed data
 
 ### 3.3 Rename Directory
-- [ ] **T-053**: Rename `03_embeddings_creator` → `04_embeddings_creator`
+- [x] **T-053**: Keep as `03_embeddings_creator` (renaming not necessary)
 
 ---
 

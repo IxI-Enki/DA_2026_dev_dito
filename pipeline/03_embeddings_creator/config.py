@@ -84,8 +84,13 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
         Resolved configuration dictionary
     """
     if config_path is None:
+        # Look for env.yaml in the same directory as this script (embeddings_creator/)
         script_dir = Path(__file__).parent
-        resolved_path = script_dir.parent / "config" / "env.yaml"
+        resolved_path = script_dir / "env.yaml"
+        
+        # Fallback: check pipeline/config/env.yaml
+        if not resolved_path.exists():
+            resolved_path = script_dir.parent / "config" / "env.yaml"
     else:
         resolved_path = Path(config_path)
     
@@ -176,7 +181,7 @@ class Config:
             script_dir=raw['PATHS']['script_dir'],
             output_dir=raw['PATHS']['output_dir'],
             log_dir=raw['PATHS']['log_dir'],
-            preprocessing_base=raw['PATHS']['preprocessing_base'],
+            preprocessing_base=raw['PATHS'].get('preprocessing_base', raw['PATHS']['input_dir']),
             input_dir=raw['PATHS']['input_dir'],
             input_fallback=raw['PATHS']['input_fallback'],
         )
