@@ -115,40 +115,44 @@ class ProgressTracker:
 # Job Status Management
 # =============================================================================
 
-def load_status() -> Dict:
-    """Load current pipeline status."""
+def load_status() -> list:
+    """Load current pipeline status (list of job runs)."""
     if STATUS_FILE.exists():
         try:
             with open(STATUS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
+                # Handle both list format (orchestrator) and dict format (legacy)
+                if isinstance(data, list):
+                    return data
+                elif isinstance(data, dict) and "runs" in data:
+                    return data["runs"]
+                return []
         except (json.JSONDecodeError, IOError):
             pass
-    return {"runs": []}
+    return []
 
 
-def save_status(status: Dict):
-    """Save pipeline status."""
+def save_status(runs: list):
+    """Save pipeline status (list of job runs)."""
     STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(STATUS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(status, f, indent=2, ensure_ascii=False)
+        json.dump(runs, f, indent=2, ensure_ascii=False)
 
 
 def update_job_status(job_id: str, updates: Dict):
     """Update a specific job's status."""
-    status = load_status()
+    runs = load_status()
     
-    for run in status.get("runs", []):
+    for run in runs:
         if isinstance(run, dict) and run.get("job_id") == job_id:
             run.update(updates)
-            save_status(status)
+            save_status(runs)
             return
     
     # Job not found, create new entry
     new_run = {"job_id": job_id, "stage": STAGE_NAME, **updates}
-    if "runs" not in status:
-        status["runs"] = []
-    status["runs"].append(new_run)
-    save_status(status)
+    runs.append(new_run)
+    save_status(runs)
 
 
 def find_latest_fetch_dir() -> Optional[Path]:

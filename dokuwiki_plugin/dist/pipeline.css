@@ -143,6 +143,41 @@
     color: #333;
 }
 
+/* Stats with tooltips - show help cursor and info indicator */
+.devdito-stat-item {
+    cursor: help;
+    position: relative;
+    border-bottom: 1px dotted #6c757d;
+    padding-bottom: 1px;
+    transition: color 0.15s;
+}
+
+.devdito-stat-item:hover {
+    color: #0056b3;
+}
+
+.devdito-stat-item:hover strong {
+    color: #0056b3;
+}
+
+/* Info icon after stat items */
+.devdito-stat-item::after {
+    content: "i";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+    margin-left: 4px;
+    font-size: 9px;
+    font-weight: bold;
+    font-style: italic;
+    color: #6c757d;
+    background: #e9ecef;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
 /* Stage Error */
 .devdito-stage-error {
     background: #fff3cd;

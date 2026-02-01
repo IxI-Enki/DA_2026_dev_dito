@@ -140,12 +140,13 @@ def get_active_job() -> Optional[dict]:
 
 
 def get_last_run(stage: str) -> Optional[dict]:
-    """Get last run for a specific stage"""
+    """Get last run for a specific stage (sorted by updated_at for most recent status)"""
     runs = load_status()
     stage_runs = [r for r in runs if r.get("stage") == stage]
     if not stage_runs:
         return None
-    return sorted(stage_runs, key=lambda x: x.get("started_at", ""), reverse=True)[0]
+    # Sort by updated_at to get the most recent status update
+    return sorted(stage_runs, key=lambda x: x.get("updated_at", x.get("started_at", "")), reverse=True)[0]
 
 
 def check_manifest_exists() -> bool:
@@ -177,14 +178,22 @@ async def get_pipeline_status():
     
     for stage_id, info in STAGES.items():
         last_run = get_last_run(stage_id)
+        # Get last_run timestamp (try multiple field names for compatibility)
+        last_run_time = None
+        if last_run:
+            last_run_time = last_run.get("finished_at") or last_run.get("completed_at") or last_run.get("updated_at")
+        # Get stats (try both 'stats' and 'result' for compatibility)
+        stats = None
+        if last_run:
+            stats = last_run.get("stats") or last_run.get("result")
         stage_data = {
             "id": stage_id,
             "name": info["name"],
             "description": info["description"],
             "status": last_run.get("status", "never_run") if last_run else "never_run",
-            "last_run": last_run.get("finished_at") if last_run else None,
+            "last_run": last_run_time,
             "duration_seconds": last_run.get("duration") if last_run else None,
-            "stats": last_run.get("stats") if last_run else None
+            "stats": stats
         }
         
         # Add manifest info for fetch stage

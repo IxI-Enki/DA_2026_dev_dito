@@ -275,7 +275,41 @@ const DevDitoPipeline = {
     },
 
     /**
-     * Render stage statistics
+     * Tooltip explanations for statistics
+     * Explains how each value is calculated
+     */
+    statTooltips: {
+        // Fetch stage
+        'pages': 'Anzahl der vom Wiki geholten Seiten via JSON-RPC API',
+        'media': 'Anzahl der heruntergeladenen Mediendateien (Bilder, PDFs, etc.)',
+        
+        // Evaluation stage
+        'pages_evaluated': 'Anzahl der analysierten Seiten',
+        'overall_quality': 'Gewichteter Durchschnitt aus: Format-Qualitaet (30%), RAG-Eignung (40%), Inhaltsklassifikation (30%). Werte 0.0-1.0',
+        'pages_to_include': 'Seiten mit Quality Score >= 0.5 (empfohlen fuer Embedding)',
+        'pages_to_exclude': 'Seiten mit Quality Score < 0.3 oder als EXCLUDE markiert',
+        'pages_to_review': 'Seiten mit Quality Score zwischen 0.3-0.5 (manuelle Pruefung empfohlen)',
+        
+        // Preprocessing stage
+        'documents_processed': 'Anzahl der in Markdown konvertierten Dokumente',
+        'pages_converted': 'Wiki-Seiten zu Markdown mit YAML Frontmatter konvertiert',
+        'media_extracted': 'Text aus Mediendateien extrahiert (PDF, DOCX, XLSX)',
+        'total_output_files': 'Gesamtzahl der erzeugten Dateien',
+        
+        // Embeddings stage
+        'chunks': 'Anzahl der semantischen Text-Chunks (Content-Aware Chunking)',
+        'vectors': 'Anzahl der generierten Embedding-Vektoren',
+        'dimensions': 'Dimensionen pro Vektor (z.B. 3072 fuer text-embedding-3-large)',
+        'cost_usd': 'Geschaetzte OpenAI API Kosten in USD',
+        'model': 'Verwendetes Embedding-Modell',
+        
+        // Deploy stage
+        'uploaded': 'Anzahl der in Qdrant hochgeladenen Vektoren',
+        'collection': 'Name der Qdrant Collection'
+    },
+
+    /**
+     * Render stage statistics with tooltips
      * @param {Object} stats Stage statistics
      * @returns {string} HTML string
      */
@@ -283,7 +317,10 @@ const DevDitoPipeline = {
         let html = '<div class="devdito-stage-stats">';
         for (const [key, value] of Object.entries(stats)) {
             if (value !== null && value !== undefined) {
-                html += `<span><strong>${this.escapeHtml(key)}:</strong> ${this.escapeHtml(String(value))}</span>`;
+                const tooltip = this.statTooltips[key] || 'Keine Erklaerung verfuegbar';
+                html += `<span title="${this.escapeHtml(tooltip)}" class="devdito-stat-item">` +
+                        `<strong>${this.escapeHtml(key)}:</strong> ${this.escapeHtml(String(value))}` +
+                        `</span>`;
             }
         }
         html += '</div>';
