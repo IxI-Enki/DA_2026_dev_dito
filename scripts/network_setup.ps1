@@ -6,7 +6,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$script:NETWORK_NAME = "htl-wiki-network"
+$script:NETWORK_NAME = "leonidas-network"
 
 function Test-NetworkExists {
     <#
