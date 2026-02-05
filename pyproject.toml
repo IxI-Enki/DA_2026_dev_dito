@@ -1,0 +1,75 @@
+# =============================================================================
+# Dev Dito - Python Project Configuration
+# =============================================================================
+# Central config for pytest, ruff, black, and project metadata.
+# Constitution Article IV: Language Standards (PEP 8, ruff, black)
+# =============================================================================
+
+[project]
+name = "dev-dito"
+version = "0.1.0"
+description = "Wiki Embedding Pipeline & Service Gateway for DokuWiki"
+requires-python = ">=3.11"
+readme = "README.md"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio",
+    "ruff",
+    "black",
+    "jsonschema",
+    "pyyaml",
+]
+
+# =============================================================================
+# pytest
+# =============================================================================
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Fast unit tests (no Docker, no network)",
+    "smoke: Docker compose validation and health checks",
+    "integration: Tests against running Docker services",
+]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+
+# =============================================================================
+# ruff (linter) - Constitution Article IV
+# =============================================================================
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["config"]
+
+# =============================================================================
+# black (formatter) - Constitution Article IV
+# =============================================================================
+[tool.black]
+target-version = ["py311"]
+line-length = 100
