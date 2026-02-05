@@ -73,6 +73,65 @@ function Test-ContainerRunning {
     return ($null -ne $status -and $status -ne '')
 }
 
+function Test-DockerDaemonRunning {
+    try {
+        docker info 2>&1 | Out-Null
+        return $LASTEXITCODE -eq 0
+    }
+    catch { return $false }
+}
+
+function Start-DockerDesktopIfNeeded {
+    <#
+    .SYNOPSIS
+    Ensures Docker Desktop is running. Starts it if needed, waits up to 120s.
+    Returns $true when Docker daemon is ready, $false on failure.
+    #>
+    if (Test-DockerDaemonRunning) { return $true }
+
+    # Docker CLI installed?
+    if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+        Write-Host "[ERROR] Docker is not installed." -ForegroundColor Red
+        Write-Host "        Install via: winget install Docker.DockerDesktop" -ForegroundColor Yellow
+        return $false
+    }
+
+    # Locate and launch Docker Desktop
+    $paths = @(
+        "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
+        "$env:LOCALAPPDATA\Docker\Docker Desktop.exe"
+    )
+    $launched = $false
+    foreach ($p in $paths) {
+        if (Test-Path $p) {
+            Write-Host "[INFO] Starting Docker Desktop..." -ForegroundColor Cyan
+            Start-Process -FilePath $p -WindowStyle Minimized
+            $launched = $true
+            break
+        }
+    }
+    if (-not $launched) {
+        Write-Host "[ERROR] Could not find Docker Desktop executable." -ForegroundColor Red
+        Write-Host "        Searched: $($paths -join ', ')" -ForegroundColor Yellow
+        return $false
+    }
+
+    # Wait for the daemon to become ready (up to 120 s)
+    Write-Host "[INFO] Waiting for Docker daemon (up to 120s)..." -ForegroundColor Cyan
+    $deadline = (Get-Date).AddSeconds(120)
+    while ((Get-Date) -lt $deadline) {
+        if (Test-DockerDaemonRunning) {
+            Write-Host "[OK] Docker is ready." -ForegroundColor Green
+            return $true
+        }
+        Write-Host "." -NoNewline
+        Start-Sleep -Seconds 3
+    }
+    Write-Host ""
+    Write-Host "[ERROR] Docker did not become ready within 120 seconds." -ForegroundColor Red
+    return $false
+}
+
 function Get-DevDitoOrchestratorUrl {
     return "http://localhost:8089"
 }
@@ -345,6 +404,12 @@ function Invoke-DevDitoUp {
 
     if (-not (Test-DevDitoInstalled)) {
         Write-Host "[ERROR] Dev Dito not installed. Run 'dd-install' first." -ForegroundColor Red
+        return
+    }
+
+    # --- Ensure Docker Desktop is running ---
+    if (-not (Start-DockerDesktopIfNeeded)) {
+        Write-Host "[ERROR] Cannot proceed without Docker. Aborting." -ForegroundColor Red
         return
     }
 
