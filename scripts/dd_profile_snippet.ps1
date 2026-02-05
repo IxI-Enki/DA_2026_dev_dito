@@ -423,9 +423,15 @@ function Invoke-DevDitoUp {
     # --- Start core services (orchestrator + qdrant) ---
     Push-Location "$script:DD_REPO_ROOT\backend_services"
     try {
-        docker compose -p $script:DD_STACK_NAME up -d
-
-        if ($LASTEXITCODE -ne 0) {
+        # Capture output; filter known orphan warning (wiki container may belong
+        # to a different compose origin while sharing the project name).
+        $composeOut = docker compose -p $script:DD_STACK_NAME up -d 2>&1
+        $exitCode = $LASTEXITCODE
+        $composeOut | ForEach-Object {
+            $line = $_.ToString()
+            if ($line -notmatch 'Found orphan containers') { Write-Host $line }
+        }
+        if ($exitCode -ne 0) {
             Write-Host "[ERROR] Failed to start core services" -ForegroundColor Red
             return
         }
@@ -435,7 +441,12 @@ function Invoke-DevDitoUp {
         Pop-Location
     }
 
-    # --- Start DokuWiki (A+C hybrid logic) ---
+    # --- Start DokuWiki ---
+    # Strategy priority (avoids orphan / project-identity conflicts):
+    #   1. Already running          -> skip
+    #   2. docker start (existing)  -> fastest, no compose file collision
+    #   3. Profile wiki (same file) -> cleanest first-time path
+    #   4. Leonidas stacks compose  -> external fallback (own project name)
     Write-Host ""
     if (Test-ContainerRunning 'dev-dito-wiki') {
         Write-Host "[OK] DokuWiki already running" -ForegroundColor Green
@@ -443,23 +454,19 @@ function Invoke-DevDitoUp {
     else {
         $wikiStarted = $false
 
-        # Strategy C: Try leonidas stacks compose file first
-        if (Test-Path "$script:DD_WIKI_COMPOSE\docker-compose.yml") {
-            Write-Host "[INFO] Starting DokuWiki from leonidas stacks..." -ForegroundColor Cyan
-            Push-Location $script:DD_WIKI_COMPOSE
-            try {
-                docker compose -p $script:DD_STACK_NAME up -d 2>$null
-                if ($LASTEXITCODE -eq 0 -and (Test-ContainerRunning 'dev-dito-wiki')) {
-                    $wikiStarted = $true
-                    Write-Host "[OK] DokuWiki started (leonidas stacks)" -ForegroundColor Green
-                }
-            }
-            finally {
-                Pop-Location
+        # (2) Try starting an existing stopped container first (most common case)
+        $existing = docker ps -a --filter "name=^dev-dito-wiki$" --format "{{.Names}}" 2>$null
+        if ($existing -eq 'dev-dito-wiki') {
+            Write-Host "[INFO] Starting existing dev-dito-wiki container..." -ForegroundColor Cyan
+            docker start dev-dito-wiki 2>$null | Out-Null
+            Start-Sleep -Milliseconds 500
+            if (Test-ContainerRunning 'dev-dito-wiki') {
+                $wikiStarted = $true
+                Write-Host "[OK] DokuWiki started (existing container)" -ForegroundColor Green
             }
         }
 
-        # Strategy A: Try .env + wiki profile from dev_dito compose
+        # (3) Profile wiki from the same compose file (.env required)
         if (-not $wikiStarted) {
             $envFile = "$script:DD_REPO_ROOT\backend_services\.env"
             if (Test-Path $envFile) {
@@ -467,13 +474,13 @@ function Invoke-DevDitoUp {
                 if ($envContent -match 'WIKI_ROOT=(.+)' -and $Matches[1].Trim() -ne '') {
                     $wikiRoot = $Matches[1].Trim()
                     if (Test-Path $wikiRoot) {
-                        Write-Host "[INFO] Starting DokuWiki from .env (WIKI_ROOT=$wikiRoot)..." -ForegroundColor Cyan
+                        Write-Host "[INFO] Starting DokuWiki via profile wiki (WIKI_ROOT=$wikiRoot)..." -ForegroundColor Cyan
                         Push-Location "$script:DD_REPO_ROOT\backend_services"
                         try {
                             docker compose -p $script:DD_STACK_NAME --profile wiki up -d 2>$null
                             if ($LASTEXITCODE -eq 0 -and (Test-ContainerRunning 'dev-dito-wiki')) {
                                 $wikiStarted = $true
-                                Write-Host "[OK] DokuWiki started (.env profile)" -ForegroundColor Green
+                                Write-Host "[OK] DokuWiki started (profile wiki)" -ForegroundColor Green
                             }
                         }
                         finally {
@@ -484,16 +491,21 @@ function Invoke-DevDitoUp {
             }
         }
 
-        # Fallback: try to start existing stopped container
-        if (-not $wikiStarted) {
-            $existing = docker ps -a --filter "name=dev-dito-wiki" --format "{{.Names}}" 2>$null
-            if ($existing) {
-                Write-Host "[INFO] Starting existing dev-dito-wiki container..." -ForegroundColor Cyan
-                docker start dev-dito-wiki 2>$null | Out-Null
-                if (Test-ContainerRunning 'dev-dito-wiki') {
+        # (4) Leonidas stacks compose (external fallback, own project name)
+        if (-not $wikiStarted -and (Test-Path "$script:DD_WIKI_COMPOSE\docker-compose.yml")) {
+            Write-Host "[INFO] Starting DokuWiki from leonidas stacks..." -ForegroundColor Cyan
+            Push-Location $script:DD_WIKI_COMPOSE
+            try {
+                # NOTE: No -p override — uses directory-based project name to
+                # avoid mixing with stack-g-devdito from backend_services/.
+                docker compose up -d 2>$null
+                if ($LASTEXITCODE -eq 0 -and (Test-ContainerRunning 'dev-dito-wiki')) {
                     $wikiStarted = $true
-                    Write-Host "[OK] DokuWiki started (existing container)" -ForegroundColor Green
+                    Write-Host "[OK] DokuWiki started (leonidas stacks)" -ForegroundColor Green
                 }
+            }
+            finally {
+                Pop-Location
             }
         }
 
