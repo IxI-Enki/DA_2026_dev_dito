@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Dev Dito - PHPUnit Configuration
+  Constitution Article IV: PSR-12, strict types
+  Constitution Article III: Critical-Path Unit Testing
+-->
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+    bootstrap="dokuwiki_plugin/tests/bootstrap.php"
+    colors="true"
+    cacheDirectory=".phpunit.cache"
+    executionOrder="depends,defects"
+    failOnRisky="true"
+    failOnWarning="true"
+>
+    <testsuites>
+        <testsuite name="unit">
+            <directory>dokuwiki_plugin/tests/unit</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>dokuwiki_plugin/lib</directory>
+        </include>
+    </source>
+</phpunit>
