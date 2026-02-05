@@ -59,7 +59,7 @@ This architectural decision has the following implications:
 
 ### Multi-Stack Ecosystem Overview
 
-```
+```sketch
                     SHARED DOCKER NETWORK: leonidas-network
     ┌──────────────────────────────────────────────────────────────────────┐
     │                                                                      │
@@ -787,10 +787,6 @@ networks:
 | 8090 | Stack-A | wiki-sandbox              | HTTP      |
 | 9090 | Stack-F | prometheus                | HTTP      |
 
-
-
-
-
 ---
 
 ## User Stories
@@ -1121,10 +1117,6 @@ dev_dito/
 └── sources_dev_dito.yaml
 
 ```
-
-
-
-
 
 ### US-002: Easy Installation of Dev Dito (as Wiki Admin)
 
