@@ -95,6 +95,8 @@ services:
       - CONFIG_PATH=/config/env.yaml
       - DATA_PATH=/data
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - DOCKER_API_VERSION=1.46
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     networks:
       - leonidas-network
     healthcheck:
