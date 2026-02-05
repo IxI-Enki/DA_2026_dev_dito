@@ -12,6 +12,7 @@ param(
     [switch]$SkipNetwork,
     [switch]$SkipMigration,
     [switch]$SkipBuild,
+    [switch]$SkipEnv,
     [switch]$Force,
     [switch]$Help
 )
@@ -47,6 +48,7 @@ function Show-Help {
     Write-Host "  -SkipNetwork     Skip network creation"
     Write-Host "  -SkipMigration   Skip migration detection"
     Write-Host "  -SkipBuild       Skip Docker image building"
+    Write-Host "  -SkipEnv         Skip .env file setup"
     Write-Host "  -Force           Skip all confirmations"
     Write-Host "  -Help            Show this help message"
     Write-Host ""
@@ -243,9 +245,78 @@ function Step-Migration {
     return $true
 }
 
+function Step-Env {
+    Write-Host ""
+    Write-Host "=== Step 4: Environment Configuration ===" -ForegroundColor Cyan
+
+    $envFile = Join-Path $script:PROJECT_ROOT "backend_services\.env"
+    $envTemplate = Join-Path $script:PROJECT_ROOT "backend_services\.env.template"
+
+    if (Test-Path $envFile) {
+        Write-Host "[OK] .env file already exists" -ForegroundColor Green
+
+        # Check if WIKI_ROOT is set
+        $content = Get-Content $envFile -Raw
+        if ($content -match 'WIKI_ROOT=(.+)' -and $Matches[1].Trim() -ne '') {
+            $wikiRoot = $Matches[1].Trim()
+            if (Test-Path $wikiRoot) {
+                Write-Host "[OK] WIKI_ROOT=$wikiRoot (valid)" -ForegroundColor Green
+            }
+            else {
+                Write-Host "[WARN] WIKI_ROOT=$wikiRoot (path not found)" -ForegroundColor Yellow
+            }
+        }
+        else {
+            Write-Host "[WARN] WIKI_ROOT not configured in .env" -ForegroundColor Yellow
+            Write-Host "       DokuWiki will be started from leonidas stacks or manually." -ForegroundColor DarkGray
+        }
+        return $true
+    }
+
+    if (-not (Test-Path $envTemplate)) {
+        Write-Host "[WARN] No .env.template found. Skipping .env setup." -ForegroundColor Yellow
+        return $true
+    }
+
+    Write-Host "[INFO] Creating .env from template..." -ForegroundColor Cyan
+
+    # Copy template
+    Copy-Item $envTemplate $envFile
+
+    # Try to detect DokuWiki installation automatically
+    $leonidasWiki = Join-Path (Split-Path -Parent (Split-Path -Parent $script:PROJECT_ROOT)) `
+        "year_2025_26\SYP_2025_26\leonie\internal_leonidas\development\first_own_dokuwiki"
+
+    if (Test-Path $leonidasWiki) {
+        Write-Host "[INFO] Detected DokuWiki at: $leonidasWiki" -ForegroundColor Cyan
+
+        if (-not $Force) {
+            $confirm = Read-Host "Use this path for WIKI_ROOT? (Y/n)"
+            if ($confirm -eq 'n' -or $confirm -eq 'N') {
+                $leonidasWiki = Read-Host "Enter WIKI_ROOT path"
+            }
+        }
+
+        if ($leonidasWiki -and (Test-Path $leonidasWiki)) {
+            # Update .env file
+            $envContent = Get-Content $envFile -Raw
+            $envContent = $envContent -replace 'WIKI_ROOT=', "WIKI_ROOT=$leonidasWiki"
+            Set-Content -Path $envFile -Value $envContent -Encoding utf8NoBOM
+            Write-Host "[OK] WIKI_ROOT set to: $leonidasWiki" -ForegroundColor Green
+        }
+    }
+    else {
+        Write-Host "[INFO] No DokuWiki auto-detected." -ForegroundColor Yellow
+        Write-Host "       Edit backend_services/.env to set WIKI_ROOT manually." -ForegroundColor DarkGray
+    }
+
+    Write-Host "[OK] .env file created" -ForegroundColor Green
+    return $true
+}
+
 function Step-Build {
     Write-Host ""
-    Write-Host "=== Step 4: Build Docker Images ===" -ForegroundColor Cyan
+    Write-Host "=== Step 5: Build Docker Images ===" -ForegroundColor Cyan
     
     $composeFile = Join-Path $script:PROJECT_ROOT "backend_services\docker-compose.yml"
     
@@ -285,32 +356,108 @@ function Step-Build {
 
 function Step-Start {
     Write-Host ""
-    Write-Host "=== Step 5: Start Services ===" -ForegroundColor Cyan
-    
+    Write-Host "=== Step 6: Start Services ===" -ForegroundColor Cyan
+
+    # Start core services (orchestrator + qdrant)
     Push-Location (Join-Path $script:PROJECT_ROOT "backend_services")
     try {
-        Write-Host "[INFO] Starting stack-g-devdito services..." -ForegroundColor Cyan
-        
+        Write-Host "[INFO] Starting stack-g-devdito core services..." -ForegroundColor Cyan
+
         docker compose -p stack-g-devdito up -d 2>&1 | ForEach-Object {
             Write-Host $_ -ForegroundColor DarkGray
         }
-        
+
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "[ERROR] Failed to start services" -ForegroundColor Red
+            Write-Host "[ERROR] Failed to start core services" -ForegroundColor Red
             return $false
         }
+        Write-Host "[OK] Core services started (orchestrator, qdrant)" -ForegroundColor Green
     }
     finally {
         Pop-Location
     }
-    
+
+    # Start DokuWiki (A+C hybrid logic)
+    Write-Host ""
+    $wikiRunning = docker ps --filter "name=dev-dito-wiki" --format "{{.Names}}" 2>$null
+    if ($wikiRunning) {
+        Write-Host "[OK] DokuWiki already running" -ForegroundColor Green
+    }
+    else {
+        $wikiStarted = $false
+
+        # Strategy C: leonidas stacks compose
+        $leonidasCompose = Join-Path (Split-Path -Parent (Split-Path -Parent $script:PROJECT_ROOT)) `
+            "year_2025_26\SYP_2025_26\leonie\internal_leonidas\stacks\stack-g-devdito\docker-compose.yml"
+        if (Test-Path $leonidasCompose) {
+            $leonidasDir = Split-Path -Parent $leonidasCompose
+            Write-Host "[INFO] Starting DokuWiki from leonidas stacks..." -ForegroundColor Cyan
+            Push-Location $leonidasDir
+            try {
+                docker compose -p stack-g-devdito up -d 2>$null
+                $check = docker ps --filter "name=dev-dito-wiki" --format "{{.Names}}" 2>$null
+                if ($check) {
+                    $wikiStarted = $true
+                    Write-Host "[OK] DokuWiki started (leonidas stacks)" -ForegroundColor Green
+                }
+            }
+            finally {
+                Pop-Location
+            }
+        }
+
+        # Strategy A: .env + wiki profile
+        if (-not $wikiStarted) {
+            $envFile = Join-Path $script:PROJECT_ROOT "backend_services\.env"
+            if (Test-Path $envFile) {
+                $envContent = Get-Content $envFile -Raw
+                if ($envContent -match 'WIKI_ROOT=(.+)' -and $Matches[1].Trim() -ne '') {
+                    $wikiRoot = $Matches[1].Trim()
+                    if (Test-Path $wikiRoot) {
+                        Write-Host "[INFO] Starting DokuWiki via .env (WIKI_ROOT=$wikiRoot)..." -ForegroundColor Cyan
+                        Push-Location (Join-Path $script:PROJECT_ROOT "backend_services")
+                        try {
+                            docker compose -p stack-g-devdito --profile wiki up -d 2>$null
+                            $check = docker ps --filter "name=dev-dito-wiki" --format "{{.Names}}" 2>$null
+                            if ($check) {
+                                $wikiStarted = $true
+                                Write-Host "[OK] DokuWiki started (.env profile)" -ForegroundColor Green
+                            }
+                        }
+                        finally {
+                            Pop-Location
+                        }
+                    }
+                }
+            }
+        }
+
+        # Fallback: start existing stopped container
+        if (-not $wikiStarted) {
+            $existing = docker ps -a --filter "name=dev-dito-wiki" --format "{{.Names}}" 2>$null
+            if ($existing) {
+                Write-Host "[INFO] Starting existing dev-dito-wiki container..." -ForegroundColor Cyan
+                docker start dev-dito-wiki 2>$null | Out-Null
+                $check = docker ps --filter "name=dev-dito-wiki" --format "{{.Names}}" 2>$null
+                if ($check) {
+                    $wikiStarted = $true
+                    Write-Host "[OK] DokuWiki started (existing container)" -ForegroundColor Green
+                }
+            }
+        }
+
+        if (-not $wikiStarted) {
+            Write-Host "[WARN] DokuWiki not started. Set WIKI_ROOT in backend_services/.env" -ForegroundColor Yellow
+        }
+    }
+
     Write-Host "[OK] Services started" -ForegroundColor Green
     return $true
 }
 
 function Step-DeployPlugin {
     Write-Host ""
-    Write-Host "=== Step 6: Deploy DokuWiki Plugin ===" -ForegroundColor Cyan
+    Write-Host "=== Step 7: Deploy DokuWiki Plugin ===" -ForegroundColor Cyan
     
     # Check if dev-dito-wiki container exists
     $wikiContainer = docker ps --format "{{.Names}}" | Where-Object { $_ -eq "dev-dito-wiki" }
@@ -336,27 +483,38 @@ function Step-DeployPlugin {
 
 function Step-HealthCheck {
     Write-Host ""
-    Write-Host "=== Step 7: Health Check ===" -ForegroundColor Cyan
-    
-    # Wait a moment for services to start
-    Start-Sleep -Seconds 3
-    
-    # Check orchestrator
-    Write-Host "[INFO] Checking orchestrator..." -ForegroundColor Cyan
-    try {
-        $response = Invoke-RestMethod -Uri "http://localhost:8089/health" -TimeoutSec 5 -ErrorAction SilentlyContinue
-        Write-Host "[OK] Orchestrator is healthy" -ForegroundColor Green
+    Write-Host "=== Step 8: Health Check ===" -ForegroundColor Cyan
+
+    # Wait for services to initialize
+    Start-Sleep -Seconds 5
+
+    $endpoints = @(
+        @{ Name = 'Orchestrator';  Url = 'http://localhost:8089/health' },
+        @{ Name = 'DokuWiki';      Url = 'http://localhost:8080' },
+        @{ Name = 'Qdrant';        Url = 'http://localhost:6334/healthz' }
+    )
+
+    foreach ($ep in $endpoints) {
+        try {
+            $null = Invoke-WebRequest -Uri $ep.Url -TimeoutSec 5 -ErrorAction Stop
+            Write-Host ("[OK] {0,-16} {1}" -f $ep.Name, $ep.Url) -ForegroundColor Green
+        }
+        catch {
+            Write-Host ("[--] {0,-16} {1}" -f $ep.Name, $ep.Url) -ForegroundColor Yellow
+        }
     }
-    catch {
-        Write-Host "[WARN] Orchestrator not responding (may still be starting)" -ForegroundColor Yellow
-    }
-    
+
     # List running containers
     Write-Host ""
     Write-Host "[INFO] Running Dev Dito containers:" -ForegroundColor Cyan
-    $containers = docker ps --filter "name=dev-dito" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>&1
-    Write-Host $containers -ForegroundColor White
-    
+    $containers = docker ps --filter "name=dev-dito" --format "  {{.Names}}`t{{.Status}}" 2>&1
+    if ($containers -is [array]) {
+        foreach ($line in $containers) { Write-Host $line -ForegroundColor White }
+    }
+    elseif ($containers) {
+        Write-Host $containers -ForegroundColor White
+    }
+
     return $true
 }
 
@@ -366,15 +524,22 @@ function Show-Success {
     Write-Host " Installation Complete!" -ForegroundColor Green
     Write-Host "========================================" -ForegroundColor Green
     Write-Host ""
-    Write-Host "Next Steps:" -ForegroundColor Cyan
-    Write-Host "  1. Access DokuWiki: http://localhost:8080" -ForegroundColor White
-    Write-Host "  2. Admin Panel: http://localhost:8080/?do=admin&page=devdito" -ForegroundColor White
-    Write-Host "  3. Orchestrator API: http://localhost:8089" -ForegroundColor White
+    Write-Host "Access Points:" -ForegroundColor Cyan
+    Write-Host "  DokuWiki:     http://localhost:8080" -ForegroundColor White
+    Write-Host "  Admin Panel:  http://localhost:8080/?do=admin&page=devdito" -ForegroundColor White
+    Write-Host "  Orchestrator: http://localhost:8089" -ForegroundColor White
+    Write-Host "  Qdrant:       http://localhost:6334" -ForegroundColor White
     Write-Host ""
-    Write-Host "Useful Commands:" -ForegroundColor Cyan
-    Write-Host "  docker compose -p stack-g-devdito ps       # Show status" -ForegroundColor DarkGray
-    Write-Host "  docker compose -p stack-g-devdito logs -f  # View logs" -ForegroundColor DarkGray
-    Write-Host "  docker compose -p stack-g-devdito down     # Stop services" -ForegroundColor DarkGray
+    Write-Host "Quick Commands (dd alias):" -ForegroundColor Cyan
+    Write-Host "  dd-status     Show comprehensive status" -ForegroundColor DarkGray
+    Write-Host "  dd-logs       View orchestrator logs" -ForegroundColor DarkGray
+    Write-Host "  dd-health     Check all service endpoints" -ForegroundColor DarkGray
+    Write-Host "  dd-open       Open DokuWiki in browser" -ForegroundColor DarkGray
+    Write-Host "  dd -Help      Full command reference" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "Profile Setup:" -ForegroundColor Cyan
+    Write-Host "  Add this to your `$PROFILE to enable the 'dd' alias:" -ForegroundColor DarkGray
+    Write-Host "  . `"$script:PROJECT_ROOT\scripts\dd_profile_snippet.ps1`"" -ForegroundColor White
     Write-Host ""
 }
 
@@ -416,8 +581,16 @@ function Main {
             exit 1
         }
     }
-    
-    # Step 4: Build
+
+    # Step 4: Environment (.env)
+    if (-not $SkipEnv) {
+        if (-not (Step-Env)) {
+            Write-Host ""
+            Write-Host "[WARN] Environment setup had issues - continuing" -ForegroundColor Yellow
+        }
+    }
+
+    # Step 5: Build
     if (-not $SkipBuild) {
         if (-not (Step-Build)) {
             Write-Host ""
@@ -425,18 +598,18 @@ function Main {
             exit 1
         }
     }
-    
-    # Step 5: Start
+
+    # Step 6: Start
     if (-not (Step-Start)) {
         Write-Host ""
         Write-Host "[ERROR] Installation aborted: Failed to start services" -ForegroundColor Red
         exit 1
     }
     
-    # Step 6: Deploy Plugin
+    # Step 7: Deploy Plugin
     Step-DeployPlugin | Out-Null
-    
-    # Step 7: Health Check
+
+    # Step 8: Health Check
     Step-HealthCheck | Out-Null
     
     # Done!
