@@ -5,16 +5,53 @@
 # Integrates with: stack-d-ai-core (Qdrant), stack-h-mcp (Semantic Search)
 #
 # Usage:
-#   docker compose -p stack-g-devdito up -d                    # Start orchestrator
+#   docker compose -p stack-g-devdito up -d                    # Start core services
+#   docker compose -p stack-g-devdito --profile wiki up -d     # Start with DokuWiki
 #   docker compose -p stack-g-devdito --profile pipeline run   # Run pipeline modules
 #   docker compose -p stack-g-devdito down                     # Stop all
 #
-# Network: htl-wiki-network (external, shared with other stacks)
+# Network: leonidas-network (external, shared with other stacks)
+#
+# DokuWiki (profile: wiki):
+#   Requires WIKI_ROOT in .env file (see .env.template)
 # =============================================================================
 
 name: stack-g-devdito
 
 services:
+  # ==========================================================================
+  # DokuWiki Instance (Optional - via profile "wiki")
+  # Development DokuWiki with Dev Dito plugin pre-mounted
+  # Requires WIKI_ROOT set in .env (path to DokuWiki installation root)
+  # ==========================================================================
+  dokuwiki:
+    image: lscr.io/linuxserver/dokuwiki:latest
+    container_name: dev-dito-wiki
+    profiles: ["wiki"]
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Vienna}
+      - DEVDITO_MCP_URL=http://semantic-search-wiki-core:3000
+    volumes:
+      - ${WIKI_ROOT}/config:/config
+      - ${WIKI_ROOT}/data:/data
+      - ${WIKI_ROOT}/plugins_dev/devdito:/config/dokuwiki/lib/plugins/devdito
+      - ${WIKI_ROOT}/plugins_dev/leonidas:/config/dokuwiki/lib/plugins/leonidas
+      - ${WIKI_ROOT}/plugins_dev/htlthemesettings:/config/dokuwiki/lib/plugins/htlthemesettings
+      - ${WIKI_ROOT}/plugins_dev/templates/htl_leonidas_dark:/config/dokuwiki/lib/tpl/htl_leonidas_dark
+      - ${WIKI_ROOT}/plugins_dev/templates/htl_leonidas_light:/config/dokuwiki/lib/tpl/htl_leonidas_light
+    networks:
+      - leonidas-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # ==========================================================================
   # Qdrant Vector Database (Dev Dito Default)
   # Local vector DB for Dev Dito pipeline - can also use external stack-d
@@ -33,7 +70,7 @@ services:
     networks:
       - leonidas-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333'"]
       interval: 30s
       timeout: 10s
       retries: 3
