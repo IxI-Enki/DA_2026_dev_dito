@@ -930,6 +930,7 @@ function Show-DevDitoHelp {
     Write-Host "  dd-fetch       = dd -Action fetch"
     Write-Host "  dd-embed       = dd -Action embed"
     Write-Host "  dd-sandbox     = dd -Action sandbox-open"
+    Write-Host "  dd-sandbox-open= dd -Action sandbox-open"
     Write-Host "  dd-sandbox-up  = dd -Action sandbox-up"
     Write-Host "  dd-sandbox-down= dd -Action sandbox-down"
     Write-Host "  cd-dd          = Set-Location to dev_dito repo root"
@@ -1038,6 +1039,7 @@ function dd-deploy { Invoke-DevDito -Action deploy }
 
 # Sandbox shortcuts (Stack-A)
 function dd-sandbox { Invoke-DevDito -Action sandbox-open }
+function dd-sandbox-open { Invoke-DevDito -Action sandbox-open }  # Alias for consistency
 function dd-sandbox-up { Invoke-DevDito -Action sandbox-up }
 function dd-sandbox-down { Invoke-DevDito -Action sandbox-down }
 function dd-sandbox-status { Invoke-DevDito -Action sandbox-status }

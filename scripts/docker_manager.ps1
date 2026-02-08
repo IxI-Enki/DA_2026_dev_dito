@@ -30,7 +30,7 @@ function Test-DockerRunning {
         Boolean - True if Docker is running
     #>
     try {
-        $result = docker info 2>&1
+        $null = docker info 2>&1
         return $LASTEXITCODE -eq 0
     }
     catch {

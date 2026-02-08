@@ -27,8 +27,8 @@ function Find-ExistingDevDitoSetup {
         $allContainers = docker ps -a --format "{{.Names}}" 2>&1
         
         foreach ($pattern in $patterns) {
-            $matches = $allContainers | Where-Object { $_ -like $pattern }
-            foreach ($match in $matches) {
+            $foundContainers = $allContainers | Where-Object { $_ -like $pattern }
+            foreach ($match in $foundContainers) {
                 $setups += @{
                     Container = $match
                     Pattern = $pattern
@@ -175,8 +175,8 @@ function Remove-LegacyContainers {
         $allContainers = docker ps -a --format "{{.Names}}" 2>&1
         
         foreach ($pattern in $legacyPatterns) {
-            $matches = $allContainers | Where-Object { $_ -like $pattern }
-            $containersToRemove += $matches
+            $foundContainers = $allContainers | Where-Object { $_ -like $pattern }
+            $containersToRemove += $foundContainers
         }
     }
     catch {
@@ -211,7 +211,7 @@ function Remove-LegacyContainers {
     return $true
 }
 
-function Migrate-ToCurrentStructure {
+function Update-ToCurrentStructure {
     <#
     .SYNOPSIS
         Full migration workflow from legacy to current structure
@@ -311,6 +311,6 @@ Export-ModuleMember -Function @(
     'Get-SetupVersion',
     'Backup-ExistingData',
     'Remove-LegacyContainers',
-    'Migrate-ToCurrentStructure',
+    'Update-ToCurrentStructure',
     'Show-MigrationStatus'
 )
