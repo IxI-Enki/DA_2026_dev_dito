@@ -10,7 +10,6 @@ import os
 import sys
 import json
 import time
-import requests
 import argparse
 from datetime import datetime
 from pathlib import Path
@@ -20,25 +19,8 @@ from typing import Dict, Any, List, Set, Optional
 sys.path.insert(0, str(Path(__file__).parent))
 
 from api_client import WikiAPIClient, PermanentError, TransientError, UserAbortError
-from config import (
-    OUTPUT_BASE_DIR, HEADERS, CA_CERT_PATH, TIMEOUT,
-    API_FETCH_URL, get_fetch_config
-)
-
-
-def format_bytes(size_bytes: int) -> str:
-    """Format bytes to human readable string"""
-    size = float(size_bytes)
-    for unit in ["B", "KB", "MB", "GB"]:
-        if size < 1024:
-            return f"{size:.2f} {unit}"
-        size /= 1024
-    return f"{size:.2f} TB"
-
-
-def sanitize_filename(name: str) -> str:
-    """Sanitize page/media ID for use as filename"""
-    return name.replace(":", "_").replace("/", "_").replace("\\", "_")
+from config import OUTPUT_BASE_DIR, get_fetch_config
+from utils import format_bytes, sanitize_filename
 
 
 class ResumeFetcher:
@@ -203,23 +185,8 @@ class ResumeFetcher:
         file_path = ns_dir / filename
         
         try:
-            # Download via fetch.php
-            url = f"{API_FETCH_URL}?media={media_id}"
-            response = requests.get(
-                url,
-                headers=HEADERS,
-                verify=CA_CERT_PATH,
-                timeout=TIMEOUT * 2,  # Longer timeout for retry
-                stream=True
-            )
-            response.raise_for_status()
-            
-            # Save file
-            with open(file_path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            
-            file_size = file_path.stat().st_size
+            # Download via api_client session (2x timeout for retries)
+            file_size = self.client.download_file(media_id, file_path, timeout_multiplier=2.0)
             
             # Save metadata
             safe_name = sanitize_filename(media_id)

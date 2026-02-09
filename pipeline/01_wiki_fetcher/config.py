@@ -16,7 +16,6 @@ Usage:
 import os
 import re
 import json
-import hashlib
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, TypedDict
@@ -34,31 +33,18 @@ SCRIPT_DIR = Path(__file__).parent.resolve()
 
 # Repository Root (3 Ebenen hoch: fetcher -> pipeline -> dev_dito)
 REPO_ROOT = SCRIPT_DIR.parent.parent
-ROOT_CONFIG_PY = REPO_ROOT / "config.py"
 
-# Lokale Config-Pfade (Fallback)
-LOCAL_CONFIG_DIR = SCRIPT_DIR / "config"
-LOCAL_ENV_YAML = LOCAL_CONFIG_DIR / "env.yaml"
-LOCAL_SETTINGS_JSON = LOCAL_CONFIG_DIR / "settings.json"
+# Single config location: central config/env.yaml
+CONFIG_DIR = REPO_ROOT / "config"
+ENV_YAML_PATH = CONFIG_DIR / "env.yaml"
 
-# Zentrale Config-Pfade (bevorzugt)
-CENTRAL_CONFIG_DIR = REPO_ROOT / "config"
-CENTRAL_ENV_YAML = CENTRAL_CONFIG_DIR / "env.yaml"
-CENTRAL_SETTINGS_JSON = CENTRAL_CONFIG_DIR / "settings.json"
+if not ENV_YAML_PATH.exists():
+    raise FileNotFoundError(
+        f"Central config not found: {ENV_YAML_PATH}\n"
+        f"All configuration must live in the repository root config/env.yaml"
+    )
 
-# Bestimme welche Config verwendet wird
-USE_CENTRAL_CONFIG = CENTRAL_ENV_YAML.exists() or ROOT_CONFIG_PY.exists()
-
-if USE_CENTRAL_CONFIG:
-    CONFIG_DIR = CENTRAL_CONFIG_DIR
-    ENV_YAML_PATH = CENTRAL_ENV_YAML
-    SETTINGS_JSON_PATH = CENTRAL_SETTINGS_JSON
-    print(f"[config] Nutze zentrale Config: {CENTRAL_CONFIG_DIR}")
-else:
-    CONFIG_DIR = LOCAL_CONFIG_DIR
-    ENV_YAML_PATH = LOCAL_ENV_YAML
-    SETTINGS_JSON_PATH = LOCAL_SETTINGS_JSON
-    print(f"[config] Nutze lokale Config: {LOCAL_CONFIG_DIR}")
+print(f"[config] Config: {CONFIG_DIR}")
 
 # PROJECT_ROOT fuer Abwaertskompatibilitaet
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -341,40 +327,6 @@ def load_token(token_path: Path) -> str:
     return token
 
 
-def compute_config_hash(config: Dict[str, Any]) -> str:
-    """Compute hash of config for change detection"""
-    config_copy = {k: v for k, v in config.items() if k != "_meta"}
-    json_str = json.dumps(config_copy, sort_keys=True)
-    return hashlib.md5(json_str.encode()).hexdigest()
-
-
-def load_existing_settings() -> tuple[Dict[str, Any] | None, str | None]:
-    """Load existing settings.json if it exists"""
-    if not SETTINGS_JSON_PATH.exists():
-        return None, None
-    
-    try:
-        with open(SETTINGS_JSON_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data, data.get("_meta", {}).get("hash")
-    except (json.JSONDecodeError, KeyError):
-        return None, None
-
-
-def save_settings(config: Dict[str, Any], config_hash: str) -> None:
-    """Save settings.json with metadata"""
-    from datetime import datetime
-    
-    config["_meta"] = {
-        "generated_at": datetime.now().isoformat(),
-        "source": "env.yaml",
-        "hash": config_hash
-    }
-    
-    with open(SETTINGS_JSON_PATH, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=2, ensure_ascii=False)
-
-
 def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
     """Deep merge two dictionaries, override takes precedence"""
     result = base.copy()
@@ -448,17 +400,6 @@ def load_config() -> Dict[str, Any]:
         else:
             print(f"[config] Token file not found: {token_path}")
             config["JSONRPC"]["api"]["authentication"]["token"] = ""
-    
-    # =========================================================================
-    # Update settings.json only for local config mode (nicht zentral!)
-    # =========================================================================
-    if not USE_CENTRAL_CONFIG:
-        config_hash = compute_config_hash(config)
-        existing_config, existing_hash = load_existing_settings()
-        
-        if existing_hash != config_hash:
-            save_settings(config, config_hash)
-            print(f"[config] Updated settings.json (hash: {config_hash[:8]})")
     
     return config
 
@@ -586,17 +527,18 @@ def get_setting(path: str, default: Any = None) -> Any:
 # =============================================================================
 
 # API Configuration
-API_URL: str = settings.get("JSONRPC", {}).get("api", {}).get("url", "")
-API_BASE_URL: str = settings.get("JSONRPC", {}).get("api", {}).get("base_url", "")
-API_FETCH_URL: str = settings.get("JSONRPC", {}).get("api", {}).get("fetch_url", "")
-API_FEED_URL: str = settings.get("JSONRPC", {}).get("api", {}).get("feed_url", "")
+_jsonrpc_api: Dict[str, Any] = settings.get("JSONRPC", {}).get("api", {})
+API_URL: str = str(_jsonrpc_api.get("url", ""))
+API_BASE_URL: str = str(_jsonrpc_api.get("base_url", ""))
+API_FETCH_URL: str = str(_jsonrpc_api.get("fetch_url", ""))
+API_FEED_URL: str = str(_jsonrpc_api.get("feed_url", ""))
 
 # Authentication
-API_TOKEN: str = settings.get("JSONRPC", {}).get("api", {}).get("authentication", {}).get("token", "")
+API_TOKEN: str = str(_jsonrpc_api.get("authentication", {}).get("token", ""))
 
 # SSL Certificate
 # In Docker: SSL_CERT_PATH environment variable takes precedence
-_cert_from_settings = settings.get("JSONRPC", {}).get("api", {}).get("certificate", "")
+_cert_from_settings: str = str(_jsonrpc_api.get("certificate", ""))
 CA_CERT_PATH: str = os.environ.get("SSL_CERT_PATH", _cert_from_settings)
 
 # Request Headers
@@ -608,14 +550,14 @@ HEADERS: Dict[str, str] = {
 # Output Directory
 # In Docker: Environment variable OUTPUT_DIR takes precedence
 # This allows container mounts to override Windows paths from env.yaml
-_output_from_settings = settings.get("PATHS", {}).get("output_dir", str(PROJECT_ROOT / "content_output"))
+_output_from_settings: str = str(settings.get("PATHS", {}).get("output_dir", str(PROJECT_ROOT / "content_output")))
 OUTPUT_BASE_DIR: str = os.environ.get("OUTPUT_DIR", _output_from_settings)
 
 # Fetch Configuration (flat exports for backward compatibility)
 TIMEOUT: int = FETCH_CONFIG.timeout
 MAX_RETRIES: int = FETCH_CONFIG.max_retries
 RETRY_DELAY: int = FETCH_CONFIG.retry_delay
-FEED_ENTRIES: int = settings.get("FETCH", {}).get("feed_entries", 100)
+FEED_ENTRIES: int = int(settings.get("FETCH", {}).get("feed_entries", 100))
 REQUEST_DELAY: float = FETCH_CONFIG.delay_between_requests
 
 # New exports
@@ -623,9 +565,10 @@ MAX_NAMESPACE_DEPTH: int = FETCH_CONFIG.max_namespace_depth
 BATCH_PROGRESS_INTERVAL: int = FETCH_CONFIG.batch_progress_interval
 
 # Testing Configuration
-TEST_PAGE: str = settings.get("TESTING", {}).get("default_page", "start")
-TEST_NAMESPACE: str = settings.get("TESTING", {}).get("default_namespace", "")
-TEST_MEDIA: str = settings.get("TESTING", {}).get("default_media", "")
+_testing: Dict[str, Any] = settings.get("TESTING", {})
+TEST_PAGE: str = str(_testing.get("default_page", "start"))
+TEST_NAMESPACE: str = str(_testing.get("default_namespace", ""))
+TEST_MEDIA: str = str(_testing.get("default_media", ""))
 
 
 # =============================================================================

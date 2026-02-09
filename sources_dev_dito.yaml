@@ -7,6 +7,7 @@
 #
 # Die gesamte Pipeline transformiert DokuWiki-Inhalte in durchsuchbare
 # Embeddings und evaluiert deren Qualitaet in mehreren Stufen.
+
 #
 # ┌────────────────────────────────────────────────────────────────────┐
 # │                     STAGE 1: CONTENT ACQUISITION                   │

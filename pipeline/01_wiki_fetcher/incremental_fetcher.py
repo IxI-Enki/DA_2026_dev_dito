@@ -24,8 +24,7 @@ from typing import Any, Dict, List, Optional, Set
 from api_client import WikiAPIClient, SkipItemError, PermanentError, TransientError, UserAbortError
 from change_detector import ChangeDetector, ChangeSummary, PageChange, MediaChange
 from config import (
-    OUTPUT_BASE_DIR, HEADERS, CA_CERT_PATH, TIMEOUT,
-    API_BASE_URL, API_FETCH_URL,
+    OUTPUT_BASE_DIR, API_BASE_URL,
     FETCH_CONFIG, get_fetch_config
 )
 from manifest import FetchManifest, PageEntry, MediaEntry, ChangeType, EntryStatus
@@ -347,22 +346,8 @@ class IncrementalFetcher:
                 ns_dir.mkdir(parents=True, exist_ok=True)
                 file_path = ns_dir / filename
                 
-                # Download
-                url = f"{API_FETCH_URL}?media={media_id}"
-                response = requests.get(
-                    url,
-                    headers=HEADERS,
-                    verify=CA_CERT_PATH,
-                    timeout=TIMEOUT,
-                    stream=True,
-                )
-                response.raise_for_status()
-                
-                with open(file_path, "wb") as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                
-                file_size = file_path.stat().st_size
+                # Download via api_client session
+                file_size = self.client.download_file(media_id, file_path)
                 
                 # Add to manifest
                 entry = MediaEntry(
@@ -408,17 +393,8 @@ class IncrementalFetcher:
         if not self.changes:
             return
         
-        # Copy unchanged pages
+        # Unchanged items are NOT in page_changes - get them from previous manifest
         unchanged_pages = 0
-        for change in self.changes.page_changes:
-            if change.change_type == ChangeType.UNCHANGED:
-                entry = self.previous_manifest.get_page(change.page_id)
-                if entry:
-                    self.manifest.add_page(entry)
-                    unchanged_pages += 1
-        
-        # Actually, unchanged items are NOT in page_changes
-        # We need to get them differently
         changed_page_ids = {c.page_id for c in self.changes.page_changes}
         for page_id, entry in self.previous_manifest.pages.items():
             if page_id not in changed_page_ids:

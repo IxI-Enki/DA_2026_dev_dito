@@ -40,7 +40,6 @@ config/
 ├── env.yaml               ← Haupt-Konfiguration (editieren!)
 ├── json_rpc_api.token     ← API Bearer Token
 ├── ssl.cert               ← SSL Zertifikat
-
 └── settings.json          ← Auto-generiert (nicht editieren!)
 ```
 

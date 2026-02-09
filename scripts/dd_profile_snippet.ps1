@@ -918,22 +918,22 @@ function Show-DevDitoHelp {
 
     # --- Shortcuts ---
     Write-Host "SHORTCUTS:" -ForegroundColor Yellow
-    Write-Host "  dd-install     = dd -Action install"
-    Write-Host "  dd-up          = dd -Action up"
-    Write-Host "  dd-down        = dd -Action down"
-    Write-Host "  dd-restart     = dd -Action restart"
-    Write-Host "  dd-status      = dd -Action status"
-    Write-Host "  dd-logs        = dd -Action logs -Follow"
-    Write-Host "  dd-health      = dd -Action health"
-    Write-Host "  dd-open        = dd -Action open -Target wiki"
-    Write-Host "  dd-admin       = dd -Action open -Target admin"
-    Write-Host "  dd-fetch       = dd -Action fetch"
-    Write-Host "  dd-embed       = dd -Action embed"
-    Write-Host "  dd-sandbox     = dd -Action sandbox-open"
-    Write-Host "  dd-sandbox-open= dd -Action sandbox-open"
-    Write-Host "  dd-sandbox-up  = dd -Action sandbox-up"
-    Write-Host "  dd-sandbox-down= dd -Action sandbox-down"
-    Write-Host "  cd-dd          = Set-Location to dev_dito repo root"
+    Write-Host "  dd-install      = dd -Action install"
+    Write-Host "  dd-up           = dd -Action up"
+    Write-Host "  dd-down         = dd -Action down"
+    Write-Host "  dd-restart      = dd -Action restart"
+    Write-Host "  dd-status       = dd -Action status"
+    Write-Host "  dd-logs         = dd -Action logs -Follow"
+    Write-Host "  dd-health       = dd -Action health"
+    Write-Host "  dd-open         = dd -Action open -Target wiki"
+    Write-Host "  dd-admin        = dd -Action open -Target admin"
+    Write-Host "  dd-fetch        = dd -Action fetch"
+    Write-Host "  dd-embed        = dd -Action embed"
+    Write-Host "  dd-sandbox      = dd -Action sandbox-open"
+    Write-Host "  dd-sandbox-open = dd -Action sandbox-open"
+    Write-Host "  dd-sandbox-up   = dd -Action sandbox-up"
+    Write-Host "  dd-sandbox-down = dd -Action sandbox-down"
+    Write-Host "  cd-dd           = Set-Location to dev_dito repo root"
     Write-Host ""
 
     # --- Examples ---
@@ -990,7 +990,7 @@ function Show-DevDitoHelp {
     Write-Host "  Stack-G  devdito            http://localhost:8080     DokuWiki + Pipeline"
     Write-Host "  Stack-G  devdito-api        http://localhost:8089     Orchestrator API"
     Write-Host "  Stack-G  devdito-qdrant     http://localhost:6334     Qdrant (dev dito)"
-    Write-Host "  Stack-H  mcp               http://localhost:3000     Semantic Search"
+    Write-Host "  Stack-H  mcp                http://localhost:3000     Semantic Search"
     Write-Host ""
 }
 

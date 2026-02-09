@@ -61,19 +61,13 @@ flowchart TD
 
 ## Bestehende Quellen (aus sources_dev_dito.yaml)
 
-| Komponente | Pfad |
-
-|------------|------|
-
-| **Wiki Fetcher** | `D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/fetch_full_wiki_extended.py` |
-
-| **Fetch Output** | `D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/content_output/` |
-
-| **Deep Evaluation** | `D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/run_deep_evaluation.py` |
-
-| **Embeddings Creator** | `D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/` |
-
-| **Output JSONL** | `D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/output/embedded_chunks.jsonl` |
+| Komponente             | Pfad                                                                                                                                |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Wiki Fetcher**       | `D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/script/fetch_full_wiki_extended.py` |
+| **Fetch Output**       | `D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetcher_json_rpc_api/content_output/`                    |
+| **Deep Evaluation**    | `D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/dokuwiki/fetched_data_evaluation/script/run_deep_evaluation.py`   |
+| **Embeddings Creator** | `D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/`                                       |
+| **Output JSONL**       | `D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/embeddings_creator/output/embedded_chunks.jsonl`           |
 
 ## Dev Dito Wiki-Seiten Erweiterung
 
@@ -81,9 +75,9 @@ flowchart TD
 
 **Uebersicht aller Pipeline-Schritte mit Status-Anzeige:**
 
-```
-[1. Fetch] -----> [2. Evaluate] -----> [3. Embed] -----> [4. Deploy] -----> [5. Init Qdrant]
-   [OK]             [OK]               [PENDING]          [----]             [----]
+```sketch
+[1. Fetch] -----> [2. Evaluate] -----> [3. Preprocess] -----> [4. Embed] -----> [5. Deploy] -----> [6. Init Qdrant]
+   [OK]             [OK]                [OK]                   [PENDING]          [----]             [----]
 ```
 
 **Buttons:**

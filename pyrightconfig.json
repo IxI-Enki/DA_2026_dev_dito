@@ -1,0 +1,25 @@
+{
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic",
+  "executionEnvironments": [
+    {
+      "root": "pipeline/01_wiki_fetcher",
+      "extraPaths": ["pipeline/01_wiki_fetcher"]
+    },
+    {
+      "root": "pipeline/02_deep_evaluation",
+      "extraPaths": ["pipeline/02_deep_evaluation"]
+    },
+    {
+      "root": "pipeline/03_embeddings_creator",
+      "extraPaths": ["pipeline/03_embeddings_creator"]
+    },
+    {
+      "root": "pipeline/03_rag_preprocessing",
+      "extraPaths": ["pipeline/03_rag_preprocessing"]
+    },
+    {
+      "root": "."
+    }
+  ]
+}

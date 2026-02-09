@@ -41,7 +41,7 @@ todos:
 
 ## Ziel-Repository
 
-```
+```path
 D:\_Repositories\_Diploma_Thesis_Repositories\dev_dito\
 ```
 
@@ -51,7 +51,7 @@ GitHub Repository: `IxI-Enki/DA_2026_dev_dito` (privat, neu zu erstellen)
 
 ## Repository Struktur
 
-```
+```tree
 dev_dito/
 ├── README.md                          # Projekt-Uebersicht
 ├── LICENSE
@@ -154,41 +154,26 @@ dev_dito/
 
 ### Mature Versions (NUR diese kopieren)
 
-| Quelle | Ziel | Status |
-
-|--------|------|--------|
-
-| `techstack/dokuwiki/fetcher_json_rpc_api/script/` | `pipeline/01_wiki_fetcher/` | MATURE |
-
-| `techstack/dokuwiki/fetched_data_evaluation/script/` | `pipeline/02_deep_evaluation/` | MATURE |
-
-| `techstack/qdrant/embeddings_creator/script/` | `pipeline/03_embeddings_creator/` | MATURE |
-
-| `techstack/qdrant/embeddings_creator/config/env.yaml` | `pipeline/03_embeddings_creator/env.yaml` | MATURE |
-
-| `02_dev_dito/_development_of_dev_dito/backend_services/` | `backend_services/` | MATURE |
-
-| `02_dev_dito/_development_of_dev_dito/devdito/` | `dokuwiki_plugin/` | MATURE |
-
-| `02_dev_dito/architecture_dev_dito.md` | `docs/architecture.md` | MATURE |
-
-| `.cursor/plans/dev_dito_pipeline_manager_*.md` | `planning/` | PLAN |
-
-| `sources_dev_dito.yaml` | `config/sources.yaml` | CONFIG |
+| Quelle                                                   | Ziel                                      | Status |
+| -------------------------------------------------------- | ----------------------------------------- | ------ |
+| `techstack/dokuwiki/fetcher_json_rpc_api/script/`        | `pipeline/01_wiki_fetcher/`               | MATURE |
+| `techstack/dokuwiki/fetched_data_evaluation/script/`     | `pipeline/02_deep_evaluation/`            | MATURE |
+| `techstack/qdrant/embeddings_creator/script/`            | `pipeline/03_embeddings_creator/`         | MATURE |
+| `techstack/qdrant/embeddings_creator/config/env.yaml`    | `pipeline/03_embeddings_creator/env.yaml` | MATURE |
+| `02_dev_dito/_development_of_dev_dito/backend_services/` | `backend_services/`                       | MATURE |
+| `02_dev_dito/_development_of_dev_dito/devdito/`          | `dokuwiki_plugin/`                        | MATURE |
+| `02_dev_dito/architecture_dev_dito.md`                   | `docs/architecture.md`                    | MATURE |
+| `.cursor/plans/dev_dito_pipeline_manager_*.md`           | `planning/`                               | PLAN   |
+| `sources_dev_dito.yaml`                                  | `config/sources.yaml`                     | CONFIG |
 
 ### NICHT kopieren (Duplikate/Alte Versionen)
 
-| Pfad | Grund |
-
-|------|-------|
-
-| `techstack/qdrant/.archived_scripts/` | Alte Version |
-
-| `techstack/qdrant/.archived_embedded_chunks/` | Alte Outputs |
-
-| `techstack/dokuwiki/testing_json_rpc_api_dokuwiki__by_ai_(insufficient)/` | Markiert als "insufficient" |
-
-| `techstack/dokuwiki/fetcher_json_rpc_api/script/fetch_full_wiki.py` | Aeltere Version (extended ist neuer) |
+| Pfad                                                                      | Grund                                |
+| ------------------------------------------------------------------------- | ------------------------------------ |
+| `techstack/qdrant/.archived_scripts/`                                     | Alte Version                         |
+| `techstack/qdrant/.archived_embedded_chunks/`                             | Alte Outputs                         |
+| `techstack/dokuwiki/testing_json_rpc_api_dokuwiki__by_ai_(insufficient)/` | Markiert als "insufficient"          |
+| `techstack/dokuwiki/fetcher_json_rpc_api/script/fetch_full_wiki.py`       | Aeltere Version (extended ist neuer) |
 
 ---
 
@@ -225,32 +210,32 @@ services:
     image: qdrant/qdrant:v1.13.2
     container_name: devdito_qdrant
     ports:
-                                                                                 - "6333:6333"
-                                                                                 - "6334:6334"
+      - "6333:6333"
+      - "6334:6334"
     volumes:
-                                                                                 - qdrant_storage:/qdrant/storage
+      - qdrant_storage:/qdrant/storage
 
   qdrant_init:
     build: ./qdrant_db
     container_name: devdito_qdrant_init
     depends_on:
-                                                                                 - qdrant_db
+      - qdrant_db
     environment:
-                                                                                 - QDRANT_HOST=qdrant_db
-                                                                                 - COLLECTION_NAME=wiki_embeddings
+      - QDRANT_HOST=qdrant_db
+      - COLLECTION_NAME=wiki_embeddings
     volumes:
-                                                                                 - ../data/embeddings:/data/embeddings:ro
+      - ../data/embeddings:/data/embeddings:ro
 
   wiki_mcp_server:
     build: ./wiki_dev_mcp_server
     container_name: devdito_mcp_server
     ports:
-                                                                                 - "3000:3000"
+      - "3000:3000"
     depends_on:
-                                                                                 - qdrant_db
+      - qdrant_db
     environment:
-                                                                                 - QDRANT_HOST=qdrant_db
-                                                                                 - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - QDRANT_HOST=qdrant_db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
 volumes:
   qdrant_storage:
@@ -291,15 +276,14 @@ Nach der Auslagerung:
    ```
 
 2. **Struktur anlegen**
-
-                                                                                                - Verzeichnisse erstellen
-                                                                                                - Mature Scripts kopieren (siehe Mapping)
-                                                                                                - Neue Dateien erstellen (README, docker-compose, etc.)
+   - Verzeichnisse erstellen
+   - Mature Scripts kopieren (siehe Mapping)
+   - Neue Dateien erstellen (README, docker-compose, etc.)
 
 3. **Pfade in Scripts anpassen**
 
-                                                                                                - `config.py` Dateien: Relative Pfade verwenden
-                                                                                                - `env.yaml` Dateien: Pfade auf neues Repo umstellen
+   - `config.py` Dateien: Relative Pfade verwenden
+   - `env.yaml` Dateien: Pfade auf neues Repo umstellen
 
 4. **GitHub Repository erstellen**
    ```powershell
@@ -307,6 +291,5 @@ Nach der Auslagerung:
    ```
 
 5. **internal_leonidas bereinigen**
-
-                                                                                                - `02_dev_dito/` entfernen
-                                                                                                - `docker-compose.yml` anpassen
+   - `02_dev_dito/` entfernen
+   - `docker-compose.yml` anpassen

@@ -423,10 +423,11 @@ class ChangeReportGenerator:
         """
         if not self.report:
             self.generate_report()
-        
+        assert self.report is not None
+
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Save JSON
         json_path = output_dir / f"{self.report.report_id}.json"
         with open(json_path, "w", encoding="utf-8") as f:
@@ -444,7 +445,8 @@ class ChangeReportGenerator:
         """Generate human-readable text report"""
         if not self.report:
             self.generate_report()
-        
+        assert self.report is not None
+
         lines = [
             "=" * 70,
             "WIKI CHANGE REPORT",

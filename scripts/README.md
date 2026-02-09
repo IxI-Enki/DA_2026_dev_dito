@@ -34,7 +34,7 @@ Deployed das Plugin zum lokalen Test-Wiki.
 ## Ziel-Wiki Konfiguration
 
 Das Standard-Ziel-Wiki ist:
-```
+```path
 D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\development\first_own_dokuwiki
 ```
 

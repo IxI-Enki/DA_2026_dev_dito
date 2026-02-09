@@ -10,7 +10,6 @@ import sys
 import json
 import time
 import signal
-import requests
 import re
 from collections import defaultdict
 from datetime import datetime
@@ -20,11 +19,11 @@ from api_client import WikiAPIClient, SkipItemError, PermanentError, TransientEr
 from extract_links_from_html import LinkExtractor
 from media_cache import MediaCache
 from config import (
-    OUTPUT_BASE_DIR, HEADERS, CA_CERT_PATH, TIMEOUT,
-    API_BASE_URL, API_FETCH_URL,
+    OUTPUT_BASE_DIR, API_BASE_URL,
     FETCH_CONFIG, get_fetch_config, get_setting
 )
 from manifest import FetchManifest, PageEntry, MediaEntry, EntryStatus
+from utils import format_bytes, sanitize_filename
 
 # Try to import progress tracker (may not be available in all environments)
 try:
@@ -59,26 +58,11 @@ def _sigint_handler(sig, frame):
     sys.exit(130)  # Standard exit code for SIGINT
 
 
-def sanitize_filename(name: str) -> str:
-    """Sanitize page/media ID for use as filename"""
-    return name.replace(":", "_").replace("/", "_").replace("\\", "_")
-
-
 def get_file_extension(filename: str) -> str:
     """Extract file extension from filename"""
     if "." in filename:
         return filename.rsplit(".", 1)[-1].lower()
     return "unknown"
-
-
-def format_bytes(size_bytes: int | float) -> str:
-    """Format bytes to human readable string"""
-    size = float(size_bytes)
-    for unit in ["B", "KB", "MB", "GB"]:
-        if size < 1024:
-            return f"{size:.2f} {unit}"
-        size /= 1024
-    return f"{size:.2f} TB"
 
 
 class ExtendedWikiFetcher:
@@ -790,7 +774,6 @@ class ExtendedWikiFetcher:
         else:
             self.log("  Cache: DISABLED (--no-cache)")
         
-        base_url = API_FETCH_URL
         total = len(media_list)
         max_size_bytes = self.config.media.max_file_size_mb * 1024 * 1024 if self.config.media.max_file_size_mb > 0 else float("inf")
         request_delay = self.config.delay_between_requests
@@ -892,28 +875,7 @@ class ExtendedWikiFetcher:
             
             # Cache miss - download from server
             try:
-                url = f"{base_url}?media={media_id}"
-                response = requests.get(
-                    url,
-                    headers=HEADERS,
-                    verify=CA_CERT_PATH,
-                    timeout=TIMEOUT,
-                    stream=True
-                )
-                response.raise_for_status()
-                
-                # Check content length before downloading
-                content_length = int(response.headers.get('content-length', 0))
-                if content_length > max_size_bytes:
-                    self.stats["media"]["download_skipped"] += 1
-                    continue
-                
-                # Save file
-                with open(file_path, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                
-                file_size = file_path.stat().st_size
+                file_size = self.client.download_file(media_id, file_path)
                 downloaded_count += 1
                 self.stats["media"]["downloaded"] += 1
                 self.stats["media"]["total_size_bytes"] += file_size

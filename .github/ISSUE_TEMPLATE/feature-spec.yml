@@ -1,0 +1,95 @@
+name: Feature Specification
+description: Create a tracked issue for a Spec Kit feature specification
+title: "[Spec] "
+labels: ["spec", "feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Spec Kit Feature Issue
+        Use this template to create a tracking issue for a new feature
+        developed through the Spec-Driven Development workflow.
+
+  - type: input
+    id: feature_name
+    attributes:
+      label: Feature Name
+      description: Short descriptive name for the feature
+      placeholder: e.g., Simplified Installation
+    validations:
+      required: true
+
+  - type: input
+    id: spec_branch
+    attributes:
+      label: Spec Branch
+      description: "Feature branch name (format: NNN-feature-name)"
+      placeholder: e.g., 007-feature-name
+    validations:
+      required: true
+
+  - type: input
+    id: spec_dir
+    attributes:
+      label: Spec Directory
+      description: "Path to spec directory in repository"
+      placeholder: e.g., specs/007-feature-name/
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve?
+      placeholder: Describe the problem or pain point this feature addresses.
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      description: Key requirements extracted from spec.md
+      placeholder: |
+        - R1: ...
+        - R2: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: How do we know this feature is complete?
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Implementation priority
+      options:
+        - P1 - Critical (MVP)
+        - P2 - Important
+        - P3 - Nice to have
+    validations:
+      required: true
+
+  - type: dropdown
+    id: sdd_phase
+    attributes:
+      label: Current SDD Phase
+      description: Where is this feature in the Spec Kit lifecycle?
+      options:
+        - "/specify - Specification written"
+        - "/plan - Technical plan created"
+        - "/tasks - Task breakdown complete"
+        - "/implement - Implementation in progress"
+        - "Complete - Awaiting review"
+    validations:
+      required: true

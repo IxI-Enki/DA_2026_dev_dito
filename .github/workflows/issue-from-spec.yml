@@ -1,0 +1,176 @@
+# =============================================================================
+# Dev Dito - Auto-Create GitHub Issue from Spec
+# =============================================================================
+# Triggers when specs/**/spec.md is added or modified on feature branches.
+# Creates a GitHub Issue with title, problem statement, and requirements
+# extracted from the spec file.
+#
+# Human-in-the-loop:
+#   - Does NOT auto-assign
+#   - Does NOT auto-close issues on merge
+#   - Issues require manual closure after human review
+# =============================================================================
+
+name: Issue from Spec
+
+permissions:
+  contents: read
+  issues: write
+
+on:
+  push:
+    branches-ignore:
+      - master
+    paths:
+      - "specs/**/spec.md"
+
+jobs:
+  create-issue:
+    name: Create Issue from Spec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need previous commit to detect changes
+
+      - name: Find changed spec files
+        id: specs
+        run: |
+          # Find spec.md files changed in this push
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'specs/**/spec.md' 2>/dev/null || echo "")
+
+          if [ -z "$CHANGED" ]; then
+            echo "[INFO] No spec.md changes detected"
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Use the first changed spec file
+          SPEC_FILE=$(echo "$CHANGED" | head -1)
+          echo "[INFO] Changed spec: $SPEC_FILE"
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          echo "spec_file=$SPEC_FILE" >> "$GITHUB_OUTPUT"
+
+          # Extract spec directory name (e.g., "006-simplified-installation")
+          SPEC_DIR=$(dirname "$SPEC_FILE" | xargs basename)
+          echo "spec_dir=$SPEC_DIR" >> "$GITHUB_OUTPUT"
+
+          # Extract feature number
+          if [[ "$SPEC_DIR" =~ ^([0-9]+)- ]]; then
+            echo "feature_num=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract spec content
+        if: steps.specs.outputs.found == 'true'
+        id: content
+        run: |
+          SPEC_FILE="${{ steps.specs.outputs.spec_file }}"
+          SPEC_DIR="${{ steps.specs.outputs.spec_dir }}"
+
+          # Extract title (first markdown heading)
+          TITLE=$(grep -m 1 '^# ' "$SPEC_FILE" | sed 's/^# //')
+          if [ -z "$TITLE" ]; then
+            TITLE="Spec: $SPEC_DIR"
+          fi
+          echo "title=$TITLE" >> "$GITHUB_OUTPUT"
+
+          # Extract problem statement (text between ## Problem Statement and next ##)
+          PROBLEM=$(awk '/^## Problem Statement/,/^## [^P]/' "$SPEC_FILE" | head -20 | tail -n +2)
+
+          # Extract requirements section
+          REQUIREMENTS=$(awk '/^## Requirements/,/^## [^R]/' "$SPEC_FILE" | head -30 | tail -n +2)
+
+          # Build issue body using heredoc for multiline
+          BODY_FILE=$(mktemp)
+          cat > "$BODY_FILE" << 'BODYEOF'
+          ## Spec Reference
+
+          BODYEOF
+
+          {
+            echo "**Spec Directory**: \`specs/$SPEC_DIR/\`"
+            echo "**Branch**: \`${{ github.ref_name }}\`"
+            echo "**Commit**: ${{ github.sha }}"
+            echo ""
+            echo "---"
+            echo ""
+            if [ -n "$PROBLEM" ]; then
+              echo "## Problem Statement"
+              echo ""
+              echo "$PROBLEM"
+              echo ""
+            fi
+            if [ -n "$REQUIREMENTS" ]; then
+              echo "## Requirements"
+              echo ""
+              echo "$REQUIREMENTS"
+              echo ""
+            fi
+            echo "---"
+            echo ""
+            echo "*Auto-created from \`$SPEC_FILE\` by CI. Review and adjust as needed.*"
+          } > "$BODY_FILE"
+
+          # Store body file path
+          echo "body_file=$BODY_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Check for existing issue
+        if: steps.specs.outputs.found == 'true'
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SPEC_DIR="${{ steps.specs.outputs.spec_dir }}"
+
+          # Search for existing issue with matching spec label
+          EXISTING=$(gh issue list \
+            --label "spec:$SPEC_DIR" \
+            --state all \
+            --limit 1 \
+            --json number \
+            --jq '.[0].number // empty' 2>/dev/null || echo "")
+
+          if [ -n "$EXISTING" ]; then
+            echo "[INFO] Issue #$EXISTING already exists for spec $SPEC_DIR"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "number=$EXISTING" >> "$GITHUB_OUTPUT"
+          else
+            echo "[INFO] No existing issue for spec $SPEC_DIR"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Issue
+        if: steps.specs.outputs.found == 'true' && steps.existing.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="${{ steps.content.outputs.title }}"
+          SPEC_DIR="${{ steps.specs.outputs.spec_dir }}"
+          BODY_FILE="${{ steps.content.outputs.body_file }}"
+
+          # Ensure labels exist (create if missing)
+          gh label create "spec" --description "Spec-Kit feature specification" --color "0075ca" 2>/dev/null || true
+          gh label create "feature" --description "New feature" --color "a2eeef" 2>/dev/null || true
+          gh label create "spec:$SPEC_DIR" --description "Spec: $SPEC_DIR" --color "d4c5f9" 2>/dev/null || true
+
+          # Create issue
+          ISSUE_URL=$(gh issue create \
+            --title "$TITLE" \
+            --body-file "$BODY_FILE" \
+            --label "spec,feature,spec:$SPEC_DIR")
+
+          echo "[OK] Created issue: $ISSUE_URL"
+
+      - name: Update existing issue comment
+        if: steps.specs.outputs.found == 'true' && steps.existing.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUM="${{ steps.existing.outputs.number }}"
+          SPEC_FILE="${{ steps.specs.outputs.spec_file }}"
+
+          gh issue comment "$ISSUE_NUM" \
+            --body "Spec updated in commit ${{ github.sha }} (branch: \`${{ github.ref_name }}\`). Review \`$SPEC_FILE\` for changes."
+
+          echo "[OK] Added update comment to issue #$ISSUE_NUM"
