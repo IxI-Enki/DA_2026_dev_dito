@@ -21,10 +21,10 @@ except ImportError:
     HAS_PIL = False
     Image = None
 
-# Relative import für config
+# Resolve config from package root (02_deep_evaluation)
 import sys
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from script.config import get_config
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from config import get_config
 
 logger = logging.getLogger(__name__)
 

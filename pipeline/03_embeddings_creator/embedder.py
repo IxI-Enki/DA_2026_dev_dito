@@ -6,7 +6,7 @@ Creates embeddings using OpenAI API.
 
 import time
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Literal, cast
 
 from openai import OpenAI
 
@@ -83,7 +83,7 @@ class Embedder:
                 model=self.model,
                 input=texts,
                 dimensions=self.dimensions,
-                encoding_format=self.encoding_format,
+                encoding_format=cast(Literal["float", "base64"], self.encoding_format),
             )
             
             # Update statistics

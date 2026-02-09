@@ -572,6 +572,8 @@ class ContentEvaluator:
     
     def _identify_flagged(self):
         """Identify pages needing attention"""
+        if not self.report:
+            return
         for eval in self.report.page_evaluations:
             if eval.flags:
                 self.report.flagged_pages.append(eval.page_id)
@@ -584,13 +586,16 @@ class ContentEvaluator:
         """Save evaluation report to JSON"""
         if not self.report:
             self.evaluate()
-        
+        if not self.report:
+            raise RuntimeError("Evaluation did not produce a report")
+        report = self.report
+
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
-        
-        report_path = output_dir / f"evaluation_{self.report.fetch_id}.json"
+
+        report_path = output_dir / f"evaluation_{report.fetch_id}.json"
         with open(report_path, "w", encoding="utf-8") as f:
-            json.dump(self.report.to_dict(), f, indent=2, ensure_ascii=False)
+            json.dump(report.to_dict(), f, indent=2, ensure_ascii=False)
         
         self.log(f"\n[OK] Report saved: {report_path}")
         return report_path
@@ -599,19 +604,23 @@ class ContentEvaluator:
         """Get list of pages recommended for embedding"""
         if not self.report:
             self.evaluate()
-        
+        if not self.report:
+            return []
+        report = self.report
         return [
-            eval.page_id for eval in self.report.page_evaluations
+            eval.page_id for eval in report.page_evaluations
             if eval.embedding_recommendation == "include"
         ]
-    
+
     def get_pages_to_review(self) -> List[PageEvaluation]:
         """Get pages that need human review"""
         if not self.report:
             self.evaluate()
-        
+        if not self.report:
+            return []
+        report = self.report
         return [
-            eval for eval in self.report.page_evaluations
+            eval for eval in report.page_evaluations
             if eval.embedding_recommendation == "review"
         ]
 

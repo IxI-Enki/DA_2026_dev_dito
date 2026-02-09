@@ -16,6 +16,7 @@ import argparse
 import hashlib
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 # Default configuration (same as transfer_to_pi.py)
 DEFAULT_CONFIG = {
@@ -27,8 +28,8 @@ DEFAULT_CONFIG = {
 }
 
 
-def get_local_hash(filepath: Path) -> str:
-    """Calculate MD5 hash of local file."""
+def get_local_hash(filepath: Path) -> Optional[str]:
+    """Calculate MD5 hash of local file. Returns None if file does not exist."""
     if not filepath.exists():
         return None
     
@@ -39,8 +40,8 @@ def get_local_hash(filepath: Path) -> str:
     return hash_md5.hexdigest()
 
 
-def get_remote_hash(host: str, user: str, port: int, remote_path: str, key_path: str = None) -> str:
-    """Get MD5 hash of remote file via SSH."""
+def get_remote_hash(host: str, user: str, port: int, remote_path: str, key_path: Optional[str] = None) -> Optional[str]:
+    """Get MD5 hash of remote file via SSH. Returns None on failure."""
     cmd = ["ssh"]
     if key_path:
         cmd.extend(["-i", key_path])
@@ -59,7 +60,7 @@ def get_remote_hash(host: str, user: str, port: int, remote_path: str, key_path:
         return None
 
 
-def get_remote_file_info(host: str, user: str, port: int, remote_path: str, key_path: str = None) -> dict:
+def get_remote_file_info(host: str, user: str, port: int, remote_path: str, key_path: Optional[str] = None) -> dict:
     """Get file info from remote host."""
     cmd = ["ssh"]
     if key_path:
@@ -82,7 +83,7 @@ def get_remote_file_info(host: str, user: str, port: int, remote_path: str, key_
         return {"exists": False, "error": str(e)}
 
 
-def verify_qdrant_collection(host: str, user: str, port: int, key_path: str = None) -> dict:
+def verify_qdrant_collection(host: str, user: str, port: int, key_path: Optional[str] = None) -> dict:
     """Check Qdrant collection status on remote host."""
     cmd = ["ssh"]
     if key_path:

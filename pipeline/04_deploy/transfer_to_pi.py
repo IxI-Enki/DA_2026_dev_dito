@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import subprocess
 from pathlib import Path
+from typing import Optional
 from datetime import datetime
 
 # Default configuration
@@ -51,7 +52,7 @@ def get_file_size(filepath: Path) -> str:
     return f"{size:.2f} TB"
 
 
-def test_ssh_connection(host: str, user: str, port: int, key_path: str = None) -> bool:
+def test_ssh_connection(host: str, user: str, port: int, key_path: Optional[str] = None) -> bool:
     """Test SSH connection to remote host."""
     print(f"[INFO] Testing SSH connection to {user}@{host}:{port}...")
     
@@ -82,7 +83,7 @@ def transfer_file(
     remote_user: str,
     remote_path: str,
     port: int = 22,
-    key_path: str = None,
+    key_path: Optional[str] = None,
     dry_run: bool = False
 ) -> bool:
     """Transfer file via SCP."""

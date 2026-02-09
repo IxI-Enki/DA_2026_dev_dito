@@ -303,7 +303,7 @@ class RAGPreprocessor:
         """Extract text from DOCX."""
         from docx import Document
         
-        doc = Document(file_path)
+        doc = Document(str(file_path))
         paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
         
         return '\n\n'.join(paragraphs) if paragraphs else None
@@ -331,14 +331,15 @@ class RAGPreprocessor:
         """Extract text from PPTX."""
         from pptx import Presentation
         
-        prs = Presentation(file_path)
+        prs = Presentation(str(file_path))
         text_parts = []
         
         for i, slide in enumerate(prs.slides, 1):
             slide_text = []
             for shape in slide.shapes:
-                if hasattr(shape, 'text') and shape.text.strip():
-                    slide_text.append(shape.text)
+                text = getattr(shape, "text", "")
+                if text.strip():
+                    slide_text.append(text)
             
             if slide_text:
                 text_parts.append(f"## Slide {i}\n" + '\n'.join(slide_text))
