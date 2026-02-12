@@ -127,31 +127,38 @@ function Get-ExpectedStacks {
         Hashtable of stack info
     #>
     return @{
-        "stack-a-wiki-sandbox" = @{
-            Description = "Plain DokuWiki sandbox instance"
+# >>> Expected Stacks >>>
+
+        'stack-a-wiki-sandbox' = @{
+            Description = 'Plain DokuWiki sandbox instance'
             Required = $false
-            Containers = @("wiki-sandbox")
+            Containers = @('wiki-sandbox')
         }
-        "stack-b-wiki-core" = @{
-            Description = "Core wiki services (Keycloak)"
+
+        'stack-b-wiki-core' = @{
+            Description = 'Core wiki services (Keycloak)'
             Required = $false
-            Containers = @("keycloak-server")
+            Containers = @('keycloak-server')
         }
-        "stack-d-ai-core" = @{
-            Description = "AI infrastructure (Qdrant)"
+
+        'stack-d-ai-core' = @{
+            Description = 'AI infrastructure (Qdrant)'
             Required = $true
-            Containers = @("qdrant-main-vector-db")
+            Containers = @('qdrant-main-vector-db')
         }
-        "stack-g-devdito" = @{
-            Description = "Dev Dito services"
+
+        'stack-g-devdito' = @{
+            Description = 'Dev Dito services'
             Required = $true
-            Containers = @("dev-dito-wiki", "dev-dito-orchestrator")
+            Containers = @('dev-dito-wiki', 'dev-dito-orchestrator')
         }
-        "stack-h-mcp" = @{
-            Description = "MCP servers (Semantic Search)"
+
+        'stack-h-mcp' = @{
+            Description = 'MCP servers (Semantic Search)'
             Required = $false
-            Containers = @("semantic-search-wiki-core")
+            Containers = @('semantic-search-wiki-core')
         }
+# <<< Expected Stacks <<<
     }
 }
 

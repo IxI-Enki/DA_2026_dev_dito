@@ -21,13 +21,15 @@
 | Eigenschaft           | Wert                                                                  |
 | --------------------- | --------------------------------------------------------------------- |
 | **Projekt**           | Dev Dito - Wiki Embedding Pipeline & Service Addon                    |
-| **Team**              | Jan Ritt (IxI-Enki), Imre Obermüller                                  |
+| **Team**              | Jan Ritt (CIFT - Embedding/Retrieval/Auth/Deploy), Imre Obermüller (BIF - MCP Server/Transport/Tools) |
 | **Kontext**           | Diplomarbeit 2026, HTL Leonding                                       |
-| **Stack**             | Python 3.11+ (Pipeline), PHP (DokuWiki Plugin), Docker/Docker Compose |
-| **Deployment**        | Docker lokal + Raspberry Pi (SSH Deploy)                              |
-| **Zielgruppe**        | Wiki-Administrator (primaer Entwickler selbst)                        |
+| **Betreuer**          | Rainer Stropek                                                        |
+| **Stack**             | Python 3.11+ (Pipeline), PHP (DokuWiki Plugin), Docker/Docker Compose, FastAPI (Gateway) |
+| **Deployment**        | Docker lokal (Windows 11) + Raspberry Pi (SSH Deploy), npm Package (MCP Server) |
+| **Zielgruppe**        | Wiki-Administrator (primaer Entwickler selbst), Claude Desktop (MCP Client) |
 | **Architektur-Rolle** | Stack-G in Multi-Stack Docker-Architektur (Stacks A-I)                |
-| **Version**           | 0.1.0-alpha                                                           |
+| **Forschungsfragen**  | FF1: Semantic vs Keyword Search, FF2: MCP Integration Standard, FF3: Embedding Model Comparison (German Content) |
+| **Version**           | 1.3.0                                                                 |
 
 ---
 
@@ -329,6 +331,133 @@ Docker-Services verschleiern genau die Fehler, die in Produktion auftreten.
 
 ---
 
+### Article X: Evaluation-First Development
+
+**Mandate**: Die Implementierung von Evaluations-Infrastruktur und Thesis-Metriken hat VORRANG
+vor Infrastruktur-Refactorings. Evaluation-Skripte zur Generierung von Thesis-Tabellen und
+-Grafiken (FF1/FF2/FF3) muessen lauffaehig sein, bevor das Gateway-Orchestrator-Refactoring
+(DooD-Removal, docker compose run) durchgefuehrt wird. Thesis-Deliverables (J1-J8, I1-I5)
+definieren die Prioritaet der Engineering-Tasks.
+
+**Rationale**: Die Diplomarbeit wird nach wissenschaftlichen Ergebnissen bewertet, nicht nach
+der Eleganz der Docker-Orchestrierung. Evaluation-Skripte liefern die Daten fuer Kapitel 6-7
+der Thesis. Ein perfektes Gateway ohne auswertbare Daten ist wertlos fuer die Abgabe.
+
+**Enforcement**:
+- [ ] FF1-Keyword-Search-Baseline-Skript existiert und generiert MRR/Precision@5 Metriken
+- [ ] J4-Chunk-Size-Evaluation-Skript erzeugt vergleichbare Outputs fuer 256/512/1024 Tokens
+- [ ] J2/FF3-Model-Comparison-Framework kann beliebige Embedding-Modelle austauschen (Ollama, OpenAI, MTEB)
+- [ ] Evaluation-Outputs sind in `evaluation/results/` versioniert und referenzierbar
+- [ ] Infrastructure-Refactorings (DooD -> docker compose run) erfolgen ERST nach lauffaehiger Evaluation
+
+**References**:
+- Thesis Deliverables: `README_THESIS.md`
+- RAGAS Framework (Stack-E): `evaluation/ragas_integration.md`
+- MTEB Leaderboard: https://huggingface.co/spaces/mteb/leaderboard
+
+---
+
+### Article XI: Thesis Milestone Alignment
+
+**Mandate**: Jede Engineering-Task muss mindestens einer Forschungsfrage (FF1-FF3) oder einem
+Thesis-Deliverable (J1-J8, I1-I5) zugeordnet sein. Tasks ohne Thesis-Relevanz werden als
+"Post-Thesis Enhancement" markiert und haben niedrigste Prioritaet. Der Milestone-Plan
+(siehe Section "Thesis Alignment") definiert die zwingende Reihenfolge.
+
+**Rationale**: Bei zwei Studenten mit 3 Monaten bis zur Abgabe (2026-05-30) ist jede Arbeitsstunde
+kostbar. "Nice-to-have" Features wie DooD-Removal oder Guru-Architektur-Patterns sind nur
+erlaubt, wenn sie direkt Thesis-Kapitel unterstuetzen.
+
+**Enforcement**:
+- [ ] Jede Spezifikation listet die zugehoerige Forschungsfrage im Header
+- [ ] Tasks ohne FF-Zuordnung erhalten das Label "post-thesis"
+- [ ] Der aktuelle Milestone (siehe Thesis Alignment Section) ist sichtbar im Dashboard
+- [ ] Pull Requests referenzieren die Thesis-Deliverable-ID (z.B. "Closes #J4")
+
+**References**:
+- Thesis Milestone Overview: `README_THESIS.md`
+- Deliverable Tracking: `docs/thesis/deliverables.md`
+
+---
+
+### Article XII: Resource Governance
+
+**Mandate**: Jeder Docker-Service in Stack-G MUSS memory/cpu limits in `docker-compose.yml` definieren.
+Qdrant darf maximal 1GB RAM verwenden, Embedder-Module maximal 2GB, alle anderen Services maximal 512MB.
+Health-Checks muessen `start_period` fuer langsam startende Services (Qdrant, LLM-Inferenz) definieren.
+ALLE Image-Versionen muessen explizit gepinnt sein (kein `:latest` Tag).
+
+**Rationale**: Dev Dito laeuft auf Entwickler-Laptops (Windows 11, 16-32GB RAM) und einem Raspberry Pi 5 (8GB).
+Unbegrenzte Ressourcen-Nutzung fuehrt zu OOM-Kills und unvorhersehbarem Verhalten. Gepinnte Versionen
+garantieren reproduzierbare Builds fuer die Thesis-Evaluation.
+
+**Enforcement**:
+- [ ] Jeder Service in `docker-compose.yml` hat `deploy.resources.limits.memory` und `cpus`
+- [ ] Qdrant: `mem_limit: 1g`, Embedder: `mem_limit: 2g`, Gateway/Pipeline: `mem_limit: 512m`
+- [ ] Alle `image:` Tags enthalten explizite Versionsnummern (z.B. `qdrant/qdrant:v1.7.4`)
+- [ ] Health-Checks fuer Services mit >10s Startzeit haben `start_period: 30s`
+- [ ] Docker Compose Profiles (`pipeline`, `wiki`, `dev`) sind dokumentiert
+
+**References**:
+- [Docker Compose Resource Constraints](https://docs.docker.com/compose/compose-file/deploy/#resources)
+- [Qdrant Memory Configuration](https://qdrant.tech/documentation/guides/configuration/)
+
+---
+
+### Article XIII: DooD Deprecation
+
+**Mandate**: Docker-outside-of-Docker (DooD) ueber Docker-Socket-Mounting (`/var/run/docker.sock`)
+ist als DEPRECATED markiert und wird in Phase 2 (post-Evaluation) entfernt. Der Gateway-Orchestrator
+darf KEINE neuen DooD-basierten Features mehr implementieren. Die Migration zu `docker compose run`
+fuer batch jobs erfolgt ERST nach Abschluss der Evaluation-Infrastruktur (Article X).
+
+**Rationale**: DooD erzeugt Sicherheitsrisiken (Root-Zugriff auf Host-Docker), kompliziert das
+Windows-Deployment und ist nicht noetig fuer run-to-completion Pipeline-Jobs. Der Overhead
+des Refactorings ist jedoch nur gerechtfertigt, wenn die Evaluation-Skripte bereits produktiv sind.
+
+**Enforcement**:
+- [ ] Neue Pipeline-Module verwenden NICHT `docker.from_env()` oder `DockerClient()`
+- [ ] Gateway-Orchestrator dokumentiert DooD-Usage als "DEPRECATED" in Code-Kommentaren
+- [ ] Phase-2-Migration-Plan existiert in `docs/architecture/dood_removal.md`
+- [ ] DooD-basierte Container-Starts loggen eine Deprecation-Warning
+
+**References**:
+- Docker Compose Run: https://docs.docker.com/compose/reference/run/
+- Security Best Practices: https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html
+
+---
+
+### Article XIV: Inter-Stack Communication
+
+**Mandate**: ALLE Kommunikation zwischen Stack-G (dev-dito) und anderen Stacks (A-I) erfolgt
+ausschliesslich via HTTP ueber das `leonidas-network` Docker-Netzwerk. Stack-G darf KEINE Volumes
+von anderen Stacks mounten. Stack-G darf KEINE Container anderer Stacks starten oder stoppen.
+Service-Discovery erfolgt via Docker Compose DNS-Namen (z.B. `http://qdrant:6333`, `http://mcp-server:3000`).
+
+**Cross-Stack-Ownership:**
+- **Stack-D (ai-core)**: Qdrant, Ollama, LMStudio → Dev Dito ist HTTP-Client
+- **Stack-E (eval-benchmarks)**: RAGAS Evaluation → Dev Dito sendet Test-Daten via HTTP
+- **Stack-H (mcp-servers)**: MCP Server (Imre's Domain) → Dev Dito ist JSON-RPC-Client
+- **Stack-A (wiki-sandbox)**: DokuWiki Plugin → Ruft Dev Dito Gateway auf (Port 8089)
+
+**Rationale**: Tight Coupling zwischen Stacks (shared volumes, Container-Management) macht
+unabhaengige Entwicklung unmoeglich und verhindert, dass Jan und Imre parallel arbeiten koennen.
+HTTP-basierte Schnittstellen erlauben es, Stacks auf separaten Hosts zu deployen (z.B. Qdrant
+auf dem Pi, Gateway auf Laptop).
+
+**Enforcement**:
+- [ ] `docker-compose.yml` in Stack-G enthaelt KEINE `volumes_from` oder externe Volume-Mounts
+- [ ] Kein `docker exec`, `docker start` oder `docker stop` auf Container ausserhalb Stack-G
+- [ ] Alle inter-stack API-Calls verwenden Docker DNS-Namen oder konfigurierbare URLs
+- [ ] Stack-G exponiert nur Port 8089 (Gateway) an `leonidas-network`
+- [ ] Service-Dependencies sind in `docker-compose.yml` ueber `depends_on` dokumentiert
+
+**References**:
+- Docker Compose Networking: https://docs.docker.com/compose/networking/
+- Multi-Stack Architecture: `README_ARCHITECTURE.md`
+
+---
+
 ## Workflow Governance
 
 ### /specify Gate
@@ -338,6 +467,7 @@ Bevor eine Spezifikation genehmigt wird, muss sie enthalten:
 - [ ] Identifikation der betroffenen Schicht(en): Plugin, Pipeline, Backend Service
 - [ ] Auflistung der betroffenen Docker-Services und deren Konfigurationsaenderungen
 - [ ] Abgrenzung: Was aendert sich NICHT (bestehende Pipeline-Skripte bleiben unveraendert, es sei denn explizit anders angegeben)
+- [ ] **NEU**: Thesis-Zuordnung (FF1-FF3, J1-J8, I1-I5) oder "post-thesis" Label
 
 ### /plan Gate
 
@@ -346,6 +476,8 @@ Bevor ein Plan genehmigt wird, muss er nachweisen:
 - [ ] Keine neuen Abstraktionsschichten ohne Begruendung (Article VII, VIII)
 - [ ] Betroffene Docker-Services sind in `README_ARCHITECTURE.md` dokumentiert
 - [ ] Keine neuen Secrets ohne Placeholder-Dateien (Article VI)
+- [ ] **NEU**: Resource Limits (Article XII) fuer neue Services definiert
+- [ ] **NEU**: Inter-Stack-Dependencies (Article XIV) dokumentiert
 
 ### /tasks Gate
 
@@ -353,6 +485,7 @@ Aufgaben muessen folgende Constraints erfuellen:
 - [ ] Eine Aufgabe betrifft maximal eine Schicht (PHP ODER Python ODER Docker)
 - [ ] Abhaengigkeiten zwischen Aufgaben sind explizit markiert
 - [ ] Jede Aufgabe hat ein klares "Done"-Kriterium
+- [ ] **NEU**: Thesis-Deliverable-ID ist im Task-Titel referenziert
 
 ### /implement Gate
 
@@ -362,6 +495,71 @@ Nach der Implementierung muessen folgende Checks bestehen:
 - [ ] Unit-Tests fuer kritische Logik bestehen (Article III)
 - [ ] Docker-Services starten und Health-Checks bestehen
 - [ ] Keine Secrets im Diff (`git diff` enthaelt keine API-Keys oder Tokens)
+- [ ] **NEU**: Keine `:latest` Image-Tags in `docker-compose.yml` (Article XII)
+- [ ] **NEU**: Keine neuen DooD-Features (Article XIII)
+
+---
+
+## Thesis Alignment
+
+### Forschungsfragen (Research Questions)
+
+| ID  | Frage                                           | Zuständig | Methodik                                      | Deliverables          |
+| --- | ----------------------------------------------- | --------- | --------------------------------------------- | --------------------- |
+| FF1 | Semantic Search vs Keyword Search (MRR, P@5)    | Jan       | Keyword baseline + Vector search comparison   | J1 (corpus), J6       |
+| FF2 | MCP als Integration-Standard fuer Wissensquellen| Imre      | MCP vs REST/OData/GraphQL protocol comparison | I1-I5                 |
+| FF3 | Best Embedding Model fuer German Wiki Content   | Jan       | Model comparison (Ollama, OpenAI, MTEB)       | J2, J3, J5            |
+
+### Jan's Deliverables (CIFT - Chapter 6: Retrieval & Deployment)
+
+| ID | Deliverable                                    | Status | Depends On | Target Milestone |
+|----|------------------------------------------------|--------|------------|------------------|
+| J1 | Test Corpus (50-100 pages, 20-30 Q&A pairs)   | 🔜     | -          | 2026-03-15       |
+| J2 | Embedding Model Comparison Framework           | 🔜     | J1         | 2026-03-15       |
+| J3 | DokuWiki Markup Parser → Clean Text Chunks     | ✅     | -          | 2025-11-15       |
+| J4 | Chunk Size Impact (256/512/1024 tokens)        | 🔜     | J1, J3     | 2026-03-15       |
+| J5 | Vector DB Collection Schema (Qdrant)           | ✅     | -          | 2025-11-15       |
+| J6 | Hybrid Search vs Dense Retrieval (FF1)         | 🔜     | J1, J5     | 2026-03-15       |
+| J7 | OAuth2/RBAC via ScaleKit                       | ✅     | -          | 2026-02-20       |
+| J8 | Docker Container + npm Package (MCP Server)    | 🔜     | I3, I4     | 2026-03-30       |
+
+### Imre's Deliverables (BIF - Chapter 5: MCP Protocol & Tools)
+
+| ID | Deliverable                                    | Status | Depends On | Target Milestone |
+|----|------------------------------------------------|--------|------------|------------------|
+| I1 | MCP Server (JSON-RPC 2.0)                      | ✅     | -          | 2025-12-20       |
+| I2 | MCP Tools (search, fetch, list)                | ✅     | I1         | 2026-01-25       |
+| I3 | Transport: stdio vs HTTP-streamable            | ✅     | I1         | 2026-02-20       |
+| I4 | Role-Dependent Search Tools                    | ✅     | I2, J7     | 2026-02-20       |
+| I5 | Client Compatibility Matrix (Claude, VSCode)   | 🔜     | I3         | 2026-03-30       |
+
+### Milestone Timeline
+
+| Datum      | Milestone                          | Deliverables        | Critical Path                     |
+|------------|------------------------------------|---------------------|-----------------------------------|
+| 2025-11-15 | ✅ Vector DB Schema + Chunking      | J3, J5              | Basis fuer alle Evaluations       |
+| 2025-12-20 | ✅ MCP Server (stdio)               | I1                  | Imre's Grundstein                 |
+| 2026-01-25 | ✅ Semantic Search Integrated       | I2                  | FF2 Baseline                      |
+| 2026-02-20 | ✅ HTTP Streamable Transport        | I3, I4, J7          | Production-Ready MCP              |
+| 2026-03-15 | 🔜 Evaluation Infrastructure        | J1, J2, J4, J6      | **FF1/FF3 Auswertung** (PRIORITY) |
+| 2026-03-30 | 🔜 npm Package + Docker Image       | J8, I5              | Deployment Deliverables           |
+| 2026-04-15 | 🔜 Thesis Writing Start             | -                   | Kapitel 1-4 (Theory)              |
+| 2026-05-15 | 🔜 Thesis Review (Stropek)          | -                   | Full Draft                        |
+| 2026-05-30 | 🔜 Thesis Submission                | -                   | **HARD DEADLINE**                 |
+
+### Current Gaps (MUST Address)
+
+1. **FF1 Keyword Baseline** (J6): Kein Skript fuer keyword-only search → Kann semantische Verbesserung nicht quantifizieren
+2. **J4 Chunk Size Evaluation**: Kein parametrisches Framework → Keine Tabelle fuer Thesis Chapter 6
+3. **J2 Model-Agnostic Embedding**: Pipeline kann nur ein Modell (Ollama) → FF3 nicht auswertbar
+4. **Thesis Writing**: Jan + Imre muessen Kapitel 1-4 (Theorie) JETZT beginnen → 40 Seiten pro Person
+
+**Resolution Priority (Article X + XI):**
+1. J1 (Test Corpus) → Ohne Daten keine Evaluation
+2. J6 (Keyword Baseline) → FF1 Blocker
+3. J4 (Chunk Size Framework) → FF3 Blocker
+4. J2 (Model Comparison) → FF3 Blocker
+5. Phase 2 (DooD Removal) → Post-Thesis Enhancement
 
 ---
 
@@ -384,7 +582,8 @@ Pipeline-Fehler werden wie folgt behandelt:
 | Python Packages        | `snake_case`             | `embeddings_creator`, `wiki_fetcher`        |
 | PHP Klassen            | `PascalCase`             | `ServiceGateway`, `AdminPanel`              |
 | DokuWiki Seiten        | `devdito:name` Namespace | `devdito:dashboard`, `devdito:services`     |
-| Docker Ports (Stack-G) | 3000-3001, 8085          | MCP Server: 3000, Reserve: 3001             |
+| Docker Ports (Stack-G) | 3000-3001, 8085-8089     | Gateway: 8089, MCP: 3000, Reserve: 3001     |
+| Evaluation Scripts     | `eval_*` Praefix         | `eval_keyword_baseline.py`, `eval_chunk_size.py` |
 
 ---
 
@@ -398,6 +597,9 @@ Pipeline-Fehler werden wie folgt behandelt:
 - Docker-Service-Konfiguration fuer **Stack-G** (docker-compose.yml, Dockerfiles)
 - Lokale Entwicklungs-Services in `backend_services/` (NUR fuer lokale Tests)
 - SSH Deploy zum Raspberry Pi
+- **NEU**: Evaluation-Skripte fuer FF1/FF3 (Keyword Baseline, Model Comparison, Chunk Size)
+- **NEU**: Test-Corpus-Generierung (J1) mit Ground-Truth Q&A Paaren
+- **NEU**: RAGAS-Integration fuer Retrieval-Metriken (MRR, NDCG@10, Precision@5)
 
 ### Out of Scope
 - **MCP Server Entwicklung** → Gehoert zu Stack-H (extension-mcp-servers-services)
@@ -407,6 +609,8 @@ Pipeline-Fehler werden wie folgt behandelt:
 - Leonidas ChatBot Plugin Entwicklung → Gehoert zu Stack-I (separates Projekt)
 - Keycloak Konfiguration → Gehoert zu Stack-B
 - Andere Stacks (A-F, H-I) ausser deren dokumentierte Schnittstellen
+- **Guru-Architektur-Patterns** (services/src/core/adapters/) fuer Module <500 LOC
+- **DooD-basierte neue Features** (deprecated per Article XIII)
 
 ---
 
@@ -415,6 +619,20 @@ Pipeline-Fehler werden wie folgt behandelt:
 Diese Constitution ist das verbindliche Referenzdokument fuer alle Entwicklungsentscheidungen
 im `dev_dito` Repository. Bei Widerspruechen zwischen Constitution und anderem Code oder
 Dokumentation gilt die Constitution.
+
+### Constitution Hierarchy
+
+Die Articles folgen einer Prioritaetsordnung: Hoehere Articles ueberschreiben niedrigere bei Konflikten.
+
+**Priority Order:**
+1. **Article X** (Evaluation-First) + **Article XI** (Thesis Alignment) → OBERSTE PRIORITAET
+2. Articles I-IX (Core Engineering Principles)
+3. Articles XII-XIV (Infrastructure Governance)
+
+**Beispiel-Konflikt-Resolution:**
+- Article VII ("Integration Simplicity") verbietet neue Abstraktionen
+- Article X ("Evaluation-First") fordert Evaluation-Framework
+- **Resolution**: Evaluation-Framework wird gebaut (Article X > Article VII), ABER als Thin Wrapper implementiert (Article VII bleibt anwendbar innerhalb des Frameworks)
 
 ### Amendments
 
@@ -432,7 +650,8 @@ Aenderungen an der Constitution erfordern:
 | 2026-01-31 | 1.0.0   | Initiale Constitution erstellt       | Grundlage fuer Spec-Kit-basierte Entwicklung                                                                                                                                             |
 | 2026-01-31 | 1.1.0   | MCP Server Zuordnung korrigiert      | MCP Server gehoert zu Stack-H (nicht Stack-G). Dev Dito ist Service Gateway (Client), nicht MCP Server (Provider). Architektur-Klarstellung hinzugefuegt. Scope Boundaries aktualisiert. |
 | 2026-01-31 | 1.2.0   | Article II-B: Centralized YAML Config | ALLE Konfiguration in YAML auslagern, KEINE hardcodierten Variablen. Wiki Fetcher config.py Pattern als Standard fuer alle Module. |
+| 2026-02-12 | 1.3.0   | Thesis-Driven Governance + Expert Debate Integration | **Articles X-XIV hinzugefuegt**: Evaluation-First Development, Thesis Milestone Alignment, Resource Governance, DooD Deprecation, Inter-Stack Communication. **Thesis Alignment Section**: Forschungsfragen FF1-FF3, Jan's Deliverables J1-J8, Imre's Deliverables I1-I5, Milestone Timeline, Current Gaps. **Project Identity erweitert**: Betreuer (Stropek), Forschungsfragen, Rollentrennung (Jan=CIFT/Imre=BIF). **Workflow Gates erweitert**: Thesis-Zuordnung (FF/Deliverable-ID) mandatory. **Scope Boundaries erweitert**: Evaluation-Skripte, Test-Corpus, RAGAS-Integration. **Constitution Hierarchy**: Prioritaetsordnung Articles X/XI > I-IX > XII-XIV. Grundlage: 4 Runden Expert Debate (Architektur-Entscheidungen), Spec-Kit Best Practices, Thesis Requirements (40 Seiten/Person, Abgabe 2026-05-30). |
 
 ---
 
-**Version**: 1.2.0 | **Ratified**: 2026-01-31 | **Last Amended**: 2026-01-31
+**Version**: 1.3.0 | **Ratified**: 2026-02-12 | **Last Amended**: 2026-02-12

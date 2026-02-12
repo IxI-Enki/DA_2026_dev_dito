@@ -1,6 +1,7 @@
-# =============================================================================
+#
+# ═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════	
 # DEV DITO ALIASES - DokuWiki RAG Pipeline Manager
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════	
 # Author: IxI-Enki (https://github.com/IxI-Enki)
 # Date: 2026-02-05
 # Description: Aliases for Dev Dito pipeline management, Docker stack control,
@@ -39,6 +40,8 @@ $script:DD_GITHUB_REPO = 'https://github.com/IxI-Enki/DA_2026_dev_dito.git'
 $script:DD_LEONIDAS_STACKS = 'D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\stacks'
 $script:DD_SANDBOX_COMPOSE = "$script:DD_LEONIDAS_STACKS\stack-a-wiki-sandbox"
 $script:DD_WIKI_COMPOSE = "$script:DD_LEONIDAS_STACKS\stack-g-devdito"
+
+function Get-DevDitoOrchestratorUrl { return 'http://localhost:8089' }
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -132,9 +135,6 @@ function Start-DockerDesktopIfNeeded {
     return $false
 }
 
-function Get-DevDitoOrchestratorUrl {
-    return "http://localhost:8089"
-}
 
 # =============================================================================
 # MAIN WIZARD FUNCTION

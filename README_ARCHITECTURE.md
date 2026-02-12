@@ -59,7 +59,7 @@ DEV DITO:     Stack-G (extension-dev-dito-services)
   │  │ wiki-sandbox      │   │ wiki-core-services│   │ extensions-additional │  │
   │  │                   │   │                   │   │                       │  │
   │  │ • wiki-instance   │   │ • keycloak-server │   │ • nginx-proxy         │  │
-  │  │   (plain DokuWiki)│   │ • (redis-cache)   │   │ • redis-cache         │  │
+  │  │  (plain DokuWiki) │   │ • (redis-cache)   │   │ • redis-cache         │  │
   │  │                   │   │ • (php-fpm)       │   │ • scalekit-auth       │  │
   │  │                   │   │ • (nginx-proxy)   │   │ • n8n-workflows       │  │
   │  └───────────────────┘   └───────────────────┘   └───────────────────────┘  │

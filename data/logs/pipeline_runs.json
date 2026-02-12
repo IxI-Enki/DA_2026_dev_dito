@@ -230,5 +230,52 @@
     "error": "No JSONL files found in /data/embeddings",
     "finished_at": "2026-02-05T23:19:02.409880",
     "duration_seconds": 1
+  },
+  {
+    "job_id": "fetch_20260210_112758",
+    "status": "success",
+    "updated_at": "2026-02-10T11:31:44.846416",
+    "stage": "fetch",
+    "started_at": "2026-02-10T11:27:58.753691",
+    "output_dir": "data/fetched/fetched_at_20260210_112801",
+    "stats": {
+      "pages": 204204,
+      "media": 335335
+    },
+    "output": "ed for media: 33\n\n[LINKS]\n   Internal: 376\n   External: 288\n   Media refs: 318\n   Broken: 11\n   Avg per page: 4.8\n\n[ACL]\n   Teacher-likely: 79\n   Public: 125\n\n[RECENT CHANGES]\n   Page changes: 58\n   Media changes: 69\n\n[TIMING]\n   Duration: 222.4 seconds\n   Output: /data/fetched/fetched_at_20260210_112801\n\n======================================================================\nSee wiki_analysis_report.txt for detailed analysis\n======================================================================\n",
+    "finished_at": "2026-02-10T11:31:44.846431",
+    "duration_seconds": 226
+  },
+  {
+    "job_id": "evaluate_20260210_113207",
+    "status": "success",
+    "updated_at": "2026-02-10T11:32:10.852198",
+    "stage": "evaluate",
+    "started_at": "2026-02-10T11:32:07.767229",
+    "output_dir": "data/evaluated",
+    "stats": {
+      "pages_evaluated": 204,
+      "overall_quality": 0.58,
+      "pages_to_include": 50,
+      "pages_to_exclude": 46,
+      "pages_to_review": 108
+    },
+    "finished_at": "2026-02-10T11:32:10.852203",
+    "duration_seconds": 3
+  },
+  {
+    "job_id": "fetch_20260210_184005",
+    "status": "success",
+    "updated_at": "2026-02-10T18:42:34.345392",
+    "stage": "fetch",
+    "started_at": "2026-02-10T18:40:05.755184",
+    "output_dir": "data/fetched/fetched_at_20260210_184008",
+    "stats": {
+      "pages": 204204,
+      "media": 335335
+    },
+    "output": "ed for media: 33\n\n[LINKS]\n   Internal: 376\n   External: 288\n   Media refs: 318\n   Broken: 11\n   Avg per page: 4.8\n\n[ACL]\n   Teacher-likely: 79\n   Public: 125\n\n[RECENT CHANGES]\n   Page changes: 58\n   Media changes: 69\n\n[TIMING]\n   Duration: 145.1 seconds\n   Output: /data/fetched/fetched_at_20260210_184008\n\n======================================================================\nSee wiki_analysis_report.txt for detailed analysis\n======================================================================\n",
+    "finished_at": "2026-02-10T18:42:34.345408",
+    "duration_seconds": 148
   }
 ]
