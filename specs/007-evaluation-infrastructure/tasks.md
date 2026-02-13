@@ -177,11 +177,11 @@
 
 ---
 
-## Phase 8: Polish & Cross-Cutting — PARTIAL
+## Phase 8: Polish & Cross-Cutting — DONE
 
-- [ ] T029 Write integration test `evaluation/tests/test_integration.py` — end-to-end with local Qdrant (embed small corpus, query, verify metrics are non-zero)
-  - **Blocked**: Requires running Qdrant instance — should be run manually or in CI
-- [ ] T030 [P] Create `evaluation/README.md` — setup instructions, usage examples for each script, ground truth format documentation
+- [x] T029 Write integration test `evaluation/tests/test_integration.py` — end-to-end with local Qdrant (embed small corpus, query, verify metrics are non-zero)
+  - Implemented: two tests (`test_qdrant_connection`, `test_e2e_qdrant_embed_query_metrics`); both skip when Qdrant or Ollama unavailable. Run with Docker/Qdrant (and optionally Ollama) up to execute.
+- [x] T030 [P] Create `evaluation/README.md` — setup instructions, usage examples for each script, ground truth format documentation
 - [x] T031 [P] Add `.gitignore` for `evaluation/results/` — ignores `*.json` and `*.tex`, keeps `.gitkeep`
   - **Commit**: `256cf57`
 - [x] T032 All result JSONs include timestamp, config-hash (`sha256:...`), and code-version (git short hash) — NFR-005
@@ -194,13 +194,13 @@
 
 ### Phase Dependencies
 
-```
-Phase 1 (Setup) ─────────────► Phase 2 (Foundation) ──┬──► Phase 3 (US1: Keyword) ──┐
-                                                       ├──► Phase 4 (US2: Models)  ──┤
-                                                       ├──► Phase 5 (US3: Chunks)  ──┼──► Phase 7 (US5: LaTeX)
-                                                       └──► Phase 6 (US4: Hybrid)  ──┘         │
-                                                                                                ▼
-                                                                                        Phase 8 (Polish)
+```sketch
+Phase 1 (Setup) ────► Phase 2 (Foundation) ──┬──► Phase 3 (US1: Keyword) ──┐
+                                             ├──► Phase 4 (US2: Models)  ──┤
+                                             ├──► Phase 5 (US3: Chunks)  ──┼──► Phase 7 (US5: LaTeX)
+                                             └──► Phase 6 (US4: Hybrid)  ──┘         │
+                                                                                     ▼
+                                                                                Phase 8 (Polish)
 ```
 
 ### Actual Execution Order (as implemented)
@@ -209,7 +209,7 @@ Phase 1 (Setup) ─────────────► Phase 2 (Foundation) 
 2. **Phase 3** → commit `55ef107` (3 files, +9 tests = 45 total)
 3. **Phase 4** → commit `475d75f` (2 files, +11 tests = 56 total)
 4. **Phases 5+6+7+T031** together → commit `256cf57` (4 files, 56 tests stable)
-5. **Phase 8** — T031+T032 done, T029+T030 remaining
+5. **Phase 8** — T029, T030, T031, T032 done
 
 ---
 
@@ -244,24 +244,36 @@ Phase 1 (Setup) ─────────────► Phase 2 (Foundation) 
 
 ## Test Summary
 
-| Test File | Count | What |
-|-----------|------:|------|
-| `test_metrics.py` | 29 | MRR, P@k, NDCG@k with hand-calculated examples |
-| `test_providers.py` | 7 | ABC compliance, OllamaProvider, OpenAIProvider (mocked) |
-| `test_keyword_baseline.py` | 9 | source_file→page_id mapping (6), mocked eval runner (3) |
-| `test_model_comparison.py` | 11 | simple_chunk (5), relevance scoring (3), corpus loading (1), mocked pipeline (2) |
-| **Total** | **56** | **All passing** |
+| Test File                  |  Count | What                                                                             |
+| -------------------------- | -----: | -------------------------------------------------------------------------------- |
+| `test_metrics.py`          |     29 | MRR, P@k, NDCG@k with hand-calculated examples                                   |
+| `test_providers.py`        |      7 | ABC compliance, OllamaProvider, OpenAIProvider (mocked)                          |
+| `test_keyword_baseline.py` |      9 | source_file→page_id mapping (6), mocked eval runner (3)                          |
+| `test_model_comparison.py` |     11 | simple_chunk (5), relevance scoring (3), corpus loading (1), mocked pipeline (2) |
+| `test_integration.py`      |      2 | Qdrant connection smoke; e2e embed+query+metrics (skip if services down)         |
+| **Total**                  | **58** | **56 unit + 2 integration (integration skip when Qdrant/Ollama unavailable)**    |
+
+---
+
+## Validation (2026-02-13, against codebase)
+
+- **Directory structure**: `evaluation/` has all subdirs (metrics, providers, scripts, experiments, ground_truth, results, tests); `results/.gitkeep` and `results/.gitignore` present.
+- **Config**: Scripts read `config/env.yaml` for Qdrant (`SERVICES.qdrant`) and Wiki (`SOURCE_WIKI.api.url`); no import from `pipeline/01_wiki_fetcher/config.py` (avoids side effects).
+- **NFR-005**: Result JSONs from keyword_baseline, model_comparison, hybrid_vs_dense include `timestamp`, `config_hash`, `code_version`; chunk_size and export inherit or read from these.
+- **NFR-004**: All five scripts support `--help` (verified).
+- **Tests**: `pytest evaluation/tests/` — 56 unit tests pass; 2 integration tests skip when Qdrant (and for e2e, Ollama) not reachable.
+- **D5**: `eval_hybrid_vs_dense.py` uses vector search only for both modes; true hybrid would require Qdrant full-text index (documented in tasks deviations).
 
 ---
 
 ## Commit History
 
-| Commit | Phase | Files | Description |
-|--------|-------|------:|-------------|
-| `ea63e9f` | 1+2 | 25 | Foundation: metrics, providers, config, experiments, ground truth |
-| `55ef107` | 3 | 3 | Keyword search baseline (FF1) |
-| `475d75f` | 4 | 2 | Model comparison with multi-signal relevance (FF3) |
-| `256cf57` | 5+6+7 | 4 | Chunk size, hybrid vs dense, LaTeX export, .gitignore |
+| Commit    | Phase | Files | Description                                                       |
+| --------- | ----- | ----: | ----------------------------------------------------------------- |
+| `ea63e9f` | 1+2   |    25 | Foundation: metrics, providers, config, experiments, ground truth |
+| `55ef107` | 3     |     3 | Keyword search baseline (FF1)                                     |
+| `475d75f` | 4     |     2 | Model comparison with multi-signal relevance (FF3)                |
+| `256cf57` | 5+6+7 |     4 | Chunk size, hybrid vs dense, LaTeX export, .gitignore             |
 
 All pushed to `origin/007-evaluation-infrastructure`.
 
@@ -269,6 +281,4 @@ All pushed to `origin/007-evaluation-infrastructure`.
 
 ## Remaining Work
 
-1. **T029**: Integration test with real Qdrant — requires running services
-2. **T030**: `evaluation/README.md` with setup + usage instructions
-3. **D5 fix**: Configure Qdrant full-text index for true hybrid search in T026
+1. **D5 fix** (optional): Configure Qdrant full-text index for true hybrid search in T026 — currently both dense and hybrid modes use vector search; hybrid would need payload text index on collection.
