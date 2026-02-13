@@ -24,19 +24,19 @@
 
 #### INITIAL RESEARCH AND PLANING RULES
 
-<RESEARCH-AND-PLANNING-RULES>
-  - ALWAYS CHECKOUT TO THE CORRECT BRANCH, TO IMPROVE AN EXTENSION-PART, AND WORK EXCLUSIVELY ON THE MATCHING BRANCHES!
-  - PROACTIVELY PLAN AND EXPLAIN TO USER IF USER HAS A NON-OPTIMAL SOLUTION OR IDEA - ALWAYS!
-  - SUGGEST AND HELP USER TO FIND THE BEST SOLUTION FOR ANY PROBLEM - ALWAYS!
-  - NEVER MAKE ASSUMPTIONS -> ALWAYS VERIFY AND CONFIRM WITH THE USER - ALWAYS!
-  - NEVER GUESS -> ALWAYS ASK USER FOR CLARIFICATIONS, DETAILS, EXAMPLES, USE CASES, ETC. - ALWAYS!
-  - Research all technologies deeply and ALWAYS find and PREFER/ONLY USE/PRIMARY SOURCES LIKE THE OFFICIAL DOCS, OFFICIAL API DOCS, DEVELOPER DOCS, etc. -> ALWAYS LINK TO THESE OFFICIAL API DOCS, DEVELOPER DOCS etc.
-  - ALWAYS LINK TO THE PRIMARY SOURCES LIKE THE OFFICIAL DOCS, OFFICIAL API DOCS, DEVELOPER DOCS, etc. IN ALL YOUR RESPONSES AND PLANS (AND ALL OTHER DOCUMENTS AND FILES YOU CREATE) - ALWAYS!
-  - Research in incremental, sequential steps, and revisit previous researches and found knowledge, and refine the research and plans accordingly!
-  - Create NO USELESS DOCUMENTS AND FILES
-  - NEVER CREATE FILES WITHOUR reading all related files first, or searching and understanding the Problem completely and thoroughly and look for PRIMARY SOURCES and SOLUTIONS and BEST PRACTICES FIRST - ALWAYS!
-  - Proactively plan for the next steps, and the next steps after that, and the next steps after that, and so on...
-</RESEARCH-AND-PLANNING-RULES>
+<research-and-planning-rules>
+  - always checkout to the correct branch, to improve an extension-part, and work exclusively on the matching branches!
+  - proactively plan and explain to user if user has a non-optimal solution or idea - always!
+  - suggest and help user to find the best solution for any problem - always!
+  - never make assumptions -> always verify and confirm with the user - always!
+  - never guess -> always ask user for clarifications, details, examples, use cases, etc. - always!
+  - research all technologies deeply and always find and prefer/only use/primary sources like the official docs, official api docs, developer docs, etc. -> always link to these official api docs, developer docs etc.
+  - always link to the primary sources like the official docs, official api docs, developer docs, etc. in all your responses and plans (and all other documents and files you create) - always!
+  - research in incremental, sequential steps, and revisit previous researches and found knowledge, and refine the research and plans accordingly!
+  - create no useless documents and files
+  - never create files withour reading all related files first, or searching and understanding the problem completely and thoroughly and look for primary sources and solutions and best practices first - always!
+  - proactively plan for the next steps, and the next steps after that, and the next steps after that, and so on...
+</research-and-planning-rules>
 
 ---
 
