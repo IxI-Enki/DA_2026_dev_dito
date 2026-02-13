@@ -28,10 +28,14 @@
 # =============================================================================
 
 # =============================================================================
-# CONFIGURATION
+# CONFIGURATION (derive repo root from this script's location so it works when dot-sourced)
 # =============================================================================
 
-$script:DD_REPO_ROOT = 'D:\_Repositories\_Diploma_Thesis_Repositories\dev_dito'
+if ($PSCommandPath) {
+    $script:DD_REPO_ROOT = (Resolve-Path (Join-Path (Split-Path -Parent $PSCommandPath) '..')).Path
+} else {
+    $script:DD_REPO_ROOT = 'D:\_Repositories\_Diploma_Thesis_Repositories\dev_dito'
+}
 $script:DD_COMPOSE_FILE = "$script:DD_REPO_ROOT\backend_services\docker-compose.yml"
 $script:DD_STACK_NAME = 'stack-g-devdito'
 $script:DD_GITHUB_REPO = 'https://github.com/IxI-Enki/DA_2026_dev_dito.git'
@@ -41,7 +45,7 @@ $script:DD_LEONIDAS_STACKS = 'D:\_Repositories\year_2025_26\SYP_2025_26\leonie\i
 $script:DD_SANDBOX_COMPOSE = "$script:DD_LEONIDAS_STACKS\stack-a-wiki-sandbox"
 $script:DD_WIKI_COMPOSE = "$script:DD_LEONIDAS_STACKS\stack-g-devdito"
 
-function Get-DevDitoOrchestratorUrl { return 'http://localhost:8089' }
+function Get-DevDitoOrchestratorUrl { return 'http://localhost:18089' }
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -60,6 +64,7 @@ function Show-DevDitoBanner {
 }
 
 function Test-DevDitoInstalled {
+    if (-not $script:DD_REPO_ROOT) { return $false }
     return (Test-Path $script:DD_REPO_ROOT) -and (Test-Path $script:DD_COMPOSE_FILE)
 }
 
@@ -150,10 +155,10 @@ function Invoke-DevDito {
         Docker stack control, pipeline execution, and status monitoring.
 
         Part of the HTL Leonding multi-stack ecosystem:
-          Stack-A  wiki-sandbox       (port 8090)
+          Stack-A  wiki-sandbox       (port 18090)
           Stack-B  wiki-core          (Keycloak, port 8081)
           Stack-D  ai-core            (Qdrant, port 6333)
-          Stack-G  devdito            (Orchestrator 8089, Wiki 8080, Qdrant 6334)
+          Stack-G  devdito            (Orchestrator 18089, Wiki 18080, Qdrant 18334)
           Stack-H  mcp                (Semantic Search, port 3000)
 
     .PARAMETER Action
@@ -246,7 +251,7 @@ function Invoke-DevDito {
 
         # Check sandbox
         if (Test-ContainerRunning 'wiki-sandbox') {
-            Write-Host "  [OK] Sandbox running (port 8090)" -ForegroundColor Green
+            Write-Host "  [OK] Sandbox running (port 18090)" -ForegroundColor Green
         }
 
         Write-Host ""
@@ -519,10 +524,10 @@ function Invoke-DevDitoUp {
 
     Write-Host ""
     Write-Host "Access points:" -ForegroundColor Cyan
-    Write-Host "  DokuWiki:     http://localhost:8080" -ForegroundColor White
-    Write-Host "  Admin Panel:  http://localhost:8080/?do=admin&page=devdito" -ForegroundColor White
-    Write-Host "  Orchestrator: http://localhost:8089" -ForegroundColor White
-    Write-Host "  Qdrant:       http://localhost:6334" -ForegroundColor White
+    Write-Host "  DokuWiki:     http://localhost:18080" -ForegroundColor White
+    Write-Host "  Admin Panel:  http://localhost:18080/?do=admin&page=devdito" -ForegroundColor White
+    Write-Host "  Orchestrator: http://localhost:18089" -ForegroundColor White
+    Write-Host "  Qdrant:       http://localhost:18334" -ForegroundColor White
 }
 
 function Invoke-DevDitoDown {
@@ -682,10 +687,10 @@ function Test-DevDitoHealth {
     Write-Host ""
 
     $endpoints = @(
-        @{ Name = 'Orchestrator';  Url = 'http://localhost:8089/health';  Stack = 'Stack-G' },
-        @{ Name = 'DokuWiki';      Url = 'http://localhost:8080';         Stack = 'Stack-G' },
-        @{ Name = 'Qdrant';        Url = 'http://localhost:6334/healthz'; Stack = 'Stack-G' },
-        @{ Name = 'Wiki Sandbox';  Url = 'http://localhost:8090';         Stack = 'Stack-A' }
+        @{ Name = 'Orchestrator';  Url = 'http://localhost:18089/health';  Stack = 'Stack-G' },
+        @{ Name = 'DokuWiki';      Url = 'http://localhost:18080';         Stack = 'Stack-G' },
+        @{ Name = 'Qdrant';        Url = 'http://localhost:18334/healthz'; Stack = 'Stack-G' },
+        @{ Name = 'Wiki Sandbox';  Url = 'http://localhost:18090';         Stack = 'Stack-A' }
     )
 
     foreach ($ep in $endpoints) {
@@ -705,12 +710,12 @@ function Open-DevDitoWeb {
     param([string]$Target = 'wiki')
 
     $url = switch ($Target) {
-        'wiki'    { 'http://localhost:8080' }
-        'admin'   { 'http://localhost:8080/?do=admin&page=devdito' }
-        'api'     { 'http://localhost:8089' }
-        'qdrant'  { 'http://localhost:6334/dashboard' }
-        'sandbox' { 'http://localhost:8090' }
-        default   { 'http://localhost:8080' }
+        'wiki'    { 'http://localhost:18080' }
+        'admin'   { 'http://localhost:18080/?do=admin&page=devdito' }
+        'api'     { 'http://localhost:18089' }
+        'qdrant'  { 'http://localhost:18334/dashboard' }
+        'sandbox' { 'http://localhost:18090' }
+        default   { 'http://localhost:18080' }
     }
 
     Write-Host "[INFO] Opening $url" -ForegroundColor Cyan
@@ -773,7 +778,7 @@ function Invoke-SandboxUp {
 
     if (Test-ContainerRunning 'wiki-sandbox') {
         Write-Host "[OK] Wiki sandbox already running" -ForegroundColor Green
-        Write-Host "     http://localhost:8090" -ForegroundColor DarkGray
+        Write-Host "     http://localhost:18090" -ForegroundColor DarkGray
         return
     }
 
@@ -791,7 +796,7 @@ function Invoke-SandboxUp {
             docker compose up -d
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "[OK] Wiki sandbox started" -ForegroundColor Green
-                Write-Host "     http://localhost:8090" -ForegroundColor DarkGray
+                Write-Host "     http://localhost:18090" -ForegroundColor DarkGray
             }
             else {
                 Write-Host "[ERROR] Failed to start sandbox" -ForegroundColor Red
@@ -808,7 +813,7 @@ function Invoke-SandboxUp {
             docker start wiki-sandbox 2>$null | Out-Null
             if (Test-ContainerRunning 'wiki-sandbox') {
                 Write-Host "[OK] Wiki sandbox started (existing container)" -ForegroundColor Green
-                Write-Host "     http://localhost:8090" -ForegroundColor DarkGray
+                Write-Host "     http://localhost:18090" -ForegroundColor DarkGray
             }
             else {
                 Write-Host "[ERROR] Failed to start sandbox container" -ForegroundColor Red
@@ -860,7 +865,7 @@ function Get-SandboxStatus {
     }
 
     Write-Host ""
-    Write-Host "  URL: http://localhost:8090" -ForegroundColor DarkGray
+    Write-Host "  URL: http://localhost:18090" -ForegroundColor DarkGray
     Write-Host ""
 }
 
@@ -901,7 +906,7 @@ function Show-DevDitoHelp {
 
     # --- Sandbox ---
     Write-Host "SANDBOX (Stack-A):" -ForegroundColor Yellow
-    Write-Host "  sandbox-up      Start wiki-sandbox DokuWiki instance (port 8090)"
+    Write-Host "  sandbox-up      Start wiki-sandbox DokuWiki instance (port 18090)"
     Write-Host "  sandbox-down    Stop wiki-sandbox"
     Write-Host "  sandbox-status  Show sandbox container status"
     Write-Host "  sandbox-open    Open sandbox in browser"
@@ -984,12 +989,12 @@ function Show-DevDitoHelp {
 
     # --- Stack Overview ---
     Write-Host "STACK OVERVIEW:" -ForegroundColor Yellow
-    Write-Host "  Stack-A  wiki-sandbox       http://localhost:8090     DokuWiki test instance"
+    Write-Host "  Stack-A  wiki-sandbox       http://localhost:18090     DokuWiki test instance"
     Write-Host "  Stack-B  wiki-core          http://localhost:8081     Keycloak SSO"
     Write-Host "  Stack-D  ai-core            http://localhost:6333     Qdrant (main)"
-    Write-Host "  Stack-G  devdito            http://localhost:8080     DokuWiki + Pipeline"
-    Write-Host "  Stack-G  devdito-api        http://localhost:8089     Orchestrator API"
-    Write-Host "  Stack-G  devdito-qdrant     http://localhost:6334     Qdrant (dev dito)"
+    Write-Host "  Stack-G  devdito            http://localhost:18080     DokuWiki + Pipeline"
+    Write-Host "  Stack-G  devdito-api        http://localhost:18089     Orchestrator API"
+    Write-Host "  Stack-G  devdito-qdrant     http://localhost:18334     Qdrant (dev dito)"
     Write-Host "  Stack-H  mcp                http://localhost:3000     Semantic Search"
     Write-Host ""
 }

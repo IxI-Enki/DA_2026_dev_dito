@@ -1,4 +1,9 @@
 # Dev Dito - One Shot
+# Dot-source profile snippet so dd-* aliases and DD_REPO_ROOT work when run standalone (e.g. from IDE)
+if ($PSScriptRoot) {
+    $snippet = Join-Path $PSScriptRoot 'dd_profile_snippet.ps1'
+    if (Test-Path $snippet) { . $snippet }
+}
 
 Clear-Host
 

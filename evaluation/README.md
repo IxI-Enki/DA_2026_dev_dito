@@ -22,8 +22,8 @@ pip install -e .
 
 ### 2. Configuration
 
-- **Qdrant** (for model comparison, chunk size, hybrid vs dense): `config/env.yaml` under `SERVICES.qdrant` (default `localhost:6334`). Start Qdrant via Docker Stack-G.
-- **Qdrant Test Instance** (for integration tests): Isolated instance on port **6336** with separate volume. Start with:
+- **Qdrant** (for model comparison, chunk size, hybrid vs dense): `config/env.yaml` under `SERVICES.qdrant` (default `localhost:18334`). Start Qdrant via Docker Stack-G.
+- **Qdrant Test Instance** (for integration tests): Isolated instance on port **18336** with separate volume. Start with:
   ```powershell
   docker compose -p stack-g-devdito --profile test up qdrant-test -d
   ```
@@ -129,7 +129,7 @@ See **`evaluation/ground_truth/README.md`** for:
   pytest evaluation/tests/test_integration.py -v
   ```
 
-  With the test Qdrant (port 6336) and optionally Ollama running, the integration test creates a temporary collection, embeds a minimal corpus, runs a query, and asserts metrics are non-zero. Test data is isolated from production.
+  With the test Qdrant (port 18336) and optionally Ollama running, the integration test creates a temporary collection, embeds a minimal corpus, runs a query, and asserts metrics are non-zero. Test data is isolated from production.
 
 Run all evaluation tests:
 

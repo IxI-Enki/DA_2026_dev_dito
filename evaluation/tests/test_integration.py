@@ -2,8 +2,8 @@
 
 These tests require running services:
 - Qdrant test instance: docker compose -p stack-g-devdito --profile test up qdrant-test
-  (uses port 6336, isolated volume)
-- Falls back to main qdrant (port 6334) if test instance not available
+  (uses port 18336, isolated volume)
+- Falls back to main qdrant (port 18334) if test instance not available
 - Ollama (optional for test_e2e_qdrant_embed_query_metrics): required only for full embed+query flow
 
 Run when Docker Desktop (or Stack-G) is up:
@@ -35,12 +35,12 @@ REPO_ROOT = EVAL_ROOT.parent
 
 
 def _get_test_qdrant_client() -> QdrantClient:
-    """Create Qdrant client for tests — prefers test instance (6336), falls back to main (6334)."""
+    """Create Qdrant client for tests — prefers test instance (18336), falls back to main (18334)."""
     env_path = REPO_ROOT / "config" / "env.yaml"
     
-    # Default: test instance
+    # Default: test instance (host ports 18xxx)
     host = "localhost"
-    port = 6336
+    port = 18336
     
     if env_path.exists():
         with open(env_path, encoding="utf-8") as fh:
@@ -59,11 +59,15 @@ def _get_test_qdrant_client() -> QdrantClient:
     except Exception:
         pass
     
-    # Fall back to main qdrant (6334)
-    main_cfg = raw.get("SERVICES", {}).get("qdrant", {}) if env_path.exists() else {}
+    # Fall back to main qdrant (18334)
+    raw: dict = {}
+    if env_path.exists():
+        with open(env_path, encoding="utf-8") as fh:
+            raw = yaml.safe_load(fh) or {}
+    main_cfg = raw.get("SERVICES", {}).get("qdrant", {})
     host = main_cfg.get("host", "localhost")
-    port = main_cfg.get("port", 6334)
-    return QdrantClient(host=host, port=port, timeout=5)
+    port = main_cfg.get("port", 18334)
+    return QdrantClient(host=host, port=port, timeout=5, check_compatibility=False)
 
 
 def _qdrant_available() -> bool:
@@ -145,11 +149,12 @@ def test_e2e_qdrant_embed_query_metrics(qdrant_client: QdrantClient) -> None:
         )
 
         query_vector = provider.embed([text])[0]
-        search_results = qdrant_client.search(
+        response = qdrant_client.query_points(
             collection_name=collection_name,
-            query_vector=query_vector,
+            query=query_vector,
             limit=5,
         )
+        search_results = response.points
         assert len(search_results) >= 1
         ranked_pages = [
             hit.payload["page_id"]

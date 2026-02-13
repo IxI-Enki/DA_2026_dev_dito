@@ -489,9 +489,9 @@ function Step-HealthCheck {
     Start-Sleep -Seconds 5
 
     $endpoints = @(
-        @{ Name = 'Orchestrator';  Url = 'http://localhost:8089/health' },
-        @{ Name = 'DokuWiki';      Url = 'http://localhost:8080' },
-        @{ Name = 'Qdrant';        Url = 'http://localhost:6334/healthz' }
+        @{ Name = 'Orchestrator';  Url = 'http://localhost:18089/health' },
+        @{ Name = 'DokuWiki';      Url = 'http://localhost:18080' },
+        @{ Name = 'Qdrant';        Url = 'http://localhost:18334/healthz' }
     )
 
     foreach ($ep in $endpoints) {
@@ -525,10 +525,10 @@ function Show-Success {
     Write-Host "========================================" -ForegroundColor Green
     Write-Host ""
     Write-Host "Access Points:" -ForegroundColor Cyan
-    Write-Host "  DokuWiki:     http://localhost:8080" -ForegroundColor White
-    Write-Host "  Admin Panel:  http://localhost:8080/?do=admin&page=devdito" -ForegroundColor White
-    Write-Host "  Orchestrator: http://localhost:8089" -ForegroundColor White
-    Write-Host "  Qdrant:       http://localhost:6334" -ForegroundColor White
+    Write-Host "  DokuWiki:     http://localhost:18080" -ForegroundColor White
+    Write-Host "  Admin Panel:  http://localhost:18080/?do=admin&page=devdito" -ForegroundColor White
+    Write-Host "  Orchestrator: http://localhost:18089" -ForegroundColor White
+    Write-Host "  Qdrant:       http://localhost:18334" -ForegroundColor White
     Write-Host ""
     Write-Host "Quick Commands (dd alias):" -ForegroundColor Cyan
     Write-Host "  dd-status     Show comprehensive status" -ForegroundColor DarkGray

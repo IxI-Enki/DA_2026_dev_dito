@@ -5,188 +5,149 @@
 **Branch**: `007-evaluation-infrastructure`
 **Thesis-Zuordnung**: FF1, FF3, J1, J2, J4, J6
 
+**Tests**: Unit tests for metrics and providers are required (Article III, plan.md). Integration test for Qdrant e2e in Polish phase.
+
+**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (US1-US5)
-- Exact file paths included in descriptions
+- **[Story]**: Which user story this task belongs to (US1–US5)
+- Include exact file paths in descriptions
+
+## Path Conventions
+
+- **Evaluation module**: `evaluation/` at repository root (per plan.md)
+- **Paths**: `evaluation/metrics/`, `evaluation/providers/`, `evaluation/scripts/`, `evaluation/experiments/`, `evaluation/ground_truth/`, `evaluation/results/`, `evaluation/tests/`
 
 ---
 
-## Phase 1: Setup & Shared Infrastructure — DONE
+## Phase 1: Setup (Shared Infrastructure)
 
-**Commit**: `ea63e9f` feat(eval): add evaluation infrastructure foundation (Phase 1-2)
+**Purpose**: Project initialization and evaluation directory structure
 
-- [x] T001 Create `evaluation/` directory structure per plan.md (all subdirectories, `__init__.py` files, `.gitkeep` in `results/`)
-- [x] T002 Create `evaluation/requirements.txt` with: `qdrant-client`, `openai`, `ollama`, `requests`, `pyyaml`, `numpy`
-- [x] T003 [P] Copy ground truth file from `research/techstack/ragas/ground_truth/leowiki_qa_50_verified.json` to `evaluation/ground_truth/` and create `README.md` documenting corpus (feeds J1 thesis section)
-
----
-
-## Phase 2: Foundation (Blocking Prerequisites) — DONE
-
-**Commit**: `ea63e9f` (same as Phase 1)
-**Tests**: 36/36 passing (29 metrics + 7 providers)
-
-### Metrics Module (Pure functions, no external deps)
-
-- [x] T004 [P] Implement MRR in `evaluation/metrics/mrr.py` — `reciprocal_rank()` + `mean_reciprocal_rank()` taking `list[tuple[list[str], set[str]]]`
-- [x] T005 [P] Implement Precision@k in `evaluation/metrics/precision_at_k.py` — `precision_at_k()` + `mean_precision_at_k()`
-- [x] T006 [P] Implement NDCG@k in `evaluation/metrics/ndcg.py` — `ndcg_at_k()` using `(2^rel - 1) / log2(i + 2)` DCG formula + `mean_ndcg_at_k()`
-- [x] T007 [P] Create `evaluation/metrics/__init__.py` re-exporting all metric functions
-- [x] T008 Write unit tests `evaluation/tests/test_metrics.py` — 29 tests covering MRR, P@k, NDCG against hand-calculated examples
-
-### EmbeddingProvider Abstraction
-
-- [x] T009 [P] Implement `evaluation/providers/base.py` — ABC with `embed()`, `model_name`, `dimensions`, `cost_per_token`
-- [x] T010 Implement `evaluation/providers/ollama_provider.py` — uses `ollama.Client(host).embed()` (Article VIII direct SDK)
-- [x] T011 [P] Create `evaluation/providers/__init__.py` re-exporting `EmbeddingProvider`, `OllamaProvider`
-- [x] T012 Write unit tests `evaluation/tests/test_providers.py` — 7 tests with mocked SDK calls for ABC, OllamaProvider, OpenAIProvider
-  - **Note**: Required `pip install ollama openai` — SDKs were not pre-installed
-
-### Config Loader
-
-- [x] T013 Implement `evaluation/config.py` — `ExperimentConfig` frozen dataclass with slots, SHA-256 config hash (NFR-005), `load_experiment_config()` from YAML, `load_ground_truth()` from JSON
-
-**Checkpoint**: All verified — 36/36 tests pass
+- [ ] T001 Create `evaluation/` directory structure per plan.md: subdirs `metrics/`, `providers/`, `scripts/`, `experiments/`, `ground_truth/`, `results/`, `tests/`; add `__init__.py` in each Python package; add `.gitkeep` in `evaluation/results/`
+- [ ] T002 Create `evaluation/requirements.txt` with dependencies: `qdrant-client`, `openai`, `ollama`, `requests`, `pyyaml`, `numpy`
+- [ ] T003 [P] Copy ground truth file from `research/techstack/ragas/ground_truth/leowiki_qa_50_verified.json` to `evaluation/ground_truth/leowiki_qa_50_verified.json` and create `evaluation/ground_truth/README.md` documenting corpus format and thesis reference (J1)
 
 ---
 
-## Phase 3: User Story 1 — Keyword Search Baseline (Priority: P1) — DONE
+## Phase 2: Foundational (Blocking Prerequisites)
 
-**Commit**: `55ef107` feat(eval): add keyword search baseline script (Phase 3, FF1)
-**Tests**: 9/9 passing (6 mapping + 3 runner)
+**Purpose**: Core infrastructure that MUST be complete before ANY user story. No user story work can begin until this phase is complete.
 
-**Goal**: FF1 baseline — run 50 ground-truth queries against DokuWiki `core.searchPages`, compute MRR + P@5
-**Independent Test**: `python -m evaluation.scripts.eval_keyword_baseline` produces `evaluation/results/keyword_baseline_{timestamp}.json`
-**Thesis Table**: FF1 — Keyword vs Semantic Search
+### Metrics module (pure functions, no external deps)
 
-### Implementation
+- [ ] T004 [P] Implement MRR in `evaluation/metrics/mrr.py` — `reciprocal_rank()` and `mean_reciprocal_rank()` taking `list[tuple[list[str], set[str]]]`
+- [ ] T005 [P] Implement Precision@k in `evaluation/metrics/precision_at_k.py` — `precision_at_k()` and `mean_precision_at_k()`
+- [ ] T006 [P] Implement NDCG@k in `evaluation/metrics/ndcg.py` — `ndcg_at_k()` using DCG formula `(2^rel - 1) / log2(i + 2)` and `mean_ndcg_at_k()`
+- [ ] T007 [P] Create `evaluation/metrics/__init__.py` re-exporting all metric functions
+- [ ] T008 Write unit tests in `evaluation/tests/test_metrics.py` — cover MRR, P@k, NDCG against hand-calculated examples (Article III)
 
-- [x] T014 Create `evaluation/experiments/keyword_baseline.yaml` — config with `type: keyword_baseline`, metrics: [mrr, precision_at_5]
-  - Done in Phase 1 commit
-- [x] T015 Implement `evaluation/scripts/eval_keyword_baseline.py`:
-  - `WikiSearchClient` — lightweight DokuWiki JSON-RPC client reading from central `config/env.yaml` (NOT importing from `pipeline/01_wiki_fetcher/config.py` which has module-level side effects)
-  - `source_file_to_page_id()` — ALL underscores become colons (verified against fetched metadata: `archive_exams_semesterpruefungen.txt` → `archive:exams:semesterpruefungen`)
-  - Computes MRR + P@5 per query, writes result JSON
-  - **Deviation from plan**: Does NOT import `pipeline/01_wiki_fetcher/api_client.py` — created standalone WikiSearchClient to avoid module-level config import side effects
-- [x] T016 Add `--help` flag with argparse, `--verbose`, `--top-k`, `--output-dir` flags (NFR-004) and connection-error handling with exit codes 1/2/3
+### EmbeddingProvider abstraction
 
-**Checkpoint**: Verified — 9/9 tests pass, `--help` works
+- [ ] T009 [P] Implement `evaluation/providers/base.py` — ABC with `embed()`, `model_name`, `dimensions`, `cost_per_token`
+- [ ] T010 Implement `evaluation/providers/ollama_provider.py` — use `ollama.Client(host).embed()` (Article VIII direct SDK)
+- [ ] T011 [P] Create `evaluation/providers/__init__.py` re-exporting `EmbeddingProvider` and `OllamaProvider`
+- [ ] T012 Write unit tests in `evaluation/tests/test_providers.py` — ABC compliance, OllamaProvider, OpenAIProvider with mocked SDK calls
 
----
+### Config loader
 
-## Phase 4: User Story 2 — Model-Agnostic Embedding Evaluation (Priority: P1) — DONE
+- [ ] T013 Implement `evaluation/config.py` — `ExperimentConfig` frozen dataclass (slots), SHA-256 config hash (NFR-005), `load_experiment_config()` from YAML, `load_ground_truth()` from JSON
 
-**Commit**: `475d75f` feat(eval): add model comparison script with prototype-aligned relevance (Phase 4, FF3)
-**Tests**: 11/11 passing (5 chunker + 3 relevance + 1 corpus + 2 runner)
-
-**Goal**: FF3 — compare 3+ embedding models (Ollama + OpenAI + MTEB) with NDCG@10 + MRR
-**Independent Test**: `python -m evaluation.scripts.eval_model_comparison --config experiments/model_bge_m3.yaml` produces result JSON
-**Thesis Table**: FF3 — Embedding Model Comparison
-
-### Implementation
-
-- [x] T017 Implement `evaluation/providers/openai_provider.py` — uses `openai.OpenAI().embeddings.create()`, token usage tracking, cost calculation, API key from file (Article VI)
-  - Done in Phase 1-2 commit
-- [x] T018 [P] Create experiment configs:
-  - `evaluation/experiments/model_bge_m3.yaml` (provider: ollama, model: bge-m3, dim: 1024)
-  - `evaluation/experiments/model_openai_3large.yaml` (provider: openai, model: text-embedding-3-large, dim: 3072)
-  - `evaluation/experiments/model_mxbai_embed_de.yaml` (provider: ollama, model: mxbai-embed-large-v1, dim: 1024)
-  - Done in Phase 1-2 commit
-- [x] T019 Implement `evaluation/scripts/eval_model_comparison.py`:
-  - `simple_chunk()` — standalone paragraph-based chunker (does NOT import `pipeline/03_embeddings_creator/content_aware_chunker.py` which depends on pipeline config system)
-  - `load_corpus_for_ground_truth()` — loads `.txt` files from `data/fetched/fetched_at_*/page_content/` for pages referenced in ground truth
-  - `calculate_relevance_score()` — multi-signal relevance scoring ported from prototype `research/techstack/ragas/professional_evaluation/metrics/retrieval_metrics.py` (0.4×word_overlap + 0.3×keyword_match + 0.3×fragment_match)
-  - Creates temp Qdrant collection, embeds corpus, queries, deduplicates chunks by page_id
-  - Result includes: aggregate metrics with **mean + std dev**, **difficulty breakdown** (easy/medium/hard), **content relevance score**, **cost tracking** (OpenAI)
-  - **Enhancement over plan**: Added multi-signal relevance, std dev, difficulty breakdown after reviewing prototypes
-- [x] T020 Add `--compare-all` flag — iterates all `model_*.yaml` configs, produces Markdown comparison table + `model_comparison_{timestamp}.json`
-- [x] T021 Qdrant temp collection cleanup in `try/finally` block (FR-008) — verified cleanup runs even on error
-
-**Checkpoint**: Verified — 11/11 tests pass, `--help` works, cleanup verified
+**Checkpoint**: Foundation ready — all metrics, providers, and config loadable; unit tests pass.
 
 ---
 
-## Phase 5: User Story 3 — Chunk Size Parametric Evaluation (Priority: P1) — DONE
+## Phase 3: User Story 1 — Keyword Search Baseline (Priority: P1) — MVP
 
-**Commit**: `256cf57` feat(eval): add chunk size, hybrid vs dense, and LaTeX export scripts (Phases 5-7)
+**Goal**: FF1 baseline — run ground-truth queries against DokuWiki `core.searchPages`, compute MRR and Precision@5.
 
-**Goal**: J4 — compare 256/512/1024 token chunks on same model + queries
-**Independent Test**: `python -m evaluation.scripts.eval_chunk_size --config experiments/chunk_512.yaml`
-**Thesis Table**: J4 — Chunk Size Impact
+**Independent Test**: `python -m evaluation.scripts.eval_keyword_baseline` produces `evaluation/results/keyword_baseline_{timestamp}.json` with MRR and P@5 per query and aggregates.
 
-### Implementation
+### Implementation for User Story 1
 
-- [x] T022 [P] Create chunk experiment configs:
-  - `evaluation/experiments/chunk_256.yaml` (chunk_size: 256, chunk_overlap: 50)
-  - `evaluation/experiments/chunk_512.yaml` (chunk_size: 512, chunk_overlap: 50)
-  - `evaluation/experiments/chunk_1024.yaml` (chunk_size: 1024, chunk_overlap: 50)
-  - Done in Phase 1-2 commit
-- [x] T023 Implement `evaluation/scripts/eval_chunk_size.py`:
-  - **Thin wrapper** around `run_model_evaluation()` from Phase 4 — the model comparison pipeline already reads `chunk_size` from config, so only CLI and comparison table formatting needed
-  - **Deviation from plan**: Does NOT use `content_aware_chunker.py` from pipeline — uses `simple_chunk()` to avoid pipeline config dependency. Chunking is by character count (paragraph-boundary-respecting), not token count
-- [x] T024 Add `--compare` flag — iterates all `chunk_*.yaml` configs, produces `chunk_comparison_{timestamp}.json`
+- [ ] T014 [P] [US1] Create `evaluation/experiments/keyword_baseline.yaml` — config with `type: keyword_baseline`, metrics: [mrr, precision_at_5]
+- [ ] T015 [US1] Implement `evaluation/scripts/eval_keyword_baseline.py`: DokuWiki JSON-RPC client (read from `config/env.yaml`, not `pipeline/01_wiki_fetcher/config.py`), `source_file_to_page_id()` (underscores to colons), compute MRR + P@5 per query, write result JSON to `evaluation/results/`
+- [ ] T016 [US1] Add CLI in `evaluation/scripts/eval_keyword_baseline.py`: `--help`, `--verbose`, `--top-k`, `--output-dir` (NFR-004); connection-error handling with exit codes 1/2/3
+- [ ] T017 [P] [US1] Write unit tests in `evaluation/tests/test_keyword_baseline.py` — `source_file_to_page_id()` mapping and runner with mocked API
 
-**Checkpoint**: Verified — `--help` works, reuses Phase 4 pipeline (no new tests needed — same code path)
+**Checkpoint**: User Story 1 independently testable; keyword baseline script runs and produces result JSON.
 
 ---
 
-## Phase 6: User Story 4 — Hybrid vs Dense Retrieval (Priority: P2) — DONE
+## Phase 4: User Story 2 — Model-Agnostic Embedding Evaluation (Priority: P1)
 
-**Commit**: `256cf57` (same as Phase 5)
+**Goal**: FF3 — compare 3+ embedding models (Ollama, OpenAI) with NDCG@10 and MRR on same corpus and queries.
 
-**Goal**: J6 — compare dense-only vs hybrid (dense + BM25) retrieval on same collection
-**Independent Test**: `python -m evaluation.scripts.eval_hybrid_vs_dense`
-**Thesis Table**: J6 — Hybrid vs Dense Retrieval
+**Independent Test**: `python -m evaluation.scripts.eval_model_comparison --config evaluation/experiments/model_bge_m3.yaml` produces result JSON; `--compare-all` produces comparison table (Markdown + JSON).
 
-### Implementation
+### Implementation for User Story 2
 
-- [x] T025 Create `evaluation/experiments/hybrid_vs_dense.yaml` — config with `mode: hybrid`, metrics: [mrr, precision_at_5, ndcg_at_10]
-  - Done in Phase 1-2 commit
-- [x] T026 Implement `evaluation/scripts/eval_hybrid_vs_dense.py`:
-  - Builds one temp Qdrant collection, runs both dense and hybrid queries against it
-  - `_evaluate_queries()` shared function for both modes with full metric output
-  - Result includes side-by-side comparison with mean + std for all metrics
-  - **Note**: True hybrid (vector + BM25) requires Qdrant full-text index on collection — currently both modes use vector search. Hybrid mode needs Qdrant payload index configuration at runtime.
-  - Uses `try/finally` for collection cleanup (FR-008)
+- [ ] T018 [US1] Implement `evaluation/providers/openai_provider.py` — `openai.OpenAI().embeddings.create()`, token usage tracking, cost calculation, API key from `config/secrets/openai.token` (Article VI)
+- [ ] T019 [P] [US2] Create experiment configs in `evaluation/experiments/`: `model_bge_m3.yaml`, `model_openai_3large.yaml`, `model_mxbai_embed_de.yaml` (provider, model, dimensions per plan)
+- [ ] T020 [US2] Implement `evaluation/scripts/eval_model_comparison.py`: standalone chunker (e.g. `simple_chunk()`), `load_corpus_for_ground_truth()` from `data/fetched/fetched_at_*/page_content/`, relevance scoring, create temp Qdrant collection, embed corpus and queries, compute NDCG@10 + MRR + P@5, aggregate with mean (and optional std/difficulty breakdown), cost tracking for OpenAI
+- [ ] T021 [US2] Add `--compare-all` in `evaluation/scripts/eval_model_comparison.py` — iterate all `model_*.yaml` configs, produce Markdown comparison table and `model_comparison_{timestamp}.json`
+- [ ] T022 [US2] Ensure temp Qdrant collection cleanup in `evaluation/scripts/eval_model_comparison.py` in `try/finally` (FR-008)
+- [ ] T023 [P] [US2] Write unit tests in `evaluation/tests/test_model_comparison.py` — chunker, relevance scoring, corpus loading, runner with mocked Qdrant and provider
 
-**Checkpoint**: Verified — `--help` works, code path reuses shared evaluation functions
+**Checkpoint**: User Story 2 independently testable; model comparison script runs and produces result JSON and optional comparison table.
 
 ---
 
-## Phase 7: User Story 5 — LaTeX Export (Priority: P2) — DONE
+## Phase 5: User Story 3 — Chunk Size Parametric Evaluation (Priority: P1)
 
-**Commit**: `256cf57` (same as Phases 5-6)
+**Goal**: J4 — compare 256/512/1024 token (or character) chunk sizes on same model and queries.
 
-**Goal**: All result JSONs exportable as LaTeX `\begin{tabular}` tables for thesis
-**Independent Test**: `python -m evaluation.scripts.eval_export_latex`
+**Independent Test**: `python -m evaluation.scripts.eval_chunk_size --config evaluation/experiments/chunk_512.yaml` produces result JSON; `--compare` produces `chunk_comparison_{timestamp}.json`.
 
-### Implementation
+### Implementation for User Story 3
 
-- [x] T027 Implement `evaluation/scripts/eval_export_latex.py`:
-  - `generate_ff1_table()` — Keyword vs Semantic comparison (reads keyword_baseline + model_bge results)
-  - `generate_ff3_table()` — Embedding model comparison (reads model_comparison summary)
-  - `generate_j4_table()` — Chunk size impact (reads chunk_comparison summary)
-  - `generate_j6_table()` — Hybrid vs Dense (reads hybrid_vs_dense result)
-  - All tables use `\toprule/\midrule/\bottomrule` (booktabs), `\caption`, `\label`
-  - Auto-discovers latest result file per pattern
-- [x] T028 Add `--output-dir` and `--results-dir` flags for custom locations
+- [ ] T024 [P] [US3] Create chunk experiment configs in `evaluation/experiments/`: `chunk_256.yaml`, `chunk_512.yaml`, `chunk_1024.yaml` (chunk_size, chunk_overlap per plan)
+- [ ] T025 [US3] Implement `evaluation/scripts/eval_chunk_size.py` — thin wrapper around model comparison pipeline (config supplies chunk_size), CLI and comparison table formatting; add `--compare` to iterate all `chunk_*.yaml` and produce `chunk_comparison_{timestamp}.json`
 
-**Checkpoint**: Verified — `--help` works, generates 4 `.tex` files when results exist
+**Checkpoint**: User Story 3 independently testable; chunk size script runs and produces result JSON and optional comparison.
 
 ---
 
-## Phase 8: Polish & Cross-Cutting — DONE
+## Phase 6: User Story 4 — Hybrid vs Dense Retrieval (Priority: P2)
 
-- [x] T029 Write integration test `evaluation/tests/test_integration.py` — end-to-end with local Qdrant (embed small corpus, query, verify metrics are non-zero)
-  - Implemented: two tests (`test_qdrant_connection`, `test_e2e_qdrant_embed_query_metrics`); both skip when Qdrant or Ollama unavailable. Run with Docker/Qdrant (and optionally Ollama) up to execute.
-- [x] T030 [P] Create `evaluation/README.md` — setup instructions, usage examples for each script, ground truth format documentation
-- [x] T031 [P] Add `.gitignore` for `evaluation/results/` — ignores `*.json` and `*.tex`, keeps `.gitkeep`
-  - **Commit**: `256cf57`
-- [x] T032 All result JSONs include timestamp, config-hash (`sha256:...`), and code-version (git short hash) — NFR-005
-  - Verified in: `eval_keyword_baseline.py`, `eval_model_comparison.py`, `eval_hybrid_vs_dense.py`
-  - `eval_chunk_size.py` and `eval_export_latex.py` inherit from model comparison or read from result files
+**Goal**: J6 — compare dense-only vs hybrid (dense + BM25) retrieval on same collection.
+
+**Independent Test**: `python -m evaluation.scripts.eval_hybrid_vs_dense` produces side-by-side comparison JSON with mean (and optional std) for MRR, P@5, NDCG@10.
+
+### Implementation for User Story 4
+
+- [ ] T026 [P] [US4] Create `evaluation/experiments/hybrid_vs_dense.yaml` — config with `mode: hybrid`, metrics: [mrr, precision_at_5, ndcg_at_10]
+- [ ] T027 [US4] Implement `evaluation/scripts/eval_hybrid_vs_dense.py` — build one temp Qdrant collection, run dense and hybrid (or dense-only if hybrid not yet supported) queries, shared `_evaluate_queries()` with full metric output, result JSON with side-by-side comparison; use `try/finally` for collection cleanup (FR-008)
+
+**Checkpoint**: User Story 4 independently testable; hybrid vs dense script runs and produces comparison JSON.
+
+---
+
+## Phase 7: User Story 5 — Thesis-Ready Result Export (Priority: P2)
+
+**Goal**: Export all result JSONs as LaTeX `\begin{tabular}` tables for thesis (FR-010).
+
+**Independent Test**: `python -m evaluation.scripts.eval_export_latex` generates `.tex` files when result JSONs exist in `evaluation/results/`.
+
+### Implementation for User Story 5
+
+- [ ] T028 [US5] Implement `evaluation/scripts/eval_export_latex.py` — `generate_ff1_table()` (keyword vs semantic), `generate_ff3_table()` (model comparison), `generate_j4_table()` (chunk comparison), `generate_j6_table()` (hybrid vs dense); use `\toprule/\midrule/\bottomrule` (booktabs), `\caption`, `\label`; auto-discover latest result file per pattern
+- [ ] T029 [US5] Add `--output-dir` and `--results-dir` flags in `evaluation/scripts/eval_export_latex.py` for custom locations (NFR-004)
+
+**Checkpoint**: User Story 5 independently testable; LaTeX export produces .tex files from existing results.
+
+---
+
+## Phase 8: Polish & Cross-Cutting Concerns
+
+**Purpose**: Integration test, documentation, and NFR-005 consistency across all result JSONs.
+
+- [ ] T030 Write integration test in `evaluation/tests/test_integration.py` — end-to-end with local Qdrant (embed small corpus, query, verify metrics non-zero); skip when Qdrant or Ollama unavailable
+- [ ] T031 [P] Create `evaluation/README.md` — setup instructions (venv, config/env.yaml, Qdrant/Ollama), usage examples for each script, ground truth format reference
+- [ ] T032 [P] Add `.gitignore` in `evaluation/results/` — ignore `*.json` and `*.tex`, keep `.gitkeep`
+- [ ] T033 Verify all result JSONs from `evaluation/scripts/eval_keyword_baseline.py`, `eval_model_comparison.py`, `eval_hybrid_vs_dense.py` (and derived scripts) include timestamp, config_hash (sha256), and code_version (git short hash) — NFR-005
 
 ---
 
@@ -194,91 +155,77 @@
 
 ### Phase Dependencies
 
-```sketch
-Phase 1 (Setup) ────► Phase 2 (Foundation) ──┬──► Phase 3 (US1: Keyword) ──┐
-                                             ├──► Phase 4 (US2: Models)  ──┤
-                                             ├──► Phase 5 (US3: Chunks)  ──┼──► Phase 7 (US5: LaTeX)
-                                             └──► Phase 6 (US4: Hybrid)  ──┘         │
-                                                                                     ▼
-                                                                                Phase 8 (Polish)
+- **Phase 1 (Setup)**: No dependencies — start immediately.
+- **Phase 2 (Foundational)**: Depends on Phase 1 — BLOCKS all user stories.
+- **Phase 3 (US1)**: Depends on Phase 2 — no other story dependency.
+- **Phase 4 (US2)**: Depends on Phase 2 — no other story dependency (can parallelize with US1 after Phase 2).
+- **Phase 5 (US3)**: Depends on Phase 2 and reuses Phase 4 pipeline — implement after or with US2.
+- **Phase 6 (US4)**: Depends on Phase 2 and reuses Phase 4 pipeline — implement after or with US2.
+- **Phase 7 (US5)**: Depends on result JSONs from US1–US4 — implement after at least one result-producing script exists.
+- **Phase 8 (Polish)**: Depends on Phase 2 (and optionally Phase 3+) for integration test and README content.
+
+### User Story Dependencies
+
+- **US1 (P1)**: After Phase 2 — independent.
+- **US2 (P1)**: After Phase 2 — independent.
+- **US3 (P1)**: After Phase 2; reuses US2 pipeline (chunk_size from config).
+- **US4 (P2)**: After Phase 2; reuses US2 pipeline (collection, queries).
+- **US5 (P2)**: After any of US1–US4 that produce result files.
+
+### Parallel Opportunities
+
+- Phase 1: T003 [P] can run with T001/T002.
+- Phase 2: T004–T007 [P], T009–T011 [P], T008 and T012 (tests) after their implementations.
+- Phase 3: T014 [P], T017 [P] can run in parallel with each other; T015–T016 sequential.
+- Phase 4: T019 [P], T023 [P] parallelizable; T018, T020–T022 sequential or ordered.
+- Phase 5: T024 [P] parallel; T025 depends on pipeline.
+- Phase 6: T026 [P]; T027 depends on pipeline.
+- Phase 8: T031 [P], T032 [P] parallel.
+
+---
+
+## Parallel Example: User Story 1
+
+```text
+# After Phase 2 complete:
+T014 [P] Create keyword_baseline.yaml
+T017 [P] Write test_keyword_baseline.py
+# Then:
+T015 Implement eval_keyword_baseline.py
+T016 Add CLI and error handling
 ```
 
-### Actual Execution Order (as implemented)
+---
 
-1. **Phase 1+2** together → commit `ea63e9f` (25 files, 36 tests)
-2. **Phase 3** → commit `55ef107` (3 files, +9 tests = 45 total)
-3. **Phase 4** → commit `475d75f` (2 files, +11 tests = 56 total)
-4. **Phases 5+6+7+T031** together → commit `256cf57` (4 files, 56 tests stable)
-5. **Phase 8** — T029, T030, T031, T032 done
+## Implementation Strategy
+
+### MVP First (User Story 1 Only)
+
+1. Complete Phase 1: Setup.
+2. Complete Phase 2: Foundational (metrics, providers, config, unit tests).
+3. Complete Phase 3: User Story 1 (keyword baseline).
+4. **STOP and VALIDATE**: Run `python -m evaluation.scripts.eval_keyword_baseline`, inspect `evaluation/results/keyword_baseline_*.json`.
+
+### Incremental Delivery
+
+1. Setup + Foundational → foundation ready.
+2. Add US1 → run keyword baseline → first thesis table (FF1).
+3. Add US2 → run model comparison → second thesis table (FF3).
+4. Add US3 → run chunk size → third table (J4).
+5. Add US4 → run hybrid vs dense → fourth table (J6).
+6. Add US5 → run LaTeX export → all tables exportable.
+7. Polish → integration test, README, .gitignore, NFR-005 check.
+
+### Format Validation
+
+- All tasks use checklist format: `- [ ] [ID] [P?] [Story?] Description with file path`.
+- Task IDs T001–T033 sequential; [P] and [USn] applied per rules above.
 
 ---
 
-## Deviations from Plan
+## Notes
 
-### D1: Standalone WikiSearchClient (T015)
-**Planned**: Import `pipeline/01_wiki_fetcher/api_client.py`
-**Actual**: Created standalone `WikiSearchClient` in `eval_keyword_baseline.py`
-**Reason**: `api_client.py` imports from `config.py` which runs module-level code (loads env.yaml, validates config, prints to stdout). Importing it would trigger side effects and require the fetcher's full config to be valid.
-
-### D2: Standalone simple_chunk() (T019, T023)
-**Planned**: Use `content_aware_chunker.py` from `pipeline/03_embeddings_creator/`
-**Actual**: Created `simple_chunk()` in `eval_model_comparison.py`
-**Reason**: `ContentAwareChunker` depends on pipeline's `config.py` (`get_config()`) and `Document` dataclass. These require the pipeline's YAML config system to be initialized. The evaluation chunker is paragraph-based with size limits — simpler and self-contained.
-
-### D3: Multi-signal relevance scoring (T019)
-**Planned**: Binary page-ID matching
-**Actual**: Multi-signal scoring (word overlap + keyword match + fragment match) ported from prototype `research/techstack/ragas/professional_evaluation/metrics/retrieval_metrics.py`
-**Reason**: User instructed to check prototypes before implementing. The prototype's approach is more sophisticated and better aligned with the RAGAS evaluation methodology used in the research phase.
-
-### D4: Metrics include std dev + difficulty breakdown (T019)
-**Planned**: Only aggregate means
-**Actual**: All aggregate metrics report `{mean, std}` and results include `by_difficulty` breakdown
-**Reason**: Aligned with prototype patterns in `professional_evaluation/metrics/statistical_analysis.py` and `category_analysis.py`. Thesis benefits from showing per-difficulty performance.
-
-### D5: Hybrid mode limitation (T026)
-**Planned**: Qdrant `query_mode` toggle between dense and hybrid
-**Actual**: Both modes currently use vector search. True hybrid requires Qdrant full-text payload index.
-**Reason**: Qdrant's hybrid search requires a pre-configured text index on the collection. The evaluation script structure supports both modes — the actual Qdrant query call needs updating when a full-text index is configured.
-
----
-
-## Test Summary
-
-| Test File                  |  Count | What                                                                             |
-| -------------------------- | -----: | -------------------------------------------------------------------------------- |
-| `test_metrics.py`          |     29 | MRR, P@k, NDCG@k with hand-calculated examples                                   |
-| `test_providers.py`        |      7 | ABC compliance, OllamaProvider, OpenAIProvider (mocked)                          |
-| `test_keyword_baseline.py` |      9 | source_file→page_id mapping (6), mocked eval runner (3)                          |
-| `test_model_comparison.py` |     11 | simple_chunk (5), relevance scoring (3), corpus loading (1), mocked pipeline (2) |
-| `test_integration.py`      |      2 | Qdrant connection smoke; e2e embed+query+metrics (skip if services down)         |
-| **Total**                  | **58** | **56 unit + 2 integration (integration skip when Qdrant/Ollama unavailable)**    |
-
----
-
-## Validation (2026-02-13, against codebase)
-
-- **Directory structure**: `evaluation/` has all subdirs (metrics, providers, scripts, experiments, ground_truth, results, tests); `results/.gitkeep` and `results/.gitignore` present.
-- **Config**: Scripts read `config/env.yaml` for Qdrant (`SERVICES.qdrant`) and Wiki (`SOURCE_WIKI.api.url`); no import from `pipeline/01_wiki_fetcher/config.py` (avoids side effects).
-- **NFR-005**: Result JSONs from keyword_baseline, model_comparison, hybrid_vs_dense include `timestamp`, `config_hash`, `code_version`; chunk_size and export inherit or read from these.
-- **NFR-004**: All five scripts support `--help` (verified).
-- **Tests**: `pytest evaluation/tests/` — 56 unit tests pass; 2 integration tests skip when Qdrant (and for e2e, Ollama) not reachable.
-- **D5**: `eval_hybrid_vs_dense.py` uses vector search only for both modes; true hybrid would require Qdrant full-text index (documented in tasks deviations).
-
----
-
-## Commit History
-
-| Commit    | Phase | Files | Description                                                       |
-| --------- | ----- | ----: | ----------------------------------------------------------------- |
-| `ea63e9f` | 1+2   |    25 | Foundation: metrics, providers, config, experiments, ground truth |
-| `55ef107` | 3     |     3 | Keyword search baseline (FF1)                                     |
-| `475d75f` | 4     |     2 | Model comparison with multi-signal relevance (FF3)                |
-| `256cf57` | 5+6+7 |     4 | Chunk size, hybrid vs dense, LaTeX export, .gitignore             |
-
-All pushed to `origin/007-evaluation-infrastructure`.
-
----
-
-## Remaining Work
-
-1. **D5 fix** (optional): Configure Qdrant full-text index for true hybrid search in T026 — currently both dense and hybrid modes use vector search; hybrid would need payload text index on collection.
+- [P] = different files, no dependencies on incomplete tasks.
+- [USn] maps task to user story for traceability.
+- Each user story phase is independently completable and testable via the stated Independent Test.
+- Commit after each task or logical group; stop at any checkpoint to validate that story.
