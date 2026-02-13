@@ -22,7 +22,11 @@ pip install -e .
 
 ### 2. Configuration
 
-- **Qdrant** (for model comparison, chunk size, hybrid vs dense): `config/env.yaml` under `SERVICES.qdrant` (default `localhost:6333`). Start Qdrant via Docker or Stack-D so the scripts can create temporary collections.
+- **Qdrant** (for model comparison, chunk size, hybrid vs dense): `config/env.yaml` under `SERVICES.qdrant` (default `localhost:6334`). Start Qdrant via Docker Stack-G.
+- **Qdrant Test Instance** (for integration tests): Isolated instance on port **6336** with separate volume. Start with:
+  ```powershell
+  docker compose -p stack-g-devdito --profile test up qdrant-test -d
+  ```
 - **Keyword baseline (FF1)** uses `config/env.yaml` → `SOURCE_WIKI.api.url` for DokuWiki JSON-RPC. No Qdrant required.
 - **Ollama** (local embeddings): run `ollama serve` and pull a model, e.g. `ollama pull bge-m3`. Used by experiment configs under `evaluation/experiments/`.
 - **OpenAI** (optional): place API key in `config/secrets/openai.token` for configs with `provider: openai`.
@@ -118,10 +122,14 @@ See **`evaluation/ground_truth/README.md`** for:
 - **Integration tests** (Qdrant + optional Ollama): skipped if services are not reachable.
 
   ```powershell
+  # Start the isolated test Qdrant first
+  docker compose -p stack-g-devdito --profile test up qdrant-test -d
+  
+  # Run integration tests
   pytest evaluation/tests/test_integration.py -v
   ```
 
-  With Qdrant (and optionally Ollama) running, the integration test creates a temporary collection, embeds a minimal corpus, runs a query, and asserts metrics are non-zero.
+  With the test Qdrant (port 6336) and optionally Ollama running, the integration test creates a temporary collection, embeds a minimal corpus, runs a query, and asserts metrics are non-zero. Test data is isolated from production.
 
 Run all evaluation tests:
 

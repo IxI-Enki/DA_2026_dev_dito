@@ -1,10 +1,12 @@
 """Integration tests: end-to-end with local Qdrant and optional Ollama.
 
 These tests require running services:
-- Qdrant (e.g. Docker): must be reachable at host/port from config/env.yaml or localhost:6333
+- Qdrant test instance: docker compose -p stack-g-devdito --profile test up qdrant-test
+  (uses port 6336, isolated volume)
+- Falls back to main qdrant (port 6334) if test instance not available
 - Ollama (optional for test_e2e_qdrant_embed_query_metrics): required only for full embed+query flow
 
-Run when Docker Desktop (or Stack-D) is up:
+Run when Docker Desktop (or Stack-G) is up:
   pytest evaluation/tests/test_integration.py -v
   pytest evaluation/tests/test_integration.py -v -k e2e
 
@@ -18,15 +20,13 @@ import uuid
 from pathlib import Path
 
 import pytest
+import yaml
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
-# Import from eval_model_comparison to reuse Qdrant and provider setup
-from evaluation.scripts.eval_model_comparison import (
-    _get_qdrant_client,
-    create_provider,
-)
+# Import from eval_model_comparison to reuse provider setup
+from evaluation.scripts.eval_model_comparison import create_provider
 from evaluation.config import load_experiment_config
 from evaluation.metrics.mrr import reciprocal_rank, mean_reciprocal_rank
 
@@ -34,10 +34,42 @@ EVAL_ROOT = Path(__file__).resolve().parent.parent
 REPO_ROOT = EVAL_ROOT.parent
 
 
-def _qdrant_available() -> bool:
-    """Return True if Qdrant is reachable."""
+def _get_test_qdrant_client() -> QdrantClient:
+    """Create Qdrant client for tests — prefers test instance (6336), falls back to main (6334)."""
+    env_path = REPO_ROOT / "config" / "env.yaml"
+    
+    # Default: test instance
+    host = "localhost"
+    port = 6336
+    
+    if env_path.exists():
+        with open(env_path, encoding="utf-8") as fh:
+            raw = yaml.safe_load(fh)
+        # Prefer qdrant_test if configured
+        test_cfg = raw.get("SERVICES", {}).get("qdrant_test", {})
+        if test_cfg:
+            host = test_cfg.get("host", host)
+            port = test_cfg.get("port", port)
+    
+    # Try test instance first
     try:
-        client = _get_qdrant_client()
+        client = QdrantClient(host=host, port=port, timeout=5)
+        client.get_collections()
+        return client
+    except Exception:
+        pass
+    
+    # Fall back to main qdrant (6334)
+    main_cfg = raw.get("SERVICES", {}).get("qdrant", {}) if env_path.exists() else {}
+    host = main_cfg.get("host", "localhost")
+    port = main_cfg.get("port", 6334)
+    return QdrantClient(host=host, port=port, timeout=5)
+
+
+def _qdrant_available() -> bool:
+    """Return True if any Qdrant instance is reachable."""
+    try:
+        client = _get_test_qdrant_client()
         client.get_collections()
         return True
     except Exception:
@@ -59,8 +91,8 @@ def _ollama_available() -> bool:
 def qdrant_client() -> QdrantClient:
     """Provide Qdrant client; skip if Qdrant is not available."""
     if not _qdrant_available():
-        pytest.skip("Qdrant not reachable (start Docker or Stack-D)")
-    return _get_qdrant_client()
+        pytest.skip("Qdrant not reachable (start: docker compose -p stack-g-devdito --profile test up qdrant-test)")
+    return _get_test_qdrant_client()
 
 
 @pytest.mark.integration

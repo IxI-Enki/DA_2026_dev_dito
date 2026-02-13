@@ -76,6 +76,30 @@ services:
       retries: 3
 
   # ==========================================================================
+  # Qdrant Test Instance (Isolated for evaluation/integration tests)
+  # Separate volume to avoid polluting production data
+  # ==========================================================================
+  qdrant-test:
+    image: qdrant/qdrant:v1.13.2
+    container_name: dev-dito-qdrant-test
+    profiles: ["test"]
+    restart: unless-stopped
+    ports:
+      - "6336:6333"   # Test instance on 6336
+      - "6337:6334"   # gRPC
+    volumes:
+      - dev-dito-qdrant-test-storage:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    networks:
+      - leonidas-network
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================================================
   # Orchestrator API
   # Manages pipeline execution and provides status API for DokuWiki plugin
   # ==========================================================================
@@ -233,6 +257,8 @@ services:
 volumes:
   dev-dito-qdrant-storage:
     name: dev-dito-qdrant-storage
+  dev-dito-qdrant-test-storage:
+    name: dev-dito-qdrant-test-storage
 
 # =============================================================================
 # Networks
