@@ -133,27 +133,27 @@ class EmbeddingProvider(ABC):
 ```yaml
 # evaluation/experiments/model_bge_m3.yaml
 experiment:
-  name: "BGE-M3 via Ollama"
-  type: model_comparison  # model_comparison | chunk_size | hybrid_vs_dense | keyword_baseline
-  thesis_id: "J2/FF3"
+  name: BGE-M3 via Ollama
+  type: model_comparison      # model_comparison | chunk_size | hybrid_vs_dense | keyword_baseline
+  thesis_id: 'J2/FF3'
 
 embedding:
-  provider: ollama          # ollama | openai
-  model: "bge-m3"
-  dimensions: 1024          # Model-specific
+  provider: ollama            # ollama | openai
+  model: 'bge-m3'
+  dimensions: 1024            # Model-specific
 
 chunking:
-  strategy: content_aware   # Reuses existing content_aware_chunker.py
-  chunk_size: 512           # Default, overridden in chunk_size experiments
+  strategy: content_aware     # Reuses existing content_aware_chunker.py
+  chunk_size: 512             # Default, overridden in chunk_size experiments
   chunk_overlap: 50
 
 retrieval:
-  mode: dense               # dense | hybrid
+  mode: dense                 # dense | hybrid
   top_k: 10
-  collection_prefix: "eval_"  # Temporary collections: eval_bge_m3_512
+  collection_prefix: 'eval_'  # Temporary collections: eval_bge_m3_512
 
 ground_truth:
-  file: "ground_truth/leowiki_qa_50_verified.json"
+  file: 'ground_truth/leowiki_qa_50_verified.json'
 
 metrics:
   - mrr

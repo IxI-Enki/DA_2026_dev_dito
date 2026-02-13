@@ -1,7 +1,19 @@
+---
+title: Ground Truth Dataset (J1)
+description: 50 verified Q&A pairs from LeoWiki content used as the shared test corpus for all evaluation scripts (FF1, FF3, J4, J6).
+author:
+  name: Jan Ritt
+  github: 'https://github.com/IxI-Enki'
+version: 2.0.0
+created: 2026-01-02
+updated: 2026-02-13
+tags: [ground-truth, evaluation, qa-pairs, leowiki, thesis]
+---
+
 # Ground Truth Dataset (J1)
 
 **Thesis Reference**: J1 -- Test Corpus for Embedding Evaluation
-**Source**: `research/techstack/ragas/ground_truth/leowiki_qa_50_verified.json`
+**Source**: `evaluation/ground_truth/leowiki_qa_50_verified.json`
 
 ## Description
 

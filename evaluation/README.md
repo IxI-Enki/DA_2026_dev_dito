@@ -1,8 +1,20 @@
+---
+title: Evaluation Infrastructure
+description: Modular evaluation framework for thesis deliverables including retrieval metrics (MRR, P@5, NDCG@10), keyword vs semantic baseline, embedding model comparison, chunk size impact, and hybrid vs dense retrieval.
+author:
+  name: Jan Ritt
+  github: 'https://github.com/IxI-Enki'
+version: 1.0.0
+created: 2026-02-01
+updated: 2026-02-13
+tags: [evaluation, metrics, retrieval, embeddings, thesis, rag]
+---
+
 # Evaluation Infrastructure
 
 Modular evaluation framework for thesis deliverables: retrieval metrics (MRR, P@5, NDCG@10), keyword vs semantic baseline (FF1), embedding model comparison (FF3), chunk size impact (J4), and hybrid vs dense retrieval (J6).
 
-**Branch**: `007-evaluation-infrastructure`  
+**Branch**: `007-evaluation-infrastructure`
 **Spec**: `specs/007-evaluation-infrastructure/spec.md`
 
 ---

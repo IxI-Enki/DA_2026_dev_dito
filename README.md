@@ -1,3 +1,15 @@
+---
+title: Dev Dito -- Expert Architecture Review
+description: Collaborative expert review of the dev_dito repository (Stack-G) covering Docker infrastructure, codebase architecture, and thesis alignment.
+author:
+  name: Jan Ritt
+  github: 'https://github.com/IxI-Enki'
+version: 1.0.0
+created: 2026-02-13
+updated: 2026-02-13
+tags: [dev-dito, architecture-review, docker, evaluation, diploma-thesis, stack-g]
+---
+
 # Dev Dito -- Expert Architecture Review
 
 > **Purpose**: This README captures the collaborative findings of three expert agents (Docker, Software Architect, Thesis) analyzing the dev_dito repository for professional cleanup. Each section is written by one expert, followed by a second iteration where experts comment on each other's findings. A final section by the Spec-Kit Architect compares these proposals against the Constitution.
@@ -202,7 +214,7 @@ dev_dito/                                          # KEEP - Repository root for 
 
 ### 1.4 Proposed Optimal Architecture
 
-```tree
+```
 dev_dito/                                          # Repository root - Stack-G of 9-stack ecosystem
 |-- .claude/commands/                              # Agent tooling - Claude Code speckit commands
 |-- .cursor/commands/                              # Agent tooling - Cursor IDE speckit commands

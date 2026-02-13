@@ -1,6 +1,18 @@
+---
+title: Dev Dito Scripts
+description: Operational PowerShell scripts for plugin deployment, development workflow, and local testing of the Dev Dito DokuWiki extension.
+author:
+  name: Jan Ritt
+  github: 'https://github.com/IxI-Enki'
+version: 1.0.0
+created: 2025-11-01
+updated: 2026-02-13
+tags: [scripts, powershell, deployment, dokuwiki-plugin, development]
+---
+
 # Dev Dito Scripts
 
-Scripts für die Entwicklung und das Deployment der Dev Dito DokuWiki Extension.
+Scripts for development and deployment of the Dev Dito DokuWiki extension.
 
 ## Verfügbare Scripts
 

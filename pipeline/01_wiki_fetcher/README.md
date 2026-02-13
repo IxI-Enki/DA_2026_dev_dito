@@ -1,12 +1,24 @@
-# Full Wiki Fetching Scripts
+---
+title: Wiki Fetcher Pipeline Module
+description: Stage 1 pipeline module for fetching complete DokuWiki content via JSON-RPC API with local storage of all responses, metadata, media, and namespace structures.
+author:
+  name: Jan Ritt
+  github: 'https://github.com/IxI-Enki'
+version: 1.0.0
+created: 2025-12-01
+updated: 2026-02-13
+tags: [pipeline, wiki-fetcher, json-rpc, dokuwiki, api-client]
+---
 
-Scripts zum vollständigen Fetchen des DokuWikis über die JSON-RPC API mit lokaler Speicherung aller Responses.
+# Wiki Fetcher Pipeline Module
 
-## Quick Start - One-Liner
+Stage 1 pipeline module for fetching complete DokuWiki content via JSON-RPC API with local storage of all responses.
+
+## Quick Start
 
 ```powershell
-cd D:\_Repositories\_Diploma_Thesis_Repositories\research\techstack\dokuwiki\fetcher_json_rpc_api\script;
-python fetch_full_wiki_extended.py {'fetched_at_' + Get-Date -Format 'yyyyMMdd_HHmmss'}
+# From repository root:
+docker compose -p stack-g-devdito --profile pipeline run module_fetcher
 ```
 
 ## Überblick
