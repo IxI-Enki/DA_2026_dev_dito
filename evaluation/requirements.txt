@@ -1,0 +1,19 @@
+# Evaluation infrastructure dependencies
+# Per Article VIII: direct framework usage, no wrapper libraries
+
+# Core
+pyyaml>=6.0
+numpy>=1.26
+
+# Embedding providers
+ollama>=0.4
+openai>=1.50
+
+# Vector database
+qdrant-client>=1.12
+
+# HTTP client (for keyword baseline via DokuWiki JSON-RPC)
+requests>=2.31
+
+# Testing
+pytest>=8.0

@@ -1,0 +1,412 @@
+{
+  "metadata": {
+    "created_at": "2026-01-02T10:00:00",
+    "version": "2.0",
+    "description": "50 verifizierte Ground-Truth Q&A Paare für RAGAS Evaluation der LeoWiki RAG Pipeline",
+    "source": "LeoWiki DokuWiki Inhalte (HTL Leonding)",
+    "author": "Jan Ritt",
+    "verification_method": "Manuell gegen Quelldateien verifiziert"
+  },
+  "qa_pairs": [
+    {
+      "id": "matura-01",
+      "question": "Aus welchen Säulen bestehen die Reife- und Diplomprüfungen?",
+      "ground_truth": "Die Reife- und Diplomprüfungen bestehen aus 3 Säulen: Diplomarbeiten, Klausurarbeiten (die schriftlichen Prüfungen) und Mündliche Prüfungen.",
+      "source_file": "exams_matura-tagesschule-if-it.txt",
+      "context_keywords": ["diplomarbeit", "klausur", "muendlich", "3 saeulen"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "matura-02",
+      "question": "Was ist eine Kompensationsprüfung?",
+      "ground_truth": "Wenn eine oder mehrere Klausuren mit einem Nicht genügend beurteilt wurden, haben die Kandidat:innen die Möglichkeit, diese im Rahmen einer Kompensationsprüfung auszubessern.",
+      "source_file": "exams_matura-tagesschule-if-it.txt",
+      "context_keywords": ["kompensation", "nicht genuegend", "klausur", "ausbessern"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "matura-03",
+      "question": "Wann wird das Schwerpunktfach für die mündliche Matura in der Informatik zugeteilt?",
+      "ground_truth": "Das Schwerpunktfach wird zu Beginn des 5. Jahrgangs (Oktober) verlost. Dazu wird aus dem Pool der möglichen Schwerpunktfächer jede:r Schüler:in ein Fach zufällig zugeordnet.",
+      "source_file": "exams_matura-tagesschule-if-it.txt",
+      "context_keywords": ["schwerpunktfach", "oktober", "5. jahrgang", "verlost"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "matura-04",
+      "question": "Wann wird das Schwerpunktfach für Elektronik und Medizintechnik zugeteilt?",
+      "ground_truth": "Das Schwerpunktfach wird bis Ende November des 5. Jahrgangs durch den AV zugeteilt. Dazu wird aus dem Pool der möglichen Schwerpunktfächer jede*r Schüler*in ein Fach zufällig zugeordnet.",
+      "source_file": "exams_matura-tagesschule-el-bg.txt",
+      "context_keywords": ["schwerpunktfach", "november", "5. jahrgang", "av"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "matura-05",
+      "question": "Welche Schwerpunktfächer gibt es in der Informatik-Abteilung?",
+      "ground_truth": "In der Informatik gibt es folgende Schwerpunktfächer: Betriebswirtschaft und Management (BWM), Datenbank- und Informationssysteme (DBI), Netzwerke und verteilte Systeme (NVS), und Systemplanung und Projektentwicklung (SYP).",
+      "source_file": "exams_matura-tagesschule-if-it.txt",
+      "context_keywords": ["informatik", "bwm", "dbi", "nvs", "syp"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "matura-06",
+      "question": "Was ist das Fachtheorie-Fach bei der Matura in der Informatik?",
+      "ground_truth": "In der Informatik ist das Fachtheorie-Fach bei den Klausurarbeiten Programmieren und Software-Entwicklung (POSE).",
+      "source_file": "exams_matura-tagesschule-if-it.txt",
+      "context_keywords": ["informatik", "fachtheorie", "pose", "programmieren"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "matura-07",
+      "question": "Was ist das Fachtheorie-Fach bei der Matura in der Medientechnik?",
+      "ground_truth": "In der Medientechnik ist das Fachtheorie-Fach bei den Klausurarbeiten Software-Entwicklung (SEW).",
+      "source_file": "exams_matura-tagesschule-if-it.txt",
+      "context_keywords": ["medientechnik", "fachtheorie", "sew"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "matura-08",
+      "question": "Kann man Prüfungen vorgezogen ablegen?",
+      "ground_truth": "Da die Gegenstände Nawi und GGP bereits im 4. Jahrgang abgeschlossen werden, gibt es die Möglichkeit einer vorgezogenen Reife- und Diplomprüfung. Dies bedarf eines Beschlusses des Schulgemeinschaftsausschusses (SGA).",
+      "source_file": "exams_matura-tagesschule-if-it.txt",
+      "context_keywords": ["vorgezogen", "nawi", "ggp", "4. jahrgang", "sga"],
+      "difficulty": "hard"
+    },
+    {
+      "id": "matura-09",
+      "question": "Welche Kleidungsvorschrift gilt bei der mündlichen Matura?",
+      "ground_truth": "Die Kleidungsvorschrift bei der mündlichen Matura ist festlich.",
+      "source_file": "exams_matura-muendlich.txt",
+      "context_keywords": ["kleidung", "festlich", "muendlich"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "matura-10",
+      "question": "Wann müssen Prüfer und Kandidaten bei der mündlichen Matura anwesend sein?",
+      "ground_truth": "Die Prüfer:innen und die Kandidat:innen sind 15 Minuten vor der ersten Vorbereitungszeit des Prüfungshalbtags im Prüfungsraum anwesend.",
+      "source_file": "exams_matura-muendlich.txt",
+      "context_keywords": ["15 minuten", "vorbereitungszeit", "pruefungsraum"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "srdp-01",
+      "question": "Wann beginnt der Einlass bei der SRDP Angewandte Mathematik?",
+      "ground_truth": "Der Einlass ist von 7:45 bis 8:00 Uhr.",
+      "source_file": "exams_matura-am.txt",
+      "context_keywords": ["einlass", "7:45", "8:00", "srdp"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "srdp-02",
+      "question": "Wann werden die Aufgabenhefte bei der SRDP Mathematik ausgegeben?",
+      "ground_truth": "Die Ausgabe der Aufgabenhefte erfolgt um 8:20 Uhr.",
+      "source_file": "exams_matura-am.txt",
+      "context_keywords": ["aufgabenhefte", "8:20", "ausgabe"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "srdp-03",
+      "question": "Wie lange dauert die Arbeitszeit bei der SRDP Angewandte Mathematik?",
+      "ground_truth": "Die Arbeitszeit beträgt 270 Minuten. Die genaue Startzeit ist 8:30 Uhr.",
+      "source_file": "exams_matura-am.txt",
+      "context_keywords": ["270 minuten", "8:30", "arbeitszeit"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "srdp-04",
+      "question": "Bis wann muss die Arbeit bei der SRDP Mathematik abgegeben werden?",
+      "ground_truth": "Das Abgabeende ist spätestens 13:00 Uhr. Sollten zu diesem Zeitpunkt einzelne Kandidatinnen und Kandidaten die Arbeit noch nicht gedruckt haben, müssen diese umgehend den Raum verlassen und werden dann einzeln zum Drucken in den Raum zurückgeholt.",
+      "source_file": "exams_matura-am.txt",
+      "context_keywords": ["13:00", "abgabe", "drucken"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "srdp-05",
+      "question": "Wann dürfen Kandidaten bei der SRDP frühestens abgeben?",
+      "ground_truth": "Die Abgabe der Arbeiten ist frühestens nach 210 Minuten möglich.",
+      "source_file": "exams_matura-am.txt",
+      "context_keywords": ["210 minuten", "fruehestens", "abgabe"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "ferialpraxis-01",
+      "question": "Wie viele Wochen Ferialpraxis sind für die Matura nachzuweisen?",
+      "ground_truth": "Es sind 8 Wochen Praktikum nachzuweisen. Von den 8 Wochen können 4 eine allgemeine Bürotätigkeit sein und 4 weitere Wochen müssen facheinschlägig absolviert werden.",
+      "source_file": "exams_pflichtpraktikum.txt",
+      "context_keywords": ["8 wochen", "praktikum", "buero", "facheinschlaegig"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ferialpraxis-02",
+      "question": "Kann das Pflichtpraktikum im Ausland absolviert werden?",
+      "ground_truth": "Ja, das Praktikum kann auch im Ausland absolviert werden.",
+      "source_file": "exams_pflichtpraktikum.txt",
+      "context_keywords": ["ausland", "praktikum"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "ferialpraxis-03",
+      "question": "Wie wird das Pflichtpraktikum dokumentiert?",
+      "ground_truth": "Der/die SchülerIn muss die im Praktikum durchgeführten Arbeiten tageweise dokumentieren. Das Formular ist auf der Schulhomepage unter Schüler --> Organisation --> Downloads. Nach dem Praktikum gibt der/die SchülerIn dem/der KV das vollständig ausgefüllte Formular.",
+      "source_file": "exams_pflichtpraktikum.txt",
+      "context_keywords": ["dokumentieren", "tageweise", "formular"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "verhalten-01",
+      "question": "Was führt zu einem Verhalten 'Zufriedenstellend'?",
+      "ground_truth": "Zwischen 8 und 15 unentschuldigte Fehlstunden pro Semester, das Fälschen von Unterschriften der Eltern bzw. Erziehungsberechtigten, Stören des Unterrichts, Beleidigungen, Beschimpfungen und Kraftausdrücke, sowie respektloser Umgangston mit anderen Personen, wiederholt Mobiltelefon unerlaubt in Betrieb nehmen und Rauchen am Schulgelände.",
+      "source_file": "class_verhaltensnoten.txt",
+      "context_keywords": ["zufriedenstellend", "8-15", "fehlstunden", "stoeren"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "verhalten-02",
+      "question": "Was führt zu einem Verhalten 'Wenig zufriedenstellend'?",
+      "ground_truth": "Zwischen 16 und 23 unentschuldigte Fehlstunden pro Semester, Dauerstörer im Unterricht, aggressiver, provokanter oder sonstiger unzumutbarer Umgangston gegenüber Mitschülern, Lehrkräften oder dem Personal, und schwerwiegende Verstöße gegen die Schul-/Hausordnung.",
+      "source_file": "class_verhaltensnoten.txt",
+      "context_keywords": ["wenig zufriedenstellend", "16-23", "dauerstoerer"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "verhalten-03",
+      "question": "Was führt zu einem Verhalten 'Nicht zufriedenstellend'?",
+      "ground_truth": "Mehr als 23 unentschuldigte Fehlstunden pro Semester, Mitschüler bestehlen, bedrohen, terrorisieren, strategische und geplante Beleidigungen (Mobbing, Stalking, Cybermobbing), Mitschülern gegenüber gewalttätig sein (Körperverletzung), und mutwilliges Zerstören von Eigentum der Mitschüler oder Schule.",
+      "source_file": "class_verhaltensnoten.txt",
+      "context_keywords": ["nicht zufriedenstellend", "23", "mobbing", "gewalt"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "semesterpruefung-01",
+      "question": "Wann finden die regulären Semesterprüfungen statt?",
+      "ground_truth": "Es gibt vier reguläre Termine während des Schuljahres: Nach den Semesterferien, nach den Osterferien, nach den Sommerferien und nach den Herbstferien. Die Termine sind an den ersten beiden Schultagen nach den jeweiligen Ferien.",
+      "source_file": "archive_exams_semesterpruefungen.txt",
+      "context_keywords": ["semesterpruefung", "termine", "ferien"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "semesterpruefung-02",
+      "question": "Wie viele Prüfungen können pro Prüfungstermin abgelegt werden?",
+      "ground_truth": "Normalerweise können pro Prüfungstermin zwei Prüfungen abgelegt werden.",
+      "source_file": "archive_exams_semesterpruefungen.txt",
+      "context_keywords": ["zwei", "pruefungen", "termin"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "semesterpruefung-03",
+      "question": "Was passiert bei einer Abmeldung von der Semesterprüfung im Krankheitsfall?",
+      "ground_truth": "Im Krankheitsfall kann man sich bis zum Morgen des jeweiligen Prüfungstags abmelden. In diesem Fall ist eine ärztliche Bestätigung zu bringen. Ansonsten wird das als Antritt mit Nicht genügend gewertet.",
+      "source_file": "archive_exams_semesterpruefungen.txt",
+      "context_keywords": ["krankheit", "abmeldung", "aerztlich"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "diplomarbeit-01",
+      "question": "Aus wie vielen Teammitgliedern bestehen Diplomarbeitsteams?",
+      "ground_truth": "Die Diplomarbeitsteams bestehen aus mindestens 2 und maximal 3 SchülerInnen. Einzeldiplomarbeiten werden nicht akzeptiert.",
+      "source_file": "exams_da-inf-it.txt",
+      "context_keywords": ["team", "2", "3", "einzeldiplomarbeit"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "diplomarbeit-02",
+      "question": "In welchem Format muss die Diplomarbeit geschrieben werden?",
+      "ground_truth": "Die Arbeit ist in LaTeX zu schreiben. MS Word ist NICHT erlaubt.",
+      "source_file": "exams_da-inf-it.txt",
+      "context_keywords": ["latex", "word", "format"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "diplomarbeit-03",
+      "question": "Wie viele Seiten soll die Diplomarbeit pro Kandidat umfassen?",
+      "ground_truth": "40 Seiten pro Kandidat:in. Titelseite, Inhaltsverzeichnis, Abbildungs-, Literatur- etc. -Verzeichnis, eidesstattliche Erklärung, Index und Anhänge werden nicht zu den 40 Seiten gezählt.",
+      "source_file": "exams_da-inf-it.txt",
+      "context_keywords": ["40 seiten", "umfang"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "diplomarbeit-04",
+      "question": "Wie viele Betreuer darf ein Diplomarbeits-Betreuer maximal betreuen?",
+      "ground_truth": "Ein:e Betreuer:in soll insgesamt maximal 6 Schüler:innen (2 bis max. 3 Diplomarbeiten) betreuen.",
+      "source_file": "exams_da-inf-it.txt",
+      "context_keywords": ["betreuer", "6 schueler", "3 diplomarbeiten"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "diplomarbeit-05",
+      "question": "Wie lange dauert die Präsentation und Diskussion der Diplomarbeit?",
+      "ground_truth": "Zeitplan pro Team-Mitglied: Präsentation in 5 bis 7 Minuten, daran anschließend Diskussion von 5 bis 7 Minuten. Die Gesamtdauer ist maximal 15 Minuten.",
+      "source_file": "exams_da-inf-it.txt",
+      "context_keywords": ["5-7 minuten", "praesentation", "diskussion", "15 minuten"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "diplomarbeit-06",
+      "question": "Ist der Einsatz von ChatGPT bei der Diplomarbeit erlaubt?",
+      "ground_truth": "Der Einsatz von ChatGPT und ähnlicher Tools ist erlaubt. Generierter Content muss deutlich als solcher gekennzeichnet werden und der zugehörige Prompt(-verlauf) in der Arbeit dokumentiert werden (Link zum Chat-Verlauf). Die Kandidat:innen sind selbst für Fehler, die die generative AI macht, verantwortlich.",
+      "source_file": "exams_da-inf-it.txt",
+      "context_keywords": ["chatgpt", "ai", "erlaubt", "kennzeichnen"],
+      "difficulty": "hard"
+    },
+    {
+      "id": "diplomarbeit-07",
+      "question": "Wie viele Stunden sind für eine Diplomarbeit vorgesehen?",
+      "ground_truth": "Für Diplomarbeiten sind 180 Stunden vorgesehen. Für Abschlussarbeiten sind 80 Stunden vorgesehen.",
+      "source_file": "exams_da-aa-ele-biomed.txt",
+      "context_keywords": ["180 stunden", "diplomarbeit", "80 stunden"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "hausordnung-01",
+      "question": "Wann dürfen Schüler frühestens in die Schule kommen?",
+      "ground_truth": "Der Eintritt ist durch den Haupteingang frühestens 30 Minuten vor dem Unterrichtsbeginn erlaubt, es sei denn, es wird eine besondere Genehmigung erteilt.",
+      "source_file": "org_hausordnung.txt",
+      "context_keywords": ["30 minuten", "haupteingang", "eintritt"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "hausordnung-02",
+      "question": "Was ist im Schulgebäude und auf dem gesamten Schulgelände verboten?",
+      "ground_truth": "Das Schulgebäude und das gesamte Gelände sind rauchfreie Zonen. Das Rauchen innerhalb des Schulgebäudes und auf dem gesamten Schulgelände ist strengstens verboten. Dies gilt auch für elektrische tragbare Wasserpfeifen-Produkte.",
+      "source_file": "org_hausordnung.txt",
+      "context_keywords": ["rauchen", "verboten", "rauchfrei"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "hausordnung-03",
+      "question": "Was passiert wenn kein Lehrer 10 Minuten nach Unterrichtsbeginn anwesend ist?",
+      "ground_truth": "Wenn kein Lehrer innerhalb von 10 Minuten nach Beginn der Unterrichtsstunde im Klassenzimmer anwesend ist, muss der Klassensprecher, sein Stellvertreter oder der erste anwesende Schüler laut Klassenliste dies unverzüglich im Sekretariat melden.",
+      "source_file": "org_hausordnung.txt",
+      "context_keywords": ["10 minuten", "sekretariat", "melden"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "hausordnung-04",
+      "question": "Was müssen Schüler am Ende des Unterrichts tun?",
+      "ground_truth": "Vor dem Verlassen des Klassenzimmers am Ende des Unterrichts sollten alle Schüler sicherstellen, dass Fenster geschlossen, Lichter ausgeschaltet, Stühle auf die Tische gestellt und alle abnehmbaren Kabel entfernt sind. Schmutz muss aufgeräumt und Abfall in die vorgesehenen Behälter entsorgt werden.",
+      "source_file": "org_hausordnung.txt",
+      "context_keywords": ["fenster", "licht", "stuehle", "ende"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "hausordnung-05",
+      "question": "Sind Mobiltelefone im Unterricht erlaubt?",
+      "ground_truth": "Mobiltelefone, MP3-Player oder ähnliche Geräte, die nicht für Unterrichtszwecke verwendet werden, sollten während des Unterrichts nicht eingeschaltet sein. Wenn ein Mobiltelefon, MP3-Player oder ähnliches Gerät eingeschaltet ist, wird es dem Schüler weggenommen und kann nach dem Unterricht beim Jahrgangsvorstand abgeholt werden.",
+      "source_file": "org_hausordnung.txt",
+      "context_keywords": ["mobiltelefon", "ausgeschaltet", "unterricht"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "brandschutz-01",
+      "question": "Was ist die Notrufnummer der Feuerwehr?",
+      "ground_truth": "Die Notrufnummer der Feuerwehr ist 122.",
+      "source_file": "org_brandschutz.txt",
+      "context_keywords": ["122", "feuerwehr", "notruf"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "brandschutz-02",
+      "question": "Wo sind die Sammelpunkte im Brandfall?",
+      "ground_truth": "Sammelpunkte sind: Alle ersten Klassen bei den Fahrradständern, alle anderen Klassen bei den Asphaltbahnen.",
+      "source_file": "org_brandschutz.txt",
+      "context_keywords": ["sammelpunkt", "fahrradstaender", "asphaltbahnen"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "exkursion-01",
+      "question": "Welche Schritte sind für eine Exkursion notwendig?",
+      "ground_truth": "Antrag herunterladen und ausfüllen, alle betroffenen Lehrer*innen zustimmen lassen (Unterschrift), Veranstaltungsleiter unterschreiben lassen, Begleitlehrer (wenn vorhanden) unterschreiben lassen, zur Unterschrift zum AV/Werkstättenleiter, Genehmigung durch den Schulleiter.",
+      "source_file": "org_forms_exkursion.txt",
+      "context_keywords": ["exkursion", "antrag", "unterschrift", "genehmigung"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "notebook-01",
+      "question": "Welche Mindestspezifikation hat ein Notebook für Informatik-Schüler?",
+      "ground_truth": "Mindestspezifikation: 8 GB RAM, Intel i5 Quad-Core oder vergleichbar, 250 GB SSD.",
+      "source_file": "class_notebooks-inf-it.txt",
+      "context_keywords": ["8 gb", "i5", "250 gb", "notebook"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "notebook-02",
+      "question": "Welches Notebook wird für Schulanfänger empfohlen?",
+      "ground_truth": "Es wird empfohlen, ein gebrauchtes Marken-Notebook zu Schulbeginn zu kaufen. Der finanzielle Aufwand kann bei der Benutzung von runderneuerten Geräten in Grenzen gehalten werden (ab ca 300 Euro).",
+      "source_file": "class_notebooks-inf-it.txt",
+      "context_keywords": ["gebraucht", "marken-notebook", "300"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "studentmail-01",
+      "question": "Wie richtet man das Studentmail-Konto in der Gmail-App ein?",
+      "ground_truth": "Man wählt 'Weitere E-Mail-Adresse hinzufügen', dann 'Exchange und Office 365 auswählen' und gibt die Studentmail-Adresse ein. Die Schülermailadresse ist im Format VORNAME.NACHNAME@students.htl-leonding.ac.at.",
+      "source_file": "it_studentmail2023_android_gmail.txt",
+      "context_keywords": ["gmail", "exchange", "office 365", "studentmail"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "digiclass-01",
+      "question": "Was sind digitalisierte Klassen?",
+      "ground_truth": "In digitalisierten Klassen ist der Stand-PC fix mit dem Big Screen verbunden. Der eigene Laptop kann über HDMI (zusätzlicher Screen) und USB (Big Screen als Touch Screen) verbunden werden. Der Beamer ist über den Big Screen an das Gesamtsystem angeschlossen.",
+      "source_file": "it_digi-classes.txt",
+      "context_keywords": ["digi-class", "big screen", "hdmi", "beamer"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "digiclass-02",
+      "question": "Wie kann man den Big Screen als Tafel verwenden?",
+      "ground_truth": "Mit der Notepad-App kann der Screen als Tafel verwendet werden. Man startet diese App über den Homescreen. Wenn dieser nicht sichtbar ist, muss man ihn über das Menü aktivieren. Touch auf das Häuschen bringt in den Home Screen, dort kann die Note App gestartet werden.",
+      "source_file": "it_digi-classes.txt",
+      "context_keywords": ["notepad", "tafel", "homescreen"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "luftcheck-01",
+      "question": "Was ist der LuftCheck?",
+      "ground_truth": "Ein Gerät zum Messen von CO2, Temperatur, Luftdruck und Luftfeuchtigkeit am Aufstellungsort. Beim Überschreiten von Grenzwerten wird Alarm durch rote LEDs und den Summer ausgegeben. Der LuftCheck wird von einem ESP32 gesteuert.",
+      "source_file": "werkstaette_luftcheck.txt",
+      "context_keywords": ["luftcheck", "co2", "temperatur", "esp32"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "luftcheck-02",
+      "question": "Welche Schritte lernen Schüler beim LuftCheck-Projekt?",
+      "ground_truth": "Platine Belichten, Entwickeln, Ätzen, Bohren und Entschichten. Bestücken der SMD-Bauteile und der bedrahteten Bauelemente. Aufspielen einer Software auf einen Controller. Zusammenbau des Gehäuses, das mit dem Laser zugeschnitten wurde.",
+      "source_file": "werkstaette_luftcheck.txt",
+      "context_keywords": ["platine", "smd", "controller", "gehaeuse"],
+      "difficulty": "hard"
+    },
+    {
+      "id": "elektronik-01",
+      "question": "Welche Fächer gibt es in der Abteilung Elektronik und Technische Informatik?",
+      "ground_truth": "In der Elektronik gibt es: Hardwareentwicklung (HE), Messtechnik und Regelungssysteme (MTRS), Digitale Systeme und Computersysteme (DIC), Kommunikationssysteme und -netze (KSN), Fachspezifische Softwaretechnik (FST), Laboratorium (LA) und Engineering und Projektmanagement (EPM-EL).",
+      "source_file": "departm_elektr.txt",
+      "context_keywords": ["elektronik", "mtrs", "dic", "ksn", "fst"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "wettbewerb-01",
+      "question": "Was ist die Austria Cyber Security Challenge?",
+      "ground_truth": "Die Austria Cyber Security Challenge (ACSC) ist ein Wettbewerb, bei dem sich Teilnehmer online qualifizieren können. Die Webseite ist verbotengut.at.",
+      "source_file": "competitions_listewettbewerbe.txt",
+      "context_keywords": ["acsc", "cyber security", "verbotengut"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "wettbewerb-02",
+      "question": "Was ist Jugend Innovativ?",
+      "ground_truth": "Jugend Innovativ ist ein Wettbewerb mit Preisgeldern und Boni in Summe über 90.000 Euro. Es gibt Projektanmeldung, Konzepte für Projekt-Bonus, Projektbericht und ein Bundes-Finale.",
+      "source_file": "competitions_listewettbewerbe.txt",
+      "context_keywords": ["jugend innovativ", "90000", "finale"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "wettbewerb-03",
+      "question": "Was ist der Redewettbewerb der HTL Leonding?",
+      "ground_truth": "Der Redewettbewerb der HTL Leonding wurde 2023 erstmals durchgeführt. Die ersten drei erhielten jeweils einen Pokal sowie einen Gutschein. Kontaktpersonen sind Frau Prof. Pachschwöll und Frau Prof. Schmidt.",
+      "source_file": "competitions_listewettbewerbe.txt",
+      "context_keywords": ["redewettbewerb", "pokal", "gutschein"],
+      "difficulty": "medium"
+    }
+  ]
+}

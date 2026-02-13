@@ -1,0 +1,26 @@
+experiment:
+  name: "Keyword Search Baseline (DokuWiki core.searchPages)"
+  type: keyword_baseline
+  thesis_id: "FF1"
+
+embedding:
+  provider: ollama
+  model: "none"
+  dimensions: 0
+
+chunking:
+  strategy: none
+  chunk_size: 0
+  chunk_overlap: 0
+
+retrieval:
+  mode: keyword
+  top_k: 10
+  collection_prefix: "n/a"
+
+ground_truth:
+  file: "ground_truth/leowiki_qa_50_verified.json"
+
+metrics:
+  - mrr
+  - precision_at_5

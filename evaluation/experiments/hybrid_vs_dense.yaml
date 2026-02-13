@@ -1,0 +1,27 @@
+experiment:
+  name: "Hybrid vs Dense Retrieval"
+  type: hybrid_vs_dense
+  thesis_id: "J6"
+
+embedding:
+  provider: ollama
+  model: "bge-m3"
+  dimensions: 1024
+
+chunking:
+  strategy: content_aware
+  chunk_size: 512
+  chunk_overlap: 50
+
+retrieval:
+  mode: hybrid
+  top_k: 10
+  collection_prefix: "eval_hybrid_"
+
+ground_truth:
+  file: "ground_truth/leowiki_qa_50_verified.json"
+
+metrics:
+  - mrr
+  - precision_at_5
+  - ndcg_at_10
