@@ -39,7 +39,7 @@ D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/stacks
 
   </output>
 </docker_desktop>
-
+  
 ---
 
 ## Architecture

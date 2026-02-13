@@ -18,18 +18,18 @@
 
 ## Project Identity
 
-| Eigenschaft           | Wert                                                                  |
-| --------------------- | --------------------------------------------------------------------- |
-| **Projekt**           | Dev Dito - Wiki Embedding Pipeline & Service Addon                    |
-| **Team**              | Jan Ritt (CIFT - Embedding/Retrieval/Auth/Deploy), Imre Obermüller (BIF - MCP Server/Transport/Tools) |
-| **Kontext**           | Diplomarbeit 2026, HTL Leonding                                       |
-| **Betreuer**          | Rainer Stropek                                                        |
-| **Stack**             | Python 3.11+ (Pipeline), PHP (DokuWiki Plugin), Docker/Docker Compose, FastAPI (Gateway) |
-| **Deployment**        | Docker lokal (Windows 11) + Raspberry Pi (SSH Deploy), npm Package (MCP Server) |
-| **Zielgruppe**        | Wiki-Administrator (primaer Entwickler selbst), Claude Desktop (MCP Client) |
-| **Architektur-Rolle** | Stack-G in Multi-Stack Docker-Architektur (Stacks A-I)                |
+| Eigenschaft           | Wert                                                                                                             |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Projekt**           | Dev Dito - Wiki Embedding Pipeline & Service Addon                                                               |
+| **Team**              | Jan Ritt (CIFT - Embedding/Retrieval/Auth/Deploy), Imre Obermüller (BIF - MCP Server/Transport/Tools)            |
+| **Kontext**           | Diplomarbeit 2026, HTL Leonding                                                                                  |
+| **Betreuer**          | Rainer Stropek                                                                                                   |
+| **Stack**             | Python 3.11+ (Pipeline), PHP (DokuWiki Plugin), Docker/Docker Compose, FastAPI (Gateway)                         |
+| **Deployment**        | Docker lokal (Windows 11) + Raspberry Pi (SSH Deploy), npm Package (MCP Server)                                  |
+| **Zielgruppe**        | Wiki-Administrator (primaer Entwickler selbst), Claude Desktop (MCP Client)                                      |
+| **Architektur-Rolle** | Stack-G in Multi-Stack Docker-Architektur (Stacks A-I)                                                           |
 | **Forschungsfragen**  | FF1: Semantic vs Keyword Search, FF2: MCP Integration Standard, FF3: Embedding Model Comparison (German Content) |
-| **Version**           | 1.3.0                                                                 |
+| **Version**           | 1.3.0                                                                                                            |
 
 ---
 
@@ -504,48 +504,48 @@ Nach der Implementierung muessen folgende Checks bestehen:
 
 ### Forschungsfragen (Research Questions)
 
-| ID  | Frage                                           | Zuständig | Methodik                                      | Deliverables          |
-| --- | ----------------------------------------------- | --------- | --------------------------------------------- | --------------------- |
-| FF1 | Semantic Search vs Keyword Search (MRR, P@5)    | Jan       | Keyword baseline + Vector search comparison   | J1 (corpus), J6       |
-| FF2 | MCP als Integration-Standard fuer Wissensquellen| Imre      | MCP vs REST/OData/GraphQL protocol comparison | I1-I5                 |
-| FF3 | Best Embedding Model fuer German Wiki Content   | Jan       | Model comparison (Ollama, OpenAI, MTEB)       | J2, J3, J5            |
+| ID  | Frage                                            | Zuständig | Methodik                                      | Deliverables    |
+| --- | ------------------------------------------------ | --------- | --------------------------------------------- | --------------- |
+| FF1 | Semantic Search vs Keyword Search (MRR, P@5)     | Jan       | Keyword baseline + Vector search comparison   | J1 (corpus), J6 |
+| FF2 | MCP als Integration-Standard fuer Wissensquellen | Imre      | MCP vs REST/OData/GraphQL protocol comparison | I1-I5           |
+| FF3 | Best Embedding Model fuer German Wiki Content    | Jan       | Model comparison (Ollama, OpenAI, MTEB)       | J2, J3, J5      |
 
 ### Jan's Deliverables (CIFT - Chapter 6: Retrieval & Deployment)
 
-| ID | Deliverable                                    | Status | Depends On | Target Milestone |
-|----|------------------------------------------------|--------|------------|------------------|
-| J1 | Test Corpus (50-100 pages, 20-30 Q&A pairs)   | 🔜     | -          | 2026-03-15       |
-| J2 | Embedding Model Comparison Framework           | 🔜     | J1         | 2026-03-15       |
-| J3 | DokuWiki Markup Parser → Clean Text Chunks     | ✅     | -          | 2025-11-15       |
-| J4 | Chunk Size Impact (256/512/1024 tokens)        | 🔜     | J1, J3     | 2026-03-15       |
-| J5 | Vector DB Collection Schema (Qdrant)           | ✅     | -          | 2025-11-15       |
-| J6 | Hybrid Search vs Dense Retrieval (FF1)         | 🔜     | J1, J5     | 2026-03-15       |
-| J7 | OAuth2/RBAC via ScaleKit                       | ✅     | -          | 2026-02-20       |
-| J8 | Docker Container + npm Package (MCP Server)    | 🔜     | I3, I4     | 2026-03-30       |
+| ID  | Deliverable                                 | Status | Depends On | Target Milestone |
+| --- | ------------------------------------------- | ------ | ---------- | ---------------- |
+| J1  | Test Corpus (50-100 pages, 20-30 Q&A pairs) | 🔜      | -          | 2026-03-15       |
+| J2  | Embedding Model Comparison Framework        | 🔜      | J1         | 2026-03-15       |
+| J3  | DokuWiki Markup Parser → Clean Text Chunks  | ✅      | -          | 2025-11-15       |
+| J4  | Chunk Size Impact (256/512/1024 tokens)     | 🔜      | J1, J3     | 2026-03-15       |
+| J5  | Vector DB Collection Schema (Qdrant)        | ✅      | -          | 2025-11-15       |
+| J6  | Hybrid Search vs Dense Retrieval (FF1)      | 🔜      | J1, J5     | 2026-03-15       |
+| J7  | OAuth2/RBAC via ScaleKit                    | ✅      | -          | 2026-02-20       |
+| J8  | Docker Container + npm Package (MCP Server) | 🔜      | I3, I4     | 2026-03-30       |
 
 ### Imre's Deliverables (BIF - Chapter 5: MCP Protocol & Tools)
 
-| ID | Deliverable                                    | Status | Depends On | Target Milestone |
-|----|------------------------------------------------|--------|------------|------------------|
-| I1 | MCP Server (JSON-RPC 2.0)                      | ✅     | -          | 2025-12-20       |
-| I2 | MCP Tools (search, fetch, list)                | ✅     | I1         | 2026-01-25       |
-| I3 | Transport: stdio vs HTTP-streamable            | ✅     | I1         | 2026-02-20       |
-| I4 | Role-Dependent Search Tools                    | ✅     | I2, J7     | 2026-02-20       |
-| I5 | Client Compatibility Matrix (Claude, VSCode)   | 🔜     | I3         | 2026-03-30       |
+| ID  | Deliverable                                  | Status | Depends On | Target Milestone |
+| --- | -------------------------------------------- | ------ | ---------- | ---------------- |
+| I1  | MCP Server (JSON-RPC 2.0)                    | ✅      | -          | 2025-12-20       |
+| I2  | MCP Tools (search, fetch, list)              | ✅      | I1         | 2026-01-25       |
+| I3  | Transport: stdio vs HTTP-streamable          | ✅      | I1         | 2026-02-20       |
+| I4  | Role-Dependent Search Tools                  | ✅      | I2, J7     | 2026-02-20       |
+| I5  | Client Compatibility Matrix (Claude, VSCode) | 🔜      | I3         | 2026-03-30       |
 
 ### Milestone Timeline
 
-| Datum      | Milestone                          | Deliverables        | Critical Path                     |
-|------------|------------------------------------|---------------------|-----------------------------------|
-| 2025-11-15 | ✅ Vector DB Schema + Chunking      | J3, J5              | Basis fuer alle Evaluations       |
-| 2025-12-20 | ✅ MCP Server (stdio)               | I1                  | Imre's Grundstein                 |
-| 2026-01-25 | ✅ Semantic Search Integrated       | I2                  | FF2 Baseline                      |
-| 2026-02-20 | ✅ HTTP Streamable Transport        | I3, I4, J7          | Production-Ready MCP              |
-| 2026-03-15 | 🔜 Evaluation Infrastructure        | J1, J2, J4, J6      | **FF1/FF3 Auswertung** (PRIORITY) |
-| 2026-03-30 | 🔜 npm Package + Docker Image       | J8, I5              | Deployment Deliverables           |
-| 2026-04-15 | 🔜 Thesis Writing Start             | -                   | Kapitel 1-4 (Theory)              |
-| 2026-05-15 | 🔜 Thesis Review (Stropek)          | -                   | Full Draft                        |
-| 2026-05-30 | 🔜 Thesis Submission                | -                   | **HARD DEADLINE**                 |
+| Datum      | Milestone                     | Deliverables   | Critical Path                     |
+| ---------- | ----------------------------- | -------------- | --------------------------------- |
+| 2025-11-15 | ✅ Vector DB Schema + Chunking | J3, J5         | Basis fuer alle Evaluations       |
+| 2025-12-20 | ✅ MCP Server (stdio)          | I1             | Imre's Grundstein                 |
+| 2026-01-25 | ✅ Semantic Search Integrated  | I2             | FF2 Baseline                      |
+| 2026-02-20 | ✅ HTTP Streamable Transport   | I3, I4, J7     | Production-Ready MCP              |
+| 2026-03-15 | 🔜 Evaluation Infrastructure   | J1, J2, J4, J6 | **FF1/FF3 Auswertung** (PRIORITY) |
+| 2026-03-30 | 🔜 npm Package + Docker Image  | J8, I5         | Deployment Deliverables           |
+| 2026-04-15 | 🔜 Thesis Writing Start        | -              | Kapitel 1-4 (Theory)              |
+| 2026-05-15 | 🔜 Thesis Review (Stropek)     | -              | Full Draft                        |
+| 2026-05-30 | 🔜 Thesis Submission           | -              | **HARD DEADLINE**                 |
 
 ### Current Gaps (MUST Address)
 
@@ -575,14 +575,14 @@ Pipeline-Fehler werden wie folgt behandelt:
 
 ## Naming Conventions
 
-| Kontext                | Convention               | Beispiel                                    |
-| ---------------------- | ------------------------ | ------------------------------------------- |
-| Docker Container       | `devdito_*` Praefix      | `devdito_mcp_server`, `devdito_qdrant_init` |
-| Pipeline-Module        | `NN_name` Nummerierung   | `01_wiki_fetcher`, `02_deep_evaluation`     |
-| Python Packages        | `snake_case`             | `embeddings_creator`, `wiki_fetcher`        |
-| PHP Klassen            | `PascalCase`             | `ServiceGateway`, `AdminPanel`              |
-| DokuWiki Seiten        | `devdito:name` Namespace | `devdito:dashboard`, `devdito:services`     |
-| Docker Ports (Stack-G) | 3000-3001, 8085-8089     | Gateway: 8089, MCP: 3000, Reserve: 3001     |
+| Kontext                | Convention               | Beispiel                                         |
+| ---------------------- | ------------------------ | ------------------------------------------------ |
+| Docker Container       | `devdito_*` Praefix      | `devdito_mcp_server`, `devdito_qdrant_init`      |
+| Pipeline-Module        | `NN_name` Nummerierung   | `01_wiki_fetcher`, `02_deep_evaluation`          |
+| Python Packages        | `snake_case`             | `embeddings_creator`, `wiki_fetcher`             |
+| PHP Klassen            | `PascalCase`             | `ServiceGateway`, `AdminPanel`                   |
+| DokuWiki Seiten        | `devdito:name` Namespace | `devdito:dashboard`, `devdito:services`          |
+| Docker Ports (Stack-G) | 3000-3001, 8085-8089     | Gateway: 8089, MCP: 3000, Reserve: 3001          |
 | Evaluation Scripts     | `eval_*` Praefix         | `eval_keyword_baseline.py`, `eval_chunk_size.py` |
 
 ---
@@ -645,11 +645,11 @@ Aenderungen an der Constitution erfordern:
 
 ## Amendment Log
 
-| Datum      | Version | Aenderung                            | Begruendung                                                                                                                                                                              |
-| ---------- | ------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-01-31 | 1.0.0   | Initiale Constitution erstellt       | Grundlage fuer Spec-Kit-basierte Entwicklung                                                                                                                                             |
-| 2026-01-31 | 1.1.0   | MCP Server Zuordnung korrigiert      | MCP Server gehoert zu Stack-H (nicht Stack-G). Dev Dito ist Service Gateway (Client), nicht MCP Server (Provider). Architektur-Klarstellung hinzugefuegt. Scope Boundaries aktualisiert. |
-| 2026-01-31 | 1.2.0   | Article II-B: Centralized YAML Config | ALLE Konfiguration in YAML auslagern, KEINE hardcodierten Variablen. Wiki Fetcher config.py Pattern als Standard fuer alle Module. |
+| Datum      | Version | Aenderung                                            | Begruendung                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------- | ------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-01-31 | 1.0.0   | Initiale Constitution erstellt                       | Grundlage fuer Spec-Kit-basierte Entwicklung                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 2026-01-31 | 1.1.0   | MCP Server Zuordnung korrigiert                      | MCP Server gehoert zu Stack-H (nicht Stack-G). Dev Dito ist Service Gateway (Client), nicht MCP Server (Provider). Architektur-Klarstellung hinzugefuegt. Scope Boundaries aktualisiert.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 2026-01-31 | 1.2.0   | Article II-B: Centralized YAML Config                | ALLE Konfiguration in YAML auslagern, KEINE hardcodierten Variablen. Wiki Fetcher config.py Pattern als Standard fuer alle Module.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 2026-02-12 | 1.3.0   | Thesis-Driven Governance + Expert Debate Integration | **Articles X-XIV hinzugefuegt**: Evaluation-First Development, Thesis Milestone Alignment, Resource Governance, DooD Deprecation, Inter-Stack Communication. **Thesis Alignment Section**: Forschungsfragen FF1-FF3, Jan's Deliverables J1-J8, Imre's Deliverables I1-I5, Milestone Timeline, Current Gaps. **Project Identity erweitert**: Betreuer (Stropek), Forschungsfragen, Rollentrennung (Jan=CIFT/Imre=BIF). **Workflow Gates erweitert**: Thesis-Zuordnung (FF/Deliverable-ID) mandatory. **Scope Boundaries erweitert**: Evaluation-Skripte, Test-Corpus, RAGAS-Integration. **Constitution Hierarchy**: Prioritaetsordnung Articles X/XI > I-IX > XII-XIV. Grundlage: 4 Runden Expert Debate (Architektur-Entscheidungen), Spec-Kit Best Practices, Thesis Requirements (40 Seiten/Person, Abgabe 2026-05-30). |
 
 ---

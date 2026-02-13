@@ -374,9 +374,9 @@ keycloak-server             Up (healthy)    8081:8080
 
 ## Referenzen
 
-- [Hauptarchitektur-Doku](./docs/architecture.md) - Detaillierte Komponentenbeschreibung
-- [Pipeline Manager Plan](./planning/dev_dito_pipeline_manager.md) - Pipeline-Entwicklungsplan
-- [Repository Setup Plan](./planning/dev_dito_repository_setup.md) - Initiales Setup
+- [Hauptarchitektur-Doku](./.planning/architecture.md) - Detaillierte Komponentenbeschreibung
+- [Pipeline Manager Plan](./.planning/dev_dito_pipeline_manager.md) - Pipeline-Entwicklungsplan
+- [Repository Setup Plan](./.planning/dev_dito_repository_setup.md) - Initiales Setup
 
 ---
 
