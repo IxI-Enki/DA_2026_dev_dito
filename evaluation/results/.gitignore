@@ -1,0 +1,5 @@
+# Evaluation results are generated per-run and not tracked in git.
+# Only .gitkeep and summary files are kept.
+*.json
+*.tex
+!.gitkeep
