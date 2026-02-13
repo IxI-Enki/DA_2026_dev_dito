@@ -209,541 +209,512 @@ The following stacks must be available for full Dev Dito functionality. The inst
   <health_endpoint>http://localhost:5000/health</health_endpoint>
 </stack>
 
-<stack id="stack-f-observability">
-  <stack_name>observability-services</stack_name>
-  <stack_description>Monitoring, logging, and metrics collection for the entire stack ecosystem.</stack_description>
-  <requirement_level>OPTIONAL</requirement_level>
-  <devdito_relationship>USES - Dev Dito exports metrics for monitoring</devdito_relationship>
-  <contained_services>
-    <service name="prometheus">
-      <image>prom/prometheus:latest</image>
-      <port>9090:9090</port>
-      <purpose>Metrics collection and alerting</purpose>
-      <status>PLANNED</status>
-    </service>
-    <service name="grafana">
-      <image>grafana/grafana:latest</image>
-      <port>3001:3000</port>
-      <purpose>Metrics visualization and dashboards</purpose>
-      <status>PLANNED</status>
-    </service>
-  </contained_services>
-  <health_endpoint>http://localhost:9090/-/healthy</health_endpoint>
-</stack>
+  <stack id="stack-f-observability">
+    <stack_name>observability-services</stack_name>
+    <stack_description>Monitoring, logging, and metrics collection for the entire stack ecosystem.</stack_description>
+    <requirement_level>OPTIONAL</requirement_level>
+    <devdito_relationship>USES - Dev Dito exports metrics for monitoring</devdito_relationship>
+    <contained_services>
+      <service name="prometheus">
+        <image>prom/prometheus:latest</image>
+        <port>9090:9090</port>
+        <purpose>Metrics collection and alerting</purpose>
+        <status>PLANNED</status>
+      </service>
+      <service name="grafana">
+        <image>grafana/grafana:latest</image>
+        <port>3001:3000</port>
+        <purpose>Metrics visualization and dashboards</purpose>
+        <status>PLANNED</status>
+      </service>
+    </contained_services>
+    <health_endpoint>http://localhost:9090/-/healthy</health_endpoint>
+  </stack>
 
-<stack id="stack-g-devdito">
-  <stack_name>extension-dev-dito-services</stack_name>
-  <stack_description>
-    THIS PROJECT - Dev Dito Pipeline Manager for DokuWiki.
-    
-    Dev Dito is a DokuWiki extension that provides RAG-powered semantic search over wiki content.
-    It fetches wiki pages, evaluates content quality, preprocesses for RAG, creates embeddings,
-    and deploys to vector databases for semantic search.
-    
-    The stack includes:
-    - Core Services: DokuWiki with plugin, Orchestrator API, local Qdrant
-    - Pipeline Modules: On-demand containers for each processing stage
-    - DokuWiki Plugin: Admin UI for pipeline control and monitoring
-  </stack_description>
-  <requirement_level>CORE - This is the main installation target</requirement_level>
-  <devdito_relationship>THIS IS DEV DITO</devdito_relationship>
-  
-  <service_categories>
-    
-    <category name="Core Services" description="Always-running services that form the backbone of Dev Dito">
-      
-      <service name="dev-dito-qdrant" container_name="dev-dito-qdrant">
-        <image>qdrant/qdrant:v1.13.2</image>
-        <port>6334:6333</port>
-        <port>6335:6334</port>
-        <purpose>Local vector database for Dev Dito pipeline. Independent from stack-d-ai-core for isolated development and testing.</purpose>
-        <status>ACTIVE</status>
-        <restart_policy>unless-stopped</restart_policy>
-        <volumes>
-          <volume>dev-dito-qdrant-storage:/qdrant/storage</volume>
-        </volumes>
-        <healthcheck>
-          <test>curl -f http://localhost:6333/health</test>
-          <interval>30s</interval>
-          <timeout>10s</timeout>
-          <retries>3</retries>
-        </healthcheck>
-        <environment>
-          <var name="QDRANT__SERVICE__GRPC_PORT">6334</var>
-        </environment>
-      </service>
-      
-      <service name="dev-dito-orchestrator" container_name="dev-dito-orchestrator">
-        <image>stack-g-devdito-orchestrator (built from ./orchestrator)</image>
-        <port>8089:8089</port>
-        <purpose>
-          Pipeline Orchestrator API - Central control plane for all Dev Dito operations.
-          Manages pipeline execution, job scheduling, status tracking, and provides
-          REST API for DokuWiki plugin communication.
-        </purpose>
-        <status>ACTIVE</status>
-        <restart_policy>unless-stopped</restart_policy>
-        <volumes>
-          <volume>../config:/config:ro</volume>
-          <volume>../data:/data</volume>
-          <volume>/var/run/docker.sock:/var/run/docker.sock:ro</volume>
-        </volumes>
-        <healthcheck>
-          <test>curl -f http://localhost:8089/health</test>
-          <interval>30s</interval>
-          <timeout>10s</timeout>
-          <retries>3</retries>
-        </healthcheck>
-        <environment>
-          <var name="CONFIG_PATH">/config/env.yaml</var>
-          <var name="DATA_PATH">/data</var>
-          <var name="DOCKER_HOST">unix:///var/run/docker.sock</var>
-        </environment>
-        <api_endpoints>
-          <endpoint method="GET" path="/health">Health check</endpoint>
-          <endpoint method="GET" path="/status">Get all pipeline stage statuses</endpoint>
-          <endpoint method="POST" path="/run/{stage}">Start pipeline stage (fetch|evaluate|preprocess|embed|deploy)</endpoint>
-          <endpoint method="GET" path="/job/{job_id}">Get specific job status</endpoint>
-          <endpoint method="GET" path="/progress">Get current job progress (live updates)</endpoint>
-          <endpoint method="GET" path="/progress/{job_id}">Get progress for specific job</endpoint>
-          <endpoint method="POST" path="/cancel/{job_id}">Cancel running job</endpoint>
-        </api_endpoints>
-      </service>
-      
-    </category>
-    
-    <category name="Pipeline Modules" description="On-demand containers started by orchestrator for specific pipeline stages. Profile: pipeline">
-      
-      <service name="dev-dito-module-fetcher" container_name="dev-dito-module-fetcher">
-        <image>stack-g-devdito-module-fetcher (built from ./module_fetcher)</image>
-        <port>none</port>
-        <profile>pipeline</profile>
-        <purpose>
-          Stage 01: Wiki Fetcher
-          Fetches content from DokuWiki instances via JSON-RPC API.
-          Supports full fetch and incremental updates using manifest tracking.
-          Handles authentication, SSL certificates, and rate limiting.
-        </purpose>
-        <status>ACTIVE</status>
-        <pipeline_stage>fetch</pipeline_stage>
-        <source_code>pipeline/01_wiki_fetcher/</source_code>
-        <volumes>
-          <volume>../config:/config:ro</volume>
-          <volume>../data:/data</volume>
-          <volume>../pipeline/01_wiki_fetcher:/pipeline/01_wiki_fetcher:ro</volume>
-          <volume>../config.py:/app/config.py:ro</volume>
-        </volumes>
-        <environment>
-          <var name="CONFIG_PATH">/config/env.yaml</var>
-          <var name="DATA_PATH">/data</var>
-          <var name="PIPELINE_PATH">/pipeline/01_wiki_fetcher</var>
-          <var name="OUTPUT_DIR">/data/fetched</var>
-          <var name="TOKEN_PATH">/config/secrets/json_rpc_api.token</var>
-          <var name="SSL_CERT_PATH">/config/secrets/ssl.cert</var>
-          <var name="REQUESTS_CA_BUNDLE">/etc/ssl/certs/ca-certificates.crt</var>
-          <var name="SSL_CERT_FILE">/etc/ssl/certs/ca-certificates.crt</var>
-        </environment>
-        <input>
-          <source>DokuWiki JSON-RPC API</source>
-          <credentials>config/secrets/json_rpc_api.token</credentials>
-        </input>
-        <output>
-          <directory>data/fetched/fetched_at_{timestamp}/</directory>
+  <stack id="stack-g-devdito">
+    <stack_name>extension-dev-dito-services</stack_name>
+    <stack_description>
+      THIS PROJECT - Dev Dito Pipeline Manager for DokuWiki.
+      Dev Dito is a DokuWiki extension that provides RAG-powered semantic search over wiki content.
+      It fetches wiki pages, evaluates content quality, preprocesses for RAG, creates embeddings,
+      and deploys to vector databases for semantic search.
+      The stack includes:
+      - Core Services: DokuWiki with plugin, Orchestrator API, local Qdrant
+      - Pipeline Modules: On-demand containers for each processing stage
+      - DokuWiki Plugin: Admin UI for pipeline control and monitoring
+    </stack_description>
+    <requirement_level>CORE - This is the main installation target</requirement_level>
+    <devdito_relationship>THIS IS DEV DITO</devdito_relationship>
+    <service_categories>
+      <category name="Core Services" description="Always-running services that form the backbone of Dev Dito">
+        <service name="dev-dito-qdrant" container_name="dev-dito-qdrant">
+          <image>qdrant/qdrant:v1.13.2</image>
+          <port>6334:6333</port>
+          <port>6335:6334</port>
+          <purpose>Local vector database for Dev Dito pipeline. Independent from stack-d-ai-core for isolated development and testing.</purpose>
+          <status>ACTIVE</status>
+          <restart_policy>unless-stopped</restart_policy>
+          <volumes>
+            <volume>dev-dito-qdrant-storage:/qdrant/storage</volume>
+          </volumes>
+          <healthcheck>
+            <test>curl -f http://localhost:6333/health</test>
+            <interval>30s</interval>
+            <timeout>10s</timeout>
+            <retries>3</retries>
+          </healthcheck>
+          <environment>
+            <var name="QDRANT__SERVICE__GRPC_PORT">6334</var>
+          </environment>
+        </service>
+        <service name="dev-dito-orchestrator" container_name="dev-dito-orchestrator">
+          <image>stack-g-devdito-orchestrator (built from ./orchestrator)</image>
+          <port>8089:8089</port>
+          <purpose>
+            Pipeline Orchestrator API - Central control plane for all Dev Dito operations.
+            Manages pipeline execution, job scheduling, status tracking, and provides
+            REST API for DokuWiki plugin communication.
+          </purpose>
+          <status>ACTIVE</status>
+          <restart_policy>unless-stopped</restart_policy>
+          <volumes>
+            <volume>../config:/config:ro</volume>
+            <volume>../data:/data</volume>
+            <volume>/var/run/docker.sock:/var/run/docker.sock:ro</volume>
+          </volumes>
+          <healthcheck>
+            <test>curl -f http://localhost:8089/health</test>
+            <interval>30s</interval>
+            <timeout>10s</timeout>
+            <retries>3</retries>
+          </healthcheck>
+          <environment>
+            <var name="CONFIG_PATH">/config/env.yaml</var>
+            <var name="DATA_PATH">/data</var>
+            <var name="DOCKER_HOST">unix:///var/run/docker.sock</var>
+          </environment>
+          <api_endpoints>
+            <endpoint method="GET" path="/health">Health check</endpoint>
+            <endpoint method="GET" path="/status">Get all pipeline stage statuses</endpoint>
+            <endpoint method="POST" path="/run/{stage}">Start pipeline stage (fetch|evaluate|preprocess|embed|deploy)</endpoint>
+            <endpoint method="GET" path="/job/{job_id}">Get specific job status</endpoint>
+            <endpoint method="GET" path="/progress">Get current job progress (live updates)</endpoint>
+            <endpoint method="GET" path="/progress/{job_id}">Get progress for specific job</endpoint>
+            <endpoint method="POST" path="/cancel/{job_id}">Cancel running job</endpoint>
+          </api_endpoints>
+        </service>
+      </category>
+      <category name="Pipeline Modules" description="On-demand containers started by orchestrator for specific pipeline stages. Profile: pipeline">
+        <service name="dev-dito-module-fetcher" container_name="dev-dito-module-fetcher">
+          <image>stack-g-devdito-module-fetcher (built from ./module_fetcher)</image>
+          <port>none</port>
+          <profile>pipeline</profile>
+          <purpose>
+            Stage 01: Wiki Fetcher
+            Fetches content from DokuWiki instances via JSON-RPC API.
+            Supports full fetch and incremental updates using manifest tracking.
+            Handles authentication, SSL certificates, and rate limiting.
+          </purpose>
+          <status>ACTIVE</status>
+          <pipeline_stage>fetch</pipeline_stage>
+          <source_code>pipeline/01_wiki_fetcher/</source_code>
+          <volumes>
+            <volume>../config:/config:ro</volume>
+            <volume>../data:/data</volume>
+            <volume>../pipeline/01_wiki_fetcher:/pipeline/01_wiki_fetcher:ro</volume>
+            <volume>../config.py:/app/config.py:ro</volume>
+          </volumes>
+          <environment>
+            <var name="CONFIG_PATH">/config/env.yaml</var>
+            <var name="DATA_PATH">/data</var>
+            <var name="PIPELINE_PATH">/pipeline/01_wiki_fetcher</var>
+            <var name="OUTPUT_DIR">/data/fetched</var>
+            <var name="TOKEN_PATH">/config/secrets/json_rpc_api.token</var>
+            <var name="SSL_CERT_PATH">/config/secrets/ssl.cert</var>
+            <var name="REQUESTS_CA_BUNDLE">/etc/ssl/certs/ca-certificates.crt</var>
+            <var name="SSL_CERT_FILE">/etc/ssl/certs/ca-certificates.crt</var>
+          </environment>
+          <input>
+            <source>DokuWiki JSON-RPC API</source>
+            <credentials>config/secrets/json_rpc_api.token</credentials>
+          </input>
+          <output>
+            <directory>data/fetched/fetched_at_{timestamp}/</directory>
+            <files>
+              <file>changes/ - Recent changes data</file>
+              <file>media/ - Downloaded media files</file>
+              <file>namespaces/ - Namespace structure</file>
+              <file>page_backlinks/ - Backlink data per page</file>
+              <file>page_content/ - Raw wiki syntax content</file>
+              <file>page_html/ - Rendered HTML content</file>
+              <file>page_links/ - Link data per page</file>
+              <file>page_metadata/ - Page metadata (author, date, etc.)</file>
+              <file>raw_json/ - Raw API responses</file>
+              <file>fetch_manifest.json - Manifest for incremental updates</file>
+            </files>
+          </output>
+          <capabilities>
+            <capability>Full wiki fetch (all pages, all namespaces)</capability>
+            <capability>Incremental fetch (only changed pages since last run)</capability>
+            <capability>Media file caching and deduplication</capability>
+            <capability>Progress tracking with resume capability</capability>
+            <capability>Change detection and reporting</capability>
+          </capabilities>
+        </service>
+        <service name="dev-dito-module-evaluator" container_name="dev-dito-module-evaluator">
+          <image>stack-g-devdito-module-evaluator (built from ./module_evaluator)</image>
+          <port>none</port>
+          <profile>pipeline</profile>
+          <purpose>
+            Stage 02: Deep Evaluation
+            Analyzes fetched wiki content for quality, RAG readiness, and cleanup strategies.
+            Uses LLM for content classification and generates improvement recommendations.
+          </purpose>
+          <status>ACTIVE</status>
+          <pipeline_stage>evaluate</pipeline_stage>
+          <source_code>pipeline/02_deep_evaluation/</source_code>
+          <volumes>
+            <volume>../config:/config:ro</volume>
+            <volume>../data:/data</volume>
+            <volume>../pipeline/02_deep_evaluation:/pipeline/02_deep_evaluation:ro</volume>
+          </volumes>
+          <environment>
+            <var name="CONFIG_PATH">/config/env.yaml</var>
+            <var name="DATA_PATH">/data</var>
+            <var name="PIPELINE_PATH">/pipeline/02_deep_evaluation</var>
+          </environment>
+          <input>
+            <directory>data/fetched/fetched_at_{timestamp}/</directory>
+          </input>
+          <output>
+            <directory>data/evaluated/evaluation_fetched_at_{timestamp}/</directory>
+            <files>
+              <file>evaluation_report.json - Comprehensive evaluation results</file>
+              <file>content_classifications.json - Page type classifications</file>
+              <file>quality_scores.json - Quality metrics per page</file>
+              <file>rag_readiness.json - RAG suitability assessment</file>
+              <file>cleanup_strategies.json - Recommended improvements</file>
+            </files>
+          </output>
+          <analyzers>
+            <analyzer name="content_classifier">Classifies page content type (documentation, tutorial, reference, etc.)</analyzer>
+            <analyzer name="document_deep_analyzer">Deep analysis of document structure and content</analyzer>
+            <analyzer name="format_quality_analyzer">Evaluates formatting consistency and quality</analyzer>
+            <analyzer name="media_deep_analyzer">Analyzes embedded media usage and quality</analyzer>
+            <analyzer name="query_generator">Generates sample queries for RAG testing</analyzer>
+            <analyzer name="rag_readiness_checker">Assesses suitability for RAG retrieval</analyzer>
+            <analyzer name="temporal_analyzer">Analyzes content freshness and update patterns</analyzer>
+            <analyzer name="wiki_deep_analyzer">Wiki-specific structural analysis</analyzer>
+          </analyzers>
+        </service>
+        <service name="dev-dito-module-preprocessor" container_name="dev-dito-module-preprocessor">
+          <image>stack-g-devdito-module-preprocessor (built from ./module_preprocessor)</image>
+          <port>none</port>
+          <profile>pipeline</profile>
+          <purpose>
+            Stage 03a: RAG Preprocessing
+            Converts DokuWiki syntax to RAG-optimized Markdown with YAML frontmatter.
+            Enriches content with metadata for improved retrieval.
+          </purpose>
+          <status>ACTIVE</status>
+          <pipeline_stage>preprocess</pipeline_stage>
+          <source_code>pipeline/03_rag_preprocessing/</source_code>
+          <volumes>
+            <volume>../config:/config:ro</volume>
+            <volume>../data:/data</volume>
+            <volume>../pipeline/03_rag_preprocessing:/pipeline/03_rag_preprocessing:ro</volume>
+          </volumes>
+          <environment>
+            <var name="CONFIG_PATH">/config/env.yaml</var>
+            <var name="DATA_PATH">/data</var>
+            <var name="PIPELINE_PATH">/pipeline/03_rag_preprocessing</var>
+          </environment>
+          <input>
+            <directory>data/fetched/fetched_at_{timestamp}/</directory>
+            <optional>data/evaluated/evaluation_fetched_at_{timestamp}/</optional>
+          </input>
+          <output>
+            <directory>data/preprocessed/preprocess_at_{timestamp}/</directory>
+            <files>
+              <file>*.md - Converted Markdown files with YAML frontmatter</file>
+              <file>preprocessing_manifest.json - Processing manifest</file>
+              <file>metadata_index.json - Aggregated metadata for all pages</file>
+            </files>
+          </output>
+          <transformations>
+            <transformation>Wiki syntax to Markdown conversion</transformation>
+            <transformation>YAML frontmatter generation (title, namespace, author, date, tags)</transformation>
+            <transformation>Internal link resolution and normalization</transformation>
+            <transformation>Code block language detection and annotation</transformation>
+            <transformation>Table format normalization</transformation>
+            <transformation>Metadata enrichment from evaluation results</transformation>
+          </transformations>
+        </service>
+        <service name="dev-dito-module-embedder" container_name="dev-dito-module-embedder">
+          <image>stack-g-devdito-module-embedder (built from ./module_embedder)</image>
+          <port>none</port>
+          <profile>pipeline</profile>
+          <purpose>
+            Stage 03b: Embeddings Creator
+            Creates vector embeddings using OpenAI text-embedding-3-large model.
+            Implements content-aware chunking for optimal retrieval.
+          </purpose>
+          <status>ACTIVE</status>
+          <pipeline_stage>embed</pipeline_stage>
+          <source_code>pipeline/03_embeddings_creator/</source_code>
+          <volumes>
+            <volume>../config:/config:ro</volume>
+            <volume>../data:/data</volume>
+            <volume>../pipeline/03_embeddings_creator:/pipeline/03_embeddings_creator:ro</volume>
+          </volumes>
+          <environment>
+            <var name="CONFIG_PATH">/config/env.yaml</var>
+            <var name="DATA_PATH">/data</var>
+            <var name="PIPELINE_PATH">/pipeline/03_embeddings_creator</var>
+            <var name="OPENAI_API_KEY">${OPENAI_API_KEY}</var>
+          </environment>
+          <input>
+            <directory>data/preprocessed/preprocess_at_{timestamp}/</directory>
+          </input>
+          <output>
+            <directory>data/embeddings/</directory>
+            <files>
+              <file>embeddings_{timestamp}.json - Generated embeddings with metadata</file>
+              <file>chunks_{timestamp}.json - Document chunks with text</file>
+              <file>embedding_manifest.json - Processing manifest</file>
+            </files>
+          </output>
+          <embedding_config>
+            <model>text-embedding-3-large</model>
+            <dimensions>3072</dimensions>
+            <chunking_strategy>content-aware</chunking_strategy>
+            <chunk_size>512 tokens (configurable)</chunk_size>
+            <chunk_overlap>50 tokens (configurable)</chunk_overlap>
+          </embedding_config>
+          <components>
+            <component name="content_aware_chunker">Intelligent document chunking based on content structure</component>
+            <component name="document_loader">Loads preprocessed Markdown documents</component>
+            <component name="embedder">OpenAI API integration for embedding generation</component>
+            <component name="pipeline">Orchestrates the embedding workflow</component>
+          </components>
+        </service>
+        <service name="dev-dito-module-deployer" container_name="dev-dito-module-deployer">
+          <image>stack-g-devdito-module-deployer (built from ./module_deployer)</image>
+          <port>none</port>
+          <profile>pipeline</profile>
+          <purpose>
+            Stage 04: Qdrant Deployer
+            Uploads embeddings to Qdrant vector database.
+            Supports multiple deployment targets (local dev-dito-qdrant, stack-d-ai-core, remote).
+          </purpose>
+          <status>ACTIVE</status>
+          <pipeline_stage>deploy</pipeline_stage>
+          <source_code>pipeline/04_deploy/</source_code>
+          <depends_on>
+            <service>dev-dito-qdrant</service>
+          </depends_on>
+          <volumes>
+            <volume>../config:/config:ro</volume>
+            <volume>../data:/data</volume>
+          </volumes>
+          <environment>
+            <var name="CONFIG_PATH">/config/env.yaml</var>
+            <var name="DATA_PATH">/data</var>
+            <var name="QDRANT_HOST">dev-dito-qdrant (default, configurable)</var>
+            <var name="QDRANT_PORT">6333</var>
+            <var name="COLLECTION_NAME">wiki_embeddings</var>
+          </environment>
+          <input>
+            <directory>data/embeddings/</directory>
+          </input>
+          <output>
+            <target>Qdrant collection: wiki_embeddings</target>
+          </output>
+          <deployment_targets>
+            <target name="local" default="true">
+              <host>dev-dito-qdrant</host>
+              <port>6333</port>
+              <description>Local Qdrant in Stack-G for isolated development</description>
+            </target>
+            <target name="shared">
+              <host>qdrant-main-vector-db</host>
+              <port>6333</port>
+              <description>Shared Qdrant in Stack-D for production use</description>
+            </target>
+            <target name="remote">
+              <host>configurable (e.g., raspberry-pi)</host>
+              <port>6333</port>
+              <description>Remote Qdrant instance for deployment</description>
+            </target>
+          </deployment_targets>
+          <capabilities>
+            <capability>Collection creation and schema management</capability>
+            <capability>Batch upsert with progress tracking</capability>
+            <capability>Incremental updates (update changed, add new, optionally remove deleted)</capability>
+            <capability>Transfer verification</capability>
+          </capabilities>
+        </service>
+      </category>
+      <category name="DokuWiki Plugin" description="PHP plugin installed in DokuWiki instance">
+        <component name="devdito-plugin" install_path="lib/plugins/devdito/">
+          <purpose>
+            DokuWiki Admin Extension providing web UI for Dev Dito pipeline management.
+            Communicates with orchestrator via HTTP API.
+          </purpose>
+          <status>ACTIVE</status>
+          <source_code>dokuwiki_plugin/</source_code>
           <files>
-            <file>changes/ - Recent changes data</file>
-            <file>media/ - Downloaded media files</file>
-            <file>namespaces/ - Namespace structure</file>
-            <file>page_backlinks/ - Backlink data per page</file>
-            <file>page_content/ - Raw wiki syntax content</file>
-            <file>page_html/ - Rendered HTML content</file>
-            <file>page_links/ - Link data per page</file>
-            <file>page_metadata/ - Page metadata (author, date, etc.)</file>
-            <file>raw_json/ - Raw API responses</file>
-            <file>fetch_manifest.json - Manifest for incremental updates</file>
+            <file name="action.php">Event hooks and AJAX handlers</file>
+            <file name="admin.php">Admin page controller</file>
+            <file name="plugin.info.txt">Plugin metadata</file>
+            <file name="conf/default.php">Default configuration</file>
+            <file name="conf/metadata.php">Configuration schema</file>
+            <file name="lib/ConfigLoader.php">Configuration management</file>
+            <file name="lib/JobStatusManager.php">Pipeline job status tracking</file>
+            <file name="lib/PipelineOrchestrator.php">Orchestrator API client</file>
+            <file name="dist/devdito.min.css">Compiled styles</file>
+            <file name="dist/devdito.min.js">Compiled JavaScript</file>
+            <file name="dist/pipeline.css">Pipeline UI styles</file>
+            <file name="dist/pipeline.js">Pipeline UI logic</file>
+            <file name="lang/de/lang.php">German translations</file>
+            <file name="lang/de/settings.php">German settings labels</file>
+            <file name="lang/en/lang.php">English translations</file>
+            <file name="lang/en/settings.php">English settings labels</file>
           </files>
-        </output>
-        <capabilities>
-          <capability>Full wiki fetch (all pages, all namespaces)</capability>
-          <capability>Incremental fetch (only changed pages since last run)</capability>
-          <capability>Media file caching and deduplication</capability>
-          <capability>Progress tracking with resume capability</capability>
-          <capability>Change detection and reporting</capability>
-        </capabilities>
-      </service>
-      
-      <service name="dev-dito-module-evaluator" container_name="dev-dito-module-evaluator">
-        <image>stack-g-devdito-module-evaluator (built from ./module_evaluator)</image>
-        <port>none</port>
-        <profile>pipeline</profile>
+          <admin_pages>
+            <page url="?do=admin&amp;page=devdito">Main Dev Dito Dashboard</page>
+          </admin_pages>
+          <features>
+            <feature>Pipeline stage visualization and control</feature>
+            <feature>Real-time job progress monitoring</feature>
+            <feature>Service status dashboard</feature>
+            <feature>Configuration management UI</feature>
+            <feature>Log viewer and download</feature>
+          </features>
+        </component>
+      </category>
+    </service_categories>
+    <health_endpoint>http://localhost:8089/health</health_endpoint>
+    <api_summary>
+      <orchestrator_api base_url="http://localhost:8089">
+        <endpoint method="GET" path="/health">Health check - returns {status: "ok"}</endpoint>
+        <endpoint method="GET" path="/status">Pipeline status - all stages with last run info</endpoint>
+        <endpoint method="POST" path="/run/fetch">Start wiki fetch (full or incremental)</endpoint>
+        <endpoint method="POST" path="/run/evaluate">Start content evaluation</endpoint>
+        <endpoint method="POST" path="/run/preprocess">Start RAG preprocessing</endpoint>
+        <endpoint method="POST" path="/run/embed">Start embedding generation</endpoint>
+        <endpoint method="POST" path="/run/deploy">Start Qdrant deployment</endpoint>
+        <endpoint method="GET" path="/job/{job_id}">Get job status by ID</endpoint>
+        <endpoint method="GET" path="/progress">Current job progress (live)</endpoint>
+        <endpoint method="POST" path="/cancel/{job_id}">Cancel running job</endpoint>
+      </orchestrator_api>
+      <dokuwiki_admin base_url="http://localhost:8080">
+        <endpoint method="GET" path="/?do=admin&amp;page=devdito">Dev Dito Admin Dashboard</endpoint>
+      </dokuwiki_admin>
+    </api_summary>
+    <volumes>
+      <volume name="dev-dito-qdrant-storage">Persistent Qdrant data</volume>
+    </volumes>
+    <data_directories>
+      <directory path="data/fetched/">Fetched wiki content (timestamped subdirs)</directory>
+      <directory path="data/evaluated/">Evaluation results (timestamped subdirs)</directory>
+      <directory path="data/preprocessed/">Preprocessed Markdown (timestamped subdirs)</directory>
+      <directory path="data/embeddings/">Generated embeddings</directory>
+      <directory path="data/logs/">Pipeline logs and status files</directory>
+    </data_directories>
+  </stack>
+
+  <stack id="stack-h-mcp">
+    <stack_name>mcp-servers-services</stack_name>
+    <stack_description>
+      Model Context Protocol (MCP) servers providing AI-accessible tools.
+      Dev Dito contributes the semantic-search-wiki-core tool for semantic wiki search.
+      Other projects can add additional MCP servers to this stack.
+    </stack_description>
+    <requirement_level>RECOMMENDED</requirement_level>
+    <devdito_relationship>PROVIDES - Dev Dito contributes the semantic search MCP server</devdito_relationship>
+    <contained_services>
+      <service name="semantic-search-wiki-core" container_name="semantic-search-wiki-core">
+        <image>stack-h-mcp-semantic-search-wiki-core (built from backend_services/wiki_dev_mcp_server/)</image>
+        <port>3000:3000</port>
         <purpose>
-          Stage 02: Deep Evaluation
-          Analyzes fetched wiki content for quality, RAG readiness, and cleanup strategies.
-          Uses LLM for content classification and generates improvement recommendations.
+          MCP server providing semantic wiki search tools for AI assistants.
+          Implements JSON-RPC 2.0 protocol compatible with Leonidas MCPToolProxy.
+          Queries Qdrant vector database for semantic similarity search.
         </purpose>
         <status>ACTIVE</status>
-        <pipeline_stage>evaluate</pipeline_stage>
-        <source_code>pipeline/02_deep_evaluation/</source_code>
-        <volumes>
-          <volume>../config:/config:ro</volume>
-          <volume>../data:/data</volume>
-          <volume>../pipeline/02_deep_evaluation:/pipeline/02_deep_evaluation:ro</volume>
-        </volumes>
+        <source_code>backend_services/wiki_dev_mcp_server/</source_code>
         <environment>
-          <var name="CONFIG_PATH">/config/env.yaml</var>
-          <var name="DATA_PATH">/data</var>
-          <var name="PIPELINE_PATH">/pipeline/02_deep_evaluation</var>
-        </environment>
-        <input>
-          <directory>data/fetched/fetched_at_{timestamp}/</directory>
-        </input>
-        <output>
-          <directory>data/evaluated/evaluation_fetched_at_{timestamp}/</directory>
-          <files>
-            <file>evaluation_report.json - Comprehensive evaluation results</file>
-            <file>content_classifications.json - Page type classifications</file>
-            <file>quality_scores.json - Quality metrics per page</file>
-            <file>rag_readiness.json - RAG suitability assessment</file>
-            <file>cleanup_strategies.json - Recommended improvements</file>
-          </files>
-        </output>
-        <analyzers>
-          <analyzer name="content_classifier">Classifies page content type (documentation, tutorial, reference, etc.)</analyzer>
-          <analyzer name="document_deep_analyzer">Deep analysis of document structure and content</analyzer>
-          <analyzer name="format_quality_analyzer">Evaluates formatting consistency and quality</analyzer>
-          <analyzer name="media_deep_analyzer">Analyzes embedded media usage and quality</analyzer>
-          <analyzer name="query_generator">Generates sample queries for RAG testing</analyzer>
-          <analyzer name="rag_readiness_checker">Assesses suitability for RAG retrieval</analyzer>
-          <analyzer name="temporal_analyzer">Analyzes content freshness and update patterns</analyzer>
-          <analyzer name="wiki_deep_analyzer">Wiki-specific structural analysis</analyzer>
-        </analyzers>
-      </service>
-      
-      <service name="dev-dito-module-preprocessor" container_name="dev-dito-module-preprocessor">
-        <image>stack-g-devdito-module-preprocessor (built from ./module_preprocessor)</image>
-        <port>none</port>
-        <profile>pipeline</profile>
-        <purpose>
-          Stage 03a: RAG Preprocessing
-          Converts DokuWiki syntax to RAG-optimized Markdown with YAML frontmatter.
-          Enriches content with metadata for improved retrieval.
-        </purpose>
-        <status>ACTIVE</status>
-        <pipeline_stage>preprocess</pipeline_stage>
-        <source_code>pipeline/03_rag_preprocessing/</source_code>
-        <volumes>
-          <volume>../config:/config:ro</volume>
-          <volume>../data:/data</volume>
-          <volume>../pipeline/03_rag_preprocessing:/pipeline/03_rag_preprocessing:ro</volume>
-        </volumes>
-        <environment>
-          <var name="CONFIG_PATH">/config/env.yaml</var>
-          <var name="DATA_PATH">/data</var>
-          <var name="PIPELINE_PATH">/pipeline/03_rag_preprocessing</var>
-        </environment>
-        <input>
-          <directory>data/fetched/fetched_at_{timestamp}/</directory>
-          <optional>data/evaluated/evaluation_fetched_at_{timestamp}/</optional>
-        </input>
-        <output>
-          <directory>data/preprocessed/preprocess_at_{timestamp}/</directory>
-          <files>
-            <file>*.md - Converted Markdown files with YAML frontmatter</file>
-            <file>preprocessing_manifest.json - Processing manifest</file>
-            <file>metadata_index.json - Aggregated metadata for all pages</file>
-          </files>
-        </output>
-        <transformations>
-          <transformation>Wiki syntax to Markdown conversion</transformation>
-          <transformation>YAML frontmatter generation (title, namespace, author, date, tags)</transformation>
-          <transformation>Internal link resolution and normalization</transformation>
-          <transformation>Code block language detection and annotation</transformation>
-          <transformation>Table format normalization</transformation>
-          <transformation>Metadata enrichment from evaluation results</transformation>
-        </transformations>
-      </service>
-      
-      <service name="dev-dito-module-embedder" container_name="dev-dito-module-embedder">
-        <image>stack-g-devdito-module-embedder (built from ./module_embedder)</image>
-        <port>none</port>
-        <profile>pipeline</profile>
-        <purpose>
-          Stage 03b: Embeddings Creator
-          Creates vector embeddings using OpenAI text-embedding-3-large model.
-          Implements content-aware chunking for optimal retrieval.
-        </purpose>
-        <status>ACTIVE</status>
-        <pipeline_stage>embed</pipeline_stage>
-        <source_code>pipeline/03_embeddings_creator/</source_code>
-        <volumes>
-          <volume>../config:/config:ro</volume>
-          <volume>../data:/data</volume>
-          <volume>../pipeline/03_embeddings_creator:/pipeline/03_embeddings_creator:ro</volume>
-        </volumes>
-        <environment>
-          <var name="CONFIG_PATH">/config/env.yaml</var>
-          <var name="DATA_PATH">/data</var>
-          <var name="PIPELINE_PATH">/pipeline/03_embeddings_creator</var>
+          <var name="QDRANT_HOST">qdrant_db (or dev-dito-qdrant, or qdrant-main-vector-db)</var>
+          <var name="QDRANT_PORT">6333</var>
+          <var name="COLLECTION_NAME">wiki_embeddings</var>
           <var name="OPENAI_API_KEY">${OPENAI_API_KEY}</var>
+          <var name="MCP_SERVER_PORT">3000</var>
         </environment>
-        <input>
-          <directory>data/preprocessed/preprocess_at_{timestamp}/</directory>
-        </input>
-        <output>
-          <directory>data/embeddings/</directory>
-          <files>
-            <file>embeddings_{timestamp}.json - Generated embeddings with metadata</file>
-            <file>chunks_{timestamp}.json - Document chunks with text</file>
-            <file>embedding_manifest.json - Processing manifest</file>
-          </files>
-        </output>
         <embedding_config>
           <model>text-embedding-3-large</model>
           <dimensions>3072</dimensions>
-          <chunking_strategy>content-aware</chunking_strategy>
-          <chunk_size>512 tokens (configurable)</chunk_size>
-          <chunk_overlap>50 tokens (configurable)</chunk_overlap>
         </embedding_config>
-        <components>
-          <component name="content_aware_chunker">Intelligent document chunking based on content structure</component>
-          <component name="document_loader">Loads preprocessed Markdown documents</component>
-          <component name="embedder">OpenAI API integration for embedding generation</component>
-          <component name="pipeline">Orchestrates the embedding workflow</component>
-        </components>
       </service>
-      
-      <service name="dev-dito-module-deployer" container_name="dev-dito-module-deployer">
-        <image>stack-g-devdito-module-deployer (built from ./module_deployer)</image>
-        <port>none</port>
-        <profile>pipeline</profile>
-        <purpose>
-          Stage 04: Qdrant Deployer
-          Uploads embeddings to Qdrant vector database.
-          Supports multiple deployment targets (local dev-dito-qdrant, stack-d-ai-core, remote).
-        </purpose>
-        <status>ACTIVE</status>
-        <pipeline_stage>deploy</pipeline_stage>
-        <source_code>pipeline/04_deploy/</source_code>
-        <depends_on>
-          <service>dev-dito-qdrant</service>
-        </depends_on>
-        <volumes>
-          <volume>../config:/config:ro</volume>
-          <volume>../data:/data</volume>
-        </volumes>
-        <environment>
-          <var name="CONFIG_PATH">/config/env.yaml</var>
-          <var name="DATA_PATH">/data</var>
-          <var name="QDRANT_HOST">dev-dito-qdrant (default, configurable)</var>
-          <var name="QDRANT_PORT">6333</var>
-          <var name="COLLECTION_NAME">wiki_embeddings</var>
-        </environment>
-        <input>
-          <directory>data/embeddings/</directory>
-        </input>
-        <output>
-          <target>Qdrant collection: wiki_embeddings</target>
-        </output>
-        <deployment_targets>
-          <target name="local" default="true">
-            <host>dev-dito-qdrant</host>
-            <port>6333</port>
-            <description>Local Qdrant in Stack-G for isolated development</description>
-          </target>
-          <target name="shared">
-            <host>qdrant-main-vector-db</host>
-            <port>6333</port>
-            <description>Shared Qdrant in Stack-D for production use</description>
-          </target>
-          <target name="remote">
-            <host>configurable (e.g., raspberry-pi)</host>
-            <port>6333</port>
-            <description>Remote Qdrant instance for deployment</description>
-          </target>
-        </deployment_targets>
-        <capabilities>
-          <capability>Collection creation and schema management</capability>
-          <capability>Batch upsert with progress tracking</capability>
-          <capability>Incremental updates (update changed, add new, optionally remove deleted)</capability>
-          <capability>Transfer verification</capability>
-        </capabilities>
-      </service>
-      
-    </category>
-    
-    <category name="DokuWiki Plugin" description="PHP plugin installed in DokuWiki instance">
-      
-      <component name="devdito-plugin" install_path="lib/plugins/devdito/">
-        <purpose>
-          DokuWiki Admin Extension providing web UI for Dev Dito pipeline management.
-          Communicates with orchestrator via HTTP API.
-        </purpose>
-        <status>ACTIVE</status>
-        <source_code>dokuwiki_plugin/</source_code>
-        <files>
-          <file name="action.php">Event hooks and AJAX handlers</file>
-          <file name="admin.php">Admin page controller</file>
-          <file name="plugin.info.txt">Plugin metadata</file>
-          <file name="conf/default.php">Default configuration</file>
-          <file name="conf/metadata.php">Configuration schema</file>
-          <file name="lib/ConfigLoader.php">Configuration management</file>
-          <file name="lib/JobStatusManager.php">Pipeline job status tracking</file>
-          <file name="lib/PipelineOrchestrator.php">Orchestrator API client</file>
-          <file name="dist/devdito.min.css">Compiled styles</file>
-          <file name="dist/devdito.min.js">Compiled JavaScript</file>
-          <file name="dist/pipeline.css">Pipeline UI styles</file>
-          <file name="dist/pipeline.js">Pipeline UI logic</file>
-          <file name="lang/de/lang.php">German translations</file>
-          <file name="lang/de/settings.php">German settings labels</file>
-          <file name="lang/en/lang.php">English translations</file>
-          <file name="lang/en/settings.php">English settings labels</file>
-        </files>
-        <admin_pages>
-          <page url="?do=admin&amp;page=devdito">Main Dev Dito Dashboard</page>
-        </admin_pages>
-        <features>
-          <feature>Pipeline stage visualization and control</feature>
-          <feature>Real-time job progress monitoring</feature>
-          <feature>Service status dashboard</feature>
-          <feature>Configuration management UI</feature>
-          <feature>Log viewer and download</feature>
-        </features>
-      </component>
-      
-    </category>
-    
-  </service_categories>
-  
-  <health_endpoint>http://localhost:8089/health</health_endpoint>
-  
-  <api_summary>
-    <orchestrator_api base_url="http://localhost:8089">
-      <endpoint method="GET" path="/health">Health check - returns {status: "ok"}</endpoint>
-      <endpoint method="GET" path="/status">Pipeline status - all stages with last run info</endpoint>
-      <endpoint method="POST" path="/run/fetch">Start wiki fetch (full or incremental)</endpoint>
-      <endpoint method="POST" path="/run/evaluate">Start content evaluation</endpoint>
-      <endpoint method="POST" path="/run/preprocess">Start RAG preprocessing</endpoint>
-      <endpoint method="POST" path="/run/embed">Start embedding generation</endpoint>
-      <endpoint method="POST" path="/run/deploy">Start Qdrant deployment</endpoint>
-      <endpoint method="GET" path="/job/{job_id}">Get job status by ID</endpoint>
-      <endpoint method="GET" path="/progress">Current job progress (live)</endpoint>
-      <endpoint method="POST" path="/cancel/{job_id}">Cancel running job</endpoint>
-    </orchestrator_api>
-    <dokuwiki_admin base_url="http://localhost:8080">
-      <endpoint method="GET" path="/?do=admin&amp;page=devdito">Dev Dito Admin Dashboard</endpoint>
-    </dokuwiki_admin>
-  </api_summary>
-  
-  <volumes>
-    <volume name="dev-dito-qdrant-storage">Persistent Qdrant data</volume>
-  </volumes>
-  
-  <data_directories>
-    <directory path="data/fetched/">Fetched wiki content (timestamped subdirs)</directory>
-    <directory path="data/evaluated/">Evaluation results (timestamped subdirs)</directory>
-    <directory path="data/preprocessed/">Preprocessed Markdown (timestamped subdirs)</directory>
-    <directory path="data/embeddings/">Generated embeddings</directory>
-    <directory path="data/logs/">Pipeline logs and status files</directory>
-  </data_directories>
-  
-</stack>
-
-<stack id="stack-h-mcp">
-  <stack_name>mcp-servers-services</stack_name>
-  <stack_description>
-    Model Context Protocol (MCP) servers providing AI-accessible tools.
-    Dev Dito contributes the semantic-search-wiki-core tool for semantic wiki search.
-    Other projects can add additional MCP servers to this stack.
-  </stack_description>
-  <requirement_level>RECOMMENDED</requirement_level>
-  <devdito_relationship>PROVIDES - Dev Dito contributes the semantic search MCP server</devdito_relationship>
-  
-  <contained_services>
-    
-    <service name="semantic-search-wiki-core" container_name="semantic-search-wiki-core">
-      <image>stack-h-mcp-semantic-search-wiki-core (built from backend_services/wiki_dev_mcp_server/)</image>
-      <port>3000:3000</port>
-      <purpose>
-        MCP server providing semantic wiki search tools for AI assistants.
-        Implements JSON-RPC 2.0 protocol compatible with Leonidas MCPToolProxy.
-        Queries Qdrant vector database for semantic similarity search.
-      </purpose>
-      <status>ACTIVE</status>
-      <source_code>backend_services/wiki_dev_mcp_server/</source_code>
-      <environment>
-        <var name="QDRANT_HOST">qdrant_db (or dev-dito-qdrant, or qdrant-main-vector-db)</var>
-        <var name="QDRANT_PORT">6333</var>
-        <var name="COLLECTION_NAME">wiki_embeddings</var>
-        <var name="OPENAI_API_KEY">${OPENAI_API_KEY}</var>
-        <var name="MCP_SERVER_PORT">3000</var>
-      </environment>
-      <embedding_config>
-        <model>text-embedding-3-large</model>
-        <dimensions>3072</dimensions>
-      </embedding_config>
-    </service>
-    
-  </contained_services>
-  
-  <health_endpoint>http://localhost:3000/health</health_endpoint>
-  
-  <mcp_protocol>
-    <transport>HTTP/JSON-RPC 2.0</transport>
-    <endpoints>
-      <endpoint method="POST" path="/">JSON-RPC endpoint</endpoint>
-      <endpoint method="POST" path="/mcp">Alternative JSON-RPC endpoint</endpoint>
-      <endpoint method="GET" path="/">Server info</endpoint>
-      <endpoint method="GET" path="/health">Health check</endpoint>
-    </endpoints>
-    <methods>
-      <method name="tools/list">List available MCP tools</method>
-      <method name="tools/call">Execute an MCP tool</method>
-      <method name="ping">Connection check (returns {ok: true})</method>
-    </methods>
-  </mcp_protocol>
-  
-  <mcp_tools>
-    <tool name="semantic_wiki_search">
-      <description>Semantische Suche im HTL Leonding Wiki (LeoWiki). Durchsucht Wiki-Inhalte basierend auf semantischer Aehnlichkeit.</description>
-      <input_schema>
-        <property name="query" type="string" required="true">Die Suchanfrage in natuerlicher Sprache</property>
-        <property name="top_k" type="integer" default="5" min="1" max="20">Anzahl der zurueckzugebenden Ergebnisse</property>
-        <property name="namespace_filter" type="string" required="false">Optional: Filter nach Wiki-Namespace</property>
-      </input_schema>
-      <output>Markdown-formatted search results with scores, titles, namespaces, and content snippets</output>
-    </tool>
-    <tool name="faceted_search">
-      <description>Facettensuche im HTL Wiki. Verwende dieses Tool ZUERST bei JEDER Frage ueber HTL Lehrer, Kurse, Raeume, Stundenplaene oder Events.</description>
-      <input_schema>
-        <property name="query" type="string" required="true">Die Suchanfrage (Frage des Benutzers)</property>
-        <property name="limit" type="integer" default="5">Maximale Anzahl der Ergebnisse</property>
-      </input_schema>
-      <output>Markdown-formatted search results optimized for LLM consumption</output>
-    </tool>
-  </mcp_tools>
-  
-</stack>
-
-<stack id="stack-i-leonidas">
-  <stack_name>extension-leonidas-services</stack_name>
-  <stack_description>Leonidas AI Chat Frontend - consumes Dev Dito's semantic search capabilities to provide conversational wiki access. External project that integrates with Dev Dito via MCP.</stack_description>
-  <requirement_level>OPTIONAL</requirement_level>
-  <devdito_relationship>CONSUMER - Leonidas uses Dev Dito's MCP tools for semantic wiki search</devdito_relationship>
-  <contained_services>
-    <service name="leonidas-core">
-      <image>custom (external project)</image>
-      <port>8082:80</port>
-      <purpose>AI-powered chat interface for wiki Q&amp;A using RAG</purpose>
-      <status>EXTERNAL PROJECT</status>
-    </service>
-  </contained_services>
-  <health_endpoint>http://localhost:8082/health</health_endpoint>
-  <integration_points>
-    <integration>Calls semantic-search-wiki-core MCP server via JSON-RPC</integration>
-    <integration>Uses wiki_embeddings collection in Qdrant</integration>
-  </integration_points>
-</stack>
-
+    </contained_services>
+    <health_endpoint>http://localhost:3000/health</health_endpoint>
+    <mcp_protocol>
+      <transport>HTTP/JSON-RPC 2.0</transport>
+      <endpoints>
+        <endpoint method="POST" path="/">JSON-RPC endpoint</endpoint>
+        <endpoint method="POST" path="/mcp">Alternative JSON-RPC endpoint</endpoint>
+        <endpoint method="GET" path="/">Server info</endpoint>
+        <endpoint method="GET" path="/health">Health check</endpoint>
+      </endpoints>
+      <methods>
+        <method name="tools/list">List available MCP tools</method>
+        <method name="tools/call">Execute an MCP tool</method>
+        <method name="ping">Connection check (returns {ok: true})</method>
+      </methods>
+    </mcp_protocol>
+    <mcp_tools>
+      <tool name="semantic_wiki_search">
+        <description>Semantische Suche im HTL Leonding Wiki (LeoWiki). Durchsucht Wiki-Inhalte basierend auf semantischer Aehnlichkeit.</description>
+        <input_schema>
+          <property name="query" type="string" required="true">Die Suchanfrage in natuerlicher Sprache</property>
+          <property name="top_k" type="integer" default="5" min="1" max="20">Anzahl der zurueckzugebenden Ergebnisse</property>
+          <property name="namespace_filter" type="string" required="false">Optional: Filter nach Wiki-Namespace</property>
+        </input_schema>
+        <output>Markdown-formatted search results with scores, titles, namespaces, and content snippets</output>
+      </tool>
+      <tool name="faceted_search">
+        <description>Facettensuche im HTL Wiki. Verwende dieses Tool ZUERST bei JEDER Frage ueber HTL Lehrer, Kurse, Raeume, Stundenplaene oder Events.</description>
+        <input_schema>
+          <property name="query" type="string" required="true">Die Suchanfrage (Frage des Benutzers)</property>
+          <property name="limit" type="integer" default="5">Maximale Anzahl der Ergebnisse</property>
+        </input_schema>
+        <output>Markdown-formatted search results optimized for LLM consumption</output>
+      </tool>
+    </mcp_tools>
+  </stack>
 </stack_list>
+
+<!---
+  <stack id="stack-i-leonidas">
+    <stack_name>extension-leonidas-services</stack_name>
+    <stack_description>Leonidas AI Chat Frontend - consumes Dev Dito's semantic search capabilities to provide conversational wiki access. External project that integrates with Dev Dito via MCP.</stack_description>
+    <requirement_level>OPTIONAL</requirement_level>
+    <devdito_relationship>CONSUMER - Leonidas uses Dev Dito's MCP tools for semantic wiki search</devdito_relationship>
+    <contained_services>
+      <service name="leonidas-core">
+        <image>custom (external project)</image>
+        <port>8082:80</port>
+        <purpose>AI-powered chat interface for wiki Q&amp;A using RAG</purpose>
+        <status>EXTERNAL PROJECT</status>
+      </service>
+    </contained_services>
+    <health_endpoint>http://localhost:8082/health</health_endpoint>
+    <integration_points>
+      <integration>Calls semantic-search-wiki-core MCP server via JSON-RPC</integration>
+      <integration>Uses wiki_embeddings collection in Qdrant</integration>
+    </integration_points>
+  </stack>
+-->
 
 ### Stack Dependency Matrix
 
@@ -757,7 +728,7 @@ The following stacks must be available for full Dev Dito functionality. The inst
 | Stack-F (observability) | -                | All stacks (monitoring)      | OPTIONAL     |
 | Stack-G (dev-dito)      | Stack-D          | Stack-H (MCP tools)          | **CORE**     |
 | Stack-H (mcp)           | Stack-D, Stack-G | Stack-I (AI tools)           | RECOMMENDED  |
-| Stack-I (leonidas)      | Stack-H          | End users                    | OPTIONAL     |
+<!-- | Stack-I (leonidas)      | Stack-H          | End users                    | OPTIONAL     | -->
 
 ### Network Configuration
 
