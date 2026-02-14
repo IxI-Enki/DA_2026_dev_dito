@@ -4,5 +4,6 @@ Provides EvaluationVisualizer for radar, box, bar, and heatmap charts
 with German labels and DPI >= 300.
 """
 
-# EvaluationVisualizer added in Phase 6 (US3)
-__all__: list[str] = []
+from evaluation.visualization.charts import EvaluationVisualizer
+
+__all__: list[str] = ["EvaluationVisualizer"]

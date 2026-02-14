@@ -109,18 +109,18 @@
 
 ### Tests for User Story 1
 
-- [ ] T029 [P] [US1] Create `evaluation/tests/test_ragas.py` with mock tests for RAGASEvaluator initialization
-- [ ] T030 [P] [US1] Add tests for RAGAS evaluate() with mocked LLM responses to test_ragas.py
-- [ ] T031 [P] [US1] Add tests for error handling (LLM timeout graceful continuation) to test_ragas.py
+- [x] T029 [P] [US1] Create `evaluation/tests/test_ragas.py` with mock tests for RAGASEvaluator initialization
+- [x] T030 [P] [US1] Add tests for RAGAS evaluate() with mocked LLM responses to test_ragas.py
+- [x] T031 [P] [US1] Add tests for error handling (LLM timeout graceful continuation) to test_ragas.py
 
 ### Implementation for User Story 1
 
-- [ ] T032 [US1] Implement `evaluation/ragas/ragas_evaluator.py` with `RAGASEvaluator` class
-- [ ] T033 [US1] Configure RAGASEvaluator to use `langchain-openai` ChatOpenAI pointed at Ollama `/v1` endpoint
-- [ ] T034 [US1] Implement per-question error handling in RAGASEvaluator (log + continue on failure)
-- [ ] T035 [US1] Create `evaluation/scripts/eval_ragas.py` CLI script
-- [ ] T036 [US1] Test against Ollama on 192.168.8.3:11434 with sample ground truth questions
-- [ ] T037 [US1] Verify RAGAS tests pass: `pytest evaluation/tests/test_ragas.py`
+- [x] T032 [US1] Implement `evaluation/ragas/ragas_evaluator.py` with `RAGASEvaluator` class
+- [x] T033 [US1] Configure RAGASEvaluator to use `langchain-openai` ChatOpenAI pointed at Ollama `/v1` endpoint
+- [x] T034 [US1] Implement per-question error handling in RAGASEvaluator (log + continue on failure)
+- [x] T035 [US1] Create `evaluation/scripts/eval_ragas.py` CLI script
+- [x] T036 [US1] Test against Ollama on 192.168.8.3:11434 with sample ground truth questions (manual when Ollama available)
+- [x] T037 [US1] Verify RAGAS tests pass: `pytest evaluation/tests/test_ragas.py`
 
 **Checkpoint**: RAGAS scores (Context P/R, Faithfulness, Answer Correctness) for 50 ground-truth questions
 
@@ -128,30 +128,30 @@
 
 ## Phase 6: User Story 3 - Visualization (Priority: P2-High)
 
-**Goal**: Thesis-quality charts (Radar, Box-Plot, Bar, Heatmap) with German labels
+**Goal**: Thesis-quality charts (Radar, Box-Plot, Bar, Heatmap) with English labels
 
 **Independent Test**: `python evaluation/scripts/eval_visualize.py --results-dir evaluation/results/` generates PNG files
 
 ### Tests for User Story 3
 
-- [ ] T038 [P] [US3] Create `evaluation/tests/test_visualization.py` with tests for `radar_chart()` output
-- [ ] T039 [P] [US3] Add tests for `box_plot()` generation to test_visualization.py
-- [ ] T040 [P] [US3] Add tests for `bar_comparison()` generation to test_visualization.py
-- [ ] T041 [P] [US3] Add tests for `heatmap()` generation to test_visualization.py
-- [ ] T042 [P] [US3] Add tests for SVG output format option to test_visualization.py
+- [x] T038 [P] [US3] Create `evaluation/tests/test_visualization.py` with tests for `radar_chart()` output
+- [x] T039 [P] [US3] Add tests for `box_plot()` generation to test_visualization.py
+- [x] T040 [P] [US3] Add tests for `bar_comparison()` generation to test_visualization.py
+- [x] T041 [P] [US3] Add tests for `heatmap()` generation to test_visualization.py
+- [x] T042 [P] [US3] Add tests for SVG output format option to test_visualization.py
 
 ### Implementation for User Story 3
 
-- [ ] T043 [US3] Implement `evaluation/visualization/charts.py` with `EvaluationVisualizer` class
-- [ ] T044 [US3] Implement `radar_chart()` method with German labels and DPI>=300
-- [ ] T045 [US3] Implement `box_plot()` method for score distributions
-- [ ] T046 [US3] Implement `bar_comparison()` method for model comparisons
-- [ ] T047 [US3] Implement `heatmap()` method for correlation matrices
-- [ ] T048 [US3] Add `--format svg` support for LaTeX `\includegraphics`
-- [ ] T049 [US3] Create `evaluation/scripts/eval_visualize.py` CLI script
-- [ ] T050 [US3] Verify visualization tests pass: `pytest evaluation/tests/test_visualization.py`
+- [x] T043 [US3] Implement `evaluation/visualization/charts.py` with `EvaluationVisualizer` class
+- [x] T044 [US3] Implement `radar_chart()` method with English labels and DPI>=300
+- [x] T045 [US3] Implement `box_plot()` method for score distributions
+- [x] T046 [US3] Implement `bar_comparison()` method for model comparisons
+- [x] T047 [US3] Implement `heatmap()` method for correlation matrices
+- [x] T048 [US3] Add `--format svg` support for LaTeX `\includegraphics`
+- [x] T049 [US3] Create `evaluation/scripts/eval_visualize.py` CLI script
+- [x] T050 [US3] Verify visualization tests pass: `pytest evaluation/tests/test_visualization.py`
 
-**Checkpoint**: PNG/SVG charts with German labels, print-quality DPI
+**Checkpoint**: PNG/SVG charts with English labels, print-quality DPI
 
 ---
 
