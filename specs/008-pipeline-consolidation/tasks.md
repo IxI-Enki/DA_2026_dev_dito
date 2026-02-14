@@ -163,22 +163,22 @@
 
 ### Tests for User Story 4
 
-- [ ] T051 [P] [US4] Create `evaluation/tests/test_reports.py` with tests for report structure generation
-- [ ] T052 [P] [US4] Add tests for RAGAS + Custom metrics side-by-side table to test_reports.py
-- [ ] T053 [P] [US4] Add tests for NFR-005 fields (timestamp, config-hash, code-version) to test_reports.py
-- [ ] T054 [P] [US4] Add tests for difficulty breakdown table to test_reports.py
+- [X] T051 [P] [US4] Create `evaluation/tests/test_reports.py` with tests for report structure generation
+- [X] T052 [P] [US4] Add tests for RAGAS + Custom metrics side-by-side table to test_reports.py
+- [X] T053 [P] [US4] Add tests for NFR-005 fields (timestamp, config-hash, code-version) to test_reports.py
+- [X] T054 [P] [US4] Add tests for difficulty breakdown table to test_reports.py
 
 ### Implementation for User Story 4
 
-- [ ] T055 [US4] Implement `evaluation/reports/generator.py` with `ReportGenerator` class
-- [ ] T056 [US4] Implement Executive Summary generation in ReportGenerator
-- [ ] T057 [US4] Implement Custom Metrics table (MRR, NDCG, P@K, MAP, Recall@K) generation
-- [ ] T058 [US4] Implement RAGAS Metrics table (Context P/R, Faithfulness) generation
-- [ ] T059 [US4] Implement Statistical Comparison section (CI, p-values, effect sizes)
-- [ ] T060 [US4] Implement Difficulty Breakdown section
-- [ ] T061 [US4] Add NFR-005 reproducibility fields: timestamp, config-hash, code-version
-- [ ] T062 [US4] Create `evaluation/scripts/eval_report.py` CLI script
-- [ ] T063 [US4] Verify report tests pass: `pytest evaluation/tests/test_reports.py`
+- [X] T055 [US4] Implement `evaluation/reports/generator.py` with `ReportGenerator` class
+- [X] T056 [US4] Implement Executive Summary generation in ReportGenerator
+- [X] T057 [US4] Implement Custom Metrics table (MRR, NDCG, P@K, MAP, Recall@K) generation
+- [X] T058 [US4] Implement RAGAS Metrics table (Context P/R, Faithfulness) generation
+- [X] T059 [US4] Implement Statistical Comparison section (CI, p-values, effect sizes)
+- [X] T060 [US4] Implement Difficulty Breakdown section
+- [X] T061 [US4] Add NFR-005 reproducibility fields: timestamp, config-hash, code-version
+- [X] T062 [US4] Create `evaluation/scripts/eval_report.py` CLI script
+- [X] T063 [US4] Verify report tests pass: `pytest evaluation/tests/test_reports.py`
 
 **Checkpoint**: Markdown + JSON reports from result JSONs with all required sections
 
