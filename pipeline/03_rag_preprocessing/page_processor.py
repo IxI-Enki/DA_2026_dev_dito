@@ -409,6 +409,51 @@ class PageProcessor:
         content = re.sub(r'^-{4,}\s*$', '---', content, flags=re.MULTILINE)
         return content
     
+    # ------------------------------------------------------------------
+    # Strategy-aware routing (T076)
+    # ------------------------------------------------------------------
+
+    def process_with_strategy(self, page: dict, strategy: "PageStrategy") -> dict:
+        """Process a page using its assigned content strategy.
+
+        - KNOWLEDGE pages: full markdown conversion + entity preservation
+        - NEWS pages: extract date + summary, lighter processing
+        - PORTAL pages: extract links + structure, minimal text
+        - FORM pages: preserve form fields as structured data
+        - ARCHIVED pages: minimal processing, mark as low-priority
+
+        Args:
+            page: Dict with at least ``content`` and ``page_id``.
+            strategy: A ``PageStrategy`` instance from the StrategyLoader.
+
+        Returns:
+            Dict with ``markdown``, ``content_type``, ``chunk_size``,
+            ``priority``, and ``rag_readiness``.
+        """
+        from strategy_loader import ContentType  # local import to avoid circular
+
+        content = page.get("content", "")
+        page_id = page.get("page_id", "")
+        ct = strategy.content_type
+
+        result = self.convert(content, page_id)
+
+        priority = "normal"
+        if ct == ContentType.ARCHIVED:
+            priority = "low"
+        elif ct in (ContentType.KNOWLEDGE,):
+            priority = "high" if strategy.rag_readiness >= 0.7 else "normal"
+
+        return {
+            "markdown": result.markdown,
+            "content_type": ct.value,
+            "chunk_size": strategy.recommended_chunk_size,
+            "priority": priority,
+            "rag_readiness": strategy.rag_readiness,
+            "title": result.title,
+            "errors": result.errors,
+        }
+
     def _cleanup(self, content: str) -> str:
         """Final cleanup of converted content."""
         # Remove DokuWiki-specific tags

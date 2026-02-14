@@ -192,27 +192,27 @@
 
 ### Tests for User Story 5
 
-- [ ] T064 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_strategy_loader.py` with StrategyLoader tests
-- [ ] T065 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_media_processor.py` with PDF/OCR tests
-- [ ] T066 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_exporter.py` with export tests
-- [ ] T067 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_page_processor.py` with DokuWiki conversion tests
-- [ ] T068 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_metadata_enricher.py` with freshness/access tests
+- [X] T064 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_strategy_loader.py` with StrategyLoader tests
+- [X] T065 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_media_processor.py` with PDF/OCR tests
+- [X] T066 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_exporter.py` with export tests
+- [X] T067 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_page_processor.py` with DokuWiki conversion tests
+- [X] T068 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_metadata_enricher.py` with freshness/access tests
 
 ### Implementation for User Story 5
 
-- [ ] T069 [US5] Implement `pipeline/03_rag_preprocessing/strategy_loader.py` with `StrategyLoader` class
-- [ ] T070 [US5] Implement `ContentType` enum and `PageStrategy` dataclass in strategy_loader.py
-- [ ] T071 [US5] Implement `pipeline/03_rag_preprocessing/media_processor.py` with `MediaProcessor` class
-- [ ] T072 [US5] Implement `process_pdf()` method with text extraction and OCR fallback
-- [ ] T073 [US5] Implement `process_image()` method with Tesseract OCR (path from `config/env.yaml`)
-- [ ] T074 [US5] Implement `pipeline/03_rag_preprocessing/exporter.py` with `Exporter` class
-- [ ] T075 [US5] Implement export to `data/preprocessed/preprocessed_at_{timestamp}/` with YAML frontmatter
-- [ ] T076 [US5] Modify `pipeline/03_rag_preprocessing/page_processor.py`: add strategy-aware routing
-- [ ] T077 [US5] Modify `pipeline/03_rag_preprocessing/metadata_enricher.py`: add `freshness_score` field
-- [ ] T078 [US5] Modify `pipeline/03_rag_preprocessing/metadata_enricher.py`: add `access_level` field
-- [ ] T079 [US5] Create `pipeline/03_rag_preprocessing/run_preprocessing.py` main orchestrator script
-- [ ] T080 [US5] Verify preprocessing tests pass: `pytest pipeline/03_rag_preprocessing/tests/`
-- [ ] T081 [US5] Add regression test for DokuWiki syntax conversion accuracy (assert < 1% Wiki syntax markers remaining in output)
+- [X] T069 [US5] Implement `pipeline/03_rag_preprocessing/strategy_loader.py` with `StrategyLoader` class
+- [X] T070 [US5] Implement `ContentType` enum and `PageStrategy` dataclass in strategy_loader.py
+- [X] T071 [US5] Implement `pipeline/03_rag_preprocessing/media_processor.py` with `MediaProcessor` class
+- [X] T072 [US5] Implement `process_pdf()` method with text extraction and OCR fallback
+- [X] T073 [US5] Implement `process_image()` method with Tesseract OCR (path from `config/env.yaml`)
+- [X] T074 [US5] Implement `pipeline/03_rag_preprocessing/exporter.py` with `Exporter` class
+- [X] T075 [US5] Implement export to `data/preprocessed/preprocessed_at_{timestamp}/` with YAML frontmatter
+- [X] T076 [US5] Modify `pipeline/03_rag_preprocessing/page_processor.py`: add strategy-aware routing
+- [X] T077 [US5] Modify `pipeline/03_rag_preprocessing/metadata_enricher.py`: add `freshness_score` field
+- [X] T078 [US5] Modify `pipeline/03_rag_preprocessing/metadata_enricher.py`: add `access_level` field
+- [X] T079 [US5] Create `pipeline/03_rag_preprocessing/run_preprocessing.py` main orchestrator script
+- [X] T080 [US5] Verify preprocessing tests pass: `pytest pipeline/03_rag_preprocessing/tests/`
+- [X] T081 [US5] Add regression test for DokuWiki syntax conversion accuracy (assert < 1% Wiki syntax markers remaining in output)
 
 **Checkpoint**: `data/fetched/` -> `data/preprocessed/` full conversion with metadata
 

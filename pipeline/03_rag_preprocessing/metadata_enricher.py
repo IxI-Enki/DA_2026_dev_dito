@@ -149,6 +149,56 @@ class MetadataEnricher:
         # Generate YAML
         return self._to_yaml(fm)
     
+    # ------------------------------------------------------------------
+    # Freshness & Access Level (T077-T078)
+    # ------------------------------------------------------------------
+
+    def calculate_freshness_score(self, last_modified: str) -> str:
+        """Classify page freshness based on age relative to current date.
+
+        Args:
+            last_modified: ISO-8601 date/datetime string.
+
+        Returns:
+            ``'fresh'`` (<30d), ``'recent'`` (<180d),
+            ``'outdated'`` (<365d), ``'archived'`` (>365d),
+            or ``'unknown'`` if parsing fails.
+        """
+        try:
+            if "T" in last_modified:
+                dt = datetime.fromisoformat(last_modified.replace("Z", "+00:00"))
+            else:
+                dt = datetime.fromisoformat(last_modified)
+            # Make naive for comparison
+            if dt.tzinfo is not None:
+                dt = dt.replace(tzinfo=None)
+            age_days = (datetime.now() - dt).days
+        except (ValueError, TypeError):
+            return "unknown"
+
+        if age_days < 30:
+            return "fresh"
+        if age_days < 180:
+            return "recent"
+        if age_days < 365:
+            return "outdated"
+        return "archived"
+
+    def determine_access_level(self, namespace: str) -> str:
+        """Determine access level based on DokuWiki namespace.
+
+        Args:
+            namespace: DokuWiki namespace string.
+
+        Returns:
+            ``'teacher_only'`` if namespace starts with ``'teacher:'``
+            or ``'lehrer:'``, else ``'public'``.
+        """
+        ns = namespace.lower()
+        if ns.startswith("teacher:") or ns.startswith("lehrer:") or ns == "teacher" or ns == "lehrer":
+            return "teacher_only"
+        return "public"
+
     def _classify_content_type(self, page_id: str, namespace: str) -> str:
         """
         Classify content type based on page_id and namespace.
