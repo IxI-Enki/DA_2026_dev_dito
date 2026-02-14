@@ -29,7 +29,7 @@
 | **Zielgruppe**        | Wiki-Administrator (primaer Entwickler selbst), Claude Desktop (MCP Client)                                      |
 | **Architektur-Rolle** | Stack-G in Multi-Stack Docker-Architektur (Stacks A-I)                                                           |
 | **Forschungsfragen**  | FF1: Semantic vs Keyword Search, FF2: MCP Integration Standard, FF3: Embedding Model Comparison (German Content) |
-| **Version**           | 1.3.0                                                                                                            |
+| **Version**           | 1.4.0                                                                                                            |
 
 ---
 
@@ -88,10 +88,21 @@ von Qdrant und OpenAI APIs bereits verwendet.
 
 ### Article II-B: Centralized YAML Configuration (No Hardcoding)
 
-**Mandate**: ALLE Konfigurationswerte werden in YAML-Dateien (`config/env.yaml`) ausgelagert.
-Es gibt KEINE hardcodierten Variablen im Code. Jedes Modul (Pipeline, Plugin, Service) folgt
-dem gleichen Pattern wie der Wiki Fetcher: Eine zentrale `config.py`/`config.php` laedt
-Werte aus `env.yaml`, loest Platzhalter (`${var}`) auf und stellt typisierte Exports bereit.
+**Mandate**: ALLE Konfigurationswerte werden in YAML-Dateien ausgelagert. Es gibt KEINE
+hardcodierten Variablen im Code. Es wird zwischen zentraler Konfiguration und Modul-Konfiguration
+unterschieden:
+
+- **Zentrale Config** (`config/env.yaml`): Stack-weite Einstellungen (Ports, Hosts, Pfade)
+- **Modul-Config** (`pipeline/NN_module/env.yaml`): Modul-spezifische Einstellungen die
+  zentrale Werte ueberschreiben oder ergaenzen koennen
+
+Jedes Modul folgt dem gleichen Pattern: Eine `config.py`/`config.php` laedt Werte aus `env.yaml`,
+loest Platzhalter (`${var}`) auf und stellt typisierte Exports bereit.
+
+**Known Config Violations (v1.4.0):**
+- `pipeline/02_deep_evaluation/env.yaml`: Pfade zeigen auf Prototype-Location ausserhalb dev_dito → **Tier 1 Fix**
+- `pipeline/03_embeddings_creator/env.yaml`: Lokale hardcodierte Pfade → Deferred (post-thesis)
+- `pipeline/03_rag_preprocessing/env.yaml`: Lokale Config → Deferred (post-thesis)
 
 **Pattern (aus Wiki Fetcher uebernommen):**
 ```tree
@@ -161,7 +172,7 @@ Vektor-Dimensionen, HTTP-Timeouts), liefern den hoechsten Nutzen.
 **Enforcement**:
 - [ ] `pipeline/03_embeddings_creator/` hat Unit-Tests fuer Chunking und Embedding-Output-Format
 - [ ] `dokuwiki_plugin/` HTTP-Client-Code hat Tests fuer JSON-RPC Request/Response-Format
-- [ ] `backend_services/qdrant_db/` hat Tests fuer Collection-Schema-Validierung (lokale Dev)
+- [ ] `evaluation/` dient als Referenz-Implementierung (56+ Tests fuer Metriken und Config)
 - [ ] Docker-Services definieren `healthcheck` in `docker-compose.yml`
 - [ ] Tests sind mit `pytest` (Python) bzw. `phpunit` (PHP) ausfuehrbar
 
@@ -202,8 +213,7 @@ reduzieren Runtime-Fehler bei der Integration zwischen Pipeline-Modulen.
 **Mandate**: Dokumentation dient der Entwicklung, nicht der Vollstaendigkeit. Jedes
 Pipeline-Modul hat ein `README.md` mit Zweck, Input/Output-Format und Aufrufbeispiel.
 Komplexe Architekturentscheidungen werden als Kommentare im Code dokumentiert, nicht in
-separaten ADR-Dateien. `README.md` und `README_ARCHITECTURE.md` im Repository-Root
-bleiben aktuell.
+separaten ADR-Dateien. `README.md` im Repository-Root und `docs/architecture.md` bleiben aktuell.
 
 **Rationale**: Bei zwei Entwicklern und Diplomarbeits-Zeitdruck ist jede Minute
 Dokumentation eine Minute weniger Implementierung. Inline-Dokumentation nahe am Code
@@ -214,7 +224,7 @@ bleibt eher aktuell als externe Dokumente.
 - [ ] Alle Docker-Services in `backend_services/` haben ein `README.md`
 - [ ] Oeffentliche Python-Funktionen haben Docstrings
 - [ ] PHP-Klassen haben PHPDoc-Bloecke fuer oeffentliche Methoden
-- [ ] `README_ARCHITECTURE.md` spiegelt die aktuelle Stack-Zuordnung wider
+- [ ] `docs/architecture.md` spiegelt die aktuelle Stack-Zuordnung wider
 
 **References**:
 - [Google Python Docstring Guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
@@ -319,7 +329,7 @@ Schnittstellen zwischen Komponenten, nicht innerhalb einzelner Funktionen. Mocks
 Docker-Services verschleiern genau die Fehler, die in Produktion auftreten.
 
 **Enforcement**:
-- [ ] `docker-compose.yml` oder separates `docker-compose.test.yml` fuer Test-Umgebung
+- [ ] `docker-compose.yml` mit Test-Profile (`--profile test`) fuer isolierte Test-Infrastruktur
 - [ ] Qdrant-Tests erstellen und loeschen eigene Test-Collections
 - [ ] Plugin HTTP-Client-Tests validieren JSON-RPC Request/Response-Format gegen lokale Services
 - [ ] OpenAI-Embedding-Aufrufe in Tests sind gemockt oder verwenden gecachte Responses
@@ -343,16 +353,22 @@ definieren die Prioritaet der Engineering-Tasks.
 der Eleganz der Docker-Orchestrierung. Evaluation-Skripte liefern die Daten fuer Kapitel 6-7
 der Thesis. Ein perfektes Gateway ohne auswertbare Daten ist wertlos fuer die Abgabe.
 
+**Execution Mandate** (v1.4.0): Evaluation-Infrastruktur ohne ausgefuehrte Ergebnisse hat KEINEN
+Thesis-Wert. Die Generierung von Ergebnis-Daten (`evaluation/results/`) hat ABSOLUTE PRIORITAET
+gegenueber jeder weiteren Infrastruktur, Dokumentation oder Code-Bereinigung. Erst Ergebnisse,
+dann Optimierung.
+
 **Enforcement**:
 - [ ] FF1-Keyword-Search-Baseline-Skript existiert und generiert MRR/Precision@5 Metriken
 - [ ] J4-Chunk-Size-Evaluation-Skript erzeugt vergleichbare Outputs fuer 256/512/1024 Tokens
 - [ ] J2/FF3-Model-Comparison-Framework kann beliebige Embedding-Modelle austauschen (Ollama, OpenAI, MTEB)
 - [ ] Evaluation-Outputs sind in `evaluation/results/` versioniert und referenzierbar
 - [ ] Infrastructure-Refactorings (DooD -> docker compose run) erfolgen ERST nach lauffaehiger Evaluation
+- [ ] Jede Forschungsfrage (FF1, FF3) hat mindestens ein Ergebnis-JSON in `evaluation/results/`
+- [ ] LaTeX-Tabellen werden aus tatsaechlichen Ergebnissen generiert, nicht aus Platzhaltern
 
 **References**:
 - Thesis Deliverables: `README_THESIS.md`
-- RAGAS Framework (Stack-E): `evaluation/ragas_integration.md`
 - MTEB Leaderboard: https://huggingface.co/spaces/mteb/leaderboard
 
 ---
@@ -382,21 +398,26 @@ erlaubt, wenn sie direkt Thesis-Kapitel unterstuetzen.
 
 ### Article XII: Resource Governance
 
-**Mandate**: Jeder Docker-Service in Stack-G MUSS memory/cpu limits in `docker-compose.yml` definieren.
-Qdrant darf maximal 1GB RAM verwenden, Embedder-Module maximal 2GB, alle anderen Services maximal 512MB.
-Health-Checks muessen `start_period` fuer langsam startende Services (Qdrant, LLM-Inferenz) definieren.
-ALLE Image-Versionen muessen explizit gepinnt sein (kein `:latest` Tag).
+**Mandate**: Resource Governance fuer Docker-Services in Stack-G ist in zwei Stufen gegliedert:
+
+**Tier 1 — Sofort (v1.4.0):**
+- ALLE Image-Versionen muessen explizit gepinnt sein (kein `:latest` Tag)
+- Health-Checks muessen `start_period` fuer langsam startende Services definieren
+- `.dockerignore` in jedem Build-Context
+
+**Tier 2 — Nach Evaluation-Ergebnissen:**
+- `deploy.resources.limits` (memory, cpus) kalibriert aus Profiling-Daten
+- Qdrant: max 1GB RAM, Embedder: max 2GB, Gateway/Pipeline: max 512MB
 
 **Rationale**: Dev Dito laeuft auf Entwickler-Laptops (Windows 11, 16-32GB RAM) und einem Raspberry Pi 5 (8GB).
-Unbegrenzte Ressourcen-Nutzung fuehrt zu OOM-Kills und unvorhersehbarem Verhalten. Gepinnte Versionen
-garantieren reproduzierbare Builds fuer die Thesis-Evaluation.
+Resource Limits ohne Profiling-Daten sind willkuerlich und koennen Evaluations blockieren (Article X Vorrang).
+Gepinnte Versionen und Health-Checks sind hingegen risikolos und sofort umsetzbar.
 
 **Enforcement**:
-- [ ] Jeder Service in `docker-compose.yml` hat `deploy.resources.limits.memory` und `cpus`
-- [ ] Qdrant: `mem_limit: 1g`, Embedder: `mem_limit: 2g`, Gateway/Pipeline: `mem_limit: 512m`
 - [ ] Alle `image:` Tags enthalten explizite Versionsnummern (z.B. `qdrant/qdrant:v1.7.4`)
 - [ ] Health-Checks fuer Services mit >10s Startzeit haben `start_period: 30s`
 - [ ] Docker Compose Profiles (`pipeline`, `wiki`, `dev`) sind dokumentiert
+- [ ] Resource Limits werden NACH Evaluation-Ausfuehrung anhand tatsaechlicher Nutzung kalibriert
 
 **References**:
 - [Docker Compose Resource Constraints](https://docs.docker.com/compose/compose-file/deploy/#resources)
@@ -514,12 +535,12 @@ Nach der Implementierung muessen folgende Checks bestehen:
 
 | ID  | Deliverable                                 | Status | Depends On | Target Milestone |
 | --- | ------------------------------------------- | ------ | ---------- | ---------------- |
-| J1  | Test Corpus (50-100 pages, 20-30 Q&A pairs) | 🔜      | -          | 2026-03-15       |
-| J2  | Embedding Model Comparison Framework        | 🔜      | J1         | 2026-03-15       |
+| J1  | Test Corpus (50 Q&A pairs, ground truth)    | ✅      | -          | 2026-02-10       |
+| J2  | Embedding Model Comparison Framework        | ⚙️      | J1         | 2026-03-15       |
 | J3  | DokuWiki Markup Parser → Clean Text Chunks  | ✅      | -          | 2025-11-15       |
-| J4  | Chunk Size Impact (256/512/1024 tokens)     | 🔜      | J1, J3     | 2026-03-15       |
+| J4  | Chunk Size Impact (256/512/1024 tokens)     | ⚙️      | J1, J3     | 2026-03-15       |
 | J5  | Vector DB Collection Schema (Qdrant)        | ✅      | -          | 2025-11-15       |
-| J6  | Hybrid Search vs Dense Retrieval (FF1)      | 🔜      | J1, J5     | 2026-03-15       |
+| J6  | Hybrid Search vs Dense Retrieval (FF1)      | ⚙️      | J1, J5     | 2026-03-15       |
 | J7  | OAuth2/RBAC via ScaleKit                    | ✅      | -          | 2026-02-20       |
 | J8  | Docker Container + npm Package (MCP Server) | 🔜      | I3, I4     | 2026-03-30       |
 
@@ -547,19 +568,22 @@ Nach der Implementierung muessen folgende Checks bestehen:
 | 2026-05-15 | 🔜 Thesis Review (Stropek)     | -              | Full Draft                        |
 | 2026-05-30 | 🔜 Thesis Submission           | -              | **HARD DEADLINE**                 |
 
+**Status-Legende:** ✅ = Abgeschlossen | ⚙️ = Code Complete / Ergebnisse ausstehend | 🔜 = Geplant
+
+**Hinweis J6 (v1.4.0):** Aktuell nur Dense Search implementiert. Hybrid Search (BM25 payload index)
+entweder implementieren ODER als Limitation dokumentieren und in Future Work verweisen.
+
 ### Current Gaps (MUST Address)
 
-1. **FF1 Keyword Baseline** (J6): Kein Skript fuer keyword-only search → Kann semantische Verbesserung nicht quantifizieren
-2. **J4 Chunk Size Evaluation**: Kein parametrisches Framework → Keine Tabelle fuer Thesis Chapter 6
-3. **J2 Model-Agnostic Embedding**: Pipeline kann nur ein Modell (Ollama) → FF3 nicht auswertbar
-4. **Thesis Writing**: Jan + Imre muessen Kapitel 1-4 (Theorie) JETZT beginnen → 40 Seiten pro Person
+1. **Evaluation Execution** (J2/J4/J6): Skripte existieren, aber KEINE Ergebnis-JSONs generiert
+2. **FF1 Keyword Baseline**: Skript existiert (`eval_keyword_baseline.py`), muss ausgefuehrt werden
+3. **Thesis Writing**: Jan + Imre muessen Kapitel 1-4 (Theorie) JETZT beginnen → 40 Seiten pro Person
 
-**Resolution Priority (Article X + XI):**
-1. J1 (Test Corpus) → Ohne Daten keine Evaluation
-2. J6 (Keyword Baseline) → FF1 Blocker
-3. J4 (Chunk Size Framework) → FF3 Blocker
-4. J2 (Model Comparison) → FF3 Blocker
-5. Phase 2 (DooD Removal) → Post-Thesis Enhancement
+**Resolution Priority (Article X Execution Mandate):**
+1. Evaluation-Skripte ausfuehren → Ergebnis-JSONs generieren (FF1, FF3)
+2. LaTeX-Tabellen aus Ergebnissen exportieren (US5)
+3. Thesis-Kapitel 6-7 mit echten Daten schreiben
+4. Phase 2 (DooD Removal, Config Consolidation) → Post-Thesis Enhancement
 
 ---
 
@@ -614,6 +638,28 @@ Pipeline-Fehler werden wie folgt behandelt:
 
 ---
 
+## Known Violations Register (v1.4.0)
+
+Intentionally-deferred violations. Verhindert dass Agents bereits akzeptierte technische Schulden
+erneut triagieren.
+
+| Article | Violation                                        | Status                 | Target             |
+| ------- | ------------------------------------------------ | ---------------------- | ------------------ |
+| II-B    | `02_deep_evaluation/env.yaml` Prototype-Pfade    | Fix Scheduled (Tier 1) | 2026-02-28         |
+| II-B    | `03_embeddings_creator/env.yaml` hardcoded paths | Deferred               | Post-thesis        |
+| II-B    | `03_rag_preprocessing/env.yaml` local config     | Deferred               | Post-thesis        |
+| VII     | `module_deployer/entrypoint.py` 377 LOC          | Accepted               | Post-thesis        |
+| XII     | Keine Resource Limits auf Services               | Accepted (Tier 2)      | Nach Eval-Results  |
+
+### Dead Code Policy
+
+Verzeichnisse die weder von `docker-compose.yml` referenziert, noch von Python importiert,
+noch in `docs/` dokumentiert sind, MUESSEN geloescht werden. Bereits geloescht (v1.4.0):
+- `backend_services/qdrant_db/`, `wiki_dev_mcp_server/`, `embeddings/`
+- `pipeline/02_deep_evaluation/check_models.py`, `cleanup_strategies.py`
+
+---
+
 ## Governance
 
 Diese Constitution ist das verbindliche Referenzdokument fuer alle Entwicklungsentscheidungen
@@ -651,7 +697,8 @@ Aenderungen an der Constitution erfordern:
 | 2026-01-31 | 1.1.0   | MCP Server Zuordnung korrigiert                      | MCP Server gehoert zu Stack-H (nicht Stack-G). Dev Dito ist Service Gateway (Client), nicht MCP Server (Provider). Architektur-Klarstellung hinzugefuegt. Scope Boundaries aktualisiert.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 2026-01-31 | 1.2.0   | Article II-B: Centralized YAML Config                | ALLE Konfiguration in YAML auslagern, KEINE hardcodierten Variablen. Wiki Fetcher config.py Pattern als Standard fuer alle Module.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 2026-02-12 | 1.3.0   | Thesis-Driven Governance + Expert Debate Integration | **Articles X-XIV hinzugefuegt**: Evaluation-First Development, Thesis Milestone Alignment, Resource Governance, DooD Deprecation, Inter-Stack Communication. **Thesis Alignment Section**: Forschungsfragen FF1-FF3, Jan's Deliverables J1-J8, Imre's Deliverables I1-I5, Milestone Timeline, Current Gaps. **Project Identity erweitert**: Betreuer (Stropek), Forschungsfragen, Rollentrennung (Jan=CIFT/Imre=BIF). **Workflow Gates erweitert**: Thesis-Zuordnung (FF/Deliverable-ID) mandatory. **Scope Boundaries erweitert**: Evaluation-Skripte, Test-Corpus, RAGAS-Integration. **Constitution Hierarchy**: Prioritaetsordnung Articles X/XI > I-IX > XII-XIV. Grundlage: 4 Runden Expert Debate (Architektur-Entscheidungen), Spec-Kit Best Practices, Thesis Requirements (40 Seiten/Person, Abgabe 2026-05-30). |
+| 2026-02-13 | 1.4.0   | Expert Review Amendments + Execution Mandate         | **Art X**: Execution Mandate hinzugefuegt — Ergebnis-Generierung hat absolute Prioritaet. **Art XI**: Deliverable-Status aktualisiert (J1=Complete, J2/J4/J6=Code Complete, Gaps aktualisiert). **Art II-B**: Config-Reality — Zentral vs Modul-Config unterschieden, Known Violations dokumentiert. **Art III**: Stale `qdrant_db/` Referenz durch `evaluation/` Referenz ersetzt. **Art V**: `README_ARCHITECTURE.md` → `docs/architecture.md`. **Art IX**: `docker-compose.test.yml` → `--profile test`. **Art XII**: Tier-Split (Tier 1 sofort: Pinning+Healthchecks, Tier 2 nach Profiling: Resource Limits). **Neu**: Known Violations Register + Dead Code Policy. Grundlage: 3-Experten-Review (Docker, Software Architect, Thesis Expert) + Spec-Kit Architect Cross-Review. |
 
 ---
 
-**Version**: 1.3.0 | **Ratified**: 2026-02-12 | **Last Amended**: 2026-02-12
+**Version**: 1.4.0 | **Ratified**: 2026-02-13 | **Last Amended**: 2026-02-13

@@ -172,3 +172,4 @@ coverage.xml
 *.cover
 .hypothesis/
 pipeline/03_embeddings_creator/env.yaml
+pipeline/02_deep_evaluation/env.yaml
