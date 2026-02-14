@@ -1,5 +1,18 @@
-# Unified evaluation pipeline config (eval_pipeline.py)
-# Combines retrieval, custom metrics, RAGAS, statistics, visualization, report.
+# ==============================================================================
+# Unified Evaluation Pipeline Configuration
+# ==============================================================================
+# Usage:
+#   python -m evaluation.scripts.eval_pipeline --config evaluation/experiments/full_eval.yaml
+#   python -m evaluation.scripts.eval_pipeline --config evaluation/experiments/full_eval.yaml --skip ragas
+#
+# Pipeline steps:
+#   1. Qdrant Retrieval (top-k for each ground-truth query)
+#   2. Custom Metrics (MRR, NDCG@10, P@5, MAP, Recall@10, Hit Rate)
+#   3. RAGAS Metrics (answer_correctness, faithfulness, context_precision)
+#   4. Statistical Analysis (descriptive stats, bootstrap CIs)
+#   5. Visualization (radar, bar, box, heatmap charts)
+#   6. Report Generation (Markdown + JSON with NFR-005 fields)
+# ==============================================================================
 
 experiment:
   name: "Full Eval Pipeline"

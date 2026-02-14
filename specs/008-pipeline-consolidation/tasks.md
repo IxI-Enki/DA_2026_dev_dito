@@ -226,19 +226,19 @@
 
 ### Tests for User Story 6
 
-- [ ] T082 [P] [US6] Create `pipeline/04_deploy/tests/test_deploy_qdrant.py` with direct upload tests (mocked client)
-- [ ] T083 [P] [US6] Add tests for watchdog mode (file copy) to test_deploy_qdrant.py
-- [ ] T084 [P] [US6] Add tests for `--recreate` collection behavior to test_deploy_qdrant.py
-- [ ] T085 [P] [US6] Add tests for upsert-only behavior (without --recreate) to test_deploy_qdrant.py
+- [X] T082 [P] [US6] Create `pipeline/04_deploy/tests/test_deploy_qdrant.py` with direct upload tests (mocked client)
+- [X] T083 [P] [US6] Add tests for watchdog mode (file copy) to test_deploy_qdrant.py
+- [X] T084 [P] [US6] Add tests for `--recreate` collection behavior to test_deploy_qdrant.py
+- [X] T085 [P] [US6] Add tests for upsert-only behavior (without --recreate) to test_deploy_qdrant.py
 
 ### Implementation for User Story 6
 
-- [ ] T086 [US6] Implement `pipeline/04_deploy/deploy_qdrant.py` with `QdrantDeployer` class
-- [ ] T087 [US6] Implement `deploy_direct()` method for direct Qdrant upload via `qdrant_client`
-- [ ] T088 [US6] Implement `deploy_watchdog()` method for MCP watchdog folder copy
-- [ ] T089 [US6] Add `--recreate` flag to delete and recreate existing collections
-- [ ] T090 [US6] Add `--dry-run` flag for validation without actual upload
-- [ ] T091 [US6] Verify deploy tests pass: `pytest pipeline/04_deploy/tests/test_deploy_qdrant.py`
+- [X] T086 [US6] Implement `pipeline/04_deploy/deploy_qdrant.py` with `QdrantDeployer` class
+- [X] T087 [US6] Implement `deploy_direct()` method for direct Qdrant upload via `qdrant_client`
+- [X] T088 [US6] Implement `deploy_watchdog()` method for MCP watchdog folder copy
+- [X] T089 [US6] Add `--recreate` flag to delete and recreate existing collections
+- [X] T090 [US6] Add `--dry-run` flag for validation without actual upload
+- [X] T091 [US6] Verify deploy tests pass: `pytest pipeline/04_deploy/tests/test_deploy_qdrant.py`
 
 **Checkpoint**: Embeddings uploadable to Qdrant directly or via watchdog folder
 
@@ -252,16 +252,16 @@
 
 ### Implementation for User Story 7
 
-- [ ] T092 [US7] Implement `evaluation/scripts/eval_pipeline.py` with `EvaluationPipeline` class
-- [ ] T093 [US7] Implement Step 1: Qdrant Retrieval (top-k for each ground-truth query)
-- [ ] T094 [US7] Implement Step 2: Custom Metrics calculation (MRR, NDCG, P@K, MAP, Recall@K)
-- [ ] T095 [US7] Implement Step 3: RAGAS Metrics calculation (Context P/R, Faithfulness)
-- [ ] T096 [US7] Implement Step 4: Statistical Analysis (descriptive + bootstrap CIs)
-- [ ] T097 [US7] Implement Step 5: Visualization (charts)
-- [ ] T098 [US7] Implement Step 6: Report Generation (Markdown + JSON)
-- [ ] T099 [US7] Add `--skip ragas` flag for fast iterations without LLM costs
-- [ ] T100 [US7] Implement results output to `evaluation/results/{experiment_name}_{timestamp}/`
-- [ ] T101 [US7] Add NFR-005 fields to output: config-hash, code-version
+- [X] T092 [US7] Implement `evaluation/scripts/eval_pipeline.py` with `EvaluationPipeline` class
+- [X] T093 [US7] Implement Step 1: Qdrant Retrieval (top-k for each ground-truth query)
+- [X] T094 [US7] Implement Step 2: Custom Metrics calculation (MRR, NDCG, P@K, MAP, Recall@K)
+- [X] T095 [US7] Implement Step 3: RAGAS Metrics calculation (Context P/R, Faithfulness)
+- [X] T096 [US7] Implement Step 4: Statistical Analysis (descriptive + bootstrap CIs)
+- [X] T097 [US7] Implement Step 5: Visualization (charts)
+- [X] T098 [US7] Implement Step 6: Report Generation (Markdown + JSON)
+- [X] T099 [US7] Add `--skip ragas` flag for fast iterations without LLM costs
+- [X] T100 [US7] Implement results output to `evaluation/results/{experiment_name}_{timestamp}/`
+- [X] T101 [US7] Add NFR-005 fields to output: config-hash, code-version
 
 **Checkpoint**: Single command runs full evaluation pipeline
 
@@ -271,13 +271,13 @@
 
 **Purpose**: End-to-end validation, edge case fixes, final polish
 
-- [ ] T102 Run end-to-end test: preprocessed data -> embeddings -> Qdrant -> evaluation -> report
-- [ ] T103 Verify all NFR-005 fields present in final outputs (timestamp, config-hash, code-version)
+- [X] T102 Run end-to-end test: preprocessed data -> embeddings -> Qdrant -> evaluation -> report
+- [X] T103 Verify all NFR-005 fields present in final outputs (timestamp, config-hash, code-version)
 - [ ] T104 Run full pipeline on actual LeoWiki data
-- [ ] T105 [P] Fix edge cases discovered during integration testing
-- [ ] T106 [P] Verify all existing tests still pass: `pytest evaluation/tests/test_metrics.py` (56 tests)
-- [ ] T107 [P] Run full test suite: `pytest evaluation/tests/ pipeline/03_rag_preprocessing/tests/ pipeline/04_deploy/tests/`
-- [ ] T108 Update `evaluation/experiments/full_eval.yaml` with production-ready configuration
+- [X] T105 [P] Fix edge cases discovered during integration testing
+- [X] T106 [P] Verify all existing tests still pass: `pytest evaluation/tests/test_metrics.py` (56 tests)
+- [X] T107 [P] Run full test suite: `pytest evaluation/tests/ pipeline/03_rag_preprocessing/tests/ pipeline/04_deploy/tests/`
+- [X] T108 Update `evaluation/experiments/full_eval.yaml` with production-ready configuration
 
 **Checkpoint**: Complete pipeline works end-to-end with all 8 user stories
 
