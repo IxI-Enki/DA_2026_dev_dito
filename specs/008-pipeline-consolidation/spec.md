@@ -99,7 +99,8 @@ Als Thesis-Autor will ich automatisch generierte Diagramme (Radar, Box-Plot, Hea
 
 1. **Given** Evaluationsergebnisse fuer 3+ Modelle liegen vor, **When** `python eval_visualize.py --results-dir evaluation/results/` ausgefuehrt wird, **Then** werden PNG-Dateien generiert: Radar-Chart (alle Metriken), Box-Plot (Score-Verteilungen), Bar-Chart (Modellvergleich).
 2. **Given** ein `--format svg` Flag, **When** Visualisierung laeuft, **Then** werden SVG-Dateien fuer LaTeX-Einbindung erzeugt.
-3. Alle Diagramme haben Deutsche Achsenbeschriftungen und sind Thesis-tauglich (DPI >= 300, keine informellen Farben).
+3. **Given** eine generierte PNG-Datei, **When** die Metadaten geprueft werden, **Then** ist DPI >= 300 und alle Achsenbeschriftungen sind Deutsch. Keine informellen Farben (akademisches Farbschema).
+4. **Given** eine generierte SVG-Datei, **When** sie in LaTeX via `\includegraphics` eingebunden wird, **Then** ist sie skalierbar ohne Qualitaetsverlust.
 
 ---
 

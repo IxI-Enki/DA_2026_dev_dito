@@ -16,7 +16,7 @@
 ## Path Conventions
 
 - **evaluation/**: All evaluation-related modules (metrics, RAGAS, statistics, visualization, reports)
-- **pipeline/03_rag_preprocessing/**: Preprocessing pipeline components
+- **pipeline/03_rag_preprocessing/**: RAG preprocessing pipeline components
 - **pipeline/04_deploy/**: Deployment scripts
 
 ---
@@ -26,11 +26,12 @@
 **Purpose**: Project initialization, dependency installation, and basic structure
 
 - [ ] T001 Install new dependencies: `pip install ragas datasets langchain-openai scipy matplotlib seaborn pytesseract Pillow tqdm`
-- [ ] T002 [P] Create `evaluation/ragas/__init__.py` with module docstring
-- [ ] T003 [P] Create `evaluation/statistics/__init__.py` with module docstring
-- [ ] T004 [P] Create `evaluation/visualization/__init__.py` with module docstring
-- [ ] T005 [P] Create `evaluation/reports/__init__.py` with module docstring
-- [ ] T006 [P] Create `evaluation/experiments/full_eval.yaml` with unified pipeline config skeleton
+- [ ] T002 [P] Configure Tesseract binary path in `pipeline/03_rag_preprocessing/config/env.yaml` per Article II-B
+- [ ] T003 [P] Create `evaluation/ragas/__init__.py` with module docstring
+- [ ] T004 [P] Create `evaluation/statistics/__init__.py` with module docstring
+- [ ] T005 [P] Create `evaluation/visualization/__init__.py` with module docstring
+- [ ] T006 [P] Create `evaluation/reports/__init__.py` with module docstring
+- [ ] T007 [P] Create `evaluation/experiments/full_eval.yaml` with unified pipeline config skeleton
 
 ---
 
@@ -40,8 +41,8 @@
 
 **Note**: Existing evaluation infrastructure (56 tests, 5 eval scripts, provider abstraction) remains UNTOUCHED.
 
-- [ ] T007 Extend `evaluation/config.py`: Add fields for RAGAS config (llm_base_url, llm_model, temperature) and report config (output_format, dpi)
-- [ ] T008 Verify existing tests still pass: `pytest evaluation/tests/test_metrics.py` (56 tests)
+- [ ] T008 Extend `evaluation/config.py`: Add fields for RAGAS config (llm_base_url, llm_model, temperature) and report config (output_format, dpi)
+- [ ] T009 Verify existing tests still pass: `pytest evaluation/tests/test_metrics.py` (56 tests)
 
 **Checkpoint**: Foundation ready - existing functionality preserved, config extended
 
@@ -57,17 +58,17 @@
 
 ### Tests for User Story 8
 
-- [ ] T009 [P] [US8] Create test file `evaluation/tests/test_new_metrics.py` with test cases for Recall@K
-- [ ] T010 [P] [US8] Add test cases for MAP to `evaluation/tests/test_new_metrics.py`
-- [ ] T011 [P] [US8] Add test cases for Hit Rate to `evaluation/tests/test_new_metrics.py`
+- [ ] T010 [P] [US8] Create test file `evaluation/tests/test_new_metrics.py` with test cases for Recall@K
+- [ ] T011 [P] [US8] Add test cases for MAP to `evaluation/tests/test_new_metrics.py`
+- [ ] T012 [P] [US8] Add test cases for Hit Rate to `evaluation/tests/test_new_metrics.py`
 
 ### Implementation for User Story 8
 
-- [ ] T012 [P] [US8] Implement `evaluation/metrics/recall_at_k.py` with pure function `recall_at_k()`
-- [ ] T013 [P] [US8] Implement `evaluation/metrics/mean_average_precision.py` with pure function `mean_average_precision()`
-- [ ] T014 [P] [US8] Implement `evaluation/metrics/hit_rate.py` with pure function `hit_rate()`
-- [ ] T015 [US8] Update `evaluation/metrics/__init__.py` to export new metrics
-- [ ] T016 [US8] Verify all metrics tests pass: `pytest evaluation/tests/test_new_metrics.py`
+- [ ] T013 [P] [US8] Implement `evaluation/metrics/recall_at_k.py` with pure function `recall_at_k()`
+- [ ] T014 [P] [US8] Implement `evaluation/metrics/mean_average_precision.py` with pure function `mean_average_precision()`
+- [ ] T015 [P] [US8] Implement `evaluation/metrics/hit_rate.py` with pure function `hit_rate()`
+- [ ] T016 [US8] Update `evaluation/metrics/__init__.py` to export new metrics
+- [ ] T017 [US8] Verify all metrics tests pass: `pytest evaluation/tests/test_new_metrics.py`
 
 **Checkpoint**: 56 existing + ~20 new metric tests pass
 
@@ -81,20 +82,20 @@
 
 ### Tests for User Story 2
 
-- [ ] T017 [P] [US2] Create `evaluation/tests/test_statistics.py` with tests for `bootstrap_ci()`
-- [ ] T018 [P] [US2] Add tests for `paired_test()` (t-test and Wilcoxon selection) to test_statistics.py
-- [ ] T019 [P] [US2] Add tests for `cohens_d()` with effect size interpretation to test_statistics.py
-- [ ] T020 [P] [US2] Add tests for `descriptive_stats()` to test_statistics.py
-- [ ] T021 [P] [US2] Add tests for `compare_configurations()` to test_statistics.py
+- [ ] T018 [P] [US2] Create `evaluation/tests/test_statistics.py` with tests for `bootstrap_ci()`
+- [ ] T019 [P] [US2] Add tests for `paired_test()` (t-test and Wilcoxon selection) to test_statistics.py
+- [ ] T020 [P] [US2] Add tests for `cohens_d()` with effect size interpretation to test_statistics.py
+- [ ] T021 [P] [US2] Add tests for `descriptive_stats()` to test_statistics.py
+- [ ] T022 [P] [US2] Add tests for `compare_configurations()` to test_statistics.py
 
 ### Implementation for User Story 2
 
-- [ ] T022 [US2] Implement `evaluation/statistics/statistical_analysis.py` with `StatisticalAnalyzer` class
-- [ ] T023 [US2] Implement dataclasses `BootstrapCI` and `ComparisonResult` in statistical_analysis.py
-- [ ] T024 [US2] Implement `evaluation/statistics/category_analysis.py` with per-difficulty breakdown
-- [ ] T025 [US2] Create `evaluation/scripts/eval_statistics.py` for single-run descriptive stats
-- [ ] T026 [US2] Create `evaluation/scripts/eval_compare.py` for A/B comparison with p-values and CIs
-- [ ] T027 [US2] Verify all statistics tests pass: `pytest evaluation/tests/test_statistics.py`
+- [ ] T023 [US2] Implement `evaluation/statistics/statistical_analysis.py` with `StatisticalAnalyzer` class
+- [ ] T024 [US2] Implement dataclasses `BootstrapCI` and `ComparisonResult` in statistical_analysis.py
+- [ ] T025 [US2] Implement `evaluation/statistics/category_analysis.py` with per-difficulty breakdown
+- [ ] T026 [US2] Create `evaluation/scripts/eval_statistics.py` for single-run descriptive stats
+- [ ] T027 [US2] Create `evaluation/scripts/eval_compare.py` for A/B comparison with p-values and CIs
+- [ ] T028 [US2] Verify all statistics tests pass: `pytest evaluation/tests/test_statistics.py`
 
 **Checkpoint**: Can compare two result JSONs with p-values + CIs + Cohen's d
 
@@ -108,18 +109,18 @@
 
 ### Tests for User Story 1
 
-- [ ] T028 [P] [US1] Create `evaluation/tests/test_ragas.py` with mock tests for RAGASEvaluator initialization
-- [ ] T029 [P] [US1] Add tests for RAGAS evaluate() with mocked LLM responses to test_ragas.py
-- [ ] T030 [P] [US1] Add tests for error handling (LLM timeout graceful continuation) to test_ragas.py
+- [ ] T029 [P] [US1] Create `evaluation/tests/test_ragas.py` with mock tests for RAGASEvaluator initialization
+- [ ] T030 [P] [US1] Add tests for RAGAS evaluate() with mocked LLM responses to test_ragas.py
+- [ ] T031 [P] [US1] Add tests for error handling (LLM timeout graceful continuation) to test_ragas.py
 
 ### Implementation for User Story 1
 
-- [ ] T031 [US1] Implement `evaluation/ragas/ragas_evaluator.py` with `RAGASEvaluator` class
-- [ ] T032 [US1] Configure RAGASEvaluator to use `langchain-openai` ChatOpenAI pointed at Ollama `/v1` endpoint
-- [ ] T033 [US1] Implement per-question error handling in RAGASEvaluator (log + continue on failure)
-- [ ] T034 [US1] Create `evaluation/scripts/eval_ragas.py` CLI script
-- [ ] T035 [US1] Test against Ollama on 192.168.8.3:11434 with sample ground truth questions
-- [ ] T036 [US1] Verify RAGAS tests pass: `pytest evaluation/tests/test_ragas.py`
+- [ ] T032 [US1] Implement `evaluation/ragas/ragas_evaluator.py` with `RAGASEvaluator` class
+- [ ] T033 [US1] Configure RAGASEvaluator to use `langchain-openai` ChatOpenAI pointed at Ollama `/v1` endpoint
+- [ ] T034 [US1] Implement per-question error handling in RAGASEvaluator (log + continue on failure)
+- [ ] T035 [US1] Create `evaluation/scripts/eval_ragas.py` CLI script
+- [ ] T036 [US1] Test against Ollama on 192.168.8.3:11434 with sample ground truth questions
+- [ ] T037 [US1] Verify RAGAS tests pass: `pytest evaluation/tests/test_ragas.py`
 
 **Checkpoint**: RAGAS scores (Context P/R, Faithfulness, Answer Correctness) for 50 ground-truth questions
 
@@ -133,22 +134,22 @@
 
 ### Tests for User Story 3
 
-- [ ] T037 [P] [US3] Create `evaluation/tests/test_visualization.py` with tests for `radar_chart()` output
-- [ ] T038 [P] [US3] Add tests for `box_plot()` generation to test_visualization.py
-- [ ] T039 [P] [US3] Add tests for `bar_comparison()` generation to test_visualization.py
-- [ ] T040 [P] [US3] Add tests for `heatmap()` generation to test_visualization.py
-- [ ] T041 [P] [US3] Add tests for SVG output format option to test_visualization.py
+- [ ] T038 [P] [US3] Create `evaluation/tests/test_visualization.py` with tests for `radar_chart()` output
+- [ ] T039 [P] [US3] Add tests for `box_plot()` generation to test_visualization.py
+- [ ] T040 [P] [US3] Add tests for `bar_comparison()` generation to test_visualization.py
+- [ ] T041 [P] [US3] Add tests for `heatmap()` generation to test_visualization.py
+- [ ] T042 [P] [US3] Add tests for SVG output format option to test_visualization.py
 
 ### Implementation for User Story 3
 
-- [ ] T042 [US3] Implement `evaluation/visualization/charts.py` with `EvaluationVisualizer` class
-- [ ] T043 [US3] Implement `radar_chart()` method with German labels and DPI>=300
-- [ ] T044 [US3] Implement `box_plot()` method for score distributions
-- [ ] T045 [US3] Implement `bar_comparison()` method for model comparisons
-- [ ] T046 [US3] Implement `heatmap()` method for correlation matrices
-- [ ] T047 [US3] Add `--format svg` support for LaTeX `\includegraphics`
-- [ ] T048 [US3] Create `evaluation/scripts/eval_visualize.py` CLI script
-- [ ] T049 [US3] Verify visualization tests pass: `pytest evaluation/tests/test_visualization.py`
+- [ ] T043 [US3] Implement `evaluation/visualization/charts.py` with `EvaluationVisualizer` class
+- [ ] T044 [US3] Implement `radar_chart()` method with German labels and DPI>=300
+- [ ] T045 [US3] Implement `box_plot()` method for score distributions
+- [ ] T046 [US3] Implement `bar_comparison()` method for model comparisons
+- [ ] T047 [US3] Implement `heatmap()` method for correlation matrices
+- [ ] T048 [US3] Add `--format svg` support for LaTeX `\includegraphics`
+- [ ] T049 [US3] Create `evaluation/scripts/eval_visualize.py` CLI script
+- [ ] T050 [US3] Verify visualization tests pass: `pytest evaluation/tests/test_visualization.py`
 
 **Checkpoint**: PNG/SVG charts with German labels, print-quality DPI
 
@@ -162,55 +163,56 @@
 
 ### Tests for User Story 4
 
-- [ ] T050 [P] [US4] Create `evaluation/tests/test_reports.py` with tests for report structure generation
-- [ ] T051 [P] [US4] Add tests for RAGAS + Custom metrics side-by-side table to test_reports.py
-- [ ] T052 [P] [US4] Add tests for NFR-005 fields (timestamp, config-hash, code-version) to test_reports.py
-- [ ] T053 [P] [US4] Add tests for difficulty breakdown table to test_reports.py
+- [ ] T051 [P] [US4] Create `evaluation/tests/test_reports.py` with tests for report structure generation
+- [ ] T052 [P] [US4] Add tests for RAGAS + Custom metrics side-by-side table to test_reports.py
+- [ ] T053 [P] [US4] Add tests for NFR-005 fields (timestamp, config-hash, code-version) to test_reports.py
+- [ ] T054 [P] [US4] Add tests for difficulty breakdown table to test_reports.py
 
 ### Implementation for User Story 4
 
-- [ ] T054 [US4] Implement `evaluation/reports/generator.py` with `ReportGenerator` class
-- [ ] T055 [US4] Implement Executive Summary generation in ReportGenerator
-- [ ] T056 [US4] Implement Custom Metrics table (MRR, NDCG, P@K, MAP, Recall@K) generation
-- [ ] T057 [US4] Implement RAGAS Metrics table (Context P/R, Faithfulness) generation
-- [ ] T058 [US4] Implement Statistical Comparison section (CI, p-values, effect sizes)
-- [ ] T059 [US4] Implement Difficulty Breakdown section
-- [ ] T060 [US4] Add NFR-005 reproducibility fields: timestamp, config-hash, code-version
-- [ ] T061 [US4] Create `evaluation/scripts/eval_report.py` CLI script
-- [ ] T062 [US4] Verify report tests pass: `pytest evaluation/tests/test_reports.py`
+- [ ] T055 [US4] Implement `evaluation/reports/generator.py` with `ReportGenerator` class
+- [ ] T056 [US4] Implement Executive Summary generation in ReportGenerator
+- [ ] T057 [US4] Implement Custom Metrics table (MRR, NDCG, P@K, MAP, Recall@K) generation
+- [ ] T058 [US4] Implement RAGAS Metrics table (Context P/R, Faithfulness) generation
+- [ ] T059 [US4] Implement Statistical Comparison section (CI, p-values, effect sizes)
+- [ ] T060 [US4] Implement Difficulty Breakdown section
+- [ ] T061 [US4] Add NFR-005 reproducibility fields: timestamp, config-hash, code-version
+- [ ] T062 [US4] Create `evaluation/scripts/eval_report.py` CLI script
+- [ ] T063 [US4] Verify report tests pass: `pytest evaluation/tests/test_reports.py`
 
 **Checkpoint**: Markdown + JSON reports from result JSONs with all required sections
 
 ---
 
-## Phase 8: User Story 5 - Preprocessing Pipeline (Priority: P1-Critical)
+## Phase 8: User Story 5 - RAG Preprocessing Pipeline (Priority: P1-Critical)
 
-**Goal**: Complete preprocessing: DokuWiki->Markdown, strategy routing, OCR, metadata enrichment, export
+**Goal**: Complete RAG preprocessing: DokuWiki->Markdown, strategy routing, OCR, metadata enrichment, export
 
 **Independent Test**: `python pipeline/03_rag_preprocessing/run_preprocessing.py` converts `data/fetched/` to `data/preprocessed/`
 
 ### Tests for User Story 5
 
-- [ ] T063 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_strategy_loader.py` with StrategyLoader tests
-- [ ] T064 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_media_processor.py` with PDF/OCR tests
-- [ ] T065 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_exporter.py` with export tests
-- [ ] T066 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_page_processor.py` with DokuWiki conversion tests
-- [ ] T067 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_metadata_enricher.py` with freshness/access tests
+- [ ] T064 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_strategy_loader.py` with StrategyLoader tests
+- [ ] T065 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_media_processor.py` with PDF/OCR tests
+- [ ] T066 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_exporter.py` with export tests
+- [ ] T067 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_page_processor.py` with DokuWiki conversion tests
+- [ ] T068 [P] [US5] Create `pipeline/03_rag_preprocessing/tests/test_metadata_enricher.py` with freshness/access tests
 
 ### Implementation for User Story 5
 
-- [ ] T068 [US5] Implement `pipeline/03_rag_preprocessing/strategy_loader.py` with `StrategyLoader` class
-- [ ] T069 [US5] Implement `ContentType` enum and `PageStrategy` dataclass in strategy_loader.py
-- [ ] T070 [US5] Implement `pipeline/03_rag_preprocessing/media_processor.py` with `MediaProcessor` class
-- [ ] T071 [US5] Implement `process_pdf()` method with text extraction and OCR fallback
-- [ ] T072 [US5] Implement `process_image()` method with Tesseract OCR
-- [ ] T073 [US5] Implement `pipeline/03_rag_preprocessing/exporter.py` with `Exporter` class
-- [ ] T074 [US5] Implement export to `data/preprocessed/preprocessed_at_{timestamp}/` with YAML frontmatter
-- [ ] T075 [US5] Modify `pipeline/03_rag_preprocessing/page_processor.py`: add strategy-aware routing
-- [ ] T076 [US5] Modify `pipeline/03_rag_preprocessing/metadata_enricher.py`: add `freshness_score` field
-- [ ] T077 [US5] Modify `pipeline/03_rag_preprocessing/metadata_enricher.py`: add `access_level` field
-- [ ] T078 [US5] Create `pipeline/03_rag_preprocessing/run_preprocessing.py` main orchestrator script
-- [ ] T079 [US5] Verify preprocessing tests pass: `pytest pipeline/03_rag_preprocessing/tests/`
+- [ ] T069 [US5] Implement `pipeline/03_rag_preprocessing/strategy_loader.py` with `StrategyLoader` class
+- [ ] T070 [US5] Implement `ContentType` enum and `PageStrategy` dataclass in strategy_loader.py
+- [ ] T071 [US5] Implement `pipeline/03_rag_preprocessing/media_processor.py` with `MediaProcessor` class
+- [ ] T072 [US5] Implement `process_pdf()` method with text extraction and OCR fallback
+- [ ] T073 [US5] Implement `process_image()` method with Tesseract OCR (path from `config/env.yaml`)
+- [ ] T074 [US5] Implement `pipeline/03_rag_preprocessing/exporter.py` with `Exporter` class
+- [ ] T075 [US5] Implement export to `data/preprocessed/preprocessed_at_{timestamp}/` with YAML frontmatter
+- [ ] T076 [US5] Modify `pipeline/03_rag_preprocessing/page_processor.py`: add strategy-aware routing
+- [ ] T077 [US5] Modify `pipeline/03_rag_preprocessing/metadata_enricher.py`: add `freshness_score` field
+- [ ] T078 [US5] Modify `pipeline/03_rag_preprocessing/metadata_enricher.py`: add `access_level` field
+- [ ] T079 [US5] Create `pipeline/03_rag_preprocessing/run_preprocessing.py` main orchestrator script
+- [ ] T080 [US5] Verify preprocessing tests pass: `pytest pipeline/03_rag_preprocessing/tests/`
+- [ ] T081 [US5] Add regression test for DokuWiki syntax conversion accuracy (assert < 1% Wiki syntax markers remaining in output)
 
 **Checkpoint**: `data/fetched/` -> `data/preprocessed/` full conversion with metadata
 
@@ -224,19 +226,19 @@
 
 ### Tests for User Story 6
 
-- [ ] T080 [P] [US6] Create `pipeline/04_deploy/tests/test_deploy_qdrant.py` with direct upload tests (mocked client)
-- [ ] T081 [P] [US6] Add tests for watchdog mode (file copy) to test_deploy_qdrant.py
-- [ ] T082 [P] [US6] Add tests for `--recreate` collection behavior to test_deploy_qdrant.py
-- [ ] T083 [P] [US6] Add tests for upsert-only behavior (without --recreate) to test_deploy_qdrant.py
+- [ ] T082 [P] [US6] Create `pipeline/04_deploy/tests/test_deploy_qdrant.py` with direct upload tests (mocked client)
+- [ ] T083 [P] [US6] Add tests for watchdog mode (file copy) to test_deploy_qdrant.py
+- [ ] T084 [P] [US6] Add tests for `--recreate` collection behavior to test_deploy_qdrant.py
+- [ ] T085 [P] [US6] Add tests for upsert-only behavior (without --recreate) to test_deploy_qdrant.py
 
 ### Implementation for User Story 6
 
-- [ ] T084 [US6] Implement `pipeline/04_deploy/deploy_qdrant.py` with `QdrantDeployer` class
-- [ ] T085 [US6] Implement `deploy_direct()` method for direct Qdrant upload via `qdrant_client`
-- [ ] T086 [US6] Implement `deploy_watchdog()` method for MCP watchdog folder copy
-- [ ] T087 [US6] Add `--recreate` flag to delete and recreate existing collections
-- [ ] T088 [US6] Add `--dry-run` flag for validation without actual upload
-- [ ] T089 [US6] Verify deploy tests pass: `pytest pipeline/04_deploy/tests/test_deploy_qdrant.py`
+- [ ] T086 [US6] Implement `pipeline/04_deploy/deploy_qdrant.py` with `QdrantDeployer` class
+- [ ] T087 [US6] Implement `deploy_direct()` method for direct Qdrant upload via `qdrant_client`
+- [ ] T088 [US6] Implement `deploy_watchdog()` method for MCP watchdog folder copy
+- [ ] T089 [US6] Add `--recreate` flag to delete and recreate existing collections
+- [ ] T090 [US6] Add `--dry-run` flag for validation without actual upload
+- [ ] T091 [US6] Verify deploy tests pass: `pytest pipeline/04_deploy/tests/test_deploy_qdrant.py`
 
 **Checkpoint**: Embeddings uploadable to Qdrant directly or via watchdog folder
 
@@ -250,16 +252,16 @@
 
 ### Implementation for User Story 7
 
-- [ ] T090 [US7] Implement `evaluation/scripts/eval_pipeline.py` with `EvaluationPipeline` class
-- [ ] T091 [US7] Implement Step 1: Qdrant Retrieval (top-k for each ground-truth query)
-- [ ] T092 [US7] Implement Step 2: Custom Metrics calculation (MRR, NDCG, P@K, MAP, Recall@K)
-- [ ] T093 [US7] Implement Step 3: RAGAS Metrics calculation (Context P/R, Faithfulness)
-- [ ] T094 [US7] Implement Step 4: Statistical Analysis (descriptive + bootstrap CIs)
-- [ ] T095 [US7] Implement Step 5: Visualization (charts)
-- [ ] T096 [US7] Implement Step 6: Report Generation (Markdown + JSON)
-- [ ] T097 [US7] Add `--skip ragas` flag for fast iterations without LLM costs
-- [ ] T098 [US7] Implement results output to `evaluation/results/{experiment_name}_{timestamp}/`
-- [ ] T099 [US7] Add NFR-005 fields to output: config-hash, code-version
+- [ ] T092 [US7] Implement `evaluation/scripts/eval_pipeline.py` with `EvaluationPipeline` class
+- [ ] T093 [US7] Implement Step 1: Qdrant Retrieval (top-k for each ground-truth query)
+- [ ] T094 [US7] Implement Step 2: Custom Metrics calculation (MRR, NDCG, P@K, MAP, Recall@K)
+- [ ] T095 [US7] Implement Step 3: RAGAS Metrics calculation (Context P/R, Faithfulness)
+- [ ] T096 [US7] Implement Step 4: Statistical Analysis (descriptive + bootstrap CIs)
+- [ ] T097 [US7] Implement Step 5: Visualization (charts)
+- [ ] T098 [US7] Implement Step 6: Report Generation (Markdown + JSON)
+- [ ] T099 [US7] Add `--skip ragas` flag for fast iterations without LLM costs
+- [ ] T100 [US7] Implement results output to `evaluation/results/{experiment_name}_{timestamp}/`
+- [ ] T101 [US7] Add NFR-005 fields to output: config-hash, code-version
 
 **Checkpoint**: Single command runs full evaluation pipeline
 
@@ -269,13 +271,13 @@
 
 **Purpose**: End-to-end validation, edge case fixes, final polish
 
-- [ ] T100 Run end-to-end test: preprocessed data -> embeddings -> Qdrant -> evaluation -> report
-- [ ] T101 Verify all NFR-005 fields present in final outputs (timestamp, config-hash, code-version)
-- [ ] T102 Run full pipeline on actual LeoWiki data
-- [ ] T103 [P] Fix edge cases discovered during integration testing
-- [ ] T104 [P] Verify all existing tests still pass: `pytest evaluation/tests/test_metrics.py` (56 tests)
-- [ ] T105 [P] Run full test suite: `pytest evaluation/tests/ pipeline/03_rag_preprocessing/tests/ pipeline/04_deploy/tests/`
-- [ ] T106 Update `evaluation/experiments/full_eval.yaml` with production-ready configuration
+- [ ] T102 Run end-to-end test: preprocessed data -> embeddings -> Qdrant -> evaluation -> report
+- [ ] T103 Verify all NFR-005 fields present in final outputs (timestamp, config-hash, code-version)
+- [ ] T104 Run full pipeline on actual LeoWiki data
+- [ ] T105 [P] Fix edge cases discovered during integration testing
+- [ ] T106 [P] Verify all existing tests still pass: `pytest evaluation/tests/test_metrics.py` (56 tests)
+- [ ] T107 [P] Run full test suite: `pytest evaluation/tests/ pipeline/03_rag_preprocessing/tests/ pipeline/04_deploy/tests/`
+- [ ] T108 Update `evaluation/experiments/full_eval.yaml` with production-ready configuration
 
 **Checkpoint**: Complete pipeline works end-to-end with all 8 user stories
 
@@ -290,7 +292,7 @@
 - **User Stories (Phases 3-10)**: All depend on Foundational phase completion
   - US8 (Phase 3): Pure metrics, no external dependencies - START HERE
   - US2 (Phase 4): Depends on T008 (config extension)
-  - US1 (Phase 5): Depends on T007 (RAGAS config fields)
+  - US1 (Phase 5): Depends on T008 (RAGAS config fields)
   - US3 (Phase 6): Depends on US2 (uses statistical results)
   - US4 (Phase 7): Depends on US1, US2, US3 (includes all metric types)
   - US5 (Phase 8): Independent of evaluation phases
@@ -300,16 +302,16 @@
 
 ### User Story Dependencies
 
-| Story | Depends On | Can Run In Parallel With |
-|-------|------------|--------------------------|
-| US8 (Metrics) | Foundational | - |
-| US2 (Statistics) | Foundational | US8, US5, US6 |
-| US1 (RAGAS) | Foundational | US8, US2, US5, US6 |
-| US3 (Visualization) | US2 | US5, US6 |
-| US4 (Reports) | US1, US2, US3 | US5, US6 |
-| US5 (Preprocessing) | Foundational | US8, US2, US1, US3, US4 |
-| US6 (Qdrant Deploy) | Foundational | US8, US2, US1, US3, US4, US5 |
-| US7 (Orchestrator) | US1, US2, US3, US4 | - |
+| Story                   | Depends On         | Can Run In Parallel With     |
+| ----------------------- | ------------------ | ---------------------------- |
+| US8 (Metrics)           | Foundational       | -                            |
+| US2 (Statistics)        | Foundational       | US8, US5, US6                |
+| US1 (RAGAS)             | Foundational       | US8, US2, US5, US6           |
+| US3 (Visualization)     | US2                | US5, US6                     |
+| US4 (Reports)           | US1, US2, US3      | US5, US6                     |
+| US5 (RAG Preprocessing) | Foundational       | US8, US2, US1, US3, US4      |
+| US6 (Qdrant Deploy)     | Foundational       | US8, US2, US1, US3, US4, US5 |
+| US7 (Orchestrator)      | US1, US2, US3, US4 | -                            |
 
 ### Within Each User Story
 
@@ -322,43 +324,43 @@
 
 **Phase 1 (Setup)**:
 ```
-T002, T003, T004, T005, T006 -- all __init__.py files
+T002, T003, T004, T005, T006, T007 -- all config/init files
 ```
 
 **Phase 3 (US8 - Metrics)**:
 ```
-T009, T010, T011 -- all test cases
-T012, T013, T014 -- all metric implementations
+T010, T011, T012 -- all test cases
+T013, T014, T015 -- all metric implementations
 ```
 
 **Phase 4 (US2 - Statistics)**:
 ```
-T017, T018, T019, T020, T021 -- all test cases
+T018, T019, T020, T021, T022 -- all test cases
 ```
 
 **Phase 5 (US1 - RAGAS)**:
 ```
-T028, T029, T030 -- all test cases
+T029, T030, T031 -- all test cases
 ```
 
 **Phase 6 (US3 - Visualization)**:
 ```
-T037, T038, T039, T040, T041 -- all test cases
+T038, T039, T040, T041, T042 -- all test cases
 ```
 
 **Phase 7 (US4 - Reports)**:
 ```
-T050, T051, T052, T053 -- all test cases
+T051, T052, T053, T054 -- all test cases
 ```
 
-**Phase 8 (US5 - Preprocessing)**:
+**Phase 8 (US5 - RAG Preprocessing)**:
 ```
-T063, T064, T065, T066, T067 -- all test files
+T064, T065, T066, T067, T068 -- all test files
 ```
 
 **Phase 9 (US6 - Qdrant Deploy)**:
 ```
-T080, T081, T082, T083 -- all test cases
+T082, T083, T084, T085 -- all test cases
 ```
 
 ---
@@ -367,14 +369,14 @@ T080, T081, T082, T083 -- all test cases
 
 ```bash
 # Launch all tests together:
-Task T009: "Create test_new_metrics.py with Recall@K tests"
-Task T010: "Add MAP tests to test_new_metrics.py"
-Task T011: "Add Hit Rate tests to test_new_metrics.py"
+Task T010: "Create test_new_metrics.py with Recall@K tests"
+Task T011: "Add MAP tests to test_new_metrics.py"
+Task T012: "Add Hit Rate tests to test_new_metrics.py"
 
 # Launch all metric implementations together:
-Task T012: "Implement evaluation/metrics/recall_at_k.py"
-Task T013: "Implement evaluation/metrics/mean_average_precision.py"
-Task T014: "Implement evaluation/metrics/hit_rate.py"
+Task T013: "Implement evaluation/metrics/recall_at_k.py"
+Task T014: "Implement evaluation/metrics/mean_average_precision.py"
+Task T015: "Implement evaluation/metrics/hit_rate.py"
 ```
 
 ---
@@ -400,7 +402,7 @@ Task T014: "Implement evaluation/metrics/hit_rate.py"
 3. US2 (Statistics) -> A/B comparisons with p-values
 4. US1 (RAGAS) -> LLM-as-Judge scores for 50 questions
 5. US3 + US4 (Viz + Reports) -> Thesis-quality outputs
-6. US5 + US6 (Preprocessing + Deploy) -> Full pipeline
+6. US5 + US6 (RAG Preprocessing + Deploy) -> Full pipeline
 7. US7 (Orchestrator) -> Single command runs all
 
 ### Parallel Team Strategy
@@ -416,23 +418,23 @@ With multiple developers:
 
 ## Summary
 
-| Metric | Count |
-|--------|-------|
-| **Total Tasks** | 106 |
-| **Phase 1 (Setup)** | 6 |
-| **Phase 2 (Foundational)** | 2 |
-| **Phase 3 (US8 - Metrics)** | 8 |
-| **Phase 4 (US2 - Statistics)** | 11 |
-| **Phase 5 (US1 - RAGAS)** | 9 |
-| **Phase 6 (US3 - Visualization)** | 13 |
-| **Phase 7 (US4 - Reports)** | 13 |
-| **Phase 8 (US5 - Preprocessing)** | 17 |
-| **Phase 9 (US6 - Qdrant Deploy)** | 10 |
-| **Phase 10 (US7 - Orchestrator)** | 10 |
-| **Phase 11 (Polish)** | 7 |
+| Metric                                | Count |
+| ------------------------------------- | ----- |
+| **Total Tasks**                       | 108   |
+| **Phase 1 (Setup)**                   | 7     |
+| **Phase 2 (Foundational)**            | 2     |
+| **Phase 3 (US8 - Metrics)**           | 8     |
+| **Phase 4 (US2 - Statistics)**        | 11    |
+| **Phase 5 (US1 - RAGAS)**             | 9     |
+| **Phase 6 (US3 - Visualization)**     | 13    |
+| **Phase 7 (US4 - Reports)**           | 13    |
+| **Phase 8 (US5 - RAG Preprocessing)** | 18    |
+| **Phase 9 (US6 - Qdrant Deploy)**     | 10    |
+| **Phase 10 (US7 - Orchestrator)**     | 10    |
+| **Phase 11 (Polish)**                 | 7     |
 
-**Parallel Opportunities**: 44 tasks marked [P]
+**Parallel Opportunities**: 46 tasks marked [P]
 
-**MVP Scope**: Phases 1-5 (US8, US2, US1) = 36 tasks
+**MVP Scope**: Phases 1-5 (US8, US2, US1) = 37 tasks
 
 **Suggested MVP**: Complete through Phase 5 (RAGAS) to have statistical analysis + LLM-as-Judge available for thesis writing.

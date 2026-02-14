@@ -308,6 +308,45 @@ Existing `MetadataEnricher` in `pipeline/03_rag_preprocessing/metadata_enricher.
 - `freshness_score`: Based on last_modified date vs current date (fresh/recent/outdated/archived)
 - `access_level`: Based on namespace (teacher_only if in teacher namespace, else public)
 
+**Modifications to existing methods** (additions only, no existing behavior changed):
+
+```python
+# pipeline/03_rag_preprocessing/metadata_enricher.py -- NEW methods added to existing class
+
+def calculate_freshness_score(self, last_modified: str) -> str:
+    """Classify page freshness based on age relative to current date.
+
+    Returns: 'fresh' (<30d), 'recent' (<180d), 'outdated' (<365d), 'archived' (>365d)
+    """
+    ...
+
+def determine_access_level(self, namespace: str) -> str:
+    """Determine access level based on DokuWiki namespace.
+
+    Returns: 'teacher_only' if namespace starts with 'teacher:' or 'lehrer:', else 'public'
+    """
+    ...
+```
+
+#### 5a-b. PageProcessor Enhancement
+
+Existing `PageProcessor` in `pipeline/03_rag_preprocessing/page_processor.py` gets strategy-aware routing:
+
+```python
+# pipeline/03_rag_preprocessing/page_processor.py -- NEW method added to existing class
+
+def process_with_strategy(self, page: dict, strategy: PageStrategy) -> dict:
+    """Process a page using its assigned content strategy.
+
+    - KNOWLEDGE pages: full markdown conversion + entity preservation
+    - NEWS pages: extract date + summary, lighter processing
+    - PORTAL pages: extract links + structure, minimal text
+    - FORM pages: preserve form fields as structured data
+    - ARCHIVED pages: minimal processing, mark as low-priority
+    """
+    ...
+```
+
 #### 5c. Media Processor
 
 ```python
@@ -330,7 +369,7 @@ class MediaProcessor:
         ...
 ```
 
-**Dependencies**: `pytesseract` (requires Tesseract binary at `C:/Program Files/Tesseract-OCR/tesseract.exe`), `Pillow`, `PyPDF2` or `pymupdf`.
+**Dependencies**: `pytesseract` (requires Tesseract binary, path configured via `config/env.yaml` per Article II-B), `Pillow`, `PyPDF2` or `pymupdf`.
 
 #### 5d. Exporter
 
