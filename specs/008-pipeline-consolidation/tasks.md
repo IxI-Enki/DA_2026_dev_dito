@@ -25,13 +25,13 @@
 
 **Purpose**: Project initialization, dependency installation, and basic structure
 
-- [ ] T001 Install new dependencies: `pip install ragas datasets langchain-openai scipy matplotlib seaborn pytesseract Pillow tqdm`
-- [ ] T002 [P] Configure Tesseract binary path in `pipeline/03_rag_preprocessing/config/env.yaml` per Article II-B
-- [ ] T003 [P] Create `evaluation/ragas/__init__.py` with module docstring
-- [ ] T004 [P] Create `evaluation/statistics/__init__.py` with module docstring
-- [ ] T005 [P] Create `evaluation/visualization/__init__.py` with module docstring
-- [ ] T006 [P] Create `evaluation/reports/__init__.py` with module docstring
-- [ ] T007 [P] Create `evaluation/experiments/full_eval.yaml` with unified pipeline config skeleton
+- [x] T001 Install new dependencies: `pip install ragas datasets langchain-openai scipy matplotlib seaborn pytesseract Pillow tqdm`
+- [x] T002 [P] Configure Tesseract binary path in `pipeline/03_rag_preprocessing/config/env.yaml` per Article II-B
+- [x] T003 [P] Create `evaluation/ragas/__init__.py` with module docstring
+- [x] T004 [P] Create `evaluation/statistics/__init__.py` with module docstring
+- [x] T005 [P] Create `evaluation/visualization/__init__.py` with module docstring
+- [x] T006 [P] Create `evaluation/reports/__init__.py` with module docstring
+- [x] T007 [P] Create `evaluation/experiments/full_eval.yaml` with unified pipeline config skeleton
 
 ---
 
@@ -41,8 +41,8 @@
 
 **Note**: Existing evaluation infrastructure (56 tests, 5 eval scripts, provider abstraction) remains UNTOUCHED.
 
-- [ ] T008 Extend `evaluation/config.py`: Add fields for RAGAS config (llm_base_url, llm_model, temperature) and report config (output_format, dpi)
-- [ ] T009 Verify existing tests still pass: `pytest evaluation/tests/test_metrics.py` (56 tests)
+- [x] T008 Extend `evaluation/config.py`: Add fields for RAGAS config (llm_base_url, llm_model, temperature) and report config (output_format, dpi)
+- [x] T009 Verify existing tests still pass: `pytest evaluation/tests/test_metrics.py` (56 tests)
 
 **Checkpoint**: Foundation ready - existing functionality preserved, config extended
 
@@ -58,17 +58,17 @@
 
 ### Tests for User Story 8
 
-- [ ] T010 [P] [US8] Create test file `evaluation/tests/test_new_metrics.py` with test cases for Recall@K
-- [ ] T011 [P] [US8] Add test cases for MAP to `evaluation/tests/test_new_metrics.py`
-- [ ] T012 [P] [US8] Add test cases for Hit Rate to `evaluation/tests/test_new_metrics.py`
+- [x] T010 [P] [US8] Create test file `evaluation/tests/test_new_metrics.py` with test cases for Recall@K
+- [x] T011 [P] [US8] Add test cases for MAP to `evaluation/tests/test_new_metrics.py`
+- [x] T012 [P] [US8] Add test cases for Hit Rate to `evaluation/tests/test_new_metrics.py`
 
 ### Implementation for User Story 8
 
-- [ ] T013 [P] [US8] Implement `evaluation/metrics/recall_at_k.py` with pure function `recall_at_k()`
-- [ ] T014 [P] [US8] Implement `evaluation/metrics/mean_average_precision.py` with pure function `mean_average_precision()`
-- [ ] T015 [P] [US8] Implement `evaluation/metrics/hit_rate.py` with pure function `hit_rate()`
-- [ ] T016 [US8] Update `evaluation/metrics/__init__.py` to export new metrics
-- [ ] T017 [US8] Verify all metrics tests pass: `pytest evaluation/tests/test_new_metrics.py`
+- [x] T013 [P] [US8] Implement `evaluation/metrics/recall_at_k.py` with pure function `recall_at_k()`
+- [x] T014 [P] [US8] Implement `evaluation/metrics/mean_average_precision.py` with pure function `mean_average_precision()`
+- [x] T015 [P] [US8] Implement `evaluation/metrics/hit_rate.py` with pure function `hit_rate()`
+- [x] T016 [US8] Update `evaluation/metrics/__init__.py` to export new metrics
+- [x] T017 [US8] Verify all metrics tests pass: `pytest evaluation/tests/test_new_metrics.py`
 
 **Checkpoint**: 56 existing + ~20 new metric tests pass
 
@@ -82,20 +82,20 @@
 
 ### Tests for User Story 2
 
-- [ ] T018 [P] [US2] Create `evaluation/tests/test_statistics.py` with tests for `bootstrap_ci()`
-- [ ] T019 [P] [US2] Add tests for `paired_test()` (t-test and Wilcoxon selection) to test_statistics.py
-- [ ] T020 [P] [US2] Add tests for `cohens_d()` with effect size interpretation to test_statistics.py
-- [ ] T021 [P] [US2] Add tests for `descriptive_stats()` to test_statistics.py
-- [ ] T022 [P] [US2] Add tests for `compare_configurations()` to test_statistics.py
+- [x] T018 [P] [US2] Create `evaluation/tests/test_statistics.py` with tests for `bootstrap_ci()`
+- [x] T019 [P] [US2] Add tests for `paired_test()` (t-test and Wilcoxon selection) to test_statistics.py
+- [x] T020 [P] [US2] Add tests for `cohens_d()` with effect size interpretation to test_statistics.py
+- [x] T021 [P] [US2] Add tests for `descriptive_stats()` to test_statistics.py
+- [x] T022 [P] [US2] Add tests for `compare_configurations()` to test_statistics.py
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Implement `evaluation/statistics/statistical_analysis.py` with `StatisticalAnalyzer` class
-- [ ] T024 [US2] Implement dataclasses `BootstrapCI` and `ComparisonResult` in statistical_analysis.py
-- [ ] T025 [US2] Implement `evaluation/statistics/category_analysis.py` with per-difficulty breakdown
-- [ ] T026 [US2] Create `evaluation/scripts/eval_statistics.py` for single-run descriptive stats
-- [ ] T027 [US2] Create `evaluation/scripts/eval_compare.py` for A/B comparison with p-values and CIs
-- [ ] T028 [US2] Verify all statistics tests pass: `pytest evaluation/tests/test_statistics.py`
+- [x] T023 [US2] Implement `evaluation/statistics/statistical_analysis.py` with `StatisticalAnalyzer` class
+- [x] T024 [US2] Implement dataclasses `BootstrapCI` and `ComparisonResult` in statistical_analysis.py
+- [x] T025 [US2] Implement `evaluation/statistics/category_analysis.py` with per-difficulty breakdown
+- [x] T026 [US2] Create `evaluation/scripts/eval_statistics.py` for single-run descriptive stats
+- [x] T027 [US2] Create `evaluation/scripts/eval_compare.py` for A/B comparison with p-values and CIs
+- [x] T028 [US2] Verify all statistics tests pass: `pytest evaluation/tests/test_statistics.py`
 
 **Checkpoint**: Can compare two result JSONs with p-values + CIs + Cohen's d
 

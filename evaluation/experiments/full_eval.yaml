@@ -1,0 +1,44 @@
+# Unified evaluation pipeline config (eval_pipeline.py)
+# Combines retrieval, custom metrics, RAGAS, statistics, visualization, report.
+
+experiment:
+  name: "Full Eval Pipeline"
+  type: model_comparison
+  thesis_id: "J2/FF3"
+
+embedding:
+  provider: ollama
+  model: "bge-m3"
+  dimensions: 1024
+
+chunking:
+  strategy: content_aware
+  chunk_size: 512
+  chunk_overlap: 50
+
+retrieval:
+  mode: dense
+  top_k: 10
+  collection_prefix: "eval_"
+
+ground_truth:
+  file: "ground_truth/leowiki_qa_50_verified.json"
+
+metrics:
+  - mrr
+  - precision_at_5
+  - ndcg_at_10
+  - recall_at_k
+  - mean_average_precision
+  - hit_rate
+
+# RAGAS (LLM-as-Judge) - optional, skip with --skip ragas
+ragas:
+  llm_base_url: "http://192.168.8.3:11434/v1"
+  model: "llama3.2"
+  temperature: 0.0
+
+# Report and visualization
+report:
+  output_format: markdown
+  dpi: 300

@@ -97,9 +97,15 @@ class PreprocessingConfig:
     
     @classmethod
     def from_yaml(cls, config_path: Optional[Path] = None) -> 'PreprocessingConfig':
-        """Load configuration from YAML file."""
+        """Load configuration from YAML file.
+
+        Prefers config/env.yaml (Article II-B), then env.yaml in module root.
+        """
         if config_path is None:
-            config_path = Path(__file__).parent / 'env.yaml'
+            base = Path(__file__).parent
+            config_path = base / 'config' / 'env.yaml'
+            if not config_path.exists():
+                config_path = base / 'env.yaml'
         
         raw_config = load_yaml(config_path)
         config = resolve_variables(raw_config)

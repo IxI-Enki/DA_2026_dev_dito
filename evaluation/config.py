@@ -57,6 +57,13 @@ class ExperimentConfig:
     ground_truth_file: str = "ground_truth/leowiki_qa_50_verified.json"
     metrics: tuple[str, ...] = ("mrr", "precision_at_5", "ndcg_at_10")
     config_hash: str = ""
+    # RAGAS (LLM-as-Judge) - optional
+    llm_base_url: str = "http://192.168.8.3:11434/v1"
+    llm_model: str = "llama3.2"
+    ragas_temperature: float = 0.0
+    # Report and visualization
+    output_format: str = "markdown"
+    dpi: int = 300
 
 
 def load_experiment_config(config_path: str | Path) -> ExperimentConfig:
@@ -86,6 +93,8 @@ def load_experiment_config(config_path: str | Path) -> ExperimentConfig:
     retrieval = raw.get("retrieval", {})
     ground_truth = raw.get("ground_truth", {})
     metrics_list = raw.get("metrics", ["mrr", "precision_at_5", "ndcg_at_10"])
+    ragas = raw.get("ragas", {})
+    report = raw.get("report", {})
 
     return ExperimentConfig(
         name=experiment.get("name", path.stem),
@@ -104,6 +113,11 @@ def load_experiment_config(config_path: str | Path) -> ExperimentConfig:
         ),
         metrics=tuple(metrics_list),
         config_hash=f"sha256:{config_hash}",
+        llm_base_url=ragas.get("llm_base_url", "http://192.168.8.3:11434/v1"),
+        llm_model=ragas.get("model", "llama3.2"),
+        ragas_temperature=float(ragas.get("temperature", 0.0)),
+        output_format=report.get("output_format", "markdown"),
+        dpi=int(report.get("dpi", 300)),
     )
 
 
