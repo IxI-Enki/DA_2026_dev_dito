@@ -30,8 +30,8 @@ test_corpus:
   media_ratio: 0.2
   # Auto-exclude pages below these thresholds (from analyze_manifest)
   auto_exclude_thresholds:
-    min_readiness_score: 0.3
-    min_connectivity: 1
+    min_readiness_score: 0.15
+    min_connectivity: 0  # 1 when manifest has link_count/backlink_count; fetcher does not populate yet
 
 document_quality:
   readability_min_flesch: 20
