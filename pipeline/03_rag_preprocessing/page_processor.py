@@ -19,8 +19,11 @@ DokuWiki Syntax Reference:
 import re
 import logging
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, TYPE_CHECKING
 from dataclasses import dataclass
+
+if TYPE_CHECKING:
+    from strategy_loader import PageStrategy
 
 logger = logging.getLogger(__name__)
 

@@ -44,15 +44,6 @@ class PageStrategy:
     noise_level: str
 
 
-# Default strategy for pages without evaluation data
-_DEFAULT_STRATEGY = dict(
-    content_type=ContentType.KNOWLEDGE,
-    rag_readiness=0.5,
-    recommended_chunk_size=512,
-    noise_level="medium",
-)
-
-
 class StrategyLoader:
     """Loads per-page processing strategies from Deep Evaluation output."""
 
@@ -110,4 +101,10 @@ class StrategyLoader:
         """Get strategy for a page, returning a sensible default if unknown."""
         if page_id in self._strategies:
             return self._strategies[page_id]
-        return PageStrategy(page_id=page_id, **_DEFAULT_STRATEGY)
+        return PageStrategy(
+            page_id=page_id,
+            content_type=ContentType.KNOWLEDGE,
+            rag_readiness=0.5,
+            recommended_chunk_size=512,
+            noise_level="medium",
+        )

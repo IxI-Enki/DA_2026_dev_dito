@@ -101,6 +101,11 @@ class QdrantDeployer:
                         len(records), collection_name, vec_dim)
             return len(records)
 
+        if self.client is None:
+            raise RuntimeError(
+                "Qdrant client not available; install qdrant-client for direct upload."
+            )
+
         # Collection management (T089)
         existing = {
             c.name

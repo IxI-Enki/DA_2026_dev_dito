@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import math
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import matplotlib
 matplotlib.use("Agg")  # non-interactive backend; must be before pyplot import
@@ -99,6 +99,9 @@ class EvaluationVisualizer:
         angles += angles[:1]
 
         fig, ax = plt.subplots(figsize=(7, 7), subplot_kw={"polar": True})
+        from matplotlib.projections.polar import PolarAxes
+
+        ax = cast(PolarAxes, ax)
         colours = sns.color_palette("husl", len(models))
         for i, model in enumerate(models):
             values = [results[model].get(m, 0.0) for m in metrics]

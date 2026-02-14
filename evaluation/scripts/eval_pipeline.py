@@ -124,7 +124,7 @@ class EvaluationPipeline:
                         limit=self.config.top_k,
                     )
                     hits = [
-                        {"page_id": r.payload.get("page_id", ""), "score": r.score}
+                        {"page_id": (r.payload or {}).get("page_id", ""), "score": r.score}
                         for r in results
                     ]
                 except Exception:
@@ -162,8 +162,11 @@ class EvaluationPipeline:
     def _step_custom_metrics(self) -> None:
         """Calculate MRR, NDCG, P@K, MAP, Recall@K."""
         logger.info("[Step 2/6] Custom Metrics")
-        from evaluation.metrics.retrieval import reciprocal_rank, precision_at_k, ndcg_at_k
-        from evaluation.metrics.new_metrics import recall_at_k, average_precision
+        from evaluation.metrics.mrr import reciprocal_rank
+        from evaluation.metrics.precision_at_k import precision_at_k
+        from evaluation.metrics.ndcg import ndcg_at_k
+        from evaluation.metrics.recall_at_k import recall_at_k
+        from evaluation.metrics.mean_average_precision import average_precision
 
         per_query_scores: list[dict] = []
         for item in self._per_query:
@@ -171,9 +174,10 @@ class EvaluationPipeline:
             retrieved_ids = [h["page_id"] for h in item.get("retrieved", [])]
             difficulty = item.get("difficulty", "medium")
 
+            relevance_map = {doc_id: 1 for doc_id in expected}
             rr = reciprocal_rank(retrieved_ids, expected)
             p5 = precision_at_k(retrieved_ids, expected, k=5)
-            ndcg10 = ndcg_at_k(retrieved_ids, expected, k=10)
+            ndcg10 = ndcg_at_k(retrieved_ids, relevance_map, k=10)
             rec_k = recall_at_k(retrieved_ids, expected, k=10)
             ap = average_precision(retrieved_ids, expected)
             hit = 1.0 if rr > 0 else 0.0
@@ -251,8 +255,9 @@ class EvaluationPipeline:
         assert self.results_dir is not None
 
         try:
-            from evaluation.statistics import bootstrap_ci, descriptive_stats
+            from evaluation.statistics import StatisticalAnalyzer
 
+            analyzer = StatisticalAnalyzer()
             metrics_of_interest = ["rr", "p_at_5", "ndcg_at_10", "recall_at_10"]
             stats_output: dict[str, Any] = {}
 
@@ -260,14 +265,14 @@ class EvaluationPipeline:
                 values = [d.get(metric, 0.0) for d in self._per_query]
                 if not values:
                     continue
-                desc = descriptive_stats(values)
-                ci = bootstrap_ci(values)
+                desc = analyzer.descriptive_stats(values)
+                ci = analyzer.bootstrap_ci(values)
                 stats_output[metric] = {
                     "descriptive": desc,
-                    "bootstrap_ci": {"lower": ci.lower, "upper": ci.upper, "mean": ci.mean},
+                    "bootstrap_ci": {"lower": ci.ci_lower, "upper": ci.ci_upper, "mean": ci.mean},
                 }
                 logger.info("  %s: mean=%.4f CI=[%.4f, %.4f]",
-                            metric, ci.mean, ci.lower, ci.upper)
+                            metric, ci.mean, ci.ci_lower, ci.ci_upper)
 
             stats_path = self.results_dir / "statistics.json"
             with open(stats_path, "w", encoding="utf-8") as f:
@@ -290,8 +295,10 @@ class EvaluationPipeline:
 
             viz = EvaluationVisualizer(output_dir=self.results_dir / "charts")
 
-            # Radar chart of aggregate scores
-            radar_data = {k: v for k, v in self._scores.items() if isinstance(v, (int, float))}
+            # Radar chart of aggregate scores (ensure float for type checker)
+            radar_data: dict[str, float] = {
+                k: float(v) for k, v in self._scores.items() if isinstance(v, (int, float))
+            }
             if radar_data:
                 viz.radar_chart(
                     {self.config.name: radar_data},
