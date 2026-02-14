@@ -7,7 +7,7 @@
       "question_text": "Was steht in diesem Dokument ueber departm?",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "departm:forms:aenderungen_stundentafel_sga_151018_mt.pdf"
+        "departm:dictionarynetworkhardware"
       ]
     },
     {
@@ -15,7 +15,7 @@
       "question_text": "Welche Informationen enthaelt das Dokument zu departm?",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "departm:minf:minf_25_26_neu.pdf"
+        "departm:dictionaryworkshop"
       ]
     },
     {
@@ -23,183 +23,183 @@
       "question_text": "Beschreibe die wichtigsten Punkte zu departm.",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "departm:forms:schulautonom_labor-mt.pdf"
+        "departm:translationtools"
       ]
     },
     {
       "question_id": "q_4",
-      "question_text": "Was steht in diesem Dokument ueber teacher?",
+      "question_text": "Was steht in diesem Dokument ueber departm?",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "teacher:forms:kv:kv-stunde_01.pptx"
+        "departm:werkstaette"
       ]
     },
     {
       "question_id": "q_5",
-      "question_text": "Welche Informationen enthaelt das Dokument zu teacher?",
+      "question_text": "Welche Informationen enthaelt das Dokument zu departm?",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "teacher:forms:kv:elternabend_1ahitm_herzlich_willkommen_.pptx"
+        "departm:elektr"
       ]
     },
     {
       "question_id": "q_6",
-      "question_text": "Beschreibe die wichtigsten Punkte zu teacher.",
+      "question_text": "Beschreibe die wichtigsten Punkte zu departm.",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "teacher:elternabend_1ahitm_herzlich_willkommen_.pptx"
+        "departm:fach"
       ]
     },
     {
       "question_id": "q_7",
-      "question_text": "Was steht in diesem Dokument ueber org?",
+      "question_text": "Was steht in diesem Dokument ueber departm?",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "org:forms:werte_htl_leonding.pdf"
+        "departm:fachpraxis:start"
       ]
     },
     {
       "question_id": "q_8",
-      "question_text": "Welche Informationen enthaelt das Dokument zu org?",
+      "question_text": "Welche Informationen enthaelt das Dokument zu departm?",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "org:herdt-verlag-online-zugang.pdf"
+        "departm:informatiksaal"
       ]
     },
     {
       "question_id": "q_9",
-      "question_text": "Beschreibe die wichtigsten Punkte zu org.",
+      "question_text": "Beschreibe die wichtigsten Punkte zu departm.",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "org:biomed-und_gesundheitstechnik-lp2015-schulautonom.pdf"
+        "departm:mgt:start"
       ]
     },
     {
       "question_id": "q_10",
-      "question_text": "Was steht in diesem Dokument ueber class?",
+      "question_text": "Was steht in diesem Dokument ueber departm?",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "class:proxmox-netz_route.jpg"
+        "departm:medizint"
       ]
     },
     {
       "question_id": "q_11",
-      "question_text": "Welche Informationen enthaelt das Dokument zu class?",
+      "question_text": "Welche Informationen enthaelt das Dokument zu teacher?",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "class:docker_kollision.jpg"
+        "teacher:kv:klassenvorstandsstunden"
       ]
     },
     {
       "question_id": "q_12",
-      "question_text": "Beschreibe die wichtigsten Punkte zu exams.",
+      "question_text": "Beschreibe die wichtigsten Punkte zu teacher.",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "exams:threed_object_reconstruction.pdf"
+        "teacher:neulehrerinnenhandbuch:teaching"
       ]
     },
     {
       "question_id": "q_13",
-      "question_text": "Was steht in diesem Dokument ueber exams?",
+      "question_text": "Was steht in diesem Dokument ueber teacher?",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "exams:200403_main_final.pdf"
+        "teacher:schulaemter"
       ]
     },
     {
       "question_id": "q_14",
-      "question_text": "Welche Informationen enthaelt das Dokument zu exams?",
+      "question_text": "Welche Informationen enthaelt das Dokument zu teacher?",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "exams:kemon_keba_network_monitor.pdf"
+        "teacher:kv:index"
       ]
     },
     {
       "question_id": "q_15",
-      "question_text": "Beschreibe die wichtigsten Punkte zu competitions.",
+      "question_text": "Beschreibe die wichtigsten Punkte zu teacher.",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "competitions:22_23_wettberwerbe.pdf"
+        "teacher:neulehrerinnenhandbuch:schoollive"
       ]
     },
     {
       "question_id": "q_16",
-      "question_text": "Was steht in diesem Dokument ueber competitions?",
+      "question_text": "Was steht in diesem Dokument ueber teacher?",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "competitions:project_award_vorausscheidungen_links.pdf"
+        "teacher:neulehrerinnenhandbuch:infrastructure"
       ]
     },
     {
       "question_id": "q_17",
-      "question_text": "Welche Informationen enthaelt das Dokument zu competitions?",
+      "question_text": "Welche Informationen enthaelt das Dokument zu teacher?",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "competitions:projectaward-einverstaendniserklaerung-template.odt"
+        "teacher:makerweek"
       ]
     },
     {
       "question_id": "q_18",
-      "question_text": "Beschreibe die wichtigsten Punkte zu tutorial.",
+      "question_text": "Beschreibe die wichtigsten Punkte zu teacher.",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "tutorial:pv-anlage:2223_energie-logger.pdf"
+        "teacher:kv:sonstige_themen"
       ]
     },
     {
       "question_id": "q_19",
-      "question_text": "Was steht in diesem Dokument ueber tutorial?",
+      "question_text": "Was steht in diesem Dokument ueber teacher?",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "tutorial:2223_energie-logger.pdf"
+        "teacher:it:lfvt:wunschgegenstaende"
       ]
     },
     {
       "question_id": "q_20",
-      "question_text": "Welche Informationen enthaelt das Dokument zu tutorial?",
+      "question_text": "Welche Informationen enthaelt das Dokument zu teacher?",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "tutorial:pv-anlage:2223_pv-anlage.pdf"
+        "teacher:schilfs"
       ]
     },
     {
       "question_id": "q_21",
-      "question_text": "Beschreibe die wichtigsten Punkte zu departm.",
+      "question_text": "Beschreibe die wichtigsten Punkte zu org.",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "departm:forms:bmg-4jg.pdf"
+        "org:termine-2026"
       ]
     },
     {
       "question_id": "q_22",
-      "question_text": "Was steht in diesem Dokument ueber departm?",
+      "question_text": "Was steht in diesem Dokument ueber org?",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "departm:forms:epm_-_kompetenzen-v2.pdf"
+        "org:hausordnung"
       ]
     },
     {
       "question_id": "q_23",
-      "question_text": "Welche Informationen enthaelt das Dokument zu departm?",
+      "question_text": "Welche Informationen enthaelt das Dokument zu org?",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "departm:forms:lp-2015-bgbl_ii_nr_262_2015_anlage_1.3.pdf"
+        "org:termine-2028"
       ]
     },
     {
       "question_id": "q_24",
-      "question_text": "Beschreibe die wichtigsten Punkte zu departm.",
+      "question_text": "Beschreibe die wichtigsten Punkte zu org.",
       "query_type": "multi_hop",
       "source_doc_ids": [
-        "departm:forms:mgt_semesterkompetenzen_lehrplan_2223.pdf"
+        "org:termine-2027"
       ]
     },
     {
       "question_id": "q_25",
-      "question_text": "Was steht in diesem Dokument ueber departm?",
+      "question_text": "Was steht in diesem Dokument ueber org?",
       "query_type": "single_hop",
       "source_doc_ids": [
-        "departm:forms:mgt_semesterkompetenzen_lehrplan_2223_2jg.pdf"
+        "org:forms"
       ]
     }
   ]
