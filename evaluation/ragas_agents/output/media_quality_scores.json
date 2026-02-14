@@ -1,0 +1,2340 @@
+{
+  "source": "fetch_manifest",
+  "fetch_id": "fetched_at_20260211_235935",
+  "documents": [
+    {
+      "media_id": "class:docker_kollision.jpg",
+      "namespace": "class",
+      "size_bytes": 37585,
+      "extension": "jpg",
+      "quality_score": 0.0075
+    },
+    {
+      "media_id": "class:proxmox-netz_route.jpg",
+      "namespace": "class",
+      "size_bytes": 86963,
+      "extension": "jpg",
+      "quality_score": 0.0174
+    },
+    {
+      "media_id": "competitions:22_23_wettberwerbe.pdf",
+      "namespace": "competitions",
+      "size_bytes": 1003997,
+      "extension": "pdf",
+      "quality_score": 0.2008
+    },
+    {
+      "media_id": "competitions:projectaward-einverstaendniserklaerung-template.odt",
+      "namespace": "competitions",
+      "size_bytes": 5844,
+      "extension": "odt",
+      "quality_score": 0.0012
+    },
+    {
+      "media_id": "competitions:project_award_vorausscheidungen_links.pdf",
+      "namespace": "competitions",
+      "size_bytes": 37951,
+      "extension": "pdf",
+      "quality_score": 0.0076
+    },
+    {
+      "media_id": "departm:forms:aenderungen_stundentafel_sga_151018_mt.pdf",
+      "namespace": "departm",
+      "size_bytes": 783537,
+      "extension": "pdf",
+      "quality_score": 0.1567
+    },
+    {
+      "media_id": "departm:forms:bmg-4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 320423,
+      "extension": "pdf",
+      "quality_score": 0.0641
+    },
+    {
+      "media_id": "departm:forms:epm_-_kompetenzen-v2.pdf",
+      "namespace": "departm",
+      "size_bytes": 264282,
+      "extension": "pdf",
+      "quality_score": 0.0529
+    },
+    {
+      "media_id": "departm:forms:lp-2015-bgbl_ii_nr_262_2015_anlage_1.3.pdf",
+      "namespace": "departm",
+      "size_bytes": 437904,
+      "extension": "pdf",
+      "quality_score": 0.0876
+    },
+    {
+      "media_id": "departm:forms:mgt_semesterkompetenzen_lehrplan_2223.pdf",
+      "namespace": "departm",
+      "size_bytes": 77812,
+      "extension": "pdf",
+      "quality_score": 0.0156
+    },
+    {
+      "media_id": "departm:forms:mgt_semesterkompetenzen_lehrplan_2223_2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 20089,
+      "extension": "pdf",
+      "quality_score": 0.004
+    },
+    {
+      "media_id": "departm:forms:performance_notification_en.pdf",
+      "namespace": "departm",
+      "size_bytes": 71197,
+      "extension": "pdf",
+      "quality_score": 0.0142
+    },
+    {
+      "media_id": "departm:forms:schulautonom_labor-mt.pdf",
+      "namespace": "departm",
+      "size_bytes": 583081,
+      "extension": "pdf",
+      "quality_score": 0.1166
+    },
+    {
+      "media_id": "departm:minf:minf_25_26_neu.pdf",
+      "namespace": "departm",
+      "size_bytes": 600489,
+      "extension": "pdf",
+      "quality_score": 0.1201
+    },
+    {
+      "media_id": "departm:mtrs:jahrgang2_mtrs.pdf",
+      "namespace": "departm",
+      "size_bytes": 367439,
+      "extension": "pdf",
+      "quality_score": 0.0735
+    },
+    {
+      "media_id": "departm:mtrs:jahrgang3_mtrs.pdf",
+      "namespace": "departm",
+      "size_bytes": 194677,
+      "extension": "pdf",
+      "quality_score": 0.0389
+    },
+    {
+      "media_id": "departm:mtrs:jahrgang4_mtrs.pdf",
+      "namespace": "departm",
+      "size_bytes": 372609,
+      "extension": "pdf",
+      "quality_score": 0.0745
+    },
+    {
+      "media_id": "departm:mtrs:lehrplanuebersicht_mtrs.pdf",
+      "namespace": "departm",
+      "size_bytes": 185111,
+      "extension": "pdf",
+      "quality_score": 0.037
+    },
+    {
+      "media_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_1jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 77521,
+      "extension": "pdf",
+      "quality_score": 0.0155
+    },
+    {
+      "media_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 76074,
+      "extension": "pdf",
+      "quality_score": 0.0152
+    },
+    {
+      "media_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 77549,
+      "extension": "pdf",
+      "quality_score": 0.0155
+    },
+    {
+      "media_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 74248,
+      "extension": "pdf",
+      "quality_score": 0.0148
+    },
+    {
+      "media_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_5jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 78847,
+      "extension": "pdf",
+      "quality_score": 0.0158
+    },
+    {
+      "media_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_lp.pdf",
+      "namespace": "departm",
+      "size_bytes": 75493,
+      "extension": "pdf",
+      "quality_score": 0.0151
+    },
+    {
+      "media_id": "departm:bsv1_semesterkompetenzen_lehrplan_v1.0.xlsx",
+      "namespace": "departm",
+      "size_bytes": 29846,
+      "extension": "xlsx",
+      "quality_score": 0.006
+    },
+    {
+      "media_id": "departm:bsv2_semesterkompetenzen_lehrplan_v1.0.xlsx",
+      "namespace": "departm",
+      "size_bytes": 30162,
+      "extension": "xlsx",
+      "quality_score": 0.006
+    },
+    {
+      "media_id": "departm:bsv_semesterkompetenzen_lehrplan_2021.xlsx",
+      "namespace": "departm",
+      "size_bytes": 17237,
+      "extension": "xlsx",
+      "quality_score": 0.0034
+    },
+    {
+      "media_id": "departm:fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_1jhg.pdf",
+      "namespace": "departm",
+      "size_bytes": 74707,
+      "extension": "pdf",
+      "quality_score": 0.0149
+    },
+    {
+      "media_id": "departm:fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_2jhg.pdf",
+      "namespace": "departm",
+      "size_bytes": 73907,
+      "extension": "pdf",
+      "quality_score": 0.0148
+    },
+    {
+      "media_id": "departm:fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_3jhg.pdf",
+      "namespace": "departm",
+      "size_bytes": 76581,
+      "extension": "pdf",
+      "quality_score": 0.0153
+    },
+    {
+      "media_id": "departm:fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_4jhg.pdf",
+      "namespace": "departm",
+      "size_bytes": 75348,
+      "extension": "pdf",
+      "quality_score": 0.0151
+    },
+    {
+      "media_id": "departm:fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_5jhg.pdf",
+      "namespace": "departm",
+      "size_bytes": 74767,
+      "extension": "pdf",
+      "quality_score": 0.015
+    },
+    {
+      "media_id": "departm:fel-ae-1jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 370000,
+      "extension": "pdf",
+      "quality_score": 0.074
+    },
+    {
+      "media_id": "departm:fel-ae-2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 368912,
+      "extension": "pdf",
+      "quality_score": 0.0738
+    },
+    {
+      "media_id": "departm:fel-ae-3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 195457,
+      "extension": "pdf",
+      "quality_score": 0.0391
+    },
+    {
+      "media_id": "departm:fel-ae-4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 191100,
+      "extension": "pdf",
+      "quality_score": 0.0382
+    },
+    {
+      "media_id": "departm:fel-ae-lehrplan_gesamtuebersicht.pdf",
+      "namespace": "departm",
+      "size_bytes": 189454,
+      "extension": "pdf",
+      "quality_score": 0.0379
+    },
+    {
+      "media_id": "departm:fel-auto-1jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 177733,
+      "extension": "pdf",
+      "quality_score": 0.0355
+    },
+    {
+      "media_id": "departm:fel-auto-2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 178321,
+      "extension": "pdf",
+      "quality_score": 0.0357
+    },
+    {
+      "media_id": "departm:fel-auto-3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 195974,
+      "extension": "pdf",
+      "quality_score": 0.0392
+    },
+    {
+      "media_id": "departm:fel-auto-4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 196146,
+      "extension": "pdf",
+      "quality_score": 0.0392
+    },
+    {
+      "media_id": "departm:fel-auto-gesamtuebersicht.pdf",
+      "namespace": "departm",
+      "size_bytes": 185199,
+      "extension": "pdf",
+      "quality_score": 0.037
+    },
+    {
+      "media_id": "departm:fel-ctnt-1jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 195654,
+      "extension": "pdf",
+      "quality_score": 0.0391
+    },
+    {
+      "media_id": "departm:fel-ctnt-2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 388953,
+      "extension": "pdf",
+      "quality_score": 0.0778
+    },
+    {
+      "media_id": "departm:fel-ctnt-3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 196793,
+      "extension": "pdf",
+      "quality_score": 0.0394
+    },
+    {
+      "media_id": "departm:fel-ctnt-4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 193597,
+      "extension": "pdf",
+      "quality_score": 0.0387
+    },
+    {
+      "media_id": "departm:fel-ctnt-gesamtuebersicht.pdf",
+      "namespace": "departm",
+      "size_bytes": 185926,
+      "extension": "pdf",
+      "quality_score": 0.0372
+    },
+    {
+      "media_id": "departm:fel-eld-1jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 214617,
+      "extension": "pdf",
+      "quality_score": 0.0429
+    },
+    {
+      "media_id": "departm:fel-eld-2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 195347,
+      "extension": "pdf",
+      "quality_score": 0.0391
+    },
+    {
+      "media_id": "departm:fel-eld-3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 192177,
+      "extension": "pdf",
+      "quality_score": 0.0384
+    },
+    {
+      "media_id": "departm:fel-eld-4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 194399,
+      "extension": "pdf",
+      "quality_score": 0.0389
+    },
+    {
+      "media_id": "departm:fel-eld-gesamtuebersicht.pdf",
+      "namespace": "departm",
+      "size_bytes": 188601,
+      "extension": "pdf",
+      "quality_score": 0.0377
+    },
+    {
+      "media_id": "departm:fel-kme-2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 368873,
+      "extension": "pdf",
+      "quality_score": 0.0738
+    },
+    {
+      "media_id": "departm:fel-kme-3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 198399,
+      "extension": "pdf",
+      "quality_score": 0.0397
+    },
+    {
+      "media_id": "departm:fel-kme-4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 195555,
+      "extension": "pdf",
+      "quality_score": 0.0391
+    },
+    {
+      "media_id": "departm:fel-kme-lehrplan-gesamtuebersicht.pdf",
+      "namespace": "departm",
+      "size_bytes": 191559,
+      "extension": "pdf",
+      "quality_score": 0.0383
+    },
+    {
+      "media_id": "departm:fel-la-1jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 177443,
+      "extension": "pdf",
+      "quality_score": 0.0355
+    },
+    {
+      "media_id": "departm:fel-la-2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 178056,
+      "extension": "pdf",
+      "quality_score": 0.0356
+    },
+    {
+      "media_id": "departm:fel-la-3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 198129,
+      "extension": "pdf",
+      "quality_score": 0.0396
+    },
+    {
+      "media_id": "departm:fel-la-4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 195344,
+      "extension": "pdf",
+      "quality_score": 0.0391
+    },
+    {
+      "media_id": "departm:fel-la-gesamtuebersicht.pdf",
+      "namespace": "departm",
+      "size_bytes": 185577,
+      "extension": "pdf",
+      "quality_score": 0.0371
+    },
+    {
+      "media_id": "departm:fel-sote-1jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 370889,
+      "extension": "pdf",
+      "quality_score": 0.0742
+    },
+    {
+      "media_id": "departm:fel-sote-2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 367442,
+      "extension": "pdf",
+      "quality_score": 0.0735
+    },
+    {
+      "media_id": "departm:fel-sote-3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 181821,
+      "extension": "pdf",
+      "quality_score": 0.0364
+    },
+    {
+      "media_id": "departm:fel-sote-4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 180959,
+      "extension": "pdf",
+      "quality_score": 0.0362
+    },
+    {
+      "media_id": "departm:fel-sote-gesamtuebersicht.pdf",
+      "namespace": "departm",
+      "size_bytes": 185381,
+      "extension": "pdf",
+      "quality_score": 0.0371
+    },
+    {
+      "media_id": "departm:hel_dic_3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 199442,
+      "extension": "pdf",
+      "quality_score": 0.0399
+    },
+    {
+      "media_id": "departm:hel_dic_4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 204610,
+      "extension": "pdf",
+      "quality_score": 0.0409
+    },
+    {
+      "media_id": "departm:hel_dic_5jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 201024,
+      "extension": "pdf",
+      "quality_score": 0.0402
+    },
+    {
+      "media_id": "departm:hel_fst_1jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 188084,
+      "extension": "pdf",
+      "quality_score": 0.0376
+    },
+    {
+      "media_id": "departm:hel_fst_2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 361403,
+      "extension": "pdf",
+      "quality_score": 0.0723
+    },
+    {
+      "media_id": "departm:hel_fst_3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 188113,
+      "extension": "pdf",
+      "quality_score": 0.0376
+    },
+    {
+      "media_id": "departm:hel_fst_4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 188557,
+      "extension": "pdf",
+      "quality_score": 0.0377
+    },
+    {
+      "media_id": "departm:hel_fst_5jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 189793,
+      "extension": "pdf",
+      "quality_score": 0.038
+    },
+    {
+      "media_id": "departm:hel_fst_gesamtuebersicht.pdf",
+      "namespace": "departm",
+      "size_bytes": 187359,
+      "extension": "pdf",
+      "quality_score": 0.0375
+    },
+    {
+      "media_id": "departm:hel_he_1jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 198371,
+      "extension": "pdf",
+      "quality_score": 0.0397
+    },
+    {
+      "media_id": "departm:hel_he_2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 205465,
+      "extension": "pdf",
+      "quality_score": 0.0411
+    },
+    {
+      "media_id": "departm:hel_he_3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 199074,
+      "extension": "pdf",
+      "quality_score": 0.0398
+    },
+    {
+      "media_id": "departm:hel_he_4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 195638,
+      "extension": "pdf",
+      "quality_score": 0.0391
+    },
+    {
+      "media_id": "departm:hel_he_5jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 193416,
+      "extension": "pdf",
+      "quality_score": 0.0387
+    },
+    {
+      "media_id": "departm:la_semesterkompetenzen_lehrplan_2223_3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 426237,
+      "extension": "pdf",
+      "quality_score": 0.0852
+    },
+    {
+      "media_id": "departm:mgt_semesterkompetenzen_lehrplan_2223.pdf",
+      "namespace": "departm",
+      "size_bytes": 77812,
+      "extension": "pdf",
+      "quality_score": 0.0156
+    },
+    {
+      "media_id": "departm:mgt_semesterkompetenzen_lehrplan_2223_1jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 104665,
+      "extension": "pdf",
+      "quality_score": 0.0209
+    },
+    {
+      "media_id": "departm:mgt_semesterkompetenzen_lehrplan_2223_2jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 20089,
+      "extension": "pdf",
+      "quality_score": 0.004
+    },
+    {
+      "media_id": "departm:mgt_semesterkompetenzen_lehrplan_2223_3jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 80539,
+      "extension": "pdf",
+      "quality_score": 0.0161
+    },
+    {
+      "media_id": "departm:mgt_semesterkompetenzen_lehrplan_2223_4jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 78624,
+      "extension": "pdf",
+      "quality_score": 0.0157
+    },
+    {
+      "media_id": "departm:mgt_semesterkompetenzen_lehrplan_2223_5jg.pdf",
+      "namespace": "departm",
+      "size_bytes": 81894,
+      "extension": "pdf",
+      "quality_score": 0.0164
+    },
+    {
+      "media_id": "departm:minf_semesterkompetenzen_lehrplan_2021.xlsx",
+      "namespace": "departm",
+      "size_bytes": 19793,
+      "extension": "xlsx",
+      "quality_score": 0.004
+    },
+    {
+      "media_id": "departm:mtrs_semesterkompetenzen_lehrplan_2021.xlsx",
+      "namespace": "departm",
+      "size_bytes": 15101,
+      "extension": "xlsx",
+      "quality_score": 0.003
+    },
+    {
+      "media_id": "departm:wept_el_lehrplan_1jg_2223.pdf",
+      "namespace": "departm",
+      "size_bytes": 73595,
+      "extension": "pdf",
+      "quality_score": 0.0147
+    },
+    {
+      "media_id": "departm:wept_el_lehrplan_2jg_2223.pdf",
+      "namespace": "departm",
+      "size_bytes": 72742,
+      "extension": "pdf",
+      "quality_score": 0.0145
+    },
+    {
+      "media_id": "departm:wept_el_lehrplan_3jg_2223.pdf",
+      "namespace": "departm",
+      "size_bytes": 73674,
+      "extension": "pdf",
+      "quality_score": 0.0147
+    },
+    {
+      "media_id": "departm:wept_el_lehrplan_4jg_2223.pdf",
+      "namespace": "departm",
+      "size_bytes": 76318,
+      "extension": "pdf",
+      "quality_score": 0.0153
+    },
+    {
+      "media_id": "exams:200403_main_final.pdf",
+      "namespace": "exams",
+      "size_bytes": 6456483,
+      "extension": "pdf",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "exams:aa-a3-beurteilungsbogen.docx",
+      "namespace": "exams",
+      "size_bytes": 28511,
+      "extension": "docx",
+      "quality_score": 0.0057
+    },
+    {
+      "media_id": "exams:beurteilungsbogen-template-inf.docx",
+      "namespace": "exams",
+      "size_bytes": 31163,
+      "extension": "docx",
+      "quality_score": 0.0062
+    },
+    {
+      "media_id": "exams:beurteilungsbogen-template-medt.docx",
+      "namespace": "exams",
+      "size_bytes": 31124,
+      "extension": "docx",
+      "quality_score": 0.0062
+    },
+    {
+      "media_id": "exams:beurteilungsbogen_template.docx",
+      "namespace": "exams",
+      "size_bytes": 30636,
+      "extension": "docx",
+      "quality_score": 0.0061
+    },
+    {
+      "media_id": "exams:beurteilungsbogen_template_it.docx",
+      "namespace": "exams",
+      "size_bytes": 30322,
+      "extension": "docx",
+      "quality_score": 0.0061
+    },
+    {
+      "media_id": "exams:crowdfit-diploma_thesis.pdf",
+      "namespace": "exams",
+      "size_bytes": 1998072,
+      "extension": "pdf",
+      "quality_score": 0.3996
+    },
+    {
+      "media_id": "exams:customer_setup_performance_check.pdf",
+      "namespace": "exams",
+      "size_bytes": 3852331,
+      "extension": "pdf",
+      "quality_score": 0.7705
+    },
+    {
+      "media_id": "exams:da_timeline.xlsx",
+      "namespace": "exams",
+      "size_bytes": 14648,
+      "extension": "xlsx",
+      "quality_score": 0.0029
+    },
+    {
+      "media_id": "exams:diplomarbeits_konzept_vorlage.docx",
+      "namespace": "exams",
+      "size_bytes": 93166,
+      "extension": "docx",
+      "quality_score": 0.0186
+    },
+    {
+      "media_id": "exams:diplomarbeit_vorlage.docx",
+      "namespace": "exams",
+      "size_bytes": 526985,
+      "extension": "docx",
+      "quality_score": 0.1054
+    },
+    {
+      "media_id": "exams:diplomarbeit_vorlage_deckblatt.docx",
+      "namespace": "exams",
+      "size_bytes": 544408,
+      "extension": "docx",
+      "quality_score": 0.1089
+    },
+    {
+      "media_id": "exams:formular_materialanforderung_da_aa.xlsx",
+      "namespace": "exams",
+      "size_bytes": 17988,
+      "extension": "xlsx",
+      "quality_score": 0.0036
+    },
+    {
+      "media_id": "exams:htl_diplomarbeit_betreuungsprot_a4_2016.docx",
+      "namespace": "exams",
+      "size_bytes": 32241,
+      "extension": "docx",
+      "quality_score": 0.0064
+    },
+    {
+      "media_id": "exams:james.pdf",
+      "namespace": "exams",
+      "size_bytes": 4901977,
+      "extension": "pdf",
+      "quality_score": 0.9804
+    },
+    {
+      "media_id": "exams:kemon_keba_network_monitor.pdf",
+      "namespace": "exams",
+      "size_bytes": 6188947,
+      "extension": "pdf",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "exams:kooperationsvereinbarung.docx",
+      "namespace": "exams",
+      "size_bytes": 614176,
+      "extension": "docx",
+      "quality_score": 0.1228
+    },
+    {
+      "media_id": "exams:marco.pdf",
+      "namespace": "exams",
+      "size_bytes": 1252955,
+      "extension": "pdf",
+      "quality_score": 0.2506
+    },
+    {
+      "media_id": "exams:threed_object_reconstruction.pdf",
+      "namespace": "exams",
+      "size_bytes": 13143644,
+      "extension": "pdf",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "it:microsoft365:anmelden.jpg",
+      "namespace": "it",
+      "size_bytes": 74524,
+      "extension": "jpg",
+      "quality_score": 0.0149
+    },
+    {
+      "media_id": "it:microsoft365:anmelden_benutzername.jpg",
+      "namespace": "it",
+      "size_bytes": 30271,
+      "extension": "jpg",
+      "quality_score": 0.0061
+    },
+    {
+      "media_id": "it:microsoft365:datenschutz1.jpg",
+      "namespace": "it",
+      "size_bytes": 92844,
+      "extension": "jpg",
+      "quality_score": 0.0186
+    },
+    {
+      "media_id": "it:microsoft365:datenschutz2.jpg",
+      "namespace": "it",
+      "size_bytes": 105594,
+      "extension": "jpg",
+      "quality_score": 0.0211
+    },
+    {
+      "media_id": "it:microsoft365:datenschutz3.jpg",
+      "namespace": "it",
+      "size_bytes": 23014,
+      "extension": "jpg",
+      "quality_score": 0.0046
+    },
+    {
+      "media_id": "it:microsoft365:hakerl.jpg",
+      "namespace": "it",
+      "size_bytes": 89056,
+      "extension": "jpg",
+      "quality_score": 0.0178
+    },
+    {
+      "media_id": "it:microsoft365:install.jpg",
+      "namespace": "it",
+      "size_bytes": 90874,
+      "extension": "jpg",
+      "quality_score": 0.0182
+    },
+    {
+      "media_id": "it:microsoft365:install2.jpg",
+      "namespace": "it",
+      "size_bytes": 74246,
+      "extension": "jpg",
+      "quality_score": 0.0148
+    },
+    {
+      "media_id": "it:microsoft365:intro.jpg",
+      "namespace": "it",
+      "size_bytes": 105440,
+      "extension": "jpg",
+      "quality_score": 0.0211
+    },
+    {
+      "media_id": "it:microsoft365:keeplogin.jpg",
+      "namespace": "it",
+      "size_bytes": 33737,
+      "extension": "jpg",
+      "quality_score": 0.0067
+    },
+    {
+      "media_id": "it:microsoft365:lizenz.jpg",
+      "namespace": "it",
+      "size_bytes": 67764,
+      "extension": "jpg",
+      "quality_score": 0.0136
+    },
+    {
+      "media_id": "it:microsoft365:login.jpg",
+      "namespace": "it",
+      "size_bytes": 34325,
+      "extension": "jpg",
+      "quality_score": 0.0069
+    },
+    {
+      "media_id": "it:microsoft365:loginbutton.jpg",
+      "namespace": "it",
+      "size_bytes": 175867,
+      "extension": "jpg",
+      "quality_score": 0.0352
+    },
+    {
+      "media_id": "it:microsoft365:password.jpg",
+      "namespace": "it",
+      "size_bytes": 25229,
+      "extension": "jpg",
+      "quality_score": 0.005
+    },
+    {
+      "media_id": "it:studentmail2023:android_gmail:g_add_account.png",
+      "namespace": "it",
+      "size_bytes": 316206,
+      "extension": "png",
+      "quality_score": 0.0632
+    },
+    {
+      "media_id": "it:studentmail2023:android_gmail:g_mailaddress.png",
+      "namespace": "it",
+      "size_bytes": 63870,
+      "extension": "png",
+      "quality_score": 0.0128
+    },
+    {
+      "media_id": "it:studentmail2023:android_gmail:g_office365.png",
+      "namespace": "it",
+      "size_bytes": 38322,
+      "extension": "png",
+      "quality_score": 0.0077
+    },
+    {
+      "media_id": "it:studentmail2023:android_gmail:g_password.png",
+      "namespace": "it",
+      "size_bytes": 77366,
+      "extension": "png",
+      "quality_score": 0.0155
+    },
+    {
+      "media_id": "it:studentmail2023:android_gmail:g_permissions.png",
+      "namespace": "it",
+      "size_bytes": 159483,
+      "extension": "png",
+      "quality_score": 0.0319
+    },
+    {
+      "media_id": "it:studentmail2023:android_outlook:g_add_account.png",
+      "namespace": "it",
+      "size_bytes": 41794,
+      "extension": "png",
+      "quality_score": 0.0084
+    },
+    {
+      "media_id": "it:studentmail2023:android_outlook:g_app.png",
+      "namespace": "it",
+      "size_bytes": 187672,
+      "extension": "png",
+      "quality_score": 0.0375
+    },
+    {
+      "media_id": "it:studentmail2023:android_outlook:g_further_account.png",
+      "namespace": "it",
+      "size_bytes": 43903,
+      "extension": "png",
+      "quality_score": 0.0088
+    },
+    {
+      "media_id": "it:studentmail2023:android_outlook:g_mailaddress.png",
+      "namespace": "it",
+      "size_bytes": 69130,
+      "extension": "png",
+      "quality_score": 0.0138
+    },
+    {
+      "media_id": "it:studentmail2023:android_outlook:g_password.png",
+      "namespace": "it",
+      "size_bytes": 87294,
+      "extension": "png",
+      "quality_score": 0.0175
+    },
+    {
+      "media_id": "it:studentmail2023:desktop:g_addaccount.jpg",
+      "namespace": "it",
+      "size_bytes": 32719,
+      "extension": "jpg",
+      "quality_score": 0.0065
+    },
+    {
+      "media_id": "it:studentmail2023:desktop:g_addmail.jpg",
+      "namespace": "it",
+      "size_bytes": 40266,
+      "extension": "jpg",
+      "quality_score": 0.0081
+    },
+    {
+      "media_id": "it:studentmail2023:desktop:g_addmail_success.jpg",
+      "namespace": "it",
+      "size_bytes": 40824,
+      "extension": "jpg",
+      "quality_score": 0.0082
+    },
+    {
+      "media_id": "it:studentmail2023:desktop:g_login.jpg",
+      "namespace": "it",
+      "size_bytes": 44805,
+      "extension": "jpg",
+      "quality_score": 0.009
+    },
+    {
+      "media_id": "it:studentmail2023:ios_mail:g_accountname.png",
+      "namespace": "it",
+      "size_bytes": 107968,
+      "extension": "png",
+      "quality_score": 0.0216
+    },
+    {
+      "media_id": "it:studentmail2023:ios_mail:g_accounts.png",
+      "namespace": "it",
+      "size_bytes": 81903,
+      "extension": "png",
+      "quality_score": 0.0164
+    },
+    {
+      "media_id": "it:studentmail2023:ios_mail:g_add_account.png",
+      "namespace": "it",
+      "size_bytes": 53849,
+      "extension": "png",
+      "quality_score": 0.0108
+    },
+    {
+      "media_id": "it:studentmail2023:ios_mail:g_berechtigungen.png",
+      "namespace": "it",
+      "size_bytes": 100554,
+      "extension": "png",
+      "quality_score": 0.0201
+    },
+    {
+      "media_id": "it:studentmail2023:ios_mail:g_berechtigungen2.png",
+      "namespace": "it",
+      "size_bytes": 138118,
+      "extension": "png",
+      "quality_score": 0.0276
+    },
+    {
+      "media_id": "it:studentmail2023:ios_mail:g_einstellungen.png",
+      "namespace": "it",
+      "size_bytes": 948556,
+      "extension": "png",
+      "quality_score": 0.1897
+    },
+    {
+      "media_id": "it:studentmail2023:ios_mail:g_exchange.png",
+      "namespace": "it",
+      "size_bytes": 83094,
+      "extension": "png",
+      "quality_score": 0.0166
+    },
+    {
+      "media_id": "it:studentmail2023:ios_mail:g_microsoft.png",
+      "namespace": "it",
+      "size_bytes": 87380,
+      "extension": "png",
+      "quality_score": 0.0175
+    },
+    {
+      "media_id": "it:studentmail2023:ios_mail:g_passwort.png",
+      "namespace": "it",
+      "size_bytes": 66993,
+      "extension": "png",
+      "quality_score": 0.0134
+    },
+    {
+      "media_id": "it:studentmail2023:ios_mail:g_speichern.png",
+      "namespace": "it",
+      "size_bytes": 69383,
+      "extension": "png",
+      "quality_score": 0.0139
+    },
+    {
+      "media_id": "it:studentmail2023:ios_outlook:outlookapp.png",
+      "namespace": "it",
+      "size_bytes": 212084,
+      "extension": "png",
+      "quality_score": 0.0424
+    },
+    {
+      "media_id": "it:angaben_zum_htl_logo_2022_logoformate.pdf",
+      "namespace": "it",
+      "size_bytes": 339920,
+      "extension": "pdf",
+      "quality_score": 0.068
+    },
+    {
+      "media_id": "it:htllogo_2022_black_v2.png",
+      "namespace": "it",
+      "size_bytes": 37516,
+      "extension": "png",
+      "quality_score": 0.0075
+    },
+    {
+      "media_id": "it:htllogo_2022_white_v2.png",
+      "namespace": "it",
+      "size_bytes": 37222,
+      "extension": "png",
+      "quality_score": 0.0074
+    },
+    {
+      "media_id": "it:htllogo_ab2022_farbig.jpg",
+      "namespace": "it",
+      "size_bytes": 831804,
+      "extension": "jpg",
+      "quality_score": 0.1664
+    },
+    {
+      "media_id": "it:htl_logo_ab2022_schwarz_weiss.jpg",
+      "namespace": "it",
+      "size_bytes": 135725,
+      "extension": "jpg",
+      "quality_score": 0.0271
+    },
+    {
+      "media_id": "it:htl_logo_next_level_ab2022_epsfiles_zur_weiterverarbeitung.zip",
+      "namespace": "it",
+      "size_bytes": 2604312,
+      "extension": "zip",
+      "quality_score": 0.5209
+    },
+    {
+      "media_id": "org:forms:1_ansuchen_um_sonderurlaub.pdf",
+      "namespace": "org",
+      "size_bytes": 146915,
+      "extension": "pdf",
+      "quality_score": 0.0294
+    },
+    {
+      "media_id": "org:forms:2_exkursionsantrag.pdf",
+      "namespace": "org",
+      "size_bytes": 141104,
+      "extension": "pdf",
+      "quality_score": 0.0282
+    },
+    {
+      "media_id": "org:forms:3_foerderkursmeldung.pdf",
+      "namespace": "org",
+      "size_bytes": 241840,
+      "extension": "pdf",
+      "quality_score": 0.0484
+    },
+    {
+      "media_id": "org:forms:4_formular_schulabmeldung.pdf",
+      "namespace": "org",
+      "size_bytes": 127736,
+      "extension": "pdf",
+      "quality_score": 0.0255
+    },
+    {
+      "media_id": "org:forms:6_ungerechtfertiges_fernbleiben_von_der_schule_-_bei_schulpflichtverletzung.pdf",
+      "namespace": "org",
+      "size_bytes": 153937,
+      "extension": "pdf",
+      "quality_score": 0.0308
+    },
+    {
+      "media_id": "org:forms:7_pflegefreistellung_neu.pdf",
+      "namespace": "org",
+      "size_bytes": 164538,
+      "extension": "pdf",
+      "quality_score": 0.0329
+    },
+    {
+      "media_id": "org:forms:8_protokoll_festellungspruefung_bzw._nachtragspruefung.pdf",
+      "namespace": "org",
+      "size_bytes": 133053,
+      "extension": "pdf",
+      "quality_score": 0.0266
+    },
+    {
+      "media_id": "org:forms:9_verstaendigung_festellungspruefung_eigenberechtigt.pdf",
+      "namespace": "org",
+      "size_bytes": 149989,
+      "extension": "pdf",
+      "quality_score": 0.03
+    },
+    {
+      "media_id": "org:forms:10_verstaendigung_feststellungspruefung.pdf",
+      "namespace": "org",
+      "size_bytes": 134755,
+      "extension": "pdf",
+      "quality_score": 0.027
+    },
+    {
+      "media_id": "org:forms:11_protokoll_kolloquium.pdf",
+      "namespace": "org",
+      "size_bytes": 134985,
+      "extension": "pdf",
+      "quality_score": 0.027
+    },
+    {
+      "media_id": "org:forms:12_protokoll_modulpruefung.pdf",
+      "namespace": "org",
+      "size_bytes": 158239,
+      "extension": "pdf",
+      "quality_score": 0.0316
+    },
+    {
+      "media_id": "org:forms:13_protokoll_nost_semesterpruefung.pdf",
+      "namespace": "org",
+      "size_bytes": 240488,
+      "extension": "pdf",
+      "quality_score": 0.0481
+    },
+    {
+      "media_id": "org:forms:14_protokoll_wiederholungpruefung.pdf",
+      "namespace": "org",
+      "size_bytes": 124991,
+      "extension": "pdf",
+      "quality_score": 0.025
+    },
+    {
+      "media_id": "org:forms:15_stundentausch.pdf",
+      "namespace": "org",
+      "size_bytes": 196512,
+      "extension": "pdf",
+      "quality_score": 0.0393
+    },
+    {
+      "media_id": "org:forms:befreiung-pflichtgegenstaende.pdf",
+      "namespace": "org",
+      "size_bytes": 76080,
+      "extension": "pdf",
+      "quality_score": 0.0152
+    },
+    {
+      "media_id": "org:forms:entschuldigungsliste.pdf",
+      "namespace": "org",
+      "size_bytes": 195821,
+      "extension": "pdf",
+      "quality_score": 0.0392
+    },
+    {
+      "media_id": "org:forms:exkursion.pdf",
+      "namespace": "org",
+      "size_bytes": 94477,
+      "extension": "pdf",
+      "quality_score": 0.0189
+    },
+    {
+      "media_id": "org:forms:fernbleibenvonderschule.pdf",
+      "namespace": "org",
+      "size_bytes": 132724,
+      "extension": "pdf",
+      "quality_score": 0.0265
+    },
+    {
+      "media_id": "org:forms:fernbleibenvonderschuleeigenberechtigt.pdf",
+      "namespace": "org",
+      "size_bytes": 126185,
+      "extension": "pdf",
+      "quality_score": 0.0252
+    },
+    {
+      "media_id": "org:forms:festellungspruefung.pdf",
+      "namespace": "org",
+      "size_bytes": 123499,
+      "extension": "pdf",
+      "quality_score": 0.0247
+    },
+    {
+      "media_id": "org:forms:festellungspruefungeigenberechtigt.pdf",
+      "namespace": "org",
+      "size_bytes": 122909,
+      "extension": "pdf",
+      "quality_score": 0.0246
+    },
+    {
+      "media_id": "org:forms:foerderkursmeldung.pdf",
+      "namespace": "org",
+      "size_bytes": 223719,
+      "extension": "pdf",
+      "quality_score": 0.0447
+    },
+    {
+      "media_id": "org:forms:formular-anmeldung-zum-rdp-nebentermin.pdf",
+      "namespace": "org",
+      "size_bytes": 134793,
+      "extension": "pdf",
+      "quality_score": 0.027
+    },
+    {
+      "media_id": "org:forms:formular-pflichtpraktikum-biomedizin-und-gesundheitstechnik.pdf",
+      "namespace": "org",
+      "size_bytes": 45340,
+      "extension": "pdf",
+      "quality_score": 0.0091
+    },
+    {
+      "media_id": "org:forms:formular-pflichtpraktikum-doppelbogen.pdf",
+      "namespace": "org",
+      "size_bytes": 84030,
+      "extension": "pdf",
+      "quality_score": 0.0168
+    },
+    {
+      "media_id": "org:forms:formular-pflichtpraktikum-elektronik-und-technische-informatik.pdf",
+      "namespace": "org",
+      "size_bytes": 108073,
+      "extension": "pdf",
+      "quality_score": 0.0216
+    },
+    {
+      "media_id": "org:forms:formular-pflichtpraktikum-fachschule-fuer-elektronik-und-technische-informatik.pdf",
+      "namespace": "org",
+      "size_bytes": 54528,
+      "extension": "pdf",
+      "quality_score": 0.0109
+    },
+    {
+      "media_id": "org:forms:formular-pflichtpraktikum-informatik.pdf",
+      "namespace": "org",
+      "size_bytes": 97815,
+      "extension": "pdf",
+      "quality_score": 0.0196
+    },
+    {
+      "media_id": "org:forms:formular-pflichtpraktikum-medientechnik.pdf",
+      "namespace": "org",
+      "size_bytes": 97125,
+      "extension": "pdf",
+      "quality_score": 0.0194
+    },
+    {
+      "media_id": "org:forms:formular-pflichtpraktikum-unterrichtsfreistellung-letzte-schulwoche.pdf",
+      "namespace": "org",
+      "size_bytes": 87434,
+      "extension": "pdf",
+      "quality_score": 0.0175
+    },
+    {
+      "media_id": "org:forms:formular-schulbesuchsbestaetigung.pdf",
+      "namespace": "org",
+      "size_bytes": 88525,
+      "extension": "pdf",
+      "quality_score": 0.0177
+    },
+    {
+      "media_id": "org:forms:hausordnung_2018-19.pdf",
+      "namespace": "org",
+      "size_bytes": 160876,
+      "extension": "pdf",
+      "quality_score": 0.0322
+    },
+    {
+      "media_id": "org:forms:hausordnung_2021-22.pdf",
+      "namespace": "org",
+      "size_bytes": 162255,
+      "extension": "pdf",
+      "quality_score": 0.0325
+    },
+    {
+      "media_id": "org:forms:nost_-_semesterpruefung_deckblatt-1.pdf",
+      "namespace": "org",
+      "size_bytes": 247113,
+      "extension": "pdf",
+      "quality_score": 0.0494
+    },
+    {
+      "media_id": "org:forms:pflegefreistellung_neu_2.pdf",
+      "namespace": "org",
+      "size_bytes": 123218,
+      "extension": "pdf",
+      "quality_score": 0.0246
+    },
+    {
+      "media_id": "org:forms:protokoll_festellungspruefung_bzw.nachtragspruefung_neu.pdf",
+      "namespace": "org",
+      "size_bytes": 117380,
+      "extension": "pdf",
+      "quality_score": 0.0235
+    },
+    {
+      "media_id": "org:forms:protokoll_kolloquium_neu_2017.pdf",
+      "namespace": "org",
+      "size_bytes": 124955,
+      "extension": "pdf",
+      "quality_score": 0.025
+    },
+    {
+      "media_id": "org:forms:protokoll_modulpruefung_neu_2017.pdf",
+      "namespace": "org",
+      "size_bytes": 165086,
+      "extension": "pdf",
+      "quality_score": 0.033
+    },
+    {
+      "media_id": "org:forms:protokoll_wiederholungspruefung.pdf",
+      "namespace": "org",
+      "size_bytes": 118938,
+      "extension": "pdf",
+      "quality_score": 0.0238
+    },
+    {
+      "media_id": "org:forms:rdpaufgabenstellungmuendlprfg.pdf",
+      "namespace": "org",
+      "size_bytes": 91193,
+      "extension": "pdf",
+      "quality_score": 0.0182
+    },
+    {
+      "media_id": "org:forms:schlusskonferenz_leer_fachschule.pdf",
+      "namespace": "org",
+      "size_bytes": 139302,
+      "extension": "pdf",
+      "quality_score": 0.0279
+    },
+    {
+      "media_id": "org:forms:schlusskonferenz_leer_hoehere_abteilung.pdf",
+      "namespace": "org",
+      "size_bytes": 137295,
+      "extension": "pdf",
+      "quality_score": 0.0275
+    },
+    {
+      "media_id": "org:forms:schulabmeldung.pdf",
+      "namespace": "org",
+      "size_bytes": 133548,
+      "extension": "pdf",
+      "quality_score": 0.0267
+    },
+    {
+      "media_id": "org:forms:schulveranstaltungen_organisationsplan.pdf",
+      "namespace": "org",
+      "size_bytes": 208159,
+      "extension": "pdf",
+      "quality_score": 0.0416
+    },
+    {
+      "media_id": "org:forms:sonderurlaub.pdf",
+      "namespace": "org",
+      "size_bytes": 140316,
+      "extension": "pdf",
+      "quality_score": 0.0281
+    },
+    {
+      "media_id": "org:forms:stundentausch_neu_2017.pdf",
+      "namespace": "org",
+      "size_bytes": 188824,
+      "extension": "pdf",
+      "quality_score": 0.0378
+    },
+    {
+      "media_id": "org:forms:tonstudio_musik_u_streamingvideowall_anmeldeformular_.pdf",
+      "namespace": "org",
+      "size_bytes": 152051,
+      "extension": "pdf",
+      "quality_score": 0.0304
+    },
+    {
+      "media_id": "org:forms:werkstaettenordnung.pdf",
+      "namespace": "org",
+      "size_bytes": 89033,
+      "extension": "pdf",
+      "quality_score": 0.0178
+    },
+    {
+      "media_id": "org:forms:werte_htl_leonding.pdf",
+      "namespace": "org",
+      "size_bytes": 1675234,
+      "extension": "pdf",
+      "quality_score": 0.335
+    },
+    {
+      "media_id": "org:10_verstaendigung_festellungspruefung.pdf",
+      "namespace": "org",
+      "size_bytes": 118937,
+      "extension": "pdf",
+      "quality_score": 0.0238
+    },
+    {
+      "media_id": "org:biomed-und_gesundheitstechnik-lp2015-schulautonom.pdf",
+      "namespace": "org",
+      "size_bytes": 483069,
+      "extension": "pdf",
+      "quality_score": 0.0966
+    },
+    {
+      "media_id": "org:fernbleibenvonderschuleeigenberechtigt.pdf",
+      "namespace": "org",
+      "size_bytes": 126185,
+      "extension": "pdf",
+      "quality_score": 0.0252
+    },
+    {
+      "media_id": "org:festellungspruefungeigenberechtigt.pdf",
+      "namespace": "org",
+      "size_bytes": 122909,
+      "extension": "pdf",
+      "quality_score": 0.0246
+    },
+    {
+      "media_id": "org:gebaeude_1og.png",
+      "namespace": "org",
+      "size_bytes": 24914,
+      "extension": "png",
+      "quality_score": 0.005
+    },
+    {
+      "media_id": "org:gebaeude_2og.png",
+      "namespace": "org",
+      "size_bytes": 23777,
+      "extension": "png",
+      "quality_score": 0.0048
+    },
+    {
+      "media_id": "org:gebaeude_eg.png",
+      "namespace": "org",
+      "size_bytes": 29442,
+      "extension": "png",
+      "quality_score": 0.0059
+    },
+    {
+      "media_id": "org:gebaeude_turnsaal.png",
+      "namespace": "org",
+      "size_bytes": 9367,
+      "extension": "png",
+      "quality_score": 0.0019
+    },
+    {
+      "media_id": "org:gebaeude_ug.png",
+      "namespace": "org",
+      "size_bytes": 35946,
+      "extension": "png",
+      "quality_score": 0.0072
+    },
+    {
+      "media_id": "org:herdt-verlag-online-zugang.pdf",
+      "namespace": "org",
+      "size_bytes": 707863,
+      "extension": "pdf",
+      "quality_score": 0.1416
+    },
+    {
+      "media_id": "org:hoelzl-verlag-online-zugang.pdf",
+      "namespace": "org",
+      "size_bytes": 315076,
+      "extension": "pdf",
+      "quality_score": 0.063
+    },
+    {
+      "media_id": "org:plan_istrien.pdf",
+      "namespace": "org",
+      "size_bytes": 43984,
+      "extension": "pdf",
+      "quality_score": 0.0088
+    },
+    {
+      "media_id": "org:veranstaltungsplaner_htl_leonding_ausfuellbar_.xlsx",
+      "namespace": "org",
+      "size_bytes": 13640,
+      "extension": "xlsx",
+      "quality_score": 0.0027
+    },
+    {
+      "media_id": "org:veranstaltungsplaner_htl_leonding_nur_druck_.pdf",
+      "namespace": "org",
+      "size_bytes": 117818,
+      "extension": "pdf",
+      "quality_score": 0.0236
+    },
+    {
+      "media_id": "software:sokrates:sokrates_allgemeines.pdf",
+      "namespace": "software",
+      "size_bytes": 274308,
+      "extension": "pdf",
+      "quality_score": 0.0549
+    },
+    {
+      "media_id": "software:sokrates:sokrates_beurteilungen.pdf",
+      "namespace": "software",
+      "size_bytes": 125456,
+      "extension": "pdf",
+      "quality_score": 0.0251
+    },
+    {
+      "media_id": "software:sokrates:sokrates_fehlstunden_webuntis.pdf",
+      "namespace": "software",
+      "size_bytes": 572976,
+      "extension": "pdf",
+      "quality_score": 0.1146
+    },
+    {
+      "media_id": "software:sokrates:sokrates_fruehwarner.pdf",
+      "namespace": "software",
+      "size_bytes": 225690,
+      "extension": "pdf",
+      "quality_score": 0.0451
+    },
+    {
+      "media_id": "software:sokrates:sokrates_fruehwarnsystem_diagramm.pdf",
+      "namespace": "software",
+      "size_bytes": 25505,
+      "extension": "pdf",
+      "quality_score": 0.0051
+    },
+    {
+      "media_id": "software:sokrates:sokrates_kompetenzen_nost_bg_lp_2015.pdf",
+      "namespace": "software",
+      "size_bytes": 231447,
+      "extension": "pdf",
+      "quality_score": 0.0463
+    },
+    {
+      "media_id": "software:sokrates:sokrates_kompetenzen_nost_he_lp2015.pdf",
+      "namespace": "software",
+      "size_bytes": 235125,
+      "extension": "pdf",
+      "quality_score": 0.047
+    },
+    {
+      "media_id": "software:sokrates:sokrates_kompetenzen_nost_if_lp2015.pdf",
+      "namespace": "software",
+      "size_bytes": 228576,
+      "extension": "pdf",
+      "quality_score": 0.0457
+    },
+    {
+      "media_id": "software:sokrates:sokrates_kompetenzen_nost_itm_lp2015.pdf",
+      "namespace": "software",
+      "size_bytes": 244925,
+      "extension": "pdf",
+      "quality_score": 0.049
+    },
+    {
+      "media_id": "software:sokrates:sokrates_kv-skriptum.pdf",
+      "namespace": "software",
+      "size_bytes": 4499049,
+      "extension": "pdf",
+      "quality_score": 0.8998
+    },
+    {
+      "media_id": "software:sokrates:sokrates_leistungsstand_quartalszeugnis.pdf",
+      "namespace": "software",
+      "size_bytes": 122546,
+      "extension": "pdf",
+      "quality_score": 0.0245
+    },
+    {
+      "media_id": "software:sokrates:sokrates_listen_elektronisch.pdf",
+      "namespace": "software",
+      "size_bytes": 96855,
+      "extension": "pdf",
+      "quality_score": 0.0194
+    },
+    {
+      "media_id": "software:sokrates:sokrates_moduluebersicht_drucken.pdf",
+      "namespace": "software",
+      "size_bytes": 129519,
+      "extension": "pdf",
+      "quality_score": 0.0259
+    },
+    {
+      "media_id": "software:sokrates:sokrates_pflichtpraktikum.pdf",
+      "namespace": "software",
+      "size_bytes": 283200,
+      "extension": "pdf",
+      "quality_score": 0.0566
+    },
+    {
+      "media_id": "software:sokrates:sokrates_schueler_stammdaten.pdf",
+      "namespace": "software",
+      "size_bytes": 95796,
+      "extension": "pdf",
+      "quality_score": 0.0192
+    },
+    {
+      "media_id": "software:sokrates:sokrates_wiederholungspruefungen_anleitung.pdf",
+      "namespace": "software",
+      "size_bytes": 166197,
+      "extension": "pdf",
+      "quality_score": 0.0332
+    },
+    {
+      "media_id": "software:sokrates:sokrates_zuordnung_kompetenzen.pdf",
+      "namespace": "software",
+      "size_bytes": 452061,
+      "extension": "pdf",
+      "quality_score": 0.0904
+    },
+    {
+      "media_id": "software:generalsetup.png",
+      "namespace": "software",
+      "size_bytes": 96490,
+      "extension": "png",
+      "quality_score": 0.0193
+    },
+    {
+      "media_id": "software:hauptschalter.png",
+      "namespace": "software",
+      "size_bytes": 5806910,
+      "extension": "png",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "software:homescreen.png",
+      "namespace": "software",
+      "size_bytes": 16328247,
+      "extension": "png",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "software:inputumschalten.png",
+      "namespace": "software",
+      "size_bytes": 12769244,
+      "extension": "png",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "software:laptopanschluesse.png",
+      "namespace": "software",
+      "size_bytes": 10847996,
+      "extension": "png",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "software:menueoeffnen.png",
+      "namespace": "software",
+      "size_bytes": 15986236,
+      "extension": "png",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "software:menuepunktbildschirmanmerkung.png",
+      "namespace": "software",
+      "size_bytes": 15367032,
+      "extension": "png",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "software:menuepunktinputselector.png",
+      "namespace": "software",
+      "size_bytes": 20111825,
+      "extension": "png",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "software:pflichtpraktikum_sokrates.pdf",
+      "namespace": "software",
+      "size_bytes": 391408,
+      "extension": "pdf",
+      "quality_score": 0.0783
+    },
+    {
+      "media_id": "software:screenallgemein.png",
+      "namespace": "software",
+      "size_bytes": 10204738,
+      "extension": "png",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "software:stiftaufbewahrung.png",
+      "namespace": "software",
+      "size_bytes": 7510371,
+      "extension": "png",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "software:teaman_testset_anleitung.pdf",
+      "namespace": "software",
+      "size_bytes": 147451,
+      "extension": "pdf",
+      "quality_score": 0.0295
+    },
+    {
+      "media_id": "software:zuteilungschuelergruppen.pdf",
+      "namespace": "software",
+      "size_bytes": 310714,
+      "extension": "pdf",
+      "quality_score": 0.0621
+    },
+    {
+      "media_id": "teacher:forms:kv:handbuch:anh1_schulordnung.docx",
+      "namespace": "teacher",
+      "size_bytes": 9286,
+      "extension": "docx",
+      "quality_score": 0.0019
+    },
+    {
+      "media_id": "teacher:forms:kv:handbuch:anh2_hausordnung.pdf",
+      "namespace": "teacher",
+      "size_bytes": 96540,
+      "extension": "pdf",
+      "quality_score": 0.0193
+    },
+    {
+      "media_id": "teacher:forms:kv:handbuch:anh3_lbvo.pdf",
+      "namespace": "teacher",
+      "size_bytes": 59144,
+      "extension": "pdf",
+      "quality_score": 0.0118
+    },
+    {
+      "media_id": "teacher:forms:kv:handbuch:anh4_earlyfeedback.docx",
+      "namespace": "teacher",
+      "size_bytes": 22579,
+      "extension": "docx",
+      "quality_score": 0.0045
+    },
+    {
+      "media_id": "teacher:forms:kv:handbuch:anh5_students.pdf",
+      "namespace": "teacher",
+      "size_bytes": 79267,
+      "extension": "pdf",
+      "quality_score": 0.0159
+    },
+    {
+      "media_id": "teacher:forms:kv:handbuch:anh6_parents.pdf",
+      "namespace": "teacher",
+      "size_bytes": 49994,
+      "extension": "pdf",
+      "quality_score": 0.01
+    },
+    {
+      "media_id": "teacher:forms:kv:handbuch:anh7_elternabend.pdf",
+      "namespace": "teacher",
+      "size_bytes": 62296,
+      "extension": "pdf",
+      "quality_score": 0.0125
+    },
+    {
+      "media_id": "teacher:forms:kv:handbuch:anh8_steckbrief.pdf",
+      "namespace": "teacher",
+      "size_bytes": 31112,
+      "extension": "pdf",
+      "quality_score": 0.0062
+    },
+    {
+      "media_id": "teacher:forms:kv:2015-09-14_einladung_elternabend.docx",
+      "namespace": "teacher",
+      "size_bytes": 521887,
+      "extension": "docx",
+      "quality_score": 0.1044
+    },
+    {
+      "media_id": "teacher:forms:kv:2019-1ahitm-elternabend.docx",
+      "namespace": "teacher",
+      "size_bytes": 35214,
+      "extension": "docx",
+      "quality_score": 0.007
+    },
+    {
+      "media_id": "teacher:forms:kv:2020-10-21_1ahif_elternabend_handouts.docx",
+      "namespace": "teacher",
+      "size_bytes": 59044,
+      "extension": "docx",
+      "quality_score": 0.0118
+    },
+    {
+      "media_id": "teacher:forms:kv:2020-10-21_elternabend_1ahif.pptx",
+      "namespace": "teacher",
+      "size_bytes": 1297786,
+      "extension": "pptx",
+      "quality_score": 0.2596
+    },
+    {
+      "media_id": "teacher:forms:kv:elternabend_1ahitm_herzlich_willkommen_.pptx",
+      "namespace": "teacher",
+      "size_bytes": 7626955,
+      "extension": "pptx",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "teacher:forms:kv:intervention_bei_mobbing_no-blame-approach.docx",
+      "namespace": "teacher",
+      "size_bytes": 18734,
+      "extension": "docx",
+      "quality_score": 0.0037
+    },
+    {
+      "media_id": "teacher:forms:kv:juco_infos.docx",
+      "namespace": "teacher",
+      "size_bytes": 16857,
+      "extension": "docx",
+      "quality_score": 0.0034
+    },
+    {
+      "media_id": "teacher:forms:kv:kv-stunde_01.pptx",
+      "namespace": "teacher",
+      "size_bytes": 15347357,
+      "extension": "pptx",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "teacher:forms:kv:kv-stunde_02.pptx",
+      "namespace": "teacher",
+      "size_bytes": 666785,
+      "extension": "pptx",
+      "quality_score": 0.1334
+    },
+    {
+      "media_id": "teacher:forms:kv:kv-stunde_03.pptx",
+      "namespace": "teacher",
+      "size_bytes": 284368,
+      "extension": "pptx",
+      "quality_score": 0.0569
+    },
+    {
+      "media_id": "teacher:forms:5_formular_mittelung-neu_fernbleiben_von_der_schule.pdf",
+      "namespace": "teacher",
+      "size_bytes": 139886,
+      "extension": "pdf",
+      "quality_score": 0.028
+    },
+    {
+      "media_id": "teacher:forms:24-tadeot-handout.pdf",
+      "namespace": "teacher",
+      "size_bytes": 1861381,
+      "extension": "pdf",
+      "quality_score": 0.3723
+    },
+    {
+      "media_id": "teacher:forms:infrastruktur-raeumungsplan.xlsx",
+      "namespace": "teacher",
+      "size_bytes": 24118,
+      "extension": "xlsx",
+      "quality_score": 0.0048
+    },
+    {
+      "media_id": "teacher:forms:open.jpg",
+      "namespace": "teacher",
+      "size_bytes": 75081,
+      "extension": "jpg",
+      "quality_score": 0.015
+    },
+    {
+      "media_id": "teacher:forms:phseminarabmeldung.pdf",
+      "namespace": "teacher",
+      "size_bytes": 91682,
+      "extension": "pdf",
+      "quality_score": 0.0183
+    },
+    {
+      "media_id": "teacher:forms:schulveranstaltung-plantuml-eintaegig.svg",
+      "namespace": "teacher",
+      "size_bytes": 9972,
+      "extension": "svg",
+      "quality_score": 0.002
+    },
+    {
+      "media_id": "teacher:forms:schulveranstaltung-plantuml-mehrtaegig.svg",
+      "namespace": "teacher",
+      "size_bytes": 15270,
+      "extension": "svg",
+      "quality_score": 0.0031
+    },
+    {
+      "media_id": "teacher:forms:schulveranstaltung-plantuml-schulbezogen.svg",
+      "namespace": "teacher",
+      "size_bytes": 15368,
+      "extension": "svg",
+      "quality_score": 0.0031
+    },
+    {
+      "media_id": "teacher:forms:schulveranstaltung-plantuml-start.svg",
+      "namespace": "teacher",
+      "size_bytes": 16784,
+      "extension": "svg",
+      "quality_score": 0.0034
+    },
+    {
+      "media_id": "teacher:forms:sonderurlaub.pdf",
+      "namespace": "teacher",
+      "size_bytes": 140316,
+      "extension": "pdf",
+      "quality_score": 0.0281
+    },
+    {
+      "media_id": "teacher:forms:terminplanvorlage-tadeot.xlsx",
+      "namespace": "teacher",
+      "size_bytes": 19553,
+      "extension": "xlsx",
+      "quality_score": 0.0039
+    },
+    {
+      "media_id": "teacher:forms:vorlage-verantwortliche-und-raeume.xlsx",
+      "namespace": "teacher",
+      "size_bytes": 119681,
+      "extension": "xlsx",
+      "quality_score": 0.0239
+    },
+    {
+      "media_id": "teacher:it:lfvt:entersuggestionsclass.jpg",
+      "namespace": "teacher",
+      "size_bytes": 114189,
+      "extension": "jpg",
+      "quality_score": 0.0228
+    },
+    {
+      "media_id": "teacher:it:lfvt:entersuggestionsgeneral.jpg",
+      "namespace": "teacher",
+      "size_bytes": 109695,
+      "extension": "jpg",
+      "quality_score": 0.0219
+    },
+    {
+      "media_id": "teacher:it:lfvt:gegenstandsserie-anlegen.png",
+      "namespace": "teacher",
+      "size_bytes": 48070,
+      "extension": "png",
+      "quality_score": 0.0096
+    },
+    {
+      "media_id": "teacher:it:lfvt:organizetuition.jpg",
+      "namespace": "teacher",
+      "size_bytes": 93071,
+      "extension": "jpg",
+      "quality_score": 0.0186
+    },
+    {
+      "media_id": "teacher:it:lfvt:sequenceam.jpg",
+      "namespace": "teacher",
+      "size_bytes": 61191,
+      "extension": "jpg",
+      "quality_score": 0.0122
+    },
+    {
+      "media_id": "teacher:it:lfvt:sequencepose.jpg",
+      "namespace": "teacher",
+      "size_bytes": 35148,
+      "extension": "jpg",
+      "quality_score": 0.007
+    },
+    {
+      "media_id": "teacher:it:lfvt:teachercoursesequencestart.jpg",
+      "namespace": "teacher",
+      "size_bytes": 65026,
+      "extension": "jpg",
+      "quality_score": 0.013
+    },
+    {
+      "media_id": "teacher:it:lfvt:teachermainmenu.jpg",
+      "namespace": "teacher",
+      "size_bytes": 13799,
+      "extension": "jpg",
+      "quality_score": 0.0028
+    },
+    {
+      "media_id": "teacher:it:howtogetcopilot.pdf",
+      "namespace": "teacher",
+      "size_bytes": 2224168,
+      "extension": "pdf",
+      "quality_score": 0.4448
+    },
+    {
+      "media_id": "teacher:it:howtogetgithubprofessional.pdf",
+      "namespace": "teacher",
+      "size_bytes": 2970096,
+      "extension": "pdf",
+      "quality_score": 0.594
+    },
+    {
+      "media_id": "teacher:it:pcs_raum_143.pdf",
+      "namespace": "teacher",
+      "size_bytes": 2567235,
+      "extension": "pdf",
+      "quality_score": 0.5134
+    },
+    {
+      "media_id": "teacher:it:pcs_raum_u08.pdf",
+      "namespace": "teacher",
+      "size_bytes": 2451202,
+      "extension": "pdf",
+      "quality_score": 0.4902
+    },
+    {
+      "media_id": "teacher:it:pcs_raum_u10.pdf",
+      "namespace": "teacher",
+      "size_bytes": 2580229,
+      "extension": "pdf",
+      "quality_score": 0.516
+    },
+    {
+      "media_id": "teacher:it:pcs_raum_u81.pdf",
+      "namespace": "teacher",
+      "size_bytes": 2867810,
+      "extension": "pdf",
+      "quality_score": 0.5736
+    },
+    {
+      "media_id": "teacher:it:pcs_raum_u82.pdf",
+      "namespace": "teacher",
+      "size_bytes": 2630955,
+      "extension": "pdf",
+      "quality_score": 0.5262
+    },
+    {
+      "media_id": "teacher:lawandorder:einrechnungsnote.pdf",
+      "namespace": "teacher",
+      "size_bytes": 175854,
+      "extension": "pdf",
+      "quality_score": 0.0352
+    },
+    {
+      "media_id": "teacher:elternabend_1ahitm_herzlich_willkommen_.pptx",
+      "namespace": "teacher",
+      "size_bytes": 7626955,
+      "extension": "pptx",
+      "quality_score": 1.0
+    },
+    {
+      "media_id": "teacher:fehlstunden.pdf",
+      "namespace": "teacher",
+      "size_bytes": 411176,
+      "extension": "pdf",
+      "quality_score": 0.0822
+    },
+    {
+      "media_id": "teacher:gesamt_uebersicht_themenstellungen.docx",
+      "namespace": "teacher",
+      "size_bytes": 18488,
+      "extension": "docx",
+      "quality_score": 0.0037
+    },
+    {
+      "media_id": "teacher:herdt-verlag-online-zugang.pdf",
+      "namespace": "teacher",
+      "size_bytes": 707863,
+      "extension": "pdf",
+      "quality_score": 0.1416
+    },
+    {
+      "media_id": "teacher:hoelzl-verlag-online-zugang.pdf",
+      "namespace": "teacher",
+      "size_bytes": 315076,
+      "extension": "pdf",
+      "quality_score": 0.063
+    },
+    {
+      "media_id": "teacher:leitfaden_bildungsdirektion_07.11.2024.docx",
+      "namespace": "teacher",
+      "size_bytes": 43913,
+      "extension": "docx",
+      "quality_score": 0.0088
+    },
+    {
+      "media_id": "teacher:leo_brief_einseitig_2022_neues_logo_v1.docx",
+      "namespace": "teacher",
+      "size_bytes": 212260,
+      "extension": "docx",
+      "quality_score": 0.0425
+    },
+    {
+      "media_id": "teacher:template_aufgabenstellung_if.docx",
+      "namespace": "teacher",
+      "size_bytes": 57800,
+      "extension": "docx",
+      "quality_score": 0.0116
+    },
+    {
+      "media_id": "teacher:template_aufgabenstellung_itm.docx",
+      "namespace": "teacher",
+      "size_bytes": 57617,
+      "extension": "docx",
+      "quality_score": 0.0115
+    },
+    {
+      "media_id": "teacher:veritas-verlag-online-zugang.pdf",
+      "namespace": "teacher",
+      "size_bytes": 205231,
+      "extension": "pdf",
+      "quality_score": 0.041
+    },
+    {
+      "media_id": "teacher:vorlage_seminar_abmeldung.pdf",
+      "namespace": "teacher",
+      "size_bytes": 91686,
+      "extension": "pdf",
+      "quality_score": 0.0183
+    },
+    {
+      "media_id": "tutorial:aula_bildschirme:bedienungsanleitung_zur_praesentation_in_aula.pdf",
+      "namespace": "tutorial",
+      "size_bytes": 277046,
+      "extension": "pdf",
+      "quality_score": 0.0554
+    },
+    {
+      "media_id": "tutorial:pv-anlage:2223_energie-logger.pdf",
+      "namespace": "tutorial",
+      "size_bytes": 1321152,
+      "extension": "pdf",
+      "quality_score": 0.2642
+    },
+    {
+      "media_id": "tutorial:pv-anlage:2223_pv-anlage.pdf",
+      "namespace": "tutorial",
+      "size_bytes": 632079,
+      "extension": "pdf",
+      "quality_score": 0.1264
+    },
+    {
+      "media_id": "tutorial:pv-anlage:htl-pv-anlage_klein.jpg",
+      "namespace": "tutorial",
+      "size_bytes": 108685,
+      "extension": "jpg",
+      "quality_score": 0.0217
+    },
+    {
+      "media_id": "tutorial:studentmail:outlook1.jpg",
+      "namespace": "tutorial",
+      "size_bytes": 214065,
+      "extension": "jpg",
+      "quality_score": 0.0428
+    },
+    {
+      "media_id": "tutorial:studentmail:outlook2.jpg",
+      "namespace": "tutorial",
+      "size_bytes": 40036,
+      "extension": "jpg",
+      "quality_score": 0.008
+    },
+    {
+      "media_id": "tutorial:studentmail:outlook3.jpg",
+      "namespace": "tutorial",
+      "size_bytes": 62860,
+      "extension": "jpg",
+      "quality_score": 0.0126
+    },
+    {
+      "media_id": "tutorial:studentmail:outlook4.jpg",
+      "namespace": "tutorial",
+      "size_bytes": 57606,
+      "extension": "jpg",
+      "quality_score": 0.0115
+    },
+    {
+      "media_id": "tutorial:studentmail:outlook5.jpg",
+      "namespace": "tutorial",
+      "size_bytes": 95262,
+      "extension": "jpg",
+      "quality_score": 0.0191
+    },
+    {
+      "media_id": "tutorial:studentmail:outlook6_erweiterte_einstellungen.jpg",
+      "namespace": "tutorial",
+      "size_bytes": 48606,
+      "extension": "jpg",
+      "quality_score": 0.0097
+    },
+    {
+      "media_id": "tutorial:studentmail:outlook7.jpg",
+      "namespace": "tutorial",
+      "size_bytes": 86370,
+      "extension": "jpg",
+      "quality_score": 0.0173
+    },
+    {
+      "media_id": "tutorial:studentmail:outlook8.jpg",
+      "namespace": "tutorial",
+      "size_bytes": 49194,
+      "extension": "jpg",
+      "quality_score": 0.0098
+    },
+    {
+      "media_id": "tutorial:studentmail:outlook9.jpg",
+      "namespace": "tutorial",
+      "size_bytes": 60390,
+      "extension": "jpg",
+      "quality_score": 0.0121
+    },
+    {
+      "media_id": "tutorial:2223_energie-logger.pdf",
+      "namespace": "tutorial",
+      "size_bytes": 1321152,
+      "extension": "pdf",
+      "quality_score": 0.2642
+    },
+    {
+      "media_id": "werkstaette:luftcheck_bestueckentop.pdf",
+      "namespace": "werkstaette",
+      "size_bytes": 25372,
+      "extension": "pdf",
+      "quality_score": 0.0051
+    },
+    {
+      "media_id": "werkstaette:luftcheck_bestueckung_bottom.pdf",
+      "namespace": "werkstaette",
+      "size_bytes": 23080,
+      "extension": "pdf",
+      "quality_score": 0.0046
+    },
+    {
+      "media_id": "werkstaette:luftcheck_schaltung.jpg",
+      "namespace": "werkstaette",
+      "size_bytes": 44763,
+      "extension": "jpg",
+      "quality_score": 0.009
+    },
+    {
+      "media_id": "werkstaette:luftcheck_screen.jpg",
+      "namespace": "werkstaette",
+      "size_bytes": 378610,
+      "extension": "jpg",
+      "quality_score": 0.0757
+    },
+    {
+      "media_id": "werkstaette:luftcheck_screendark.jpg",
+      "namespace": "werkstaette",
+      "size_bytes": 354093,
+      "extension": "jpg",
+      "quality_score": 0.0708
+    },
+    {
+      "media_id": "werkstaette:luftcheck_screenwetter.jpg",
+      "namespace": "werkstaette",
+      "size_bytes": 332275,
+      "extension": "jpg",
+      "quality_score": 0.0665
+    },
+    {
+      "media_id": "werkstaette:luftcheck_smdbestueckung.jpg",
+      "namespace": "werkstaette",
+      "size_bytes": 271051,
+      "extension": "jpg",
+      "quality_score": 0.0542
+    },
+    {
+      "media_id": "werkstaette:man-ha06-0225a.pdf",
+      "namespace": "werkstaette",
+      "size_bytes": 1396409,
+      "extension": "pdf",
+      "quality_score": 0.2793
+    },
+    {
+      "media_id": "werkstaette:sl-ha06-ii-300x300.png",
+      "namespace": "werkstaette",
+      "size_bytes": 78063,
+      "extension": "png",
+      "quality_score": 0.0156
+    },
+    {
+      "media_id": "werkstaette:webpage.jpg",
+      "namespace": "werkstaette",
+      "size_bytes": 20125,
+      "extension": "jpg",
+      "quality_score": 0.004
+    },
+    {
+      "media_id": "4_formular_abmeldung_von_der_schule_1_.pdf",
+      "namespace": "root",
+      "size_bytes": 127736,
+      "extension": "pdf",
+      "quality_score": 0.0255
+    },
+    {
+      "media_id": "leondingimage.jpg",
+      "namespace": "root",
+      "size_bytes": 3175046,
+      "extension": "jpg",
+      "quality_score": 0.635
+    }
+  ],
+  "aggregate": {
+    "total": 333
+  }
+}

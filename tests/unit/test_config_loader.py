@@ -85,9 +85,9 @@ class TestResolvePlaceholders:
         assert result["OTHER"]["ref"] == "${unknown_var}/path"
 
     def test_non_string_values_unchanged(self) -> None:
-        data = {"PATHS": {"root_dir": "/test"}, "NUMBERS": {"port": 6333, "enabled": True}}
+        data = {"PATHS": {"root_dir": "/test"}, "NUMBERS": {"port": 18334, "enabled": True}}
         result = self.config_mod.resolve_placeholders(data)
-        assert result["NUMBERS"]["port"] == 6333
+        assert result["NUMBERS"]["port"] == 18334
         assert result["NUMBERS"]["enabled"] is True
 
     def test_list_values_resolved(self) -> None:

@@ -275,7 +275,7 @@ def _get_qdrant_client() -> QdrantClient:
     """Create Qdrant client from central env.yaml."""
     env_path = REPO_ROOT / "config" / "env.yaml"
     host = "localhost"
-    port = 6333
+    port = 18334
 
     if env_path.exists():
         with open(env_path, encoding="utf-8") as fh:
@@ -438,6 +438,7 @@ def run_model_evaluation(
                 collection_name=collection_name,
                 query_vector=query_embedding,
                 limit=config.top_k,
+                with_payload=True,
             )
 
             # Extract unique page IDs in ranked order (deduplicate chunks)
@@ -446,8 +447,11 @@ def run_model_evaluation(
             ranked_pages: list[str] = []
             best_relevance_by_page: dict[str, float] = {}
             for hit in search_results:
-                pid = hit.payload["page_id"]
-                chunk_text = hit.payload.get("text", "")
+                payload: dict = hit.payload if hit.payload is not None else {}
+                if "page_id" not in payload:
+                    continue
+                pid = payload["page_id"]
+                chunk_text = payload.get("text", "")
                 rel_score = calculate_relevance_score(chunk_text, gt_text, keywords)
                 # Track best relevance per page
                 if pid not in best_relevance_by_page or rel_score > best_relevance_by_page[pid]:

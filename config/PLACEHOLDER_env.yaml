@@ -154,7 +154,7 @@ PIPELINE_ORCHESTRATION:
   # HTTP Orchestrator API (laeuft auf Host, nicht in Container)
   # WICHTIG: host.docker.internal fuer Zugriff vom Docker-Container auf Host
   orchestrator:
-    url: http://host.docker.internal:8089
+    url: http://host.docker.internal:18089
     timeout: 30
   
   # Docker Compose Einstellungen

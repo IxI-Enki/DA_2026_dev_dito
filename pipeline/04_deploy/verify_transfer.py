@@ -91,7 +91,7 @@ def verify_qdrant_collection(host: str, user: str, port: int, key_path: Optional
     cmd.extend([
         "-p", str(port), 
         f"{user}@{host}", 
-        "curl -s http://localhost:6333/collections/wiki_embeddings || echo 'QDRANT_NOT_RUNNING'"
+        "curl -s http://localhost:18334/collections/wiki_embeddings || echo 'QDRANT_NOT_RUNNING'"
     ])
     
     try:

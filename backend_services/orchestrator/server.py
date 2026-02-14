@@ -13,8 +13,8 @@ Usage (container — default):
     Automatically started by docker compose.
 
 Usage (host — development):
-    python server.py                    # Start on default port 8089
-    python server.py --port 8090        # Custom port
+    python server.py                    # Container default port 8089 (host map 18089)
+    python server.py --port 18089       # On host use 18089 to match Stack-G
 
 Endpoints:
     GET  /health                        - Health check
@@ -629,7 +629,7 @@ async def cancel_job(job_id: str):
 def main():
     parser = argparse.ArgumentParser(description="Dev Dito Pipeline Orchestrator")
     parser.add_argument("--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=8089, help="Port to listen on (default: 8089)")
+    parser.add_argument("--port", type=int, default=8089, help="Port to listen on (default: 8089 in container; use 18089 on host)")
     args = parser.parse_args()
     
     mode = "CONTAINER (DooD)" if _IN_CONTAINER else "HOST"

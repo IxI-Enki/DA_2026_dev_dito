@@ -109,7 +109,7 @@ def minimal_env_yaml(tmp_config_dir: Path) -> Path:
             },
             "qdrant": {
                 "host": "localhost",
-                "port": 6333,
+                "port": 18334,
                 "collection": "test_wiki_embeddings",
             },
         },

@@ -1,0 +1,459 @@
+{
+  "min_docs": 50,
+  "max_docs": 100,
+  "selected_count": 50,
+  "documents": [
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_forms_aenderungen_stundentafel_sga_151018_mt.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:forms:aenderungen_stundentafel_sga_151018_mt.pdf",
+      "size_bytes": 783537,
+      "rel_path": "media\\departm_forms_aenderungen_stundentafel_sga_151018_mt.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_minf_minf_25_26_neu.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:minf:minf_25_26_neu.pdf",
+      "size_bytes": 600489,
+      "rel_path": "media\\departm_minf_minf_25_26_neu.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_forms_schulautonom_labor-mt.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:forms:schulautonom_labor-mt.pdf",
+      "size_bytes": 583081,
+      "rel_path": "media\\departm_forms_schulautonom_labor-mt.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\teacher_forms_kv_kv-stunde_01.pptx",
+      "namespace": "teacher",
+      "type": "media",
+      "doc_id": "teacher:forms:kv:kv-stunde_01.pptx",
+      "size_bytes": 15347357,
+      "rel_path": "media\\teacher_forms_kv_kv-stunde_01.pptx",
+      "extension": "pptx"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\teacher_forms_kv_elternabend_1ahitm_herzlich_willkommen_.pptx",
+      "namespace": "teacher",
+      "type": "media",
+      "doc_id": "teacher:forms:kv:elternabend_1ahitm_herzlich_willkommen_.pptx",
+      "size_bytes": 7626955,
+      "rel_path": "media\\teacher_forms_kv_elternabend_1ahitm_herzlich_willkommen_.pptx",
+      "extension": "pptx"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\teacher_elternabend_1ahitm_herzlich_willkommen_.pptx",
+      "namespace": "teacher",
+      "type": "media",
+      "doc_id": "teacher:elternabend_1ahitm_herzlich_willkommen_.pptx",
+      "size_bytes": 7626955,
+      "rel_path": "media\\teacher_elternabend_1ahitm_herzlich_willkommen_.pptx",
+      "extension": "pptx"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\org_forms_werte_htl_leonding.pdf",
+      "namespace": "org",
+      "type": "media",
+      "doc_id": "org:forms:werte_htl_leonding.pdf",
+      "size_bytes": 1675234,
+      "rel_path": "media\\org_forms_werte_htl_leonding.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\org_herdt-verlag-online-zugang.pdf",
+      "namespace": "org",
+      "type": "media",
+      "doc_id": "org:herdt-verlag-online-zugang.pdf",
+      "size_bytes": 707863,
+      "rel_path": "media\\org_herdt-verlag-online-zugang.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\org_biomed-und_gesundheitstechnik-lp2015-schulautonom.pdf",
+      "namespace": "org",
+      "type": "media",
+      "doc_id": "org:biomed-und_gesundheitstechnik-lp2015-schulautonom.pdf",
+      "size_bytes": 483069,
+      "rel_path": "media\\org_biomed-und_gesundheitstechnik-lp2015-schulautonom.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\class_proxmox-netz_route.jpg",
+      "namespace": "class",
+      "type": "media",
+      "doc_id": "class:proxmox-netz_route.jpg",
+      "size_bytes": 86963,
+      "rel_path": "media\\class_proxmox-netz_route.jpg",
+      "extension": "jpg"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\class_docker_kollision.jpg",
+      "namespace": "class",
+      "type": "media",
+      "doc_id": "class:docker_kollision.jpg",
+      "size_bytes": 37585,
+      "rel_path": "media\\class_docker_kollision.jpg",
+      "extension": "jpg"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\exams_threed_object_reconstruction.pdf",
+      "namespace": "exams",
+      "type": "media",
+      "doc_id": "exams:threed_object_reconstruction.pdf",
+      "size_bytes": 13143644,
+      "rel_path": "media\\exams_threed_object_reconstruction.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\exams_200403_main_final.pdf",
+      "namespace": "exams",
+      "type": "media",
+      "doc_id": "exams:200403_main_final.pdf",
+      "size_bytes": 6456483,
+      "rel_path": "media\\exams_200403_main_final.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\exams_kemon_keba_network_monitor.pdf",
+      "namespace": "exams",
+      "type": "media",
+      "doc_id": "exams:kemon_keba_network_monitor.pdf",
+      "size_bytes": 6188947,
+      "rel_path": "media\\exams_kemon_keba_network_monitor.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\competitions_22_23_wettberwerbe.pdf",
+      "namespace": "competitions",
+      "type": "media",
+      "doc_id": "competitions:22_23_wettberwerbe.pdf",
+      "size_bytes": 1003997,
+      "rel_path": "media\\competitions_22_23_wettberwerbe.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\competitions_project_award_vorausscheidungen_links.pdf",
+      "namespace": "competitions",
+      "type": "media",
+      "doc_id": "competitions:project_award_vorausscheidungen_links.pdf",
+      "size_bytes": 37951,
+      "rel_path": "media\\competitions_project_award_vorausscheidungen_links.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\competitions_projectaward-einverstaendniserklaerung-template.odt",
+      "namespace": "competitions",
+      "type": "media",
+      "doc_id": "competitions:projectaward-einverstaendniserklaerung-template.odt",
+      "size_bytes": 5844,
+      "rel_path": "media\\competitions_projectaward-einverstaendniserklaerung-template.odt",
+      "extension": "odt"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\tutorial_pv-anlage_2223_energie-logger.pdf",
+      "namespace": "tutorial",
+      "type": "media",
+      "doc_id": "tutorial:pv-anlage:2223_energie-logger.pdf",
+      "size_bytes": 1321152,
+      "rel_path": "media\\tutorial_pv-anlage_2223_energie-logger.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\tutorial_2223_energie-logger.pdf",
+      "namespace": "tutorial",
+      "type": "media",
+      "doc_id": "tutorial:2223_energie-logger.pdf",
+      "size_bytes": 1321152,
+      "rel_path": "media\\tutorial_2223_energie-logger.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\tutorial_pv-anlage_2223_pv-anlage.pdf",
+      "namespace": "tutorial",
+      "type": "media",
+      "doc_id": "tutorial:pv-anlage:2223_pv-anlage.pdf",
+      "size_bytes": 632079,
+      "rel_path": "media\\tutorial_pv-anlage_2223_pv-anlage.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_forms_bmg-4jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:forms:bmg-4jg.pdf",
+      "size_bytes": 320423,
+      "rel_path": "media\\departm_forms_bmg-4jg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_forms_epm_-_kompetenzen-v2.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:forms:epm_-_kompetenzen-v2.pdf",
+      "size_bytes": 264282,
+      "rel_path": "media\\departm_forms_epm_-_kompetenzen-v2.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_forms_lp-2015-bgbl_ii_nr_262_2015_anlage_1.3.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:forms:lp-2015-bgbl_ii_nr_262_2015_anlage_1.3.pdf",
+      "size_bytes": 437904,
+      "rel_path": "media\\departm_forms_lp-2015-bgbl_ii_nr_262_2015_anlage_1.3.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_forms_mgt_semesterkompetenzen_lehrplan_2223.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:forms:mgt_semesterkompetenzen_lehrplan_2223.pdf",
+      "size_bytes": 77812,
+      "rel_path": "media\\departm_forms_mgt_semesterkompetenzen_lehrplan_2223.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_forms_mgt_semesterkompetenzen_lehrplan_2223_2jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:forms:mgt_semesterkompetenzen_lehrplan_2223_2jg.pdf",
+      "size_bytes": 20089,
+      "rel_path": "media\\departm_forms_mgt_semesterkompetenzen_lehrplan_2223_2jg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_forms_performance_notification_en.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:forms:performance_notification_en.pdf",
+      "size_bytes": 71197,
+      "rel_path": "media\\departm_forms_performance_notification_en.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_mtrs_jahrgang2_mtrs.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:mtrs:jahrgang2_mtrs.pdf",
+      "size_bytes": 367439,
+      "rel_path": "media\\departm_mtrs_jahrgang2_mtrs.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_mtrs_jahrgang3_mtrs.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:mtrs:jahrgang3_mtrs.pdf",
+      "size_bytes": 194677,
+      "rel_path": "media\\departm_mtrs_jahrgang3_mtrs.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_mtrs_jahrgang4_mtrs.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:mtrs:jahrgang4_mtrs.pdf",
+      "size_bytes": 372609,
+      "rel_path": "media\\departm_mtrs_jahrgang4_mtrs.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_mtrs_lehrplanuebersicht_mtrs.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:mtrs:lehrplanuebersicht_mtrs.pdf",
+      "size_bytes": 185111,
+      "rel_path": "media\\departm_mtrs_lehrplanuebersicht_mtrs.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_bmg_semesterkompetenzen_lehrplan_2223_1jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_1jg.pdf",
+      "size_bytes": 77521,
+      "rel_path": "media\\departm_bmg_semesterkompetenzen_lehrplan_2223_1jg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_bmg_semesterkompetenzen_lehrplan_2223_2jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_2jg.pdf",
+      "size_bytes": 76074,
+      "rel_path": "media\\departm_bmg_semesterkompetenzen_lehrplan_2223_2jg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_bmg_semesterkompetenzen_lehrplan_2223_3jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_3jg.pdf",
+      "size_bytes": 77549,
+      "rel_path": "media\\departm_bmg_semesterkompetenzen_lehrplan_2223_3jg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_bmg_semesterkompetenzen_lehrplan_2223_4jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_4jg.pdf",
+      "size_bytes": 74248,
+      "rel_path": "media\\departm_bmg_semesterkompetenzen_lehrplan_2223_4jg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_bmg_semesterkompetenzen_lehrplan_2223_5jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_5jg.pdf",
+      "size_bytes": 78847,
+      "rel_path": "media\\departm_bmg_semesterkompetenzen_lehrplan_2223_5jg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_bmg_semesterkompetenzen_lehrplan_2223_lp.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:bmg_semesterkompetenzen_lehrplan_2223_lp.pdf",
+      "size_bytes": 75493,
+      "rel_path": "media\\departm_bmg_semesterkompetenzen_lehrplan_2223_lp.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_bsv1_semesterkompetenzen_lehrplan_v1.0.xlsx",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:bsv1_semesterkompetenzen_lehrplan_v1.0.xlsx",
+      "size_bytes": 29846,
+      "rel_path": "media\\departm_bsv1_semesterkompetenzen_lehrplan_v1.0.xlsx",
+      "extension": "xlsx"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_bsv2_semesterkompetenzen_lehrplan_v1.0.xlsx",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:bsv2_semesterkompetenzen_lehrplan_v1.0.xlsx",
+      "size_bytes": 30162,
+      "rel_path": "media\\departm_bsv2_semesterkompetenzen_lehrplan_v1.0.xlsx",
+      "extension": "xlsx"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_bsv_semesterkompetenzen_lehrplan_2021.xlsx",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:bsv_semesterkompetenzen_lehrplan_2021.xlsx",
+      "size_bytes": 17237,
+      "rel_path": "media\\departm_bsv_semesterkompetenzen_lehrplan_2021.xlsx",
+      "extension": "xlsx"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_1jhg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_1jhg.pdf",
+      "size_bytes": 74707,
+      "rel_path": "media\\departm_fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_1jhg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_2jhg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_2jhg.pdf",
+      "size_bytes": 73907,
+      "rel_path": "media\\departm_fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_2jhg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_3jhg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_3jhg.pdf",
+      "size_bytes": 76581,
+      "rel_path": "media\\departm_fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_3jhg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_4jhg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_4jhg.pdf",
+      "size_bytes": 75348,
+      "rel_path": "media\\departm_fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_4jhg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_5jhg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_5jhg.pdf",
+      "size_bytes": 74767,
+      "rel_path": "media\\departm_fachpraktischer_unterricht_semesterkompetenzen_lehrplan_2223_5jhg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_fel-ae-1jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:fel-ae-1jg.pdf",
+      "size_bytes": 370000,
+      "rel_path": "media\\departm_fel-ae-1jg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_fel-ae-2jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:fel-ae-2jg.pdf",
+      "size_bytes": 368912,
+      "rel_path": "media\\departm_fel-ae-2jg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_fel-ae-3jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:fel-ae-3jg.pdf",
+      "size_bytes": 195457,
+      "rel_path": "media\\departm_fel-ae-3jg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_fel-ae-4jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:fel-ae-4jg.pdf",
+      "size_bytes": 191100,
+      "rel_path": "media\\departm_fel-ae-4jg.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_fel-ae-lehrplan_gesamtuebersicht.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:fel-ae-lehrplan_gesamtuebersicht.pdf",
+      "size_bytes": 189454,
+      "rel_path": "media\\departm_fel-ae-lehrplan_gesamtuebersicht.pdf",
+      "extension": "pdf"
+    },
+    {
+      "path": "D:\\_Repositories\\_Diploma_Thesis_Repositories\\dev_dito\\data\\fetched\\fetched_at_20260211_235935\\media\\departm_fel-auto-1jg.pdf",
+      "namespace": "departm",
+      "type": "media",
+      "doc_id": "departm:fel-auto-1jg.pdf",
+      "size_bytes": 177733,
+      "rel_path": "media\\departm_fel-auto-1jg.pdf",
+      "extension": "pdf"
+    }
+  ],
+  "source": "fetch_manifest",
+  "fetch_id": "fetched_at_20260211_235935"
+}

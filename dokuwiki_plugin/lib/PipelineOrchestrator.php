@@ -66,7 +66,7 @@ class PipelineOrchestrator
         // Default uses host.docker.internal for Docker container → Host communication
         $this->orchestratorUrl = ConfigLoader::get(
             'PIPELINE_ORCHESTRATION.orchestrator.url',
-            'http://host.docker.internal:8089'
+            'http://host.docker.internal:18089'
         );
     }
 

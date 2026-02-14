@@ -1,0 +1,128 @@
+# RAGAS Evaluation Agent System - Configuration
+# Used by evaluation/ragas_agents/scripts/*.py
+# Thesis: FF1, FF3, J1, J2, J4, J6
+
+app:
+  name: ragas_agents
+  version: "1.0.0"
+  description: "RAGAS evaluation pipeline for LeoWiki RAG (Diploma thesis)"
+
+paths:
+  output_dir: evaluation/ragas_agents/output
+  test_corpus_dir: evaluation/ragas_agents/output/test_corpus
+  ground_truth_dir: evaluation/ragas_agents/output/ground_truth
+  evaluation_results_dir: evaluation/ragas_agents/output/evaluation_results
+  reports_dir: evaluation/ragas_agents/output/reports
+  plots_dir: evaluation/ragas_agents/output/plots
+
+# Data Curator
+test_corpus:
+  min_docs: 50
+  max_docs: 100
+  balance_pages_media: true
+  # Only these namespaces are hard-excluded; archive/special etc. are auto-detected
+  namespaces_exclude: [playground, wiki]
+  # Prefer these namespaces (representative LeoWiki content)
+  namespaces_priority: [departm, teacher, org, class, exams, competitions, tutorial, it, department, werkstaette, wocheninfo]
+  # Minimum page size (bytes) to avoid trivial/empty pages
+  min_page_size_bytes: 500
+  # Target share of media in corpus (e.g. 0.2 = 20% media, 80% pages)
+  media_ratio: 0.2
+  # Auto-exclude pages below these thresholds (from analyze_manifest)
+  auto_exclude_thresholds:
+    min_readiness_score: 0.3
+    min_connectivity: 1
+
+document_quality:
+  readability_min_flesch: 20
+  content_completeness_max_char_diff: 0.05
+  content_completeness_max_token_diff: 0.10
+  structure_preservation_min_ratio: 0.85
+
+# Ground Truth Engineer
+questions:
+  num_questions: 25
+  min_questions: 20
+  max_questions: 30
+  single_hop_ratio: 0.6
+  multi_hop_ratio: 0.4
+  language: de
+
+relevance_judgment:
+  scale_min: 0
+  scale_max: 3
+  llm_suggest_first: true
+  human_review_sample_ratio: 1.0  # 1.0 = review all
+
+augmentation:
+  num_extra: 10
+  strategies:
+    - paraphrase
+    - negative_sampling
+  random_seed: 42
+
+# RAG Evaluator - Embedding (J2, FF3)
+embedding_evaluation:
+  models:
+    - id: mxbai
+      name: deepset/mxbai-embed-de-large-v1
+      dimensions: 1024
+    - id: bge-m3
+      name: BAAI/bge-m3
+      dimensions: 1024
+    - id: e5
+      name: multilingual-e5-large-instruct
+      dimensions: 1024
+  metrics:
+    - ndcg_at_10
+    - mrr
+    - precision_at_5
+  k: 10
+
+# RAG Evaluator - Retrieval (J6)
+retrieval_evaluation:
+  strategies:
+    - dense
+    - bm25
+    - hybrid
+  hybrid_alpha: 0.5  # weight dense vs bm25
+  metrics:
+    - precision_at_5
+    - ndcg_at_10
+    - recall_at_10
+  top_k: 10
+
+# RAG Evaluator - LLM Judge (RAGAS)
+llm_judge:
+  evaluator_provider: openai
+  evaluator_model: gpt-4o-mini
+  metrics:
+    - answer_correctness
+    - answer_relevancy
+    - faithfulness
+    - context_precision
+  api_key_env: OPENAI_API_KEY
+
+# Statistical Analysis
+statistics:
+  confidence_level: 0.95
+  compute_ci: true
+  no_significance_tests: true  # per thesis simplification
+
+# Report Generation
+report:
+  formats:
+    - md
+    - json
+  include_plots: true
+  thesis_sections:
+    - FF1
+    - FF3
+    - J2
+    - J4
+    - J6
+
+# Optional: paths to techstack (if multi-workspace)
+techstack:
+  preprocessing_evaluation_root: null  # set to path to techstack/ragflow/preprocessing_evaluation if needed
+  fetched_data_root: null             # set to path to techstack/dokuwiki/fetcher_json_rpc_api/content_output if needed

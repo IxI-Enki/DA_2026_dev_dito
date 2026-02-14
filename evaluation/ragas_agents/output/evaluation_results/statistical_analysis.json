@@ -1,0 +1,26 @@
+{
+  "sources": [
+    "evaluation_results_embeddings.json"
+  ],
+  "tables": {
+    "embedding_mxbai": {
+      "ndcg_at_10": 0.0,
+      "mrr": 0.0,
+      "precision_at_5": 0.0
+    },
+    "embedding_bge-m3": {
+      "ndcg_at_10": 0.0,
+      "mrr": 0.0,
+      "precision_at_5": 0.0
+    },
+    "embedding_e5": {
+      "ndcg_at_10": 0.0,
+      "mrr": 0.0,
+      "precision_at_5": 0.0
+    }
+  },
+  "summary": {
+    "confidence_level": 0.95,
+    "no_significance_tests": true
+  }
+}

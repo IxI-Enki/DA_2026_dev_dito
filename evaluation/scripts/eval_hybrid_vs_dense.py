@@ -110,12 +110,26 @@ def _evaluate_queries(
             collection_name=collection_name,
             query_vector=query_embedding,
             limit=top_k,
+            with_payload=True,
         )
 
         # Deduplicate by page_id
         seen: set[str] = set()
         ranked_pages: list[str] = []
+        # #region agent log
+        _log_path = REPO_ROOT / ".cursor" / "debug.log"
+        try:
+            _first = next(iter(search_results), None)
+            if _first is not None:
+                _pl = getattr(_first, "payload", None)
+                with open(_log_path, "a", encoding="utf-8") as _f:
+                    _f.write(json.dumps({"location": "eval_hybrid_vs_dense.py:hit_loop", "message": "first hit payload check", "data": {"hit_is_none": False, "payload_is_none": _pl is None, "payload_type": type(_pl).__name__ if _pl is not None else "NoneType"}, "hypothesisId": "A", "timestamp": time.time() * 1000}) + "\n")
+        except Exception:
+            pass
+        # #endregion
         for hit in search_results:
+            if hit.payload is None or "page_id" not in hit.payload:
+                continue
             pid = hit.payload["page_id"]
             if pid not in seen:
                 seen.add(pid)
@@ -128,7 +142,8 @@ def _evaluate_queries(
         # Content relevance of best chunk
         best_rel = 0.0
         for hit in search_results:
-            chunk_text = hit.payload.get("text", "")
+            payload = hit.payload or {}
+            chunk_text = payload.get("text", "")
             rel = calculate_relevance_score(chunk_text, gt_text, keywords)
             if rel > best_rel:
                 best_rel = rel

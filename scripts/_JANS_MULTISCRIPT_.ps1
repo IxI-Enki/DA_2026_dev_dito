@@ -59,7 +59,7 @@ Write-Host "[OK] " -NoNewline -ForegroundColor Green
 Write-Host "local wiki instance opened`n" -ForegroundColor DarkGreen
 
 # Write-Host "[INFO] Sandboox wiki instance at: " -NoNewline -ForegroundColor Cyan
-# Write-Host "http://localhost:8090" -ForegroundColor Blue
+# Write-Host "http://localhost:18090" -ForegroundColor Blue
 
 Write-Host "[INFO] " -NoNewline -ForegroundColor Cyan
 Write-Host "...opening dev dito by alias:  " -NoNewline -ForegroundColor DarkGray
@@ -72,4 +72,4 @@ Write-Host "[OK] " -NoNewline -ForegroundColor Green
 Write-Host "dev dito opened`n" -ForegroundColor DarkGreen
 
 # Write-Host "[INFO] Dev dito admin panel at: " -NoNewline -ForegroundColor Cyan
-# Write-Host "http://localhost:8080/?do=admin&page=devdito" -ForegroundColor Blue
+# Write-Host "http://localhost:18080/?do=admin&page=devdito" -ForegroundColor Blue

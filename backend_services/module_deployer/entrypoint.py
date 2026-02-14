@@ -18,7 +18,7 @@ import sys
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 try:
     from qdrant_client import QdrantClient
@@ -34,7 +34,7 @@ except ImportError:
 CONFIG_PATH = Path(os.environ.get("CONFIG_PATH", "/config/env.yaml"))
 DATA_PATH = Path(os.environ.get("DATA_PATH", "/data"))
 QDRANT_HOST = os.environ.get("QDRANT_HOST", "qdrant_db")
-QDRANT_PORT = int(os.environ.get("QDRANT_PORT", "6333"))
+QDRANT_PORT = int(os.environ.get("QDRANT_PORT", "18334"))
 COLLECTION_NAME = os.environ.get("COLLECTION_NAME", "wiki_embeddings")
 
 STATUS_FILE = DATA_PATH / "logs" / "pipeline_runs.json"
@@ -97,14 +97,14 @@ class ProgressTracker:
         })
         self._write()
     
-    def update_progress(self, current: int, total: int, message: str = None):
+    def update_progress(self, current: int, total: int, message: Optional[str] = None):
         pct = int((current / total) * 100) if total > 0 else 0
         self.state["progress"] = {"current": current, "total": total, "percentage": pct}
         if message:
             self.state["message"] = message
         self._write()
     
-    def complete(self, stats: Dict = None):
+    def complete(self, stats: Optional[Dict] = None):
         self.state["status"] = "success"
         self.state["completed_at"] = datetime.now().isoformat()
         self.state["progress"]["percentage"] = 100
@@ -145,7 +145,8 @@ def update_status(job_id: str, status: str, **kwargs) -> None:
     if not job:
         job = {"job_id": job_id, "stage": STAGE_NAME, "started_at": datetime.now().isoformat()}
         runs.append(job)
-    
+    job = cast(Dict[str, Any], job)
+
     job["status"] = status
     job["updated_at"] = datetime.now().isoformat()
     
