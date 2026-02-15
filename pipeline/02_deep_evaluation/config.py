@@ -43,13 +43,15 @@ def load_env_yaml(config_path: Optional[Path] = None) -> Dict[str, Any]:
         Dictionary mit allen Konfigurationen
     """
     if config_path is None:
-        # Suche ZENTRALE config/env.yaml im Repository-Root
         script_dir = Path(__file__).parent
         # 02_deep_evaluation -> pipeline -> dev_dito (root)
         repo_root = script_dir.parent.parent
-        config_path = repo_root / "config" / "env.yaml"
-        
-        # Fallback: lokale config falls zentrale nicht existiert
+        # Prefer pipeline-local env.yaml (has PATHS for this pipeline)
+        local_env = script_dir / "env.yaml"
+        if local_env.exists():
+            config_path = local_env
+        else:
+            config_path = repo_root / "config" / "env.yaml"
         if not config_path.exists():
             config_path = script_dir.parent / "config" / "env.yaml"
 
