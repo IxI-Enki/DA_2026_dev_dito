@@ -9,6 +9,7 @@ Processes media files for the RAG pipeline:
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
@@ -55,11 +56,12 @@ class MediaProcessor:
 
         text = self._extract_pdf_text(pdf_path)
         if text.strip():
-            return text
+            return self.clean_pdf_text(text)
 
         # Fallback: OCR the PDF
         logger.info("PDF text empty, attempting OCR: %s", pdf_path.name)
-        return self._ocr_pdf(pdf_path)
+        ocr_text = self._ocr_pdf(pdf_path)
+        return self.clean_pdf_text(ocr_text) if ocr_text.strip() else ""
 
     def process_image(self, image_path: Path) -> str:
         """OCR an image using Tesseract.
@@ -105,6 +107,107 @@ class MediaProcessor:
 
             results.append({"filename": f.name, "text": text, "type": ftype})
         return results
+
+    # ------------------------------------------------------------------
+    # PDF text quality (US7)
+    # ------------------------------------------------------------------
+
+    def clean_pdf_text(self, raw_text: str) -> str:
+        """Post-process extracted PDF text for quality.
+
+        Chains: fix spaced characters -> merge short lines.
+        """
+        text = self._fix_spaced_characters(raw_text)
+        text = self._merge_short_lines(text)
+        return text
+
+    def _fix_spaced_characters(self, text: str) -> str:
+        """Fix PDF layout artifacts with spaced characters.
+
+        Heuristic: if >60% of 'words' on a line are single characters,
+        join them and split on double-spaces.
+
+        Example: ``"H T B L A  L e o n d i n g"`` -> ``"HTBLA Leonding"``
+        """
+        if not text:
+            return ""
+
+        lines = text.split("\n")
+        fixed: list[str] = []
+
+        for line in lines:
+            words = line.split()
+            if not words:
+                fixed.append(line)
+                continue
+
+            single_chars = sum(1 for w in words if len(w) == 1)
+            ratio = single_chars / len(words)
+
+            if ratio > 0.6:
+                # Split on double-space (word boundary in spaced text),
+                # then join single chars within each group
+                groups = re.split(r"  +", line.strip())
+                rebuilt = []
+                for group in groups:
+                    parts = group.split()
+                    if all(len(p) == 1 for p in parts):
+                        rebuilt.append("".join(parts))
+                    else:
+                        rebuilt.append(group)
+                fixed.append(" ".join(rebuilt))
+            else:
+                fixed.append(line)
+
+        return "\n".join(fixed)
+
+    def _merge_short_lines(self, text: str, threshold: int = 40) -> str:
+        """Merge consecutive short lines into paragraphs.
+
+        Respects structure: list items, headings, and empty lines are
+        never merged with the previous line.
+        """
+        if not text:
+            return ""
+
+        lines = text.split("\n")
+        merged: list[str] = []
+
+        for line in lines:
+            stripped = line.strip()
+
+            # Empty lines are paragraph separators -- keep them
+            if not stripped:
+                merged.append("")
+                continue
+
+            # Structure-preserving: don't merge list items, headings
+            is_structure = (
+                stripped.startswith("#")
+                or stripped.startswith("- ")
+                or stripped.startswith("* ")
+                or re.match(r"^\d+[\.\)]\s", stripped)
+            )
+
+            if is_structure:
+                merged.append(stripped)
+                continue
+
+            # If previous line exists, is non-empty, and was short -> merge
+            if (
+                merged
+                and merged[-1]
+                and len(merged[-1]) < threshold
+                and not merged[-1].startswith("#")
+                and not merged[-1].startswith("- ")
+                and not merged[-1].startswith("* ")
+                and not re.match(r"^\d+[\.\)]\s", merged[-1])
+            ):
+                merged[-1] = merged[-1] + " " + stripped
+            else:
+                merged.append(stripped)
+
+        return "\n".join(merged)
 
     # ------------------------------------------------------------------
     # Private helpers

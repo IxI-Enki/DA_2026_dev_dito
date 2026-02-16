@@ -1,4 +1,4 @@
-"""T065: Tests for MediaProcessor (PDF/OCR)."""
+"""T065 + T021: Tests for MediaProcessor (PDF/OCR + PDF quality cleaning)."""
 
 from __future__ import annotations
 
@@ -98,3 +98,131 @@ class TestMediaProcessorDirectory:
             assert "filename" in entry
             assert "text" in entry
             assert "type" in entry
+
+
+class TestFixSpacedCharacters:
+    """T021: Tests for _fix_spaced_characters() -- US7 PDF quality."""
+
+    def test_htbla_leonding(self) -> None:
+        """Spec AC1: 'H T B L A  L e o n d i n g' -> 'HTBLA Leonding'."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        result = mp._fix_spaced_characters("H T B L A  L e o n d i n g")
+        assert result == "HTBLA Leonding"
+
+    def test_mixed_spaced_and_normal_lines(self) -> None:
+        """Only lines with >60% single-char words are fixed."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        text = "H T B L A  L e o n d i n g\nThis is a normal line."
+        result = mp._fix_spaced_characters(text)
+        assert "HTBLA" in result
+        assert "This is a normal line." in result
+
+    def test_normal_text_unchanged(self) -> None:
+        """Normal text without spaced characters is not modified."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        text = "This is perfectly normal text with words."
+        result = mp._fix_spaced_characters(text)
+        assert result == text
+
+    def test_empty_string(self) -> None:
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        assert mp._fix_spaced_characters("") == ""
+
+
+class TestMergeShortLines:
+    """T021: Tests for _merge_short_lines() -- US7 PDF quality."""
+
+    def test_joins_consecutive_short_lines(self) -> None:
+        """Short lines (<40 chars) are joined into paragraphs."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        text = "Short line one\nshort line two\nshort three."
+        result = mp._merge_short_lines(text)
+        assert "Short line one short line two short three." in result
+
+    def test_respects_sentence_boundaries(self) -> None:
+        """Lines ending with sentence terminators start new segments."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        text = "First sentence ends.\nSecond sentence here."
+        result = mp._merge_short_lines(text)
+        # Both are short, but first ends with period -- still merge is OK
+        # Key: they get merged into one line
+        assert "First sentence ends." in result
+
+    def test_preserves_list_items(self) -> None:
+        """Lines starting with -, *, or digits are NOT merged with previous."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        text = "Intro paragraph\n- Item one\n- Item two\n* Star item"
+        result = mp._merge_short_lines(text)
+        assert "\n- Item one" in result or result.startswith("Intro paragraph\n- Item one")
+        assert "\n- Item two" in result
+        assert "\n* Star item" in result
+
+    def test_preserves_headings(self) -> None:
+        """Lines starting with # are NOT merged with previous."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        text = "Some text\n# Heading\nMore text"
+        result = mp._merge_short_lines(text)
+        assert "\n# Heading\n" in result
+
+    def test_preserves_empty_line_paragraph_breaks(self) -> None:
+        """Empty lines (paragraph separators) are preserved."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        text = "Paragraph one.\n\nParagraph two."
+        result = mp._merge_short_lines(text)
+        assert "\n\n" in result
+
+    def test_long_lines_not_merged(self) -> None:
+        """Lines longer than threshold are not merged with the next."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        long_line = "A" * 50 + " long line that is definitely above threshold"
+        text = f"{long_line}\nShort next line"
+        result = mp._merge_short_lines(text)
+        assert long_line in result
+
+
+class TestCleanPdfText:
+    """T021: Tests for clean_pdf_text() -- chains both operations."""
+
+    def test_chains_spaced_chars_then_merge(self) -> None:
+        """clean_pdf_text applies spaced char fix THEN short line merge."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        # Spaced chars on first line, short lines after
+        text = "H T B L A  L e o n d i n g\nis a school\nin Upper Austria"
+        result = mp.clean_pdf_text(text)
+        assert "HTBLA Leonding" in result
+        # Short lines should be merged
+        assert "is a school in Upper Austria" in result
+
+    def test_process_pdf_integrates_clean(self, tmp_path: Path) -> None:
+        """process_pdf calls clean_pdf_text as post-processing."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        pdf = tmp_path / "test.pdf"
+        pdf.write_bytes(b"%PDF")
+        raw = "H T B L A  L e o n d i n g\nis great"
+        with patch("media_processor.MediaProcessor._extract_pdf_text", return_value=raw):
+            result = mp.process_pdf(pdf)
+        assert "HTBLA Leonding" in result

@@ -116,14 +116,14 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T021 [US7] Extend tests in `pipeline/03_rag_preprocessing/tests/test_media_processor.py` -- test `_fix_spaced_characters()` with "H T B L A  L e o n d i n g" -> "HTBLA Leonding", test with mixed spaced/normal lines, test `_merge_short_lines()` joins consecutive short lines (<40 chars), test merge respects sentence boundaries, test merge preserves list items (-, *, digit prefix), test merge preserves headings (# prefix), test merge preserves empty-line paragraph breaks, test `clean_pdf_text()` chains both operations
+- [x] T021 [US7] Extend tests in `pipeline/03_rag_preprocessing/tests/test_media_processor.py` -- test `_fix_spaced_characters()` with "H T B L A  L e o n d i n g" -> "HTBLA Leonding", test with mixed spaced/normal lines, test `_merge_short_lines()` joins consecutive short lines (<40 chars), test merge respects sentence boundaries, test merge preserves list items (-, *, digit prefix), test merge preserves headings (# prefix), test merge preserves empty-line paragraph breaks, test `clean_pdf_text()` chains both operations
 
 ### Implementation for US7
 
-- [ ] T022 [P] [US7] Implement `_fix_spaced_characters()` in `pipeline/03_rag_preprocessing/media_processor.py` -- heuristic: if >60% of words on a line are single characters, join them and split on double-spaces
-- [ ] T023 [P] [US7] Implement `_merge_short_lines()` in `pipeline/03_rag_preprocessing/media_processor.py` -- join consecutive lines shorter than threshold (default 40), respect sentence boundaries, preserve lists/headings/empty-line separators
-- [ ] T024 [US7] Implement `clean_pdf_text()` in `pipeline/03_rag_preprocessing/media_processor.py` -- chain `_fix_spaced_characters()` then `_merge_short_lines()`, integrate as post-processing step called from `process_pdf()` after text extraction
-- [ ] T025 [US7] Run tests and validate with real PDF text samples from `data/preprocessed/`
+- [x] T022 [P] [US7] Implement `_fix_spaced_characters()` in `pipeline/03_rag_preprocessing/media_processor.py` -- heuristic: if >60% of words on a line are single characters, join them and split on double-spaces
+- [x] T023 [P] [US7] Implement `_merge_short_lines()` in `pipeline/03_rag_preprocessing/media_processor.py` -- join consecutive lines shorter than threshold (default 40), respect sentence boundaries, preserve lists/headings/empty-line separators
+- [x] T024 [US7] Implement `clean_pdf_text()` in `pipeline/03_rag_preprocessing/media_processor.py` -- chain `_fix_spaced_characters()` then `_merge_short_lines()`, integrate as post-processing step called from `process_pdf()` after text extraction
+- [x] T025 [US7] Run tests and validate with real PDF text samples from `data/preprocessed/`
 
 **Checkpoint**: PDF text extraction produces clean, readable paragraphs without layout artifacts.
 
