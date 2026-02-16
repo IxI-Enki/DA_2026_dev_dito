@@ -445,14 +445,15 @@ class PageProcessor:
         if ct == ContentType.ARCHIVED:
             priority = "low"
         elif ct in (ContentType.KNOWLEDGE,):
-            priority = "high" if strategy.rag_readiness >= 0.7 else "normal"
+            priority = "high"
 
         return {
             "markdown": result.markdown,
-            "content_type": ct.value,
-            "chunk_size": strategy.recommended_chunk_size,
+            "content_type": ct.value.lower(),
+            "chunk_size": strategy.chunk_size,
+            "chunking_method": strategy.chunking_method,
             "priority": priority,
-            "rag_readiness": strategy.rag_readiness,
+            "action": strategy.action,
             "title": result.title,
             "errors": result.errors,
         }

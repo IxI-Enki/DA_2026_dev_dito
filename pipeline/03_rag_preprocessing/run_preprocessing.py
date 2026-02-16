@@ -88,11 +88,12 @@ def run(
             raise FileNotFoundError(f"No fetched data found in {cfg.fetched_dir}")
     logger.info("Input:    %s", input_dir)
 
-    # Resolve evaluation
+    # Resolve evaluation directory
     if evaluated_dir is None:
-        eval_file = get_latest_evaluation(cfg.evaluated_dir)
-        if eval_file:
-            evaluated_dir = eval_file.parent
+        eval_result = get_latest_evaluation(cfg.evaluated_dir)
+        if eval_result:
+            # get_latest_evaluation returns a directory (deep_eval_*) or file
+            evaluated_dir = eval_result if eval_result.is_dir() else eval_result.parent
     if evaluated_dir:
         logger.info("Eval dir: %s", evaluated_dir)
 
@@ -134,7 +135,12 @@ def run(
             if not wiki.strip():
                 continue
 
+            # Strategy-based routing (US4)
             strategy = strategy_loader.get_strategy(page_id)
+            if strategy_loader.is_ignored(page_id):
+                logger.debug("Skipping ignored page: %s", page_id)
+                continue
+
             result = page_proc.process_with_strategy(
                 {"content": wiki, "page_id": page_id}, strategy
             )
@@ -176,16 +182,17 @@ def run(
             linked_from = backlinks_lookup.get(page_id, [])
 
             # Build page dict with Qdrant-schema fields
+            # Strategy provides content_type and chunking_method (US4)
             pages.append({
                 "page_id": page_id,
                 "title": result.get("title", ""),
                 "namespace": namespace,
                 "source": f"{cfg.wiki_base_url}{page_id.replace('_', ':')}",
                 "access_level": access,
-                "content_type": result.get("content_type", "KNOWLEDGE"),
+                "content_type": strategy.content_type.value,
                 "freshness_score": 0.5,  # Placeholder until US5 Freshness-Scoring
                 "freshness_category": freshness,
-                "chunking_method": result.get("chunking_method", "semantic"),
+                "chunking_method": strategy.chunking_method,
                 "last_modified": last_mod,
                 "author": author,
                 "links_to": links_to,

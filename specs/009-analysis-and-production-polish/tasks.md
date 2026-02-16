@@ -72,13 +72,13 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T013 [US4] Extend tests in `pipeline/03_rag_preprocessing/tests/test_strategy_loader.py` -- test YAML loading of `preprocessing_strategies.yaml`, test wiki page category mapping via `_WIKI_CATEGORY_MAP` (knowledge_articles->KNOWLEDGE/recursive_header, portals->PORTAL/parent_context, news->NEWS/naive, ignored->IGNORED/none), test document category mapping via `_DOC_CATEGORY_MAP` (theses->KNOWLEDGE/recursive_header, forms->FORM/metadata_only), test `MediaStrategy` loading (informative_images->caption_and_index, decorative->skip), test `is_ignored()`, test fallback to `page_strategies.json`, test default for unknown page_id
+- [x] T013 [US4] Extend tests in `pipeline/03_rag_preprocessing/tests/test_strategy_loader.py` -- test YAML loading of `preprocessing_strategies.yaml`, test wiki page category mapping via `_WIKI_CATEGORY_MAP` (knowledge_articles->KNOWLEDGE/recursive_header, portals->PORTAL/parent_context, news->NEWS/naive, ignored->IGNORED/none), test document category mapping via `_DOC_CATEGORY_MAP` (theses->KNOWLEDGE/recursive_header, forms->FORM/metadata_only), test `MediaStrategy` loading (informative_images->caption_and_index, decorative->skip), test `is_ignored()`, test fallback to `page_strategies.json`, test default for unknown page_id
 
 ### Implementation for US4
 
-- [ ] T014 [US4] Rewrite `pipeline/03_rag_preprocessing/strategy_loader.py` -- new `ContentType` enum (KNOWLEDGE/NEWS/PORTAL/FORM/ARCHIVED/IGNORED), new `PageStrategy` with `chunking_method` and `action` fields, new `MediaStrategy` dataclass, `_load_yaml()` with inverted index from category lists to per-ID lookup, `_load_legacy_json()` for backwards compat, `get_media_strategy()`, `is_ignored()`
-- [ ] T015 [US4] Update `pipeline/03_rag_preprocessing/run_preprocessing.py` -- use `strategy_loader.is_ignored()` to skip pages, pass `chunking_method` and `content_type` from strategy into page/media dicts, route media via `get_media_strategy()` for Vision-LLM preparation
-- [ ] T016 [US4] Run tests and verify routing with sample `preprocessing_strategies.yaml` matching the structure from `pipeline/02_deep_evaluation/generators/strategy_generator.py`
+- [x] T014 [US4] Rewrite `pipeline/03_rag_preprocessing/strategy_loader.py` -- new `ContentType` enum (KNOWLEDGE/NEWS/PORTAL/FORM/ARCHIVED/IGNORED), new `PageStrategy` with `chunking_method` and `action` fields, new `MediaStrategy` dataclass, `_load_yaml()` with inverted index from category lists to per-ID lookup, `_load_legacy_json()` for backwards compat, `get_media_strategy()`, `is_ignored()`
+- [x] T015 [US4] Update `pipeline/03_rag_preprocessing/run_preprocessing.py` -- use `strategy_loader.is_ignored()` to skip pages, pass `chunking_method` and `content_type` from strategy into page/media dicts, route media via `get_media_strategy()` for Vision-LLM preparation
+- [x] T016 [US4] Run tests and verify routing with sample `preprocessing_strategies.yaml` matching the structure from `pipeline/02_deep_evaluation/generators/strategy_generator.py`
 
 **Checkpoint**: Pipeline correctly reads YAML strategies and routes content types. Ignored pages are skipped. Default fallbacks work.
 

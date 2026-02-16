@@ -77,9 +77,9 @@ class TestStrategyAwareRouting:
         strategy = PageStrategy(
             page_id="test:page",
             content_type=ContentType.KNOWLEDGE,
-            rag_readiness=0.9,
-            recommended_chunk_size=512,
-            noise_level="low",
+            chunking_method="recursive_header",
+            chunk_size=512,
+            action="process",
         )
         page = {"content": "====== Test ======\nSome content", "page_id": "test:page"}
         result = pp.process_with_strategy(page, strategy)
@@ -94,9 +94,9 @@ class TestStrategyAwareRouting:
         strategy = PageStrategy(
             page_id="news:latest",
             content_type=ContentType.NEWS,
-            rag_readiness=0.4,
-            recommended_chunk_size=256,
-            noise_level="high",
+            chunking_method="naive",
+            chunk_size=256,
+            action="process",
         )
         page = {"content": "====== News ======\nSomething happened", "page_id": "news:latest"}
         result = pp.process_with_strategy(page, strategy)
@@ -110,9 +110,9 @@ class TestStrategyAwareRouting:
         strategy = PageStrategy(
             page_id="archive:old",
             content_type=ContentType.ARCHIVED,
-            rag_readiness=0.1,
-            recommended_chunk_size=128,
-            noise_level="medium",
+            chunking_method="none",
+            chunk_size=128,
+            action="process",
         )
         page = {"content": "Old archived content", "page_id": "archive:old"}
         result = pp.process_with_strategy(page, strategy)
