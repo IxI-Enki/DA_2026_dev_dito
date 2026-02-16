@@ -1,13 +1,12 @@
 experiment:
-  name: "text-embedding-3-large via OpenAI (paid reference ceiling)"
+  name: "snowflake-arctic-embed-l-v2.0 (MTEB #7, 65.48)"
   type: model_comparison
   thesis_id: "J2/FF3"
 
 embedding:
-  provider: openai
-  model: "text-embedding-3-large"
-  dimensions: 3072
-  api_key_env: OPENAI_API_KEY
+  provider: sentence-transformers
+  model: "Snowflake/snowflake-arctic-embed-l-v2.0"
+  dimensions: 1024
 
 chunking:
   strategy: content_aware
@@ -17,7 +16,7 @@ chunking:
 retrieval:
   mode: dense
   top_k: 10
-  collection_name: "eval_openai_3large"
+  collection_name: "eval_snowflake_arctic"
 
 qdrant:
   host: "localhost"

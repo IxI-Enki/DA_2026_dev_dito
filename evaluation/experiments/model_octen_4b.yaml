@@ -1,13 +1,13 @@
 experiment:
-  name: "text-embedding-3-large via OpenAI (paid reference ceiling)"
+  name: "Octen-Embedding-4B (MTEB #2, 73.25)"
   type: model_comparison
   thesis_id: "J2/FF3"
 
 embedding:
-  provider: openai
-  model: "text-embedding-3-large"
-  dimensions: 3072
-  api_key_env: OPENAI_API_KEY
+  provider: sentence-transformers
+  model: "bflhc/Octen-Embedding-4B"
+  dimensions: 2560
+  torch_dtype: float16  # Required: 7.7 GB model on 12 GB VRAM
 
 chunking:
   strategy: content_aware
@@ -17,11 +17,11 @@ chunking:
 retrieval:
   mode: dense
   top_k: 10
-  collection_name: "eval_openai_3large"
+  collection_name: "eval_octen_4b"
 
 qdrant:
   host: "localhost"
-  port: 6334
+  port: 6334  # Local eval Qdrant, NOT Raspberry Pi
 
 ground_truth:
   file: "ground_truth/leowiki_qa_50_verified.json"

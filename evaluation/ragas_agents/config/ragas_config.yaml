@@ -64,19 +64,47 @@ augmentation:
 # RAG Evaluator - Embedding (J2, FF3)
 embedding_evaluation:
   models:
-    - id: mxbai
-      name: deepset/mxbai-embed-de-large-v1
+    - id: octen-4b
+      name: bflhc/Octen-Embedding-4B
+      provider: sentence-transformers
+      dimensions: 2560
+      mteb_rank: 2
+      mteb_score: 73.25
+      memory_mb: 7671
+    - id: pixie-rune
+      name: telepix/PIXIE-Rune-v1.0
+      provider: sentence-transformers
       dimensions: 1024
-    - id: bge-m3
-      name: BAAI/bge-m3
+      mteb_rank: 3
+      mteb_score: 69.81
+      memory_mb: 2166
+    - id: snowflake-arctic
+      name: Snowflake/snowflake-arctic-embed-l-v2.0
+      provider: sentence-transformers
       dimensions: 1024
-    - id: e5
-      name: multilingual-e5-large-instruct
+      mteb_rank: 7
+      mteb_score: 65.48
+      memory_mb: 2166
+    - id: bge-m3-unsup
+      name: BAAI/bge-m3-unsupervised
+      provider: sentence-transformers
       dimensions: 1024
+      mteb_rank: 12
+      mteb_score: 60.24
+      memory_mb: 2167
+    - id: openai-3large
+      name: text-embedding-3-large
+      provider: openai
+      dimensions: 3072
+      mteb_rank: null  # proprietary, not on MTEB German
+      mteb_score: null
+      memory_mb: 0  # API-based
   metrics:
     - ndcg_at_10
     - mrr
     - precision_at_5
+    - recall_at_10
+    - hit_rate
   k: 10
 
 # RAG Evaluator - Retrieval (J6)
