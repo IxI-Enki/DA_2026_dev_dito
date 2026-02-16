@@ -57,30 +57,32 @@ class StrategyGenerator:
                 "description": "Standard Knowledge Base Artikel",
                 "chunking": "recursive_header",
                 "chunk_size": 1024,
-                "include_ids": categories.get("KNOWLEDGE", [])
+                "include_ids": sorted(set(categories.get("KNOWLEDGE", [])))
             },
             "portals": {
                 "description": "Verteilerseiten mit vielen Links",
                 "chunking": "parent_context",
                 "action": "index_as_context_only",
-                "include_ids": categories.get("PORTAL", [])
+                "include_ids": sorted(set(categories.get("PORTAL", [])))
             },
             "forms": {
                 "description": "Formularsammlungen",
                 "chunking": "table_row",
                 "action": "extract_links_and_metadata",
-                "include_ids": categories.get("FORM_COLLECTION", [])
+                "include_ids": sorted(set(categories.get("FORM_COLLECTION", [])))
             },
             "news": {
                 "description": "Zeitkritische News",
                 "chunking": "naive",
-                "freshness_weight": 0.5, # Decay faster
-                "include_ids": categories.get("NEWS", [])
+                "freshness_weight": 0.5,
+                "include_ids": sorted(set(categories.get("NEWS", [])))
             },
             "ignored": {
                 "description": "Irrelevanter Content",
                 "action": "skip",
-                "include_ids": categories.get("EMPTY", []) + categories.get("ERROR", [])
+                "include_ids": sorted(set(
+                    categories.get("EMPTY", []) + categories.get("ERROR", [])
+                ))
             }
         }
 
@@ -102,25 +104,27 @@ class StrategyGenerator:
                 "parser": "pdf_scientific",
                 "chunk_size": 2048,
                 "overlap": 200,
-                "files": types.get("THESIS", [])
+                "files": sorted(set(types.get("THESIS", [])))
             },
             "forms": {
-                "description": "Ausfüllbare Formulare",
+                "description": "Ausfuellbare Formulare",
                 "parser": "pdf_form_fields",
                 "action": "index_metadata_only",
-                "files": types.get("FORM", [])
+                "files": sorted(set(types.get("FORM", [])))
             },
             "standard_docs": {
                 "description": "Allgemeine Dokumente (Berichte, Infos)",
                 "parser": "pdf_standard",
                 "chunk_size": 1024,
-                "files": types.get("REPORT", []) + types.get("INFO_SHEET", [])
+                "files": sorted(set(
+                    types.get("REPORT", []) + types.get("INFO_SHEET", [])
+                ))
             },
             "presentations": {
-                "description": "Folien-Sätze",
+                "description": "Folien-Saetze",
                 "parser": "pptx_slide",
                 "action": "summarize_slides",
-                "files": types.get("PRESENTATION", [])
+                "files": sorted(set(types.get("PRESENTATION", [])))
             }
         }
 
@@ -144,11 +148,11 @@ class StrategyGenerator:
                 "description": "Bilder mit hohem Informationsgehalt",
                 "action": "caption_and_index",
                 "vision_model": "qwen2.5-vl",
-                "files": useful
+                "files": sorted(set(useful))
             },
             "decorative": {
                 "description": "Dekorative Elemente oder Low-Res",
                 "action": "skip",
-                "files": ignored
+                "files": sorted(set(ignored))
             }
         }

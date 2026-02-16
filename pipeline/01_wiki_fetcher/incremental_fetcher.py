@@ -29,6 +29,10 @@ from config import (
 )
 from manifest import FetchManifest, PageEntry, MediaEntry, ChangeType, EntryStatus
 
+# Shared CLI utilities
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
+from cli_utils import add_no_color_arg, apply_color_from_args, register_sigint, style
+
 
 # =============================================================================
 # IncrementalFetcher Class
@@ -533,7 +537,7 @@ class IncrementalFetcher:
         # Detect changes
         self.detect_changes(skip_media=skip_media)
         
-        if not self.changes.has_changes:
+        if not self.changes or not self.changes.has_changes:
             self.log("\n[OK] No changes detected - nothing to fetch")
             self.stats["fetch_info"]["end_time"] = datetime.now().isoformat()
             return self.stats
@@ -616,8 +620,11 @@ def main():
     parser.add_argument("--no-media-download", action="store_true", help="Detect but don't download media")
     parser.add_argument("--quiet", action="store_true", help="Reduce output")
     parser.add_argument("--auto-skip", action="store_true", help="Auto-skip errors (non-interactive)")
+    add_no_color_arg(parser)
     
     args = parser.parse_args()
+    apply_color_from_args(args)
+    register_sigint("incremental_fetcher")
     
     # Find latest manifest if not specified
     manifest_path = args.manifest_path

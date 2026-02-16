@@ -20,6 +20,10 @@ from typing import List, Set
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Shared CLI utilities
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
+from cli_utils import add_no_color_arg, apply_color_from_args, register_sigint, style
+
 from config import get_config, EvaluationConfig
 from analyzers.wiki_deep_analyzer import WikiDeepAnalyzer
 from analyzers.document_deep_analyzer import DocumentDeepAnalyzer
@@ -222,11 +226,12 @@ def analyze_documents(
     
     logger.info(f"Analyzing Documents in {media_dir}...")
     
-    # Recursive search for documents
-    doc_files: List[Path] = []
+    # Recursive search for documents (set-based dedup for case-insensitive FS)
+    doc_files_set: Set[Path] = set()
     for ext in extensions:
-        doc_files.extend(media_dir.rglob(f"*{ext}"))
-        doc_files.extend(media_dir.rglob(f"*{ext.upper()}"))
+        doc_files_set.update(media_dir.rglob(f"*{ext}"))
+        doc_files_set.update(media_dir.rglob(f"*{ext.upper()}"))
+    doc_files = sorted(doc_files_set)
     
     total_docs = len(doc_files)
     logger.info(f"Found {total_docs} document files")
@@ -283,11 +288,12 @@ def analyze_images(
     
     logger.info(f"Analyzing Images in {media_dir}...")
     
-    # Recursive search for images
-    img_files: List[Path] = []
+    # Recursive search for images (set-based dedup for case-insensitive FS)
+    img_files_set: Set[Path] = set()
     for ext in extensions:
-        img_files.extend(media_dir.rglob(f"*{ext}"))
-        img_files.extend(media_dir.rglob(f"*{ext.upper()}"))
+        img_files_set.update(media_dir.rglob(f"*{ext}"))
+        img_files_set.update(media_dir.rglob(f"*{ext.upper()}"))
+    img_files = sorted(img_files_set)
     
     total_imgs = len(img_files)
     logger.info(f"Found {total_imgs} image files")
@@ -319,14 +325,22 @@ def analyze_images(
 
 def main():
     """Hauptfunktion für Deep Evaluation."""
+    import argparse
+    parser = argparse.ArgumentParser(description="Deep Content Evaluation")
+    parser.add_argument("--show-config", action="store_true", help="Show current config")
+    add_no_color_arg(parser)
+    args = parser.parse_args()
+    apply_color_from_args(args)
+    register_sigint("run_deep_evaluation")
+
     # Load configuration
     config = get_config()
     
     # Setup logging
     logger = setup_logging(config)
-    logger.info("=" * 70)
-    logger.info("  DEEP CONTENT EVALUATION")
-    logger.info("=" * 70)
+    logger.info(style("=" * 70, "cyan"))
+    logger.info(style("  DEEP CONTENT EVALUATION", "bold", "bright_cyan"))
+    logger.info(style("=" * 70, "cyan"))
     
     # Validate paths
     if not validate_paths(config, logger):
@@ -422,15 +436,19 @@ def main():
         if not config.continue_on_error:
             raise
     
-    # Summary
-    logger.info("\n" + "=" * 70)
-    logger.info("  DEEP EVALUATION COMPLETE")
-    logger.info("=" * 70)
-    logger.info(f"  Wiki Pages:    {len(results['wiki_pages'])}")
-    logger.info(f"  Documents:     {len(results['documents'])}")
-    logger.info(f"  Images:        {len(results['media'])}")
-    logger.info(f"  Output Dir:    {output_dir}")
-    logger.info("=" * 70)
+    # Summary -- logged as a single cohesive block (AC3)
+    sep = "=" * 70
+    summary = (
+        f"\n{sep}\n"
+        f"  DEEP EVALUATION COMPLETE\n"
+        f"{sep}\n"
+        f"  Wiki Pages:    {len(results['wiki_pages'])}\n"
+        f"  Documents:     {len(results['documents'])}\n"
+        f"  Images:        {len(results['media'])}\n"
+        f"  Output Dir:    {output_dir}\n"
+        f"{sep}"
+    )
+    logger.info(summary)
 
 
 if __name__ == "__main__":

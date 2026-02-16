@@ -33,6 +33,10 @@ from metadata_enricher import MetadataEnricher
 from page_processor import PageProcessor
 from strategy_loader import StrategyLoader
 
+# Shared CLI utilities
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
+from cli_utils import add_no_color_arg, apply_color_from_args, register_sigint, style
+
 logger = logging.getLogger(__name__)
 
 
@@ -301,9 +305,9 @@ def run(
 
 def _print_summary(stats: dict[str, Any], out_dir: Path) -> None:
     """Print human-readable processing summary to stdout."""
-    sep = "=" * 60
+    sep = style("=" * 60, "cyan")
     print(f"\n{sep}")
-    print("RAG PREPROCESSING COMPLETE")
+    print(style("RAG PREPROCESSING COMPLETE", "bold", "bright_green"))
     print(sep)
     print(f"Pages total:      {stats.get('pages_total', 0)}")
     print(f"  - OK:           {stats.get('pages_ok', 0)}")
@@ -326,7 +330,10 @@ def main() -> int:
     parser.add_argument("--evaluated-dir", type=Path, default=None)
     parser.add_argument("--output-base", type=Path, default=None)
     parser.add_argument("--config", type=Path, default=None)
+    add_no_color_arg(parser)
     args = parser.parse_args()
+    apply_color_from_args(args)
+    register_sigint("run_preprocessing")
 
     try:
         run(

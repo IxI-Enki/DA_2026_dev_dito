@@ -42,6 +42,10 @@ from analyzers import (
 )
 from report_generator import ReportGenerator
 
+# Shared CLI utilities
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
+from cli_utils import add_no_color_arg, apply_color_from_args, register_sigint, style
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -58,17 +62,17 @@ def parse_args():
 
     # Output options
     parser.add_argument('--output-dir', '-o', type=str, default=None,
-                        help='Überschreibt Output-Verzeichnis aus config')
+                        help='Ueberschreibt Output-Verzeichnis aus config')
     parser.add_argument('--run-name', '-n', type=str, default=None,
-                        help='Name für diesen Evaluationslauf')
+                        help='Name fuer diesen Evaluationslauf')
 
     # Evaluation options
     parser.add_argument('--quick', action='store_true',
-                        help='Schnellmodus: Überspringt LLM-Queries')
+                        help='Schnellmodus: Ueberspringt LLM-Queries')
     parser.add_argument('--no-queries', action='store_true',
-                        help='Query-Generierung überspringen')
+                        help='Query-Generierung ueberspringen')
     parser.add_argument('--no-report', action='store_true',
-                        help='Report-Generierung überspringen')
+                        help='Report-Generierung ueberspringen')
     parser.add_argument('--query-limit', type=int, default=None,
                         help='Maximale Anzahl generierter Queries')
 
@@ -76,8 +80,9 @@ def parse_args():
     parser.add_argument('--quiet', '-q', action='store_true',
                         help='Minimale Ausgabe')
     parser.add_argument('--verbose', '-v', action='store_true',
-                        help='Ausführliche Ausgabe')
+                        help='Ausfuehrliche Ausgabe')
 
+    add_no_color_arg(parser)
     return parser.parse_args()
 
 
@@ -104,6 +109,8 @@ def show_config(config: EvaluationConfig):
 
 def main():
     args = parse_args()
+    apply_color_from_args(args)
+    register_sigint("run_evaluation")
 
     # Load configuration
     config_path = Path(args.config) if args.config else None

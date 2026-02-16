@@ -22,6 +22,10 @@ from api_client import WikiAPIClient, PermanentError, TransientError, UserAbortE
 from config import OUTPUT_BASE_DIR, get_fetch_config
 from utils import format_bytes, sanitize_filename
 
+# Shared CLI utilities
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
+from cli_utils import add_no_color_arg, apply_color_from_args, register_sigint, style
+
 
 class ResumeFetcher:
     """Resumes an interrupted fetch by retrying failed items"""
@@ -322,8 +326,11 @@ def main():
     parser.add_argument("--no-pages", action="store_true", help="Skip retrying pages")
     parser.add_argument("--no-media", action="store_true", help="Skip retrying media")
     parser.add_argument("--quiet", action="store_true", help="Suppress verbose output")
+    add_no_color_arg(parser)
     
     args = parser.parse_args()
+    apply_color_from_args(args)
+    register_sigint("resume_fetch")
     
     fetcher = ResumeFetcher(args.output_dir, verbose=not args.quiet)
     

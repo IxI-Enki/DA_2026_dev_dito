@@ -5,6 +5,8 @@ Includes detailed statistics about wiki structure and content.
 
 Uses centralized configuration from config.py and config/env.yaml
 """
+from __future__ import annotations
+
 import os
 import sys
 import json
@@ -25,13 +27,13 @@ from config import (
 from manifest import FetchManifest, PageEntry, MediaEntry, EntryStatus
 from utils import format_bytes, sanitize_filename
 
-# Try to import progress tracker (may not be available in all environments)
-try:
-    from progress_tracker import ProgressTracker, create_tracker_from_env
-    PROGRESS_TRACKING_AVAILABLE = True
-except ImportError:
-    PROGRESS_TRACKING_AVAILABLE = False
-    ProgressTracker = None
+# Shared CLI utilities
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
+from cli_utils import (
+    add_no_color_arg, apply_color_from_args, register_sigint, style,
+)
+
+from progress_tracker import ProgressTracker, create_tracker_from_env
 
 # Global fetcher reference for signal handler
 _current_fetcher: Optional["ExtendedWikiFetcher"] = None
@@ -39,10 +41,10 @@ _current_fetcher: Optional["ExtendedWikiFetcher"] = None
 
 def _sigint_handler(sig, frame):
     """Handle Ctrl+C gracefully with quick exit"""
-    print("\n")
-    print("=" * 50)
-    print("  FETCH ABGEBROCHEN (Ctrl+C)")
-    print("=" * 50)
+    sep = style("=" * 50, "yellow")
+    print(f"\n\n{sep}")
+    print(f"  {style('FETCH ABGEBROCHEN', 'bright_yellow', 'bold')}  (Ctrl+C)")
+    print(sep)
     
     if _current_fetcher and hasattr(_current_fetcher, 'stats'):
         stats = _current_fetcher.stats
@@ -54,8 +56,8 @@ def _sigint_handler(sig, frame):
         print(f"  Seiten:  {pages_done}/{pages_total}")
         print(f"  Media:   {media_done}/{media_total}")
     
-    print("=" * 50)
-    sys.exit(130)  # Standard exit code for SIGINT
+    print(sep)
+    sys.exit(130)
 
 
 def get_file_extension(filename: str) -> str:
@@ -74,12 +76,11 @@ class ExtendedWikiFetcher:
         # Load config
         self.config = get_fetch_config()
         
-        # Initialize progress tracker if available and job_id provided
-        self.tracker: Optional[ProgressTracker] = None
-        if PROGRESS_TRACKING_AVAILABLE and job_id:
+        # Initialize progress tracker if job_id provided
+        self.tracker: ProgressTracker | None = None
+        if job_id:
             self.tracker = ProgressTracker(job_id=job_id, stage="fetch")
-        elif PROGRESS_TRACKING_AVAILABLE:
-            # Try to create from environment
+        else:
             self.tracker = create_tracker_from_env()
         
         # Generate output directory name if not provided
@@ -2038,8 +2039,10 @@ def main():
                         help="Verify manifest integrity and exit")
     parser.add_argument("--compare-manifests", nargs=2, metavar=("CURRENT", "PREVIOUS"),
                         help="Compare two manifests and show changes")
+    add_no_color_arg(parser)
     
     args = parser.parse_args()
+    apply_color_from_args(args)
     
     # Handle manifest-only commands
     if args.show_manifest:

@@ -214,15 +214,15 @@
 
 ### Tests for US2
 
-- [ ] T049 [US2] Write tests verifying rglob dedup (mixed-case extensions produce unique file list), temperature passthrough (config value reaches LLM client), YAML list uniqueness (no duplicate page_ids or filenames), multiline summary logging (output as cohesive block without per-line timestamps)
+- [x] T049 [US2] Write tests verifying rglob dedup (mixed-case extensions produce unique file list), temperature passthrough (config value reaches LLM client), YAML list uniqueness (no duplicate page_ids or filenames), multiline summary logging (output as cohesive block without per-line timestamps)
 
 ### Implementation for US2
 
-- [ ] T050 [P] [US2] Fix rglob dedup in `pipeline/02_deep_evaluation/run_deep_evaluation.py` -- replace list-based file collection with `set[Path]` in `analyze_documents()` (lines ~226-230) and `analyze_images()` (lines ~289-291), then `sorted()` for deterministic order
-- [ ] T051 [P] [US2] Fix temperature passthrough in `pipeline/02_deep_evaluation/env.yaml` -- verify `temperature: 0.0` is set (default in config.py is 0.3), trace through `pipeline/02_deep_evaluation/core/llm_client.py` to confirm value reaches the LLM endpoint call
-- [ ] T052 [P] [US2] Fix YAML dedup in `pipeline/02_deep_evaluation/generators/strategy_generator.py` -- wrap all `include_ids` and `files` lists with `sorted(set(...))` in `_derive_wiki_strategies()`, `_derive_document_strategies()`, `_derive_media_strategies()`
-- [ ] T052b [P] [US2] Fix multiline summary logging in `pipeline/02_deep_evaluation/run_deep_evaluation.py` -- ensure multi-line summary blocks are logged as a single cohesive block without per-line timestamp prefixes (AC3)
-- [ ] T053 [US2] Run tests and validate fixes
+- [x] T050 [P] [US2] Fix rglob dedup in `pipeline/02_deep_evaluation/run_deep_evaluation.py` -- replace list-based file collection with `set[Path]` in `analyze_documents()` and `analyze_images()`, then `sorted()` for deterministic order
+- [x] T051 [P] [US2] Fix temperature passthrough in `pipeline/02_deep_evaluation/env.yaml` -- set `temperature: 0.0` (was 0.1), LLM client correctly passes through to API payload
+- [x] T052 [P] [US2] Fix YAML dedup in `pipeline/02_deep_evaluation/generators/strategy_generator.py` -- wrap all `include_ids` and `files` lists with `sorted(set(...))` in `_derive_wiki_strategies()`, `_derive_document_strategies()`, `_derive_media_strategies()`
+- [x] T052b [P] [US2] Fix multiline summary logging in `pipeline/02_deep_evaluation/run_deep_evaluation.py` -- summary block now built as single string and logged via one `logger.info()` call (AC3)
+- [x] T053 [US2] Run tests and validate fixes -- 9/9 tests pass
 
 **Checkpoint**: File counts are correct. LLM output is deterministic. YAML lists have no duplicates.
 
@@ -238,21 +238,21 @@
 
 ### Tests for US1
 
-- [ ] T054 [US1] Write tests for `pipeline/shared/cli_utils.py` -- test `style()` returns ANSI-wrapped text when color enabled, test `style()` returns plain text when color disabled via `set_use_color(False)`, test `create_sigint_handler()` calls callback and exits with 130, test `print_help_banner()` outputs all 8 sections, test `enable_windows_ansi()` runs without error on Windows
+- [x] T054 [US1] Write tests for `pipeline/shared/cli_utils.py` -- test `style()` returns ANSI-wrapped text when color enabled, test `style()` returns plain text when color disabled via `set_use_color(False)`, test `create_sigint_handler()` calls callback and exits with 130, test `print_help_banner()` outputs all 8 sections, test `enable_windows_ansi()` runs without error on Windows -- **13 tests pass**
 
 ### Implementation for US1
 
-- [ ] T055 [US1] Create `pipeline/shared/cli_utils.py` -- implement `enable_windows_ansi()`, `set_use_color()`, `style()`, `create_sigint_handler()`, `print_help_banner()` (8-section template: What, Usage, Parameters, Options, Examples, Configuration, Output, Exit Codes)
-- [ ] T056 [P] [US1] Integrate cli_utils into `pipeline/01_wiki_fetcher/fetch_full_wiki_extended.py` -- add `--no-color` arg, register `sigint_handler`, replace raw `print()` with `style()` calls
-- [ ] T057 [P] [US1] Integrate cli_utils into `pipeline/01_wiki_fetcher/incremental_fetcher.py` -- add `--no-color` arg, register `sigint_handler`
-- [ ] T058 [P] [US1] Integrate cli_utils into `pipeline/01_wiki_fetcher/resume_fetch.py` -- add `--no-color` arg, register `sigint_handler`
-- [ ] T059 [P] [US1] Integrate cli_utils into `pipeline/02_deep_evaluation/run_deep_evaluation.py` -- add `--no-color` arg, register `sigint_handler`, replace summary prints with `style()`
-- [ ] T060 [P] [US1] Integrate cli_utils into `pipeline/02_deep_evaluation/run_evaluation.py` -- add `--no-color` arg, register `sigint_handler`
-- [ ] T061 [P] [US1] Integrate cli_utils into `pipeline/02_deep_evaluation/run_strategy_generation.py` -- add `--no-color` arg, register `sigint_handler`
-- [ ] T062 [P] [US1] Integrate cli_utils into `pipeline/03_rag_preprocessing/run_preprocessing.py` -- add `--no-color` arg, register `sigint_handler`, replace summary prints with `style()`
-- [ ] T063 [US1] Validate all 7 scripts: run with `--no-color`, verify no ANSI codes; run with `-h`, verify 8-section help; test Ctrl+C abort banner
+- [x] T055 [US1] Create `pipeline/shared/cli_utils.py` -- implement `enable_windows_ansi()`, `set_use_color()`, `style()`, `create_sigint_handler()`, `print_help_banner()` (8-section template), `add_no_color_arg()`, `apply_color_from_args()`
+- [x] T056 [P] [US1] Integrate cli_utils into `pipeline/01_wiki_fetcher/fetch_full_wiki_extended.py` -- add `--no-color` arg, style existing `_sigint_handler` with `style()`, apply colour from args
+- [x] T057 [P] [US1] Integrate cli_utils into `pipeline/01_wiki_fetcher/incremental_fetcher.py` -- add `--no-color` arg, register `sigint_handler`
+- [x] T058 [P] [US1] Integrate cli_utils into `pipeline/01_wiki_fetcher/resume_fetch.py` -- add `--no-color` arg, register `sigint_handler`
+- [x] T059 [P] [US1] Integrate cli_utils into `pipeline/02_deep_evaluation/run_deep_evaluation.py` -- add `--no-color` arg, register `sigint_handler`, style banner with `style()`
+- [x] T060 [P] [US1] Integrate cli_utils into `pipeline/02_deep_evaluation/run_evaluation.py` -- add `--no-color` arg, register `sigint_handler`
+- [x] T061 [P] [US1] Integrate cli_utils into `pipeline/02_deep_evaluation/run_strategy_generation.py` -- add `--no-color` arg, register `sigint_handler`, style output with `style()`
+- [x] T062 [P] [US1] Integrate cli_utils into `pipeline/03_rag_preprocessing/run_preprocessing.py` -- add `--no-color` arg, register `sigint_handler`, style summary with `style()`
+- [x] T063 [US1] Validate all 7 scripts: `--help` shows `--no-color`; `--no-color` produces plain output; Ctrl+C exits 130 -- **VERIFIED 2026-02-16**
 
-**Checkpoint**: All pipeline scripts have consistent, professional CLI UX.
+**Checkpoint**: All pipeline scripts have consistent, professional CLI UX. **VERIFIED 2026-02-16**.
 
 ---
 
