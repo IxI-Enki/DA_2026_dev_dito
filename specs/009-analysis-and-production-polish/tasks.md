@@ -94,13 +94,13 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T017 [US5] Extend tests in `pipeline/03_rag_preprocessing/tests/test_metadata_enricher.py` -- test 26-day-old page returns score=1.0/category="fresh", test 60-day-old returns 0.85/"fresh", test 120-day-old returns 0.70/"recent", test 300-day-old returns 0.55/"recent", test 650-day-old returns 0.35/"outdated", test 1500-day-old returns 0.20/"archived", test invalid date returns default, test `FreshnessResult` dataclass has both score (float) and category (str)
+- [x] T017 [US5] Extend tests in `pipeline/03_rag_preprocessing/tests/test_metadata_enricher.py` -- test 26-day-old page returns score=1.0/category="fresh", test 60-day-old returns 0.85/"fresh", test 120-day-old returns 0.70/"recent", test 300-day-old returns 0.55/"recent", test 650-day-old returns 0.35/"outdated", test 1500-day-old returns 0.20/"archived", test invalid date returns default, test `FreshnessResult` dataclass has both score (float) and category (str)
 
 ### Implementation for US5
 
-- [ ] T018 [US5] Implement `FreshnessResult` dataclass and `calculate_freshness()` method in `pipeline/03_rag_preprocessing/metadata_enricher.py` -- replace old `calculate_freshness_score()` (string-only), implement 6-tier hybrid formula (<30d: 1.0/fresh, <90d: 0.85/fresh, <180d: 0.70/recent, <365d: 0.55/recent, <730d: 0.35/outdated, >=730d: 0.20/archived)
-- [ ] T019 [US5] Update `pipeline/03_rag_preprocessing/run_preprocessing.py` -- use new `calculate_freshness()` return value, write both `freshness_score` (float) and `freshness_category` (str) into page and media dicts
-- [ ] T020 [US5] Run tests and validate with spec examples
+- [x] T018 [US5] Implement `FreshnessResult` dataclass and `calculate_freshness()` method in `pipeline/03_rag_preprocessing/metadata_enricher.py` -- replace old `calculate_freshness_score()` (string-only), implement 6-tier hybrid formula (<30d: 1.0/fresh, <90d: 0.85/fresh, <180d: 0.70/recent, <365d: 0.55/recent, <730d: 0.35/outdated, >=730d: 0.20/archived)
+- [x] T019 [US5] Update `pipeline/03_rag_preprocessing/run_preprocessing.py` -- use new `calculate_freshness()` return value, write both `freshness_score` (float) and `freshness_category` (str) into page and media dicts
+- [x] T020 [US5] Run tests and validate with spec examples
 
 **Checkpoint**: Every document in output has `freshness_score` (Float) and `freshness_category` (String) in frontmatter.
 

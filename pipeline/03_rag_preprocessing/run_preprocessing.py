@@ -160,8 +160,8 @@ def run(
             author = page_info.get("author", "")
             namespace = page_id.rsplit(":", 1)[0] if ":" in page_id else ""
 
-            # Freshness + access
-            freshness = meta_enricher.calculate_freshness_score(last_mod) if last_mod else "unknown"
+            # Freshness (US5: 6-tier hybrid formula) + access
+            freshness = meta_enricher.calculate_freshness(last_mod) if last_mod else None
             access = meta_enricher.determine_access_level(namespace)
 
             # Links
@@ -190,8 +190,8 @@ def run(
                 "source": f"{cfg.wiki_base_url}{page_id.replace('_', ':')}",
                 "access_level": access,
                 "content_type": strategy.content_type.value,
-                "freshness_score": 0.5,  # Placeholder until US5 Freshness-Scoring
-                "freshness_category": freshness,
+                "freshness_score": freshness.score if freshness else 0.5,
+                "freshness_category": freshness.category if freshness else "unknown",
                 "chunking_method": strategy.chunking_method,
                 "last_modified": last_mod,
                 "author": author,

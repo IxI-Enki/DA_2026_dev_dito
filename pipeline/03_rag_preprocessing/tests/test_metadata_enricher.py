@@ -1,4 +1,4 @@
-"""T068 + T007: Tests for MetadataEnricher -- schema fields, freshness, access."""
+"""T068 + T007 + T017: Tests for MetadataEnricher -- schema fields, freshness, access."""
 
 from __future__ import annotations
 
@@ -6,6 +6,96 @@ from datetime import datetime, timedelta
 
 import pytest
 import yaml
+
+
+class TestFreshnessHybridFormula:
+    """T017: Tests for the 6-tier hybrid freshness formula (US5).
+
+    Spec formula:
+        < 30 days:   score=1.00, category="fresh"
+        < 90 days:   score=0.85, category="fresh"
+        < 180 days:  score=0.70, category="recent"
+        < 365 days:  score=0.55, category="recent"
+        < 730 days:  score=0.35, category="outdated"
+        >= 730 days: score=0.20, category="archived"
+    """
+
+    def test_26_day_old_returns_fresh_1_0(self) -> None:
+        """Spec AC1: 26 days -> score=1.0, category='fresh'."""
+        from metadata_enricher import MetadataEnricher
+
+        me = MetadataEnricher()
+        date = (datetime.now() - timedelta(days=26)).isoformat()
+        result = me.calculate_freshness(date)
+        assert result.score == 1.0
+        assert result.category == "fresh"
+
+    def test_60_day_old_returns_fresh_0_85(self) -> None:
+        """60 days -> score=0.85, category='fresh'."""
+        from metadata_enricher import MetadataEnricher
+
+        me = MetadataEnricher()
+        date = (datetime.now() - timedelta(days=60)).isoformat()
+        result = me.calculate_freshness(date)
+        assert result.score == 0.85
+        assert result.category == "fresh"
+
+    def test_120_day_old_returns_recent_0_70(self) -> None:
+        """120 days -> score=0.70, category='recent'."""
+        from metadata_enricher import MetadataEnricher
+
+        me = MetadataEnricher()
+        date = (datetime.now() - timedelta(days=120)).isoformat()
+        result = me.calculate_freshness(date)
+        assert result.score == 0.70
+        assert result.category == "recent"
+
+    def test_300_day_old_returns_recent_0_55(self) -> None:
+        """Spec AC2: 300 days -> score=0.55, category='recent'."""
+        from metadata_enricher import MetadataEnricher
+
+        me = MetadataEnricher()
+        date = (datetime.now() - timedelta(days=300)).isoformat()
+        result = me.calculate_freshness(date)
+        assert result.score == 0.55
+        assert result.category == "recent"
+
+    def test_650_day_old_returns_outdated_0_35(self) -> None:
+        """Spec AC2: ~650 days -> score=0.35, category='outdated'."""
+        from metadata_enricher import MetadataEnricher
+
+        me = MetadataEnricher()
+        date = (datetime.now() - timedelta(days=650)).isoformat()
+        result = me.calculate_freshness(date)
+        assert result.score == 0.35
+        assert result.category == "outdated"
+
+    def test_1500_day_old_returns_archived_0_20(self) -> None:
+        """Spec AC3: ~1500 days -> score=0.20, category='archived'."""
+        from metadata_enricher import MetadataEnricher
+
+        me = MetadataEnricher()
+        date = (datetime.now() - timedelta(days=1500)).isoformat()
+        result = me.calculate_freshness(date)
+        assert result.score == 0.20
+        assert result.category == "archived"
+
+    def test_invalid_date_returns_default(self) -> None:
+        """Invalid date string -> default score=0.5, category='unknown'."""
+        from metadata_enricher import MetadataEnricher
+
+        me = MetadataEnricher()
+        result = me.calculate_freshness("not-a-date")
+        assert result.score == 0.5
+        assert result.category == "unknown"
+
+    def test_freshness_result_has_score_and_category(self) -> None:
+        """FreshnessResult dataclass has both score (float) and category (str)."""
+        from metadata_enricher import FreshnessResult
+
+        fr = FreshnessResult(score=0.85, category="fresh")
+        assert isinstance(fr.score, float)
+        assert isinstance(fr.category, str)
 
 
 class TestFreshnessScore:

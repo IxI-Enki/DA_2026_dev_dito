@@ -7,11 +7,19 @@ Generates YAML frontmatter from multiple metadata sources.
 import json
 import yaml
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class FreshnessResult:
+    """Freshness calculation result with both score and category."""
+    score: float       # 0.0 - 1.0
+    category: str      # fresh / recent / outdated / archived / unknown
 
 
 class MetadataEnricher:
@@ -191,6 +199,44 @@ class MetadataEnricher:
         if age_days < 365:
             return "outdated"
         return "archived"
+
+    def calculate_freshness(self, last_modified: str) -> FreshnessResult:
+        """Calculate freshness using the spec's 6-tier hybrid formula.
+
+        Thresholds:
+            < 30 days:   score=1.00, category="fresh"
+            < 90 days:   score=0.85, category="fresh"
+            < 180 days:  score=0.70, category="recent"
+            < 365 days:  score=0.55, category="recent"
+            < 730 days:  score=0.35, category="outdated"
+            >= 730 days: score=0.20, category="archived"
+
+        Returns:
+            FreshnessResult with score (float) and category (str).
+            On invalid input: score=0.5, category="unknown".
+        """
+        try:
+            if "T" in last_modified:
+                dt = datetime.fromisoformat(last_modified.replace("Z", "+00:00"))
+            else:
+                dt = datetime.fromisoformat(last_modified)
+            if dt.tzinfo is not None:
+                dt = dt.replace(tzinfo=None)
+            age_days = (datetime.now() - dt).days
+        except (ValueError, TypeError):
+            return FreshnessResult(score=0.5, category="unknown")
+
+        if age_days < 30:
+            return FreshnessResult(score=1.0, category="fresh")
+        if age_days < 90:
+            return FreshnessResult(score=0.85, category="fresh")
+        if age_days < 180:
+            return FreshnessResult(score=0.70, category="recent")
+        if age_days < 365:
+            return FreshnessResult(score=0.55, category="recent")
+        if age_days < 730:
+            return FreshnessResult(score=0.35, category="outdated")
+        return FreshnessResult(score=0.20, category="archived")
 
     def determine_access_level(self, namespace: str) -> str:
         """Determine access level based on DokuWiki namespace.
