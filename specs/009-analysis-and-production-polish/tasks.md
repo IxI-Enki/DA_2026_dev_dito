@@ -139,14 +139,14 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T026 [US6] Write tests in `pipeline/03_rag_preprocessing/tests/test_image_captioner.py` -- test `caption()` returns description string with mocked OpenAI client, test `is_available()` returns False when endpoint unreachable, test graceful failure (returns empty string on error, logs warning), test base64 image encoding, test decorative images are NOT captioned (strategy routing in orchestrator), test output `.md` file has correct frontmatter schema
+- [x] T026 [US6] Write tests in `pipeline/03_rag_preprocessing/tests/test_image_captioner.py` -- test `caption()` returns description string with mocked OpenAI client, test `is_available()` returns False when endpoint unreachable, test graceful failure (returns empty string on error, logs warning), test base64 image encoding, test decorative images are NOT captioned (strategy routing in orchestrator), test output `.md` file has correct frontmatter schema
 
 ### Implementation for US6
 
-- [ ] T027 [US6] Create `pipeline/03_rag_preprocessing/image_captioner.py` -- `ImageCaptioner` class with lazy OpenAI client init, `caption(image_path)` method (base64 encode, German prompt, return description), `is_available()` pre-check, `CAPTIONABLE_EXTENSIONS` constant
-- [ ] T028 [US6] Add VISION_LLM configuration section to `pipeline/03_rag_preprocessing/env.yaml` -- `api_base`, `model`, `timeout` values (loaded by config.py, no hardcoded defaults in ImageCaptioner constructor per Article II-B)
-- [ ] T029 [US6] Update `pipeline/03_rag_preprocessing/run_preprocessing.py` -- init `ImageCaptioner` from config, check `is_available()` before batch, iterate informative images from `MediaStrategy`, call `captioner.caption()`, build media dict with Qdrant-schema frontmatter, skip decorative images
-- [ ] T030 [US6] Run tests with mock, then validate with real LMStudio endpoint if available
+- [x] T027 [US6] Create `pipeline/03_rag_preprocessing/image_captioner.py` -- `ImageCaptioner` class with lazy OpenAI client init, `caption(image_path)` method (base64 encode, German prompt, return description), `is_available()` pre-check, `CAPTIONABLE_EXTENSIONS` constant
+- [x] T028 [US6] Add VISION_LLM configuration section to `pipeline/03_rag_preprocessing/env.yaml` -- `api_base`, `model`, `timeout` values (loaded by config.py, no hardcoded defaults in ImageCaptioner constructor per Article II-B)
+- [x] T029 [US6] Update `pipeline/03_rag_preprocessing/run_preprocessing.py` -- init `ImageCaptioner` from config, check `is_available()` before batch, iterate informative images from `MediaStrategy`, call `captioner.caption()`, build media dict with Qdrant-schema frontmatter, skip decorative images
+- [x] T030 [US6] Run tests with mock, then validate with real LMStudio endpoint if available
 
 **Checkpoint**: Informative images produce `.md` files with Vision-LLM descriptions. Decorative images skipped. Pipeline continues when LMStudio is down.
 

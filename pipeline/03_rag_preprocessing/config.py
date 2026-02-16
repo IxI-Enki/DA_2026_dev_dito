@@ -94,7 +94,10 @@ class PreprocessingConfig:
     
     # Processing settings
     processing: Dict[str, Any]
-    
+
+    # Vision-LLM settings (US6)
+    vision_llm: Dict[str, Any]
+
     @classmethod
     def from_yaml(cls, config_path: Optional[Path] = None) -> 'PreprocessingConfig':
         """Load configuration from YAML file.
@@ -124,6 +127,7 @@ class PreprocessingConfig:
             media=config.get('MEDIA', {}),
             output=config.get('OUTPUT', {}),
             processing=config.get('PROCESSING', {}),
+            vision_llm=config.get('VISION_LLM', {}),
         )
 
 

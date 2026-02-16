@@ -26,6 +26,7 @@ if str(_here) not in sys.path:
 
 from config import get_config, get_latest_fetch_dir, get_latest_evaluation
 from exporter import Exporter
+from image_captioner import CAPTIONABLE_EXTENSIONS, ImageCaptioner
 from media_processor import MediaProcessor
 from metadata_enricher import MetadataEnricher
 from page_processor import PageProcessor
@@ -113,6 +114,19 @@ def run(
         ocr_language=cfg.media.get("ocr", {}).get("language", "deu+eng"),
     )
     exporter = Exporter()
+
+    # US6: Vision-LLM Image Captioner
+    vlm_cfg = cfg.vision_llm
+    captioner = ImageCaptioner(
+        api_base=vlm_cfg.get("api_base", "http://192.168.8.3:1234/v1"),
+        model=vlm_cfg.get("model", "qwen2.5-vl"),
+        timeout=vlm_cfg.get("timeout", 60),
+    )
+    captioner_available = captioner.is_available()
+    if captioner_available:
+        logger.info("Vision-LLM available at %s", vlm_cfg.get("api_base"))
+    else:
+        logger.warning("Vision-LLM not available -- images will be skipped")
 
     # T011a: Load backlinks
     backlinks_lookup = _load_backlinks(input_dir)
@@ -203,31 +217,67 @@ def run(
 
     stats["pages_fail"] = stats["pages_total"] - stats["pages_ok"]
 
-    # T011c: Process media with full Qdrant-schema metadata
+    # T011c + US6: Process media with full Qdrant-schema metadata + Vision-LLM
     media_dir = input_dir / "media"
+    stats["images_captioned"] = 0
     if media_dir.exists():
-        media_results = media_proc.process_media_directory(media_dir)
-        for mr in media_results:
-            file_path = mr.get("file_path", Path())
-            if isinstance(file_path, str):
-                file_path = Path(file_path)
-            media_id = mr.get("media_id", file_path.name if file_path else "unknown")
+        for f in sorted(media_dir.rglob("*")):
+            if not f.is_file():
+                continue
+
+            ext = f.suffix.lower()
+            media_id = f.name
+            ms = strategy_loader.get_media_strategy(f.name)
+
+            # Skip decorative images / skipped media
+            if ms.action == "skip":
+                logger.debug("Skipping media (strategy=skip): %s", f.name)
+                continue
+
+            # Captionable images (US6): use Vision-LLM
+            if ext in CAPTIONABLE_EXTENSIONS:
+                if ms.action == "caption_and_index" and captioner_available:
+                    description = captioner.caption(f)
+                    if description:
+                        media.append({
+                            "media_id": media_id,
+                            "title": f.stem.replace("_", " ").title(),
+                            "namespace": media_id.rsplit(":", 1)[0] if ":" in media_id else "",
+                            "source": f"{cfg.wiki_base_url}lib/exe/fetch.php?media={media_id}" if cfg.wiki_base_url else "",
+                            "access_level": "public",
+                            "content_type": "IMAGE",
+                            "freshness_score": 0.5,
+                            "freshness_category": "recent",
+                            "chunking_method": "metadata_only",
+                            "last_modified": "",
+                            "author": "",
+                            "links_to": [],
+                            "linked_from": [],
+                            "content": description,
+                        })
+                        stats["images_captioned"] += 1
+                continue  # images are either captioned or skipped
+
+            # Documents (PDF, etc.): extract text
+            text = ""
+            if ext == ".pdf":
+                text = media_proc.process_pdf(f)
 
             media.append({
                 "media_id": media_id,
-                "title": file_path.stem.replace("_", " ").title() if file_path else "",
+                "title": f.stem.replace("_", " ").title(),
                 "namespace": media_id.rsplit(":", 1)[0] if ":" in media_id else "",
                 "source": f"{cfg.wiki_base_url}lib/exe/fetch.php?media={media_id}" if cfg.wiki_base_url else "",
                 "access_level": "public",
-                "content_type": mr.get("content_type", "DOCUMENT"),
+                "content_type": ms.content_type,
                 "freshness_score": 0.5,
                 "freshness_category": "recent",
-                "chunking_method": "metadata_only",
+                "chunking_method": ms.parser if ms.parser != "image" else "metadata_only",
                 "last_modified": "",
                 "author": "",
                 "links_to": [],
                 "linked_from": [],
-                "content": mr.get("text", ""),
+                "content": text,
             })
         stats["media_processed"] = len(media)
 
