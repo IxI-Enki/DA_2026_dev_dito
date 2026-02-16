@@ -196,6 +196,25 @@ class TestYamlDedup:
         ids = strategies["ignored"]["include_ids"]
         assert len(ids) == len(set(ids)), f"Duplicate ignored IDs: {ids}"
 
+    def test_structural_override_table_data(self):
+        """Page with high table-row density but LLM category NEWS should be overridden to TABLE_DATA."""
+        # length=800 -> ~10 lines approx; table_rows=6 -> 60% >= 50% -> override to TABLE_DATA
+        data = {
+            "wiki_pages": [
+                {
+                    "page_id": "org:termine-2023",
+                    "semantic": {"category": "NEWS"},
+                    "structure": {"table_rows": 6, "length": 800},
+                },
+            ],
+            "documents": [],
+            "media": [],
+        }
+        gen = self._make_generator(data)
+        strategies = gen._derive_wiki_strategies()
+        assert "org:termine-2023" in strategies["table_data"]["include_ids"]
+        assert "org:termine-2023" not in strategies["news"]["include_ids"]
+
 
 # -----------------------------------------------------------------------
 # T052b: multiline summary logging tests

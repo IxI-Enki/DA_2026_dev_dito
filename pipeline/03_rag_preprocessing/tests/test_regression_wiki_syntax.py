@@ -105,6 +105,7 @@ class TestWikiSyntaxRegression:
         result = pp.convert("[[page:test|Link Text]] and [[https://example.com]]")
         assert "[[" not in result.markdown
         assert "]]" not in result.markdown
+        # Internal links keep colon namespace and are lowercased to match page_id
         assert "[Link Text](page:test)" in result.markdown
 
     def test_media_fully_converted(self) -> None:
@@ -114,4 +115,5 @@ class TestWikiSyntaxRegression:
         result = pp.convert("{{media:photo.jpg|My photo}}")
         assert "{{" not in result.markdown
         assert "}}" not in result.markdown
+        # Media links keep colon namespace and are lowercased to match media_id
         assert "![My photo](media:photo.jpg)" in result.markdown

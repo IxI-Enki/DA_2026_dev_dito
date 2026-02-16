@@ -34,14 +34,28 @@ class TestMediaProcessorPDF:
             result = mp.process_pdf(pdf)
         assert isinstance(result, str)
 
+    def test_process_pdf_tries_docling_first(self, tmp_path: Path) -> None:
+        """When Docling returns non-empty text, that text is returned (no clean_pdf_text)."""
+        from media_processor import MediaProcessor
+
+        mp = MediaProcessor()
+        pdf = tmp_path / "docling.pdf"
+        pdf.write_bytes(b"%PDF")
+        docling_md = "# Title\n\nParagraph from Docling."
+        with patch("media_processor.MediaProcessor._extract_pdf_text_docling", return_value=docling_md):
+            result = mp.process_pdf(pdf)
+        assert result == docling_md
+        assert result.strip().startswith("# Title")
+
     def test_process_pdf_fallback_to_ocr(self, tmp_path: Path) -> None:
         from media_processor import MediaProcessor
 
         mp = MediaProcessor()
         pdf = tmp_path / "scanned.pdf"
         pdf.write_bytes(b"%PDF")
-        # Simulate empty text extraction -> should attempt OCR fallback
-        with patch("media_processor.MediaProcessor._extract_pdf_text", return_value=""), \
+        # Simulate Docling empty, pypdf empty -> should attempt OCR fallback
+        with patch("media_processor.MediaProcessor._extract_pdf_text_docling", return_value=""), \
+             patch("media_processor.MediaProcessor._extract_pdf_text", return_value=""), \
              patch("media_processor.MediaProcessor._ocr_pdf", return_value="OCR result"):
             result = mp.process_pdf(pdf)
         assert result == "OCR result"
@@ -52,6 +66,88 @@ class TestMediaProcessorPDF:
         mp = MediaProcessor()
         result = mp.process_pdf(tmp_path / "nonexistent.pdf")
         assert result == ""
+
+
+class TestMediaProcessorDOCX:
+    """Tests for process_docx: Docling first, fallback with tables."""
+
+    def test_process_docx_tries_docling_first(self, tmp_path: Path) -> None:
+        """When Docling returns non-empty text, that text is returned."""
+        from docx import Document
+        from media_processor import MediaProcessor
+
+        docx_path = tmp_path / "sample.docx"
+        doc = Document()
+        doc.add_paragraph("Hello from Docx.")
+        doc.save(str(docx_path))
+        mp = MediaProcessor()
+        docling_md = "# Docling Title\n\nStructured content."
+        with patch("media_processor.MediaProcessor._extract_docx_text_docling", return_value=docling_md):
+            result = mp.process_docx(docx_path)
+        assert result == docling_md
+        assert result.strip().startswith("# Docling Title")
+
+    def test_process_docx_fallback_extracts_tables(self, tmp_path: Path) -> None:
+        """Fallback python-docx extracts both paragraphs and tables as Markdown."""
+        from docx import Document
+        from media_processor import MediaProcessor
+
+        docx_path = tmp_path / "with_tables.docx"
+        doc = Document()
+        doc.add_paragraph("Intro text.")
+        table = doc.add_table(rows=2, cols=2)
+        table.rows[0].cells[0].text = "A"
+        table.rows[0].cells[1].text = "B"
+        table.rows[1].cells[0].text = "1"
+        table.rows[1].cells[1].text = "2"
+        doc.save(str(docx_path))
+        mp = MediaProcessor()
+        with patch("media_processor.MediaProcessor._extract_docx_text_docling", return_value=""):
+            result = mp.process_docx(docx_path)
+        assert "Intro text." in result
+        assert "| A | B |" in result
+        assert "---" in result
+        assert "| 1 | 2 |" in result
+
+
+class TestMediaProcessorXLSX:
+    """Tests for process_xlsx: Docling first, fallback with proper Markdown tables."""
+
+    def test_process_xlsx_tries_docling_first(self, tmp_path: Path) -> None:
+        """When Docling returns non-empty text, that text is returned."""
+        from openpyxl import Workbook
+        from media_processor import MediaProcessor
+
+        xlsx_path = tmp_path / "sample.xlsx"
+        wb = Workbook()
+        ws = wb.active
+        ws["A1"] = "Col1"
+        ws["B1"] = "Col2"
+        wb.save(str(xlsx_path))
+        mp = MediaProcessor()
+        docling_md = "## Sheet1\n\n| Col1 | Col2 |"
+        with patch("media_processor.MediaProcessor._extract_xlsx_text_docling", return_value=docling_md):
+            result = mp.process_xlsx(xlsx_path)
+        assert result == docling_md
+
+    def test_process_xlsx_fallback_produces_markdown_tables(self, tmp_path: Path) -> None:
+        """Fallback openpyxl produces proper Markdown table syntax with | and ---."""
+        from openpyxl import Workbook
+        from media_processor import MediaProcessor
+
+        xlsx_path = tmp_path / "data.xlsx"
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Data"
+        ws["A1"], ws["B1"] = "X", "Y"
+        ws["A2"], ws["B2"] = "a", "b"
+        wb.save(str(xlsx_path))
+        mp = MediaProcessor()
+        with patch("media_processor.MediaProcessor._extract_xlsx_text_docling", return_value=""):
+            result = mp.process_xlsx(xlsx_path)
+        assert "## Data" in result
+        assert "| " in result and " | " in result
+        assert "---" in result
 
 
 class TestMediaProcessorImage:

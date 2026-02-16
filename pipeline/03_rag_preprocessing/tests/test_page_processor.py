@@ -43,6 +43,14 @@ class TestDokuWikiConversion:
         r = pp.convert("[[page|Link text]]")
         assert "[Link text](page)" in r.markdown
 
+    def test_internal_link_namespace_colon_lowercase(self) -> None:
+        """Internal wiki links keep colon separator and lowercase target to match page_id."""
+        from page_processor import PageProcessor
+
+        pp = PageProcessor()
+        r = pp.convert("[[departm:ELD|Elektronik Design]]")
+        assert "[Elektronik Design](departm:eld)" in r.markdown
+
     def test_unordered_list(self) -> None:
         from page_processor import PageProcessor
 

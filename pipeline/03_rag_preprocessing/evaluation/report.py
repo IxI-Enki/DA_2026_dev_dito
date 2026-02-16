@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -46,7 +46,7 @@ def generate_report(
         Path to the generated JSON report.
     """
     output_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # Build aggregate summary
     aggregate = _build_aggregate(scores)
@@ -54,7 +54,7 @@ def generate_report(
 
     report_data = {
         "metadata": {
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now().isoformat(),
             "fetched_dir": fetched_dir,
             "preprocessed_dir": preprocessed_dir,
             "total_documents": len(scores),

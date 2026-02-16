@@ -55,7 +55,7 @@ class Exporter:
         Returns:
             Path to the created output directory.
         """
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir = output_base / f"preprocessed_at_{timestamp}"
         pages_dir = out_dir / "pages"
         media_dir = out_dir / "media"
@@ -138,8 +138,8 @@ class Exporter:
             "last_modified": media_item.get("last_modified", ""),
             "author": media_item.get("author", ""),
             "content_hash": hashlib.md5(body.encode("utf-8")).hexdigest(),
-            "links_to": [],
-            "linked_from": [],
+            "links_to": media_item.get("links_to", []),
+            "linked_from": media_item.get("linked_from", []),
         }
 
     def _write_md(

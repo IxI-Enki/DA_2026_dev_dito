@@ -147,7 +147,8 @@ class PageProcessor:
         counter = [0]  # Use list for closure
         
         def replace_code(match):
-            placeholder = f"__CODE_BLOCK_{counter[0]}__"
+            # Use <<<...>>> to avoid collision with __underline__ conversion
+            placeholder = f"<<<CODE_BLOCK_{counter[0]}>>>"
             counter[0] += 1
             code_blocks[placeholder] = match.group(0)
             return placeholder
@@ -275,8 +276,8 @@ class PageProcessor:
                 page = target[3:]
                 return f'[{text}](https://en.wikipedia.org/wiki/{page})'
             else:
-                # Internal wiki link
-                # Handle anchors
+                # Internal wiki link; keep colon namespace, lowercase to match page_id
+                target = target.lstrip(':').lower()
                 if '#' in target:
                     page, anchor = target.split('#', 1)
                     return f'[{text}]({page}#{anchor})'
@@ -316,6 +317,8 @@ class PageProcessor:
             # Remove size parameters (e.g., ?200x100)
             if '?' in src:
                 src = src.split('?')[0]
+            # DokuWiki colon-paths: keep colon namespace, lowercase to match media_id
+            src = src.lstrip(':').lower()
             
             return f'![{alt}]({src})'
         

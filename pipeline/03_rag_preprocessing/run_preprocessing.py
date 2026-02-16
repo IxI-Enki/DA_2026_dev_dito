@@ -63,7 +63,14 @@ def _load_backlinks(input_dir: Path) -> dict[str, list[str]]:
     for f in backlinks_dir.glob("*.json"):
         try:
             data = json.loads(f.read_text(encoding="utf-8"))
-            page_id = f.stem.replace("_", ":")
+            # Primary: use page_id from the JSON (e.g. "page_id": "start")
+            page_id = data.get("page_id", "") if isinstance(data, dict) else ""
+            if not page_id:
+                # Fallback: strip _backlinks suffix, then convert _ to :
+                stem = f.stem
+                if stem.endswith("_backlinks"):
+                    stem = stem[:-10]  # len("_backlinks") == 10
+                page_id = stem.replace("_", ":")
             # data is typically a list of page_ids that link to this page
             if isinstance(data, list):
                 backlinks[page_id] = data
@@ -74,6 +81,69 @@ def _load_backlinks(input_dir: Path) -> dict[str, list[str]]:
 
     logger.info("Loaded backlinks for %d pages", len(backlinks))
     return backlinks
+
+
+def _load_media_metadata(input_dir: Path) -> dict[str, dict[str, Any]]:
+    """Load media metadata from media_metadata/*_info.json.
+
+    Returns:
+        Dict keyed by media id (from JSON) with keys last_modified (ISO),
+        author, and optionally revision (unix).
+    """
+    result: dict[str, dict[str, Any]] = {}
+    meta_dir = input_dir / "media_metadata"
+    if not meta_dir.exists():
+        logger.info("No media_metadata/ directory found")
+        return result
+
+    for path in meta_dir.glob("*_info.json"):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            mid = data.get("id")
+            if not mid:
+                continue
+            orig = data.get("original_metadata") or {}
+            rev = orig.get("revision")
+            last_mod = ""
+            if rev is not None:
+                try:
+                    dt = datetime.fromtimestamp(int(rev), tz=timezone.utc)
+                    last_mod = dt.isoformat()
+                except (ValueError, OSError):
+                    pass
+            result[mid] = {
+                "last_modified": last_mod,
+                "author": orig.get("author") or "",
+            }
+        except Exception as e:
+            logger.warning("Failed to load media metadata from %s: %s", path.name, e)
+
+    logger.info("Loaded media metadata for %d files", len(result))
+    return result
+
+
+def _load_media_usage(input_dir: Path) -> dict[str, list[str]]:
+    """Load media_usage_index.json for linked_from (which pages reference each media).
+
+    Returns:
+        Dict mapping media_id -> list of page_ids that reference it.
+    """
+    result: dict[str, list[str]] = {}
+    usage_file = input_dir / "media_usage_index.json"
+    if not usage_file.exists():
+        logger.info("No media_usage_index.json found, media linked_from will be empty")
+        return result
+    try:
+        data = json.loads(usage_file.read_text(encoding="utf-8"))
+        usage = data.get("media_usage") or {}
+        for mid, info in usage.items():
+            refs = info.get("referenced_by")
+            if isinstance(refs, list):
+                result[mid] = refs
+        logger.info("Loaded media usage for %d media (linked_from)", len(result))
+    except Exception as e:
+        logger.warning("Failed to load media_usage_index.json: %s", e)
+    return result
 
 
 def run(
@@ -144,6 +214,10 @@ def run(
 
     # T011a: Load backlinks
     backlinks_lookup = _load_backlinks(input_dir)
+    # Load media metadata for last_modified, author, freshness
+    media_metadata_lookup = _load_media_metadata(input_dir)
+    # Load media usage for linked_from (which pages reference each media)
+    media_usage_lookup = _load_media_usage(input_dir)
 
     # Process pages
     page_content_dir = input_dir / "page_content"
@@ -172,6 +246,7 @@ def run(
             result = page_proc.process_with_strategy(
                 {"content": wiki, "page_id": page_id}, strategy
             )
+            title = result.get("title", "") or page_id.split(":")[-1].replace("_", " ").title()
 
             # Load raw metadata if available
             raw_meta_file = raw_json_dir / f"{f.stem}_complete.json"
@@ -188,8 +263,8 @@ def run(
             author = page_info.get("author", "")
             namespace = page_id.rsplit(":", 1)[0] if ":" in page_id else ""
 
-            # Freshness (US5: 6-tier hybrid formula) + access
-            freshness = meta_enricher.calculate_freshness(last_mod) if last_mod else None
+            # Freshness (US5: 6-tier hybrid formula) + access; namespace used for archived vs stale
+            freshness = meta_enricher.calculate_freshness(last_mod, namespace) if last_mod else None
             access = meta_enricher.determine_access_level(namespace)
 
             # Links
@@ -203,6 +278,11 @@ def run(
                         for link in links_data.get("internal_links", [])
                         if link.get("target")
                     ]
+                    # Include media embeds
+                    for ml in links_data.get("media_links", []):
+                        mid = ml.get("media_id", "")
+                        if mid:
+                            links_to.append(mid)
                 except Exception:
                     pass
 
@@ -213,7 +293,7 @@ def run(
             # Strategy provides content_type and chunking_method (US4)
             pages.append({
                 "page_id": page_id,
-                "title": result.get("title", ""),
+                "title": title,
                 "namespace": namespace,
                 "source": f"{cfg.wiki_base_url}{page_id.replace('_', ':')}",
                 "access_level": access,
@@ -240,8 +320,22 @@ def run(
                 continue
 
             ext = f.suffix.lower()
-            media_id = f.name
+            # Resolve metadata from media_metadata/*_info.json
+            try:
+                rel = f.relative_to(media_dir)
+            except ValueError:
+                rel = Path(f.name)
+            meta_key = rel.as_posix().replace("/", ":")
+            media_id = meta_key  # e.g. "class:docker_kollision.jpg"
             ms = strategy_loader.get_media_strategy(f.name)
+            meta = media_metadata_lookup.get(meta_key) or media_metadata_lookup.get(f.name)
+            last_mod = (meta.get("last_modified", "") or "") if meta else ""
+            author = (meta.get("author", "") or "") if meta else ""
+            media_namespace = meta_key.split(":")[0] if ":" in meta_key else ""
+            freshness = meta_enricher.calculate_freshness(last_mod, media_namespace) if last_mod else None
+            freshness_score = freshness.score if freshness else 0.5
+            freshness_category = freshness.category if freshness else "recent"
+            linked_from = media_usage_lookup.get(meta_key) or media_usage_lookup.get(f.name) or []
 
             # Skip decorative images / skipped media
             if ms.action == "skip":
@@ -260,13 +354,13 @@ def run(
                             "source": f"{cfg.wiki_base_url}lib/exe/fetch.php?media={media_id}" if cfg.wiki_base_url else "",
                             "access_level": "public",
                             "content_type": "IMAGE",
-                            "freshness_score": 0.5,
-                            "freshness_category": "recent",
+                            "freshness_score": freshness_score,
+                            "freshness_category": freshness_category,
                             "chunking_method": "metadata_only",
-                            "last_modified": "",
-                            "author": "",
+                            "last_modified": last_mod,
+                            "author": author,
                             "links_to": [],
-                            "linked_from": [],
+                            "linked_from": linked_from,
                             "content": description,
                         })
                         stats["images_captioned"] += 1
@@ -292,13 +386,13 @@ def run(
                 "source": f"{cfg.wiki_base_url}lib/exe/fetch.php?media={media_id}" if cfg.wiki_base_url else "",
                 "access_level": "public",
                 "content_type": ms.content_type,
-                "freshness_score": 0.5,
-                "freshness_category": "recent",
+                "freshness_score": freshness_score,
+                "freshness_category": freshness_category,
                 "chunking_method": ms.parser if ms.parser != "image" else "metadata_only",
-                "last_modified": "",
-                "author": "",
+                "last_modified": last_mod,
+                "author": author,
                 "links_to": [],
-                "linked_from": [],
+                "linked_from": linked_from,
                 "content": text,
             })
         stats["media_processed"] = len(media)

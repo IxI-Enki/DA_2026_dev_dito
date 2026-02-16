@@ -43,11 +43,26 @@ class StrategyGenerator:
     def _derive_wiki_strategies(self) -> Dict[str, Any]:
         """Leitet Strategien für Wiki-Seiten ab."""
         pages = self.data.get("wiki_pages", [])
-        
-        # Group by category
+
+        # Structural override: if page is table-heavy but LLM did not say TABLE_DATA, override
+        TABLE_ROW_DENSITY_THRESHOLD = 0.5
+        MIN_TABLE_ROWS = 3
+        AVG_CHARS_PER_LINE = 80
+
         categories = {}
         for p in pages:
             cat = p.get("semantic", {}).get("category", "UNKNOWN")
+            structure = p.get("structure", {}) or {}
+            table_rows = int(structure.get("table_rows", 0))
+            length = int(structure.get("length", 0))
+            if (
+                cat != "TABLE_DATA"
+                and table_rows >= MIN_TABLE_ROWS
+                and length > 0
+            ):
+                total_lines_approx = max(1, length // AVG_CHARS_PER_LINE)
+                if table_rows / total_lines_approx >= TABLE_ROW_DENSITY_THRESHOLD:
+                    cat = "TABLE_DATA"
             if cat not in categories:
                 categories[cat] = []
             categories[cat].append(p["page_id"])
@@ -76,6 +91,12 @@ class StrategyGenerator:
                 "chunking": "naive",
                 "freshness_weight": 0.5,
                 "include_ids": sorted(set(categories.get("NEWS", [])))
+            },
+            "table_data": {
+                "description": "Seiten mit tabellarischen Daten als Hauptinhalt",
+                "chunking": "table_row",
+                "chunk_size": 512,
+                "include_ids": sorted(set(categories.get("TABLE_DATA", [])))
             },
             "ignored": {
                 "description": "Irrelevanter Content",

@@ -295,26 +295,49 @@ class LinkIntegrityMetric:
     """Metrik 4: DokuWiki Link Transformation.
 
     Checks that link targets from original DokuWiki are preserved in Markdown output.
+    Normalizes DokuWiki colon-paths and Markdown slash-paths to a common form
+    so ``departm:start`` matches ``departm/start``.
     Threshold: >= 0.95
     """
 
     threshold: float = 0.95
+
+    @staticmethod
+    def _normalize_target(target: str) -> str:
+        """Normalize a link target for comparison.
+
+        Strips leading colons/slashes, converts colons to slashes,
+        removes query strings and anchors, lowercases.
+        """
+        t = target.strip().lower()
+        t = t.lstrip(":").lstrip("/")
+        t = t.replace(":", "/")
+        # Strip query parameters (?...) and anchors (#...)
+        if "?" in t:
+            t = t.split("?")[0]
+        if "#" in t:
+            t = t.split("#")[0]
+        return t
 
     def score(self, original: str, processed: str) -> float:
         wiki_links = _DOKUWIKI_LINK.findall(original)
         if not wiki_links:
             return 1.0
 
-        # Extract targets from DokuWiki links
+        # Extract & normalize targets from DokuWiki links
         wiki_targets: set[str] = set()
         for target, _display in wiki_links:
-            wiki_targets.add(target.strip().lower())
+            norm = self._normalize_target(target)
+            if norm:
+                wiki_targets.add(norm)
 
-        # Extract targets from Markdown links
+        # Extract & normalize targets from Markdown links
         md_links = _MARKDOWN_LINK.findall(processed)
         md_targets: set[str] = set()
         for _display, target in md_links:
-            md_targets.add(target.strip().lower())
+            norm = self._normalize_target(target)
+            if norm:
+                md_targets.add(norm)
 
         if not wiki_targets:
             return 1.0

@@ -45,7 +45,7 @@ class MediaProcessor:
     # ------------------------------------------------------------------
 
     def process_pdf(self, pdf_path: Path) -> str:
-        """Extract text from PDF. Falls back to OCR for scanned pages.
+        """Extract text from PDF. Docling first (layout-aware Markdown), then pypdf+cleanup, then OCR.
 
         Args:
             pdf_path: Path to the PDF file.
@@ -57,11 +57,17 @@ class MediaProcessor:
             logger.warning("PDF not found: %s", pdf_path)
             return ""
 
+        # 1. Try Docling first (layout-aware, structured Markdown; skip post-processing)
+        text = self._extract_pdf_text_docling(pdf_path)
+        if text.strip():
+            return text
+
+        # 2. Fallback: pypdf + cleanup heuristics
         text = self._extract_pdf_text(pdf_path)
         if text.strip():
             return self.clean_pdf_text(text)
 
-        # Fallback: OCR the PDF
+        # 3. Fallback: OCR the PDF
         logger.info("PDF text empty, attempting OCR: %s", pdf_path.name)
         ocr_text = self._ocr_pdf(pdf_path)
         return self.clean_pdf_text(ocr_text) if ocr_text.strip() else ""
@@ -81,7 +87,7 @@ class MediaProcessor:
         return self._ocr_image(image_path)
 
     def process_docx(self, docx_path: Path) -> str:
-        """Extract text from a DOCX file.
+        """Extract text from a DOCX file. Docling first (structured Markdown), then python-docx with tables.
 
         Args:
             docx_path: Path to the DOCX file.
@@ -92,21 +98,15 @@ class MediaProcessor:
         if not docx_path.exists():
             logger.warning("DOCX not found: %s", docx_path)
             return ""
-        try:
-            from docx import Document
-
-            doc = Document(str(docx_path))
-            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
-            return "\n\n".join(paragraphs) if paragraphs else ""
-        except ImportError:
-            logger.warning("python-docx not installed -- DOCX extraction unavailable")
-            return ""
-        except Exception as e:
-            logger.warning("DOCX extraction failed for %s: %s", docx_path.name, e)
-            return ""
+        # 1. Try Docling first (paragraphs + tables as structured Markdown)
+        text = self._extract_docx_text_docling(docx_path)
+        if text.strip():
+            return text
+        # 2. Fallback: python-docx with paragraphs and tables
+        return self._extract_docx_text_fallback(docx_path)
 
     def process_xlsx(self, xlsx_path: Path) -> str:
-        """Extract text from an XLSX file.
+        """Extract text from an XLSX file. Docling first (structured Markdown), then openpyxl with proper tables.
 
         Args:
             xlsx_path: Path to the XLSX file.
@@ -117,26 +117,12 @@ class MediaProcessor:
         if not xlsx_path.exists():
             logger.warning("XLSX not found: %s", xlsx_path)
             return ""
-        try:
-            from openpyxl import load_workbook
-
-            wb = load_workbook(xlsx_path, read_only=True, data_only=True)
-            text_parts: list[str] = []
-            for sheet in wb.worksheets:
-                sheet_data: list[str] = []
-                for row in sheet.iter_rows(values_only=True):
-                    row_text = [str(cell) if cell is not None else "" for cell in row]
-                    if any(row_text):
-                        sheet_data.append(" | ".join(row_text))
-                if sheet_data:
-                    text_parts.append(f"## {sheet.title}\n" + "\n".join(sheet_data))
-            return "\n\n".join(text_parts) if text_parts else ""
-        except ImportError:
-            logger.warning("openpyxl not installed -- XLSX extraction unavailable")
-            return ""
-        except Exception as e:
-            logger.warning("XLSX extraction failed for %s: %s", xlsx_path.name, e)
-            return ""
+        # 1. Try Docling first (structured Markdown)
+        text = self._extract_xlsx_text_docling(xlsx_path)
+        if text.strip():
+            return text
+        # 2. Fallback: openpyxl with proper Markdown table syntax
+        return self._extract_xlsx_text_fallback(xlsx_path)
 
     def process_pptx(self, pptx_path: Path) -> str:
         """Extract text from a PPTX file.
@@ -220,10 +206,61 @@ class MediaProcessor:
     def clean_pdf_text(self, raw_text: str) -> str:
         """Post-process extracted PDF text for quality.
 
-        Chains: fix spaced characters -> merge short lines.
+        Chains: fix initial char splits -> fix spaced characters -> merge short lines.
         """
-        text = self._fix_spaced_characters(raw_text)
+        text = self._fix_initial_char_splits(raw_text)
+        text = self._fix_spaced_characters(text)
         text = self._merge_short_lines(text)
+        return text
+
+    def _fix_initial_char_splits(self, text: str) -> str:
+        """Rejoin PDF artifacts where the first 1-2 chars of a word are split off.
+
+        Three patterns applied sequentially:
+
+        A)  1-2 ALL-UPPERCASE letters + space + lowercase continuation (3+ chars).
+            ``P rüfer`` -> ``Prüfer``, ``PR üfung`` -> ``PRüfung``.
+        B)  1 uppercase + 1 lowercase (NOT a common German word) + space +
+            lowercase continuation (5+ chars).
+            ``Sc hriftlich`` -> ``Schriftlich``.
+        C)  Single lowercase letter + space + umlaut/sharp-s start (3+ chars).
+            ``m ündlich`` -> ``mündlich``.
+        """
+        if not text:
+            return ""
+
+        # Pattern A: 1-2 ALL uppercase + space + lowercase continuation (>= 3 chars)
+        text = re.compile(
+            r"\b([A-Z\u00C4\u00D6\u00DC]{1,2})\s+"
+            r"([a-z\u00E4\u00F6\u00FC\u00DF]\w{2,})\b",
+            re.UNICODE,
+        ).sub(r"\1\2", text)
+
+        # Pattern B: 1 uppercase + 1 lowercase + space + lowercase cont. (>= 5 chars)
+        # Exclude common 2-letter German words (Da, Er, Es, Im, In, So, Um, Zu, ...)
+        _COMMON_2 = frozenset([
+            "ab", "am", "an", "da", "du", "er", "es", "im", "in",
+            "ja", "je", "na", "ob", "oh", "so", "um", "wo", "zu",
+        ])
+
+        def _pattern_b_replace(m: re.Match[str]) -> str:
+            frag = m.group(1)
+            if frag.lower() in _COMMON_2:
+                return m.group(0)  # keep original
+            return frag + m.group(2)
+
+        text = re.compile(
+            r"\b([A-Z\u00C4\u00D6\u00DC][a-z\u00E4\u00F6\u00FC\u00DF])\s+"
+            r"([a-z\u00E4\u00F6\u00FC\u00DF]\w{4,})\b",
+            re.UNICODE,
+        ).sub(_pattern_b_replace, text)
+
+        # Pattern C: single lowercase letter + space + umlaut/sharp-s start (>= 3 chars)
+        text = re.compile(
+            r"\b([a-z])\s+([\u00E4\u00F6\u00FC\u00DF]\w{2,})\b",
+            re.UNICODE,
+        ).sub(r"\1\2", text)
+
         return text
 
     def _fix_spaced_characters(self, text: str) -> str:
@@ -317,6 +354,105 @@ class MediaProcessor:
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
+
+    def _extract_pdf_text_docling(self, pdf_path: Path) -> str:
+        """Extract text from PDF using Docling (layout-aware, structured Markdown)."""
+        try:
+            from docling.document_converter import DocumentConverter
+
+            converter = DocumentConverter()
+            result = converter.convert(str(pdf_path))
+            return result.document.export_to_markdown()
+        except ImportError:
+            logger.info("Docling not installed, falling back to pypdf")
+            return ""
+        except Exception as e:
+            logger.warning("Docling failed for %s: %s, falling back", pdf_path.name, e)
+            return ""
+
+    def _extract_docx_text_docling(self, docx_path: Path) -> str:
+        """Extract text from DOCX using Docling (paragraphs + tables as structured Markdown)."""
+        try:
+            from docling.document_converter import DocumentConverter
+
+            converter = DocumentConverter()
+            result = converter.convert(str(docx_path))
+            return result.document.export_to_markdown()
+        except ImportError:
+            logger.info("Docling not installed for DOCX, falling back to python-docx")
+            return ""
+        except Exception as e:
+            logger.warning("Docling failed for %s: %s, falling back", docx_path.name, e)
+            return ""
+
+    def _extract_docx_text_fallback(self, docx_path: Path) -> str:
+        """Extract text from DOCX using python-docx (paragraphs + tables as Markdown)."""
+        try:
+            from docx import Document
+
+            doc = Document(str(docx_path))
+            parts: list[str] = []
+            for p in doc.paragraphs:
+                if p.text.strip():
+                    parts.append(p.text.strip())
+            for table in doc.tables:
+                rows: list[str] = []
+                for row in table.rows:
+                    cells = [cell.text.strip() for cell in row.cells]
+                    rows.append("| " + " | ".join(cells) + " |")
+                if rows:
+                    ncols = len(table.columns)
+                    header_sep = "| " + " | ".join(["---"] * ncols) + " |"
+                    rows.insert(1, header_sep)
+                    parts.append("\n".join(rows))
+            return "\n\n".join(parts) if parts else ""
+        except ImportError:
+            logger.warning("python-docx not installed -- DOCX extraction unavailable")
+            return ""
+        except Exception as e:
+            logger.warning("DOCX extraction failed for %s: %s", docx_path.name, e)
+            return ""
+
+    def _extract_xlsx_text_docling(self, xlsx_path: Path) -> str:
+        """Extract text from XLSX using Docling (structured Markdown)."""
+        try:
+            from docling.document_converter import DocumentConverter
+
+            converter = DocumentConverter()
+            result = converter.convert(str(xlsx_path))
+            return result.document.export_to_markdown()
+        except ImportError:
+            logger.info("Docling not installed for XLSX, falling back to openpyxl")
+            return ""
+        except Exception as e:
+            logger.warning("Docling failed for %s: %s, falling back", xlsx_path.name, e)
+            return ""
+
+    def _extract_xlsx_text_fallback(self, xlsx_path: Path) -> str:
+        """Extract text from XLSX using openpyxl (proper Markdown table syntax)."""
+        try:
+            from openpyxl import load_workbook
+
+            wb = load_workbook(xlsx_path, read_only=True, data_only=True)
+            text_parts: list[str] = []
+            for sheet in wb.worksheets:
+                sheet_data: list[str] = []
+                for row in sheet.iter_rows(values_only=True):
+                    row_text = [str(cell) if cell is not None else "" for cell in row]
+                    if any(row_text):
+                        sheet_data.append("| " + " | ".join(row_text) + " |")
+                if sheet_data:
+                    ncols = len(sheet_data[0].split(" | "))
+                    header_sep = "| " + " | ".join(["---"] * ncols) + " |"
+                    sheet_data.insert(1, header_sep)
+                    text_parts.append(f"## {sheet.title}\n" + "\n".join(sheet_data))
+            return "\n\n".join(text_parts) if text_parts else ""
+        except ImportError:
+            logger.warning("openpyxl not installed -- XLSX extraction unavailable")
+            return ""
+        except Exception as e:
+            logger.warning("XLSX extraction failed for %s: %s", xlsx_path.name, e)
+            return ""
 
     def _extract_pdf_text(self, pdf_path: Path) -> str:
         """Extract text using pypdf / PyPDF2."""

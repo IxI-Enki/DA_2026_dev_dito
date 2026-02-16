@@ -172,12 +172,14 @@ class MetadataEnricher:
     def calculate_freshness_score(self, last_modified: str) -> str:
         """Classify page freshness based on age relative to current date.
 
+        Uses same thresholds as calculate_freshness (loosened for school-wiki content).
+
         Args:
             last_modified: ISO-8601 date/datetime string.
 
         Returns:
-            ``'fresh'`` (<30d), ``'recent'`` (<180d),
-            ``'outdated'`` (<365d), ``'archived'`` (>365d),
+            ``'fresh'`` (<365d), ``'recent'`` (<730d),
+            ``'outdated'`` (<1460d), ``'archived'`` (>=1460d),
             or ``'unknown'`` if parsing fails.
         """
         try:
@@ -185,36 +187,45 @@ class MetadataEnricher:
                 dt = datetime.fromisoformat(last_modified.replace("Z", "+00:00"))
             else:
                 dt = datetime.fromisoformat(last_modified)
-            # Make naive for comparison
             if dt.tzinfo is not None:
                 dt = dt.replace(tzinfo=None)
             age_days = (datetime.now() - dt).days
         except (ValueError, TypeError):
             return "unknown"
 
-        if age_days < 30:
+        if age_days < 90:
             return "fresh"
-        if age_days < 180:
-            return "recent"
         if age_days < 365:
+            return "fresh"
+        if age_days < 730:
+            return "recent"
+        if age_days < 1460:
             return "outdated"
         return "archived"
 
-    def calculate_freshness(self, last_modified: str) -> FreshnessResult:
-        """Calculate freshness using the spec's 6-tier hybrid formula.
+    def calculate_freshness(self, last_modified: str, namespace: str = "") -> FreshnessResult:
+        """Calculate freshness using loosened thresholds for school-wiki content.
 
-        Thresholds:
-            < 30 days:   score=1.00, category="fresh"
-            < 90 days:   score=0.85, category="fresh"
-            < 180 days:  score=0.70, category="recent"
-            < 365 days:  score=0.55, category="recent"
-            < 730 days:  score=0.35, category="outdated"
-            >= 730 days: score=0.20, category="archived"
+        If namespace starts with ``archive``, always returns category="archived".
+        Otherwise content is scored so that curricula/tutorials valid for years
+        are not aggressively penalized.
+
+        Thresholds (loosened):
+            < 90 days:    score=1.00, category="fresh"
+            < 365 days:   score=0.85, category="fresh"
+            < 730 days:   score=0.70, category="recent"
+            < 1460 days:  score=0.50, category="outdated" (4 years)
+            >= 1460 days: score=0.30, category="stale"
+        Archive namespace: always score=0.20, category="archived".
 
         Returns:
             FreshnessResult with score (float) and category (str).
             On invalid input: score=0.5, category="unknown".
         """
+        ns = (namespace or "").strip().lower()
+        if ns.startswith("archive"):
+            return FreshnessResult(score=0.20, category="archived")
+
         try:
             if "T" in last_modified:
                 dt = datetime.fromisoformat(last_modified.replace("Z", "+00:00"))
@@ -226,17 +237,15 @@ class MetadataEnricher:
         except (ValueError, TypeError):
             return FreshnessResult(score=0.5, category="unknown")
 
-        if age_days < 30:
-            return FreshnessResult(score=1.0, category="fresh")
         if age_days < 90:
-            return FreshnessResult(score=0.85, category="fresh")
-        if age_days < 180:
-            return FreshnessResult(score=0.70, category="recent")
+            return FreshnessResult(score=1.0, category="fresh")
         if age_days < 365:
-            return FreshnessResult(score=0.55, category="recent")
+            return FreshnessResult(score=0.85, category="fresh")
         if age_days < 730:
-            return FreshnessResult(score=0.35, category="outdated")
-        return FreshnessResult(score=0.20, category="archived")
+            return FreshnessResult(score=0.70, category="recent")
+        if age_days < 1460:
+            return FreshnessResult(score=0.50, category="outdated")
+        return FreshnessResult(score=0.30, category="stale")
 
     def determine_access_level(self, namespace: str) -> str:
         """Determine access level based on DokuWiki namespace.

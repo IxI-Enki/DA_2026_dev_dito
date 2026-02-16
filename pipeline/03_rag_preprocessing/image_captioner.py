@@ -97,7 +97,7 @@ class ImageCaptioner:
                 max_tokens=1024,
             )
 
-            return response.choices[0].message.content.strip()
+            return (response.choices[0].message.content or "").strip()
         except Exception as e:
             dims = self._get_image_dimensions(image_path)
             logger.warning(
