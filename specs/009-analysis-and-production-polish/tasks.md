@@ -160,15 +160,15 @@
 
 ### Tests for US9
 
-- [ ] T031 [US9] Write integration test verifying single entry point works and all media formats (PDF, DOCX, XLSX, PPTX, PNG, JPG) are discovered in `pipeline/03_rag_preprocessing/tests/`
+- [x] T031 [US9] Write integration test verifying single entry point works and all media formats (PDF, DOCX, XLSX, PPTX, PNG, JPG) are discovered in `pipeline/03_rag_preprocessing/tests/`
 
 ### Implementation for US9
 
-- [ ] T032 [US9] Migrate unique features from `pipeline/03_rag_preprocessing/main.py` to `pipeline/03_rag_preprocessing/run_preprocessing.py` -- manifest generation (`_generate_manifest()`), detailed summary output (`_print_summary()`), backlinks loading from `page_links/`
-- [ ] T033 [US9] Extend `pipeline/03_rag_preprocessing/media_processor.py` -- add `DOCUMENT_EXTENSIONS = {".pdf", ".docx", ".xlsx", ".pptx"}`, add `process_docx()`, `process_xlsx()`, `process_pptx()` methods (migrate from `main.py` extraction logic), update `process_media_directory()` to handle all formats
-- [ ] T034 [US9] Delete `pipeline/03_rag_preprocessing/main.py` after verifying all features migrated to `run_preprocessing.py` and `media_processor.py`
-- [ ] T035 [P] [US9] Fix `pipeline/01_wiki_fetcher/fetch_full_wiki_extended.py` -- remove the code that creates the empty `media_metadata/` directory
-- [ ] T036 [US9] Run tests and validate: single entry point, all formats processed, no `media_metadata/` created
+- [x] T032 [US9] Migrate unique features from `pipeline/03_rag_preprocessing/main.py` to `pipeline/03_rag_preprocessing/run_preprocessing.py` -- manifest generation (`_generate_manifest()`), detailed summary output (`_print_summary()`), backlinks loading from `page_links/`
+- [x] T033 [US9] Extend `pipeline/03_rag_preprocessing/media_processor.py` -- add `DOCUMENT_EXTENSIONS = {".pdf", ".docx", ".xlsx", ".pptx"}`, add `process_docx()`, `process_xlsx()`, `process_pptx()` methods (migrate from `main.py` extraction logic), update `process_media_directory()` to handle all formats
+- [x] T034 [US9] Delete `pipeline/03_rag_preprocessing/main.py` after verifying all features migrated to `run_preprocessing.py` and `media_processor.py`
+- [x] T035 [P] [US9] Fix `pipeline/01_wiki_fetcher/fetch_full_wiki_extended.py` -- remove the code that creates the empty `media_metadata/` directory
+- [x] T036 [US9] Run tests and validate: single entry point, all formats processed, no `media_metadata/` created
 
 **Checkpoint**: One entry point per module. All media formats supported. No dead code.
 

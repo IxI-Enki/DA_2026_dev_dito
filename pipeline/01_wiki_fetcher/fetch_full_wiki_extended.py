@@ -114,7 +114,7 @@ class ExtendedWikiFetcher:
             "page_history": self.base_path / "page_history",
             "page_backlinks": self.base_path / "page_backlinks",
             "media": self.base_path / "media",
-            "media_metadata": self.base_path / "media" / "metadata",
+            "media_metadata": self.base_path / "media_metadata",
             "namespaces": self.base_path / "namespaces",
             "changes": self.base_path / "changes"
         }

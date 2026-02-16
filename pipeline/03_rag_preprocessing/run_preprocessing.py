@@ -1,4 +1,4 @@
-"""RAG Preprocessing Orchestrator
+"""RAG Preprocessing Orchestrator (single entry point, US9)
 
 Runs the complete preprocessing pipeline:
   DokuWiki fetched data -> Strategy routing -> Markdown + YAML frontmatter -> Export
@@ -7,6 +7,7 @@ Usage:
   python pipeline/03_rag_preprocessing/run_preprocessing.py
   python pipeline/03_rag_preprocessing/run_preprocessing.py --input-dir data/fetched/fetched_at_20260201
   python pipeline/03_rag_preprocessing/run_preprocessing.py --evaluated-dir data/evaluated
+  python pipeline/03_rag_preprocessing/run_preprocessing.py --help
 """
 
 from __future__ import annotations
@@ -27,7 +28,7 @@ if str(_here) not in sys.path:
 from config import get_config, get_latest_fetch_dir, get_latest_evaluation
 from exporter import Exporter
 from image_captioner import CAPTIONABLE_EXTENSIONS, ImageCaptioner
-from media_processor import MediaProcessor
+from media_processor import DOCUMENT_EXTENSIONS, MediaProcessor
 from metadata_enricher import MetadataEnricher
 from page_processor import PageProcessor
 from strategy_loader import StrategyLoader
@@ -258,10 +259,18 @@ def run(
                         stats["images_captioned"] += 1
                 continue  # images are either captioned or skipped
 
-            # Documents (PDF, etc.): extract text
+            # Documents (PDF, DOCX, XLSX, PPTX): extract text
             text = ""
             if ext == ".pdf":
                 text = media_proc.process_pdf(f)
+            elif ext == ".docx":
+                text = media_proc.process_docx(f)
+            elif ext == ".xlsx":
+                text = media_proc.process_xlsx(f)
+            elif ext == ".pptx":
+                text = media_proc.process_pptx(f)
+            elif ext not in DOCUMENT_EXTENSIONS:
+                continue
 
             media.append({
                 "media_id": media_id,
@@ -285,7 +294,24 @@ def run(
     out_dir = exporter.export(pages, media, output_base)
     logger.info("Exported to %s", out_dir)
     logger.info("Stats: %s", stats)
+
+    _print_summary(stats, out_dir)
     return stats
+
+
+def _print_summary(stats: dict[str, Any], out_dir: Path) -> None:
+    """Print human-readable processing summary to stdout."""
+    sep = "=" * 60
+    print(f"\n{sep}")
+    print("RAG PREPROCESSING COMPLETE")
+    print(sep)
+    print(f"Pages total:      {stats.get('pages_total', 0)}")
+    print(f"  - OK:           {stats.get('pages_ok', 0)}")
+    print(f"  - Failed:       {stats.get('pages_fail', 0)}")
+    print(f"Media processed:  {stats.get('media_processed', 0)}")
+    print(f"  - Captioned:    {stats.get('images_captioned', 0)}")
+    print(f"Output directory:  {out_dir}")
+    print(sep)
 
 
 def main() -> int:

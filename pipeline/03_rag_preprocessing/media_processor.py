@@ -1,7 +1,8 @@
-"""Media Processor (T071-T073)
+"""Media Processor (T071-T073, T033/US9)
 
 Processes media files for the RAG pipeline:
-- PDF text extraction with OCR fallback
+- PDF text extraction with OCR fallback + quality cleaning (US7)
+- DOCX, XLSX, PPTX text extraction (US9 -- migrated from main.py)
 - Image OCR via Tesseract
 - Batch processing of media directories
 """
@@ -17,7 +18,9 @@ logger = logging.getLogger(__name__)
 
 # Supported file extensions
 PDF_EXTENSIONS = {".pdf"}
+DOCUMENT_EXTENSIONS = {".pdf", ".docx", ".xlsx", ".pptx"}
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tiff", ".tif", ".bmp", ".gif"}
+TEXT_EXTENSIONS = {".txt"}
 
 
 class MediaProcessor:
@@ -77,8 +80,101 @@ class MediaProcessor:
             return ""
         return self._ocr_image(image_path)
 
+    def process_docx(self, docx_path: Path) -> str:
+        """Extract text from a DOCX file.
+
+        Args:
+            docx_path: Path to the DOCX file.
+
+        Returns:
+            Extracted text (empty string on failure).
+        """
+        if not docx_path.exists():
+            logger.warning("DOCX not found: %s", docx_path)
+            return ""
+        try:
+            from docx import Document
+
+            doc = Document(str(docx_path))
+            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+            return "\n\n".join(paragraphs) if paragraphs else ""
+        except ImportError:
+            logger.warning("python-docx not installed -- DOCX extraction unavailable")
+            return ""
+        except Exception as e:
+            logger.warning("DOCX extraction failed for %s: %s", docx_path.name, e)
+            return ""
+
+    def process_xlsx(self, xlsx_path: Path) -> str:
+        """Extract text from an XLSX file.
+
+        Args:
+            xlsx_path: Path to the XLSX file.
+
+        Returns:
+            Extracted text (empty string on failure).
+        """
+        if not xlsx_path.exists():
+            logger.warning("XLSX not found: %s", xlsx_path)
+            return ""
+        try:
+            from openpyxl import load_workbook
+
+            wb = load_workbook(xlsx_path, read_only=True, data_only=True)
+            text_parts: list[str] = []
+            for sheet in wb.worksheets:
+                sheet_data: list[str] = []
+                for row in sheet.iter_rows(values_only=True):
+                    row_text = [str(cell) if cell is not None else "" for cell in row]
+                    if any(row_text):
+                        sheet_data.append(" | ".join(row_text))
+                if sheet_data:
+                    text_parts.append(f"## {sheet.title}\n" + "\n".join(sheet_data))
+            return "\n\n".join(text_parts) if text_parts else ""
+        except ImportError:
+            logger.warning("openpyxl not installed -- XLSX extraction unavailable")
+            return ""
+        except Exception as e:
+            logger.warning("XLSX extraction failed for %s: %s", xlsx_path.name, e)
+            return ""
+
+    def process_pptx(self, pptx_path: Path) -> str:
+        """Extract text from a PPTX file.
+
+        Args:
+            pptx_path: Path to the PPTX file.
+
+        Returns:
+            Extracted text (empty string on failure).
+        """
+        if not pptx_path.exists():
+            logger.warning("PPTX not found: %s", pptx_path)
+            return ""
+        try:
+            from pptx import Presentation
+
+            prs = Presentation(str(pptx_path))
+            text_parts: list[str] = []
+            for i, slide in enumerate(prs.slides, 1):
+                slide_text: list[str] = []
+                for shape in slide.shapes:
+                    text = getattr(shape, "text", "")
+                    if text.strip():
+                        slide_text.append(text)
+                if slide_text:
+                    text_parts.append(f"## Slide {i}\n" + "\n".join(slide_text))
+            return "\n\n".join(text_parts) if text_parts else ""
+        except ImportError:
+            logger.warning("python-pptx not installed -- PPTX extraction unavailable")
+            return ""
+        except Exception as e:
+            logger.warning("PPTX extraction failed for %s: %s", pptx_path.name, e)
+            return ""
+
     def process_media_directory(self, media_dir: Path) -> list[dict[str, Any]]:
         """Process all supported media files in a directory.
+
+        Handles all document formats (PDF, DOCX, XLSX, PPTX) and images.
 
         Args:
             media_dir: Directory to scan.
@@ -96,14 +192,23 @@ class MediaProcessor:
             ext = f.suffix.lower()
             text = ""
             ftype = ""
-            if ext in PDF_EXTENSIONS:
+            if ext == ".pdf":
                 text = self.process_pdf(f)
                 ftype = "pdf"
+            elif ext == ".docx":
+                text = self.process_docx(f)
+                ftype = "docx"
+            elif ext == ".xlsx":
+                text = self.process_xlsx(f)
+                ftype = "xlsx"
+            elif ext == ".pptx":
+                text = self.process_pptx(f)
+                ftype = "pptx"
             elif ext in IMAGE_EXTENSIONS:
                 text = self.process_image(f)
                 ftype = "image"
             else:
-                continue  # skip unsupported
+                continue
 
             results.append({"filename": f.name, "text": text, "type": ftype})
         return results
