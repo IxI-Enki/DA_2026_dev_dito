@@ -217,6 +217,7 @@ class SemanticSimilarityMetric:
 
     def _score_embeddings(self, original: str, processed: str) -> float:
         import numpy as np
+        assert self._model is not None, "called without model loaded"
         emb = self._model.encode([original, processed])
         cos_sim = float(np.dot(emb[0], emb[1]) / (
             np.linalg.norm(emb[0]) * np.linalg.norm(emb[1]) + 1e-10
@@ -396,9 +397,9 @@ class ReadabilityMetric:
                 return self.threshold
 
         try:
-            import textstat
-            textstat.set_lang("de")
-            fre = textstat.flesch_reading_ease(processed)
+            import textstat  # type: ignore[import-untyped]
+            textstat.set_lang("de")  # type: ignore[attr-defined]
+            fre: float = textstat.flesch_reading_ease(processed)  # type: ignore[attr-defined]
             return max(fre, 0.0)
         except ImportError:
             return self._fallback_flesch(processed)
