@@ -26,10 +26,10 @@
 
 **Purpose**: Project initialization, dependencies, directory scaffolding
 
-- [ ] T001 Verify branch `009-analysis-and-production-polish` is active and clean
-- [ ] T002 Install new Python dependencies: `pip install sentence-transformers textstat openai`
-- [ ] T003 [P] Create `pipeline/shared/__init__.py` (new shared module directory)
-- [ ] T004 [P] Create `pipeline/03_rag_preprocessing/evaluation/__init__.py` (new evaluation subdirectory)
+- [x] T001 Verify branch `009-analysis-and-production-polish` is active and clean
+- [x] T002 Install new Python dependencies: `pip install sentence-transformers textstat openai`
+- [x] T003 [P] Create `pipeline/shared/__init__.py` (new shared module directory)
+- [x] T004 [P] Create `pipeline/03_rag_preprocessing/evaluation/__init__.py` (new evaluation subdirectory)
 
 ---
 
