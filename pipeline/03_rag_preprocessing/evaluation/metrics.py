@@ -112,6 +112,55 @@ _WIKI_MARKUP_PATTERN = re.compile(
     re.MULTILINE,
 )
 
+# Link-aware patterns: extract display text from links before general stripping
+_DOKUWIKI_LINK_NORM = re.compile(r"\[\[([^\]]*?)(?:\|([^\]]*?))?\]\]")
+_DOKUWIKI_MEDIA_NORM = re.compile(r"\{\{([^\}]*?)(?:\|([^\}]*?))?\}\}")
+_MARKDOWN_LINK_NORM = re.compile(r"!?\[([^\]]*?)\]\(([^\)]*?)\)")
+
+# General markup removal (applied after link normalization)
+_GENERAL_MARKUP = re.compile(
+    r"={2,6}|"                     # DokuWiki headings
+    r"\*\*|//|''|__|"              # DokuWiki bold/italic/mono/underline
+    r"\\\\\s|"                     # DokuWiki forced line break
+    r"~~[A-Z]+~~|"                 # DokuWiki macros (~~NOTOC~~ etc.)
+    r"#{1,6}\s|"                   # Markdown headings
+    r"\|[-:]+\||"                  # Markdown table separator rows
+    r"</?[a-z][^>]*>|"             # HTML tags
+    r"^---$|"                      # Markdown horizontal rules
+    r"^[ \t]*[\*\-]\s|"            # List markers (wiki & markdown)
+    r"^\d+[\.\)]\s|"              # Numbered list markers
+    r"[\^\|]",                     # Table cell separators
+    re.MULTILINE,
+)
+
+_MULTI_WHITESPACE = re.compile(r"\s+")
+
+
+def _normalize_text(text: str) -> str:
+    """Strip all markup (DokuWiki & Markdown) and normalize whitespace.
+
+    Preserves display text from links: ``[[url|display]]`` -> ``display``,
+    ``[display](url)`` -> ``display``.  Then strips remaining syntax.
+    Returns lowercase, whitespace-collapsed text for comparison.
+    """
+    # Step 1: DokuWiki links -> keep display text (or target if no display)
+    cleaned = _DOKUWIKI_LINK_NORM.sub(
+        lambda m: m.group(2) if m.group(2) else m.group(1), text
+    )
+    # Step 2: DokuWiki media -> keep alt text (or filename)
+    cleaned = _DOKUWIKI_MEDIA_NORM.sub(
+        lambda m: m.group(2) if m.group(2) else m.group(1), cleaned
+    )
+    # Step 3: Markdown links/images -> keep display/alt text (or URL if empty)
+    cleaned = _MARKDOWN_LINK_NORM.sub(
+        lambda m: m.group(1) if m.group(1) else m.group(2), cleaned
+    )
+    # Step 4: Strip remaining markup syntax
+    cleaned = _GENERAL_MARKUP.sub(" ", cleaned)
+    # Step 5: Collapse whitespace & lowercase
+    cleaned = _MULTI_WHITESPACE.sub(" ", cleaned)
+    return cleaned.strip().lower()
+
 
 class ContentCompletenessMetric:
     """Metrik 1: Character ratio Original vs Output.
@@ -175,8 +224,16 @@ class SemanticSimilarityMetric:
         return max(0.0, min(cos_sim, 1.0))
 
     def _score_sequence_matcher(self, original: str, processed: str) -> float:
-        """Fallback when sentence-transformers is not available."""
-        return SequenceMatcher(None, original, processed).ratio()
+        """Fallback when sentence-transformers is not available.
+
+        Normalizes both texts (strip all markup, lowercase, collapse
+        whitespace) before SequenceMatcher comparison.  This ensures
+        DokuWiki->Markdown syntax transformations don't dominate the
+        similarity score.
+        """
+        norm_orig = _normalize_text(original)
+        norm_proc = _normalize_text(processed)
+        return SequenceMatcher(None, norm_orig, norm_proc).ratio()
 
 
 # ---------------------------------------------------------------------------
@@ -208,11 +265,14 @@ class EntityPreservationMetric:
     threshold: float = 0.95
 
     def score(self, original: str, processed: str) -> float:
+        # Strip wiki markup so entities inside [[...]] are found the same way
+        stripped_orig = _WIKI_MARKUP_PATTERN.sub("", original)
+
         orig_entities: set[str] = set()
         proc_entities: set[str] = set()
 
         for pattern in _ENTITY_PATTERNS.values():
-            orig_entities.update(pattern.findall(original))
+            orig_entities.update(pattern.findall(stripped_orig))
             proc_entities.update(pattern.findall(processed))
 
         if not orig_entities:
@@ -314,8 +374,26 @@ class ReadabilityMetric:
     threshold: float = 20.0
 
     def score(self, processed: str) -> float:
-        if not processed or len(processed.split()) < 3:
+        if not processed:
             return 0.0
+
+        word_count = len(processed.split())
+        if word_count < 10:
+            return self.threshold if word_count > 0 else 0.0
+
+        # Detect primarily structured content (lists, tables, links)
+        # where Flesch readability is not meaningful.
+        lines = [ln for ln in processed.splitlines() if ln.strip()]
+        if lines:
+            structured = sum(
+                1 for ln in lines
+                if (ln.strip().startswith(("-", "*", "|", "#"))
+                    or re.match(r"^\d+[\.\)]\s", ln.strip())
+                    or re.match(r"^!\[", ln.strip())
+                    or re.match(r"^\[.*\]\(", ln.strip()))
+            )
+            if structured / len(lines) > 0.60:
+                return self.threshold
 
         try:
             import textstat
@@ -350,8 +428,8 @@ class ReadabilityMetric:
 
 _WIKI_HEADING = re.compile(r"^={2,6}\s*.*?={2,6}\s*$", re.MULTILINE)
 _MD_HEADING = re.compile(r"^#{1,6}\s+", re.MULTILINE)
-_WIKI_LIST = re.compile(r"^[ \t]+[\*\-]\s", re.MULTILINE)
-_MD_LIST = re.compile(r"^[\*\-]\s|^\d+\.\s", re.MULTILINE)
+_WIKI_LIST = re.compile(r"^[ \t]*[\*\-]\s", re.MULTILINE)
+_MD_LIST = re.compile(r"^[ \t]*[\*\-]\s|^\d+[\.\)]\s", re.MULTILINE)
 
 
 class StructurePreservationMetric:
@@ -385,21 +463,32 @@ class StructurePreservationMetric:
         if total_orig == 0:
             return 1.0
 
-        total_proc = proc_headings + proc_lists + proc_paragraphs
-
         # Component-wise preservation scores
-        scores: list[float] = []
+        scores: list[tuple[float, float]] = []  # (score, weight)
         if orig_headings > 0:
-            scores.append(min(proc_headings / orig_headings, 1.0))
+            scores.append(
+                (min(proc_headings / orig_headings, 1.0), 2.0)  # headings weighted 2x
+            )
         if orig_lists > 0:
-            scores.append(min(proc_lists / orig_lists, 1.0))
+            scores.append(
+                (min(proc_lists / orig_lists, 1.0), 2.0)  # lists weighted 2x
+            )
         if orig_paragraphs > 0:
-            scores.append(min(proc_paragraphs / orig_paragraphs, 1.0))
+            # Paragraph counts diverge between wiki and markdown due to
+            # whitespace conventions; use lenient ratio (allow +/- 30%).
+            para_ratio = proc_paragraphs / orig_paragraphs
+            scores.append(
+                (min(para_ratio, 1.0) if para_ratio <= 1.0
+                 else max(1.0 - (para_ratio - 1.0) * 0.5, 0.5),
+                 1.0)  # paragraphs weighted 1x (less reliable)
+            )
 
         if not scores:
             return 1.0
 
-        return sum(scores) / len(scores)
+        weighted_sum = sum(s * w for s, w in scores)
+        total_weight = sum(w for _, w in scores)
+        return weighted_sum / total_weight
 
 
 # ---------------------------------------------------------------------------

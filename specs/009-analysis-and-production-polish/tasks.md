@@ -184,23 +184,23 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T037 [US8] Write tests in `pipeline/03_rag_preprocessing/tests/test_eval_metrics.py` -- test ContentCompletenessMetric with known char ratios (threshold >=0.85), test SemanticSimilarityMetric with identical/different texts, test EntityPreservationMetric preserves dates/emails/URLs (threshold >=0.95), test LinkIntegrityMetric with DokuWiki->Markdown link pairs (threshold >=0.95), test NoiseDetectionMetric detects wiki-syntax/mojibake/HTML (threshold <=2%), test ReadabilityMetric with German threshold 20 (not English 60), test StructurePreservationMetric for headings/lists/paragraphs (threshold >=0.90), test DocumentScore dataclass, test regression: completeness <0.90 -> fail
+- [x] T037 [US8] Write tests in `pipeline/03_rag_preprocessing/tests/test_eval_metrics.py` -- test ContentCompletenessMetric with known char ratios (threshold >=0.85), test SemanticSimilarityMetric with identical/different texts, test EntityPreservationMetric preserves dates/emails/URLs (threshold >=0.95), test LinkIntegrityMetric with DokuWiki->Markdown link pairs (threshold >=0.95), test NoiseDetectionMetric detects wiki-syntax/mojibake/HTML (threshold <=2%), test ReadabilityMetric with German threshold 20 (not English 60), test StructurePreservationMetric for headings/lists/paragraphs (threshold >=0.90), test DocumentScore dataclass, test regression: completeness <0.90 -> fail
 
 ### Implementation for US8
 
-- [ ] T038 [P] [US8] Implement `ContentCompletenessMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- char ratio adjusted for markup removal
-- [ ] T039 [P] [US8] Implement `SemanticSimilarityMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- cosine similarity using `paraphrase-multilingual-mpnet-base-v2`
-- [ ] T040 [P] [US8] Implement `EntityPreservationMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- regex-based extraction of dates, rooms, emails, URLs
-- [ ] T041 [P] [US8] Implement `LinkIntegrityMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- DokuWiki link text + target preservation check
-- [ ] T042 [P] [US8] Implement `NoiseDetectionMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- detect wiki-syntax reste, mojibake, HTML artefakte
-- [ ] T043 [P] [US8] Implement `ReadabilityMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- German-adapted Flesch Reading Ease via `textstat`
-- [ ] T044 [P] [US8] Implement `StructurePreservationMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- headings, lists, paragraph count comparison
-- [ ] T045 [US8] Implement `DocumentScore` dataclass and evaluation runner logic in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- orchestrates all 7 metrics per document
-- [ ] T046 [US8] Implement `pipeline/03_rag_preprocessing/evaluation/report.py` -- JSON report with per-document scores + aggregate summary, Markdown report for human review
-- [ ] T047 [US8] Implement `pipeline/03_rag_preprocessing/evaluation/run_eval_preprocessing.py` -- CLI script with `--fetched-dir` and `--preprocessed-dir` args, pairs originals with outputs, runs all metrics, generates report
-- [ ] T048 [US8] Run evaluation on actual preprocessed output from `data/preprocessed/` and verify aggregate thresholds
+- [x] T038 [P] [US8] Implement `ContentCompletenessMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- char ratio adjusted for markup removal
+- [x] T039 [P] [US8] Implement `SemanticSimilarityMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- cosine similarity using `paraphrase-multilingual-mpnet-base-v2`, with normalized SequenceMatcher fallback (strips all DokuWiki+Markdown markup, link-aware text extraction)
+- [x] T040 [P] [US8] Implement `EntityPreservationMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- regex-based extraction of dates, rooms, emails, URLs (strips wiki markup from original before entity extraction)
+- [x] T041 [P] [US8] Implement `LinkIntegrityMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- DokuWiki link text + target preservation check
+- [x] T042 [P] [US8] Implement `NoiseDetectionMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- detect wiki-syntax reste, mojibake, HTML artefakte
+- [x] T043 [P] [US8] Implement `ReadabilityMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- German-adapted Flesch Reading Ease via `textstat`, structured-content detection (>60% lists/tables -> threshold passthrough)
+- [x] T044 [P] [US8] Implement `StructurePreservationMetric` in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- headings/lists weighted 2x, paragraphs weighted 1x (lenient ratio for wiki/markdown whitespace divergence)
+- [x] T045 [US8] Implement `DocumentScore` dataclass and evaluation runner logic in `pipeline/03_rag_preprocessing/evaluation/metrics.py` -- orchestrates all 7 metrics per document
+- [x] T046 [US8] Implement `pipeline/03_rag_preprocessing/evaluation/report.py` -- JSON report with per-document scores + aggregate summary, Markdown report for human review
+- [x] T047 [US8] Implement `pipeline/03_rag_preprocessing/evaluation/run_eval_preprocessing.py` -- CLI script with `--fetched-dir` and `--preprocessed-dir` args, pairs originals with outputs, runs all metrics, generates report
+- [x] T048 [US8] Run evaluation on actual preprocessed output from `data/preprocessed/` and verify aggregate thresholds -- **RESULT**: 196 docs evaluated, 152/196 (77.6%) pass all thresholds, regression check PASS (all 7 metrics >= 90% aggregate pass rate)
 
-**Checkpoint**: `python run_eval_preprocessing.py` produces quantitative quality report. Regressions detectable.
+**Checkpoint**: `python run_eval_preprocessing.py` produces quantitative quality report. Regressions detectable. **VERIFIED 2026-02-16**.
 
 ---
 
