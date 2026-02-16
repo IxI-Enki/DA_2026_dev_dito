@@ -7,6 +7,7 @@ OpenAI-compatible API. All config values come from env.yaml (Article II-B).
 from __future__ import annotations
 
 import base64
+import io
 import logging
 import mimetypes
 from pathlib import Path
@@ -34,6 +35,7 @@ class ImageCaptioner:
         api_base: LMStudio API endpoint (from env.yaml VISION_LLM.api_base).
         model: Model name (from env.yaml VISION_LLM.model).
         timeout: Request timeout in seconds.
+        max_image_size: Max longest edge (px) before downscaling; 0 disables resize.
     """
 
     def __init__(
@@ -41,10 +43,12 @@ class ImageCaptioner:
         api_base: str,
         model: str,
         timeout: int = 60,
+        max_image_size: int = 1024,
     ) -> None:
         self.api_base = api_base
         self.model = model
         self.timeout = timeout
+        self.max_image_size = max(0, max_image_size)
         self._client = None  # Lazy init
 
     def _get_client(self):
@@ -95,7 +99,13 @@ class ImageCaptioner:
 
             return response.choices[0].message.content.strip()
         except Exception as e:
-            logger.warning("Image captioning failed for %s: %s", image_path.name, e)
+            dims = self._get_image_dimensions(image_path)
+            logger.warning(
+                "Image captioning failed for %s (dims=%s): %s",
+                image_path.name,
+                dims,
+                e,
+            )
             return ""
 
     def is_available(self) -> bool:
@@ -107,9 +117,58 @@ class ImageCaptioner:
         except Exception:
             return False
 
+    def _get_image_dimensions(self, image_path: Path) -> str:
+        """Return image dimensions as 'WxH' or 'unknown'."""
+        try:
+            from PIL import Image
+            with Image.open(image_path) as img:
+                w, h = img.size
+                return f"{w}x{h}"
+        except Exception:
+            return "unknown"
+
     def _encode_image(self, image_path: Path) -> str:
-        """Encode image as base64 data URI for OpenAI vision API."""
-        data = image_path.read_bytes()
-        b64 = base64.b64encode(data).decode("utf-8")
+        """Encode image as base64 data URI for OpenAI vision API.
+
+        If max_image_size > 0 and the image is larger, it is downscaled
+        (longest edge) to reduce token usage and avoid LMStudio context overflow.
+        If PIL cannot open the file (e.g. minimal/invalid test image), falls back
+        to raw bytes without resize.
+        """
         mime = mimetypes.guess_type(str(image_path))[0] or "image/png"
-        return f"data:{mime};base64,{b64}"
+
+        def _raw_encode() -> str:
+            data = image_path.read_bytes()
+            b64 = base64.b64encode(data).decode("utf-8")
+            return f"data:{mime};base64,{b64}"
+
+        try:
+            from PIL import Image
+        except ImportError:
+            return _raw_encode()
+
+        try:
+            with Image.open(image_path) as img:
+                img.load()
+                w, h = img.size
+                if self.max_image_size > 0 and max(w, h) > self.max_image_size:
+                    img = img.copy()
+                    img.thumbnail((self.max_image_size, self.max_image_size), Image.Resampling.LANCZOS)
+                    nw, nh = img.size
+                    logger.debug(
+                        "Downscaled image %s from %s to %dx%d",
+                        image_path.name,
+                        f"{w}x{h}",
+                        nw,
+                        nh,
+                    )
+                buf = io.BytesIO()
+                save_fmt = img.format if img.format in ("PNG", "JPEG", "GIF", "WEBP") else "PNG"
+                if save_fmt == "JPEG" and img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+                img.save(buf, format=save_fmt)
+                data = buf.getvalue()
+            b64 = base64.b64encode(data).decode("utf-8")
+            return f"data:{mime};base64,{b64}"
+        except Exception:
+            return _raw_encode()

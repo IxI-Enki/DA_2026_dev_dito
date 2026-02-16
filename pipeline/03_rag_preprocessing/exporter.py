@@ -39,6 +39,9 @@ class Exporter:
         pages: list[dict[str, Any]],
         media: list[dict[str, Any]],
         output_base: Path,
+        *,
+        config_hash: str = "n/a",
+        code_version: str = "1.0.0",
     ) -> Path:
         """Export pages AND media to timestamped directory.
 
@@ -46,6 +49,8 @@ class Exporter:
             pages: List of page dicts with Qdrant-schema fields + ``content``.
             media: List of media dicts with Qdrant-schema fields + ``content``.
             output_base: Base directory (e.g. ``data/preprocessed/``).
+            config_hash: Hash of config used (NFR-005 reproducibility).
+            code_version: Version or identifier of pipeline code (NFR-005).
 
         Returns:
             Path to the created output directory.
@@ -73,8 +78,12 @@ class Exporter:
             fm = self._build_media_frontmatter(item, body)
             self._write_md(media_dir / f"{safe_name}.md", fm, body)
 
-        # Write manifest
-        self._write_manifest(out_dir, len(pages), len(media))
+        # Write manifest (NFR-005: timestamp, config_hash, code_version)
+        self._write_manifest(
+            out_dir, len(pages), len(media),
+            config_hash=config_hash,
+            code_version=code_version,
+        )
 
         logger.info(
             "Exported %d pages + %d media to %s", len(pages), len(media), out_dir
@@ -147,15 +156,23 @@ class Exporter:
         path.write_text(file_content, encoding="utf-8")
 
     def _write_manifest(
-        self, out_dir: Path, pages_count: int, media_count: int
+        self,
+        out_dir: Path,
+        pages_count: int,
+        media_count: int,
+        *,
+        config_hash: str = "n/a",
+        code_version: str = "1.0.0",
     ) -> None:
-        """Write manifest.json with export metadata."""
+        """Write manifest.json with export metadata (NFR-005: timestamp, config_hash, code_version)."""
         manifest = {
             "exported_at": datetime.now(timezone.utc).isoformat(),
             "pages_count": pages_count,
             "media_count": media_count,
             "total_count": pages_count + media_count,
             "schema_version": "2.0",
+            "config_hash": config_hash,
+            "code_version": code_version,
         }
         (out_dir / "manifest.json").write_text(
             json.dumps(manifest, indent=2, ensure_ascii=False),

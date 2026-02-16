@@ -22,7 +22,15 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 # Shared CLI utilities
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
-from cli_utils import add_no_color_arg, apply_color_from_args, register_sigint, style
+from cli_utils import (
+    add_no_color_arg,
+    apply_color_from_args,
+    enable_windows_ansi,
+    print_help_banner,
+    register_sigint,
+    set_use_color,
+    style,
+)
 
 from config import get_config, EvaluationConfig
 from analyzers.wiki_deep_analyzer import WikiDeepAnalyzer
@@ -44,22 +52,29 @@ def setup_logging(config: EvaluationConfig) -> logging.Logger:
     """
     log_cfg = config.raw_config.get('LOGGING', {})
     
-    # Get log file path
+    # Get log file path (result-dir log)
     if config.results_dir:
         default_log = str(config.results_dir / 'deep_evaluation.log')
     else:
         default_log = 'deep_evaluation.log'
     log_file = log_cfg.get('deep_eval_log', default_log)
-    
-    # Create log directory if needed
+
+    # Central log under data/logs (alongside other pipeline stages)
+    central_log_dir = config.results_dir.parent / "logs" if config.results_dir else None
+    central_log_file = str(central_log_dir / "deep_evaluation.log") if central_log_dir else None
+
+    # Create log directories if needed
     if log_file:
-        log_path = Path(log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-    
+        Path(log_file).parent.mkdir(parents=True, exist_ok=True)
+    if central_log_file:
+        Path(central_log_file).parent.mkdir(parents=True, exist_ok=True)
+
     # Configure logging
     handlers: List[logging.Handler] = [logging.StreamHandler()]
     if log_file:
         handlers.append(logging.FileHandler(log_file, encoding='utf-8'))
+    if central_log_file and central_log_file != log_file:
+        handlers.append(logging.FileHandler(central_log_file, encoding='utf-8'))
     
     logging.basicConfig(
         level=getattr(logging, log_cfg.get('level', 'INFO')),
@@ -69,7 +84,10 @@ def setup_logging(config: EvaluationConfig) -> logging.Logger:
     )
     
     logger = logging.getLogger("DeepEval")
-    logger.info(f"Logging configured. Log file: {log_file}")
+    log_targets = [log_file]
+    if central_log_file and central_log_file != log_file:
+        log_targets.append(central_log_file)
+    logger.info("Logging configured. Log file(s): %s", ", ".join(log_targets))
     return logger
 
 
@@ -326,6 +344,22 @@ def analyze_images(
 def main():
     """Hauptfunktion für Deep Evaluation."""
     import argparse
+
+    if "-h" in sys.argv or "--help" in sys.argv:
+        set_use_color("--no-color" not in sys.argv)
+        enable_windows_ansi()
+        print_help_banner(
+            what="Runs deep analysis of fetched DokuWiki data: wiki pages, documents, images. Generates preprocessing strategies and reports. All settings from config/env.yaml.",
+            usage="python run_deep_evaluation.py [OPTIONS]",
+            parameters="(none)",
+            options="-h, --help       Show this help and exit.\n--show-config     Show current config and exit.\n--no-color        Disable colored output.",
+            examples="# Full deep evaluation\npython run_deep_evaluation.py\n# Show config\npython run_deep_evaluation.py --show-config",
+            configuration="pipeline/02_deep_evaluation/env.yaml (PATHS, LOGGING, LLM, etc.). If fetched_data_dir does not exist, latest fetched_at_* is used automatically.",
+            output="data/evaluated/deep_eval_<YYYYMMDD_HHMMSS>/: deep_analysis_results.json, preprocessing_strategies.yaml, report.",
+            exit_codes="0   Success.\n1   Path validation or config error.",
+        )
+        sys.exit(0)
+
     parser = argparse.ArgumentParser(description="Deep Content Evaluation")
     parser.add_argument("--show-config", action="store_true", help="Show current config")
     add_no_color_arg(parser)
@@ -346,6 +380,9 @@ def main():
     if not validate_paths(config, logger):
         logger.error("Path validation failed. Please check your config/env.yaml")
         sys.exit(1)
+
+    if config.fetched_data_dir:
+        logger.info("Using fetched data dir: %s", config.fetched_data_dir)
     
     # Get file extensions from config
     extensions = get_file_extensions_from_config(config)
@@ -371,33 +408,34 @@ def main():
     }
     
     # 1. Analyze Wiki Pages
-    logger.info("\n" + "=" * 70)
-    logger.info("  STEP 1: WIKI PAGES ANALYSIS")
-    logger.info("=" * 70)
+    sep = "=" * 70
+    logger.info(style(sep, "cyan"))
+    logger.info(style("  STEP 1: WIKI PAGES ANALYSIS", "bold", "bright_cyan"))
+    logger.info(style(sep, "cyan"))
     results["wiki_pages"] = analyze_wiki_pages(
         config, wiki_analyzer, extensions['pages'], logger
     )
     
     # 2. Analyze Documents
-    logger.info("\n" + "=" * 70)
-    logger.info("  STEP 2: DOCUMENTS ANALYSIS")
-    logger.info("=" * 70)
+    logger.info(style(sep, "cyan"))
+    logger.info(style("  STEP 2: DOCUMENTS ANALYSIS", "bold", "bright_cyan"))
+    logger.info(style(sep, "cyan"))
     results["documents"] = analyze_documents(
         config, doc_analyzer, extensions['documents'], logger
     )
     
     # 3. Analyze Images
-    logger.info("\n" + "=" * 70)
-    logger.info("  STEP 3: IMAGES ANALYSIS")
-    logger.info("=" * 70)
+    logger.info(style(sep, "cyan"))
+    logger.info(style("  STEP 3: IMAGES ANALYSIS", "bold", "bright_cyan"))
+    logger.info(style(sep, "cyan"))
     results["media"] = analyze_images(
         config, media_analyzer, extensions['images'], logger
     )
     
     # 4. Save Raw Results
-    logger.info("\n" + "=" * 70)
-    logger.info("  STEP 4: SAVING RESULTS")
-    logger.info("=" * 70)
+    logger.info(style(sep, "cyan"))
+    logger.info(style("  STEP 4: SAVING RESULTS", "bold", "bright_cyan"))
+    logger.info(style(sep, "cyan"))
     if not config.results_dir:
         logger.error("Results directory not configured!")
         sys.exit(1)
@@ -411,9 +449,9 @@ def main():
     logger.info(f"Raw results saved to: {json_path}")
     
     # 5. Generate Preprocessing Strategies
-    logger.info("\n" + "=" * 70)
-    logger.info("  STEP 5: GENERATING PREPROCESSING STRATEGIES")
-    logger.info("=" * 70)
+    logger.info(style(sep, "cyan"))
+    logger.info(style("  STEP 5: GENERATING PREPROCESSING STRATEGIES", "bold", "bright_cyan"))
+    logger.info(style(sep, "cyan"))
     try:
         strategy_gen = StrategyGenerator(json_path)
         strategy_path = strategy_gen.generate_strategies(output_dir)
@@ -424,9 +462,9 @@ def main():
             raise
     
     # 6. Generate Comprehensive Markdown Report
-    logger.info("\n" + "=" * 70)
-    logger.info("  STEP 6: GENERATING REPORT")
-    logger.info("=" * 70)
+    logger.info(style(sep, "cyan"))
+    logger.info(style("  STEP 6: GENERATING REPORT", "bold", "bright_cyan"))
+    logger.info(style(sep, "cyan"))
     try:
         report_gen = ReportGenerator(config=config)
         report_path = report_gen.generate_deep_analysis_report(output_dir, results)
@@ -436,17 +474,17 @@ def main():
         if not config.continue_on_error:
             raise
     
-    # Summary -- logged as a single cohesive block (AC3)
-    sep = "=" * 70
+    # Summary -- logged as a single cohesive block (AC3), with styled banner
     summary = (
-        f"\n{sep}\n"
-        f"  DEEP EVALUATION COMPLETE\n"
-        f"{sep}\n"
-        f"  Wiki Pages:    {len(results['wiki_pages'])}\n"
-        f"  Documents:     {len(results['documents'])}\n"
-        f"  Images:        {len(results['media'])}\n"
-        f"  Output Dir:    {output_dir}\n"
-        f"{sep}"
+        "\n"
+        + style(sep, "cyan") + "\n"
+        + style("  DEEP EVALUATION COMPLETE", "bold", "bright_cyan") + "\n"
+        + style(sep, "cyan") + "\n"
+        + f"  Wiki Pages:    {len(results['wiki_pages'])}\n"
+        + f"  Documents:     {len(results['documents'])}\n"
+        + f"  Images:        {len(results['media'])}\n"
+        + f"  Output Dir:    {output_dir}\n"
+        + style(sep, "cyan")
     )
     logger.info(summary)
 

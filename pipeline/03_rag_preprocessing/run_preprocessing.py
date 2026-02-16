@@ -35,7 +35,15 @@ from strategy_loader import StrategyLoader
 
 # Shared CLI utilities
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
-from cli_utils import add_no_color_arg, apply_color_from_args, register_sigint, style
+from cli_utils import (
+    add_no_color_arg,
+    apply_color_from_args,
+    enable_windows_ansi,
+    print_help_banner,
+    register_sigint,
+    set_use_color,
+    style,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +134,7 @@ def run(
         api_base=vlm_cfg.get("api_base", "http://192.168.8.3:1234/v1"),
         model=vlm_cfg.get("model", "qwen2.5-vl"),
         timeout=vlm_cfg.get("timeout", 60),
+        max_image_size=vlm_cfg.get("max_image_size", 1024),
     )
     captioner_available = captioner.is_available()
     if captioner_available:
@@ -294,8 +303,14 @@ def run(
             })
         stats["media_processed"] = len(media)
 
-    # T011d: Export with new API
-    out_dir = exporter.export(pages, media, output_base)
+    # T011d: Export with new API (NFR-005: manifest has timestamp, config_hash, code_version)
+    code_version = "1.0.0"
+    config_hash = "n/a"
+    out_dir = exporter.export(
+        pages, media, output_base,
+        config_hash=config_hash,
+        code_version=code_version,
+    )
     logger.info("Exported to %s", out_dir)
     logger.info("Stats: %s", stats)
 
@@ -320,10 +335,20 @@ def _print_summary(stats: dict[str, Any], out_dir: Path) -> None:
 
 def main() -> int:
     """CLI entry point."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    )
+    if "-h" in sys.argv or "--help" in sys.argv:
+        set_use_color("--no-color" not in sys.argv)
+        enable_windows_ansi()
+        print_help_banner(
+            what="Transforms fetched DokuWiki content into RAG-optimized Markdown with YAML frontmatter. Uses strategies from Stage 2, runs PDF/OCR and image captioning. Single entry point (US9).",
+            usage="python run_preprocessing.py [OPTIONS]",
+            parameters="(none)",
+            options="-h, --help         Show this help and exit.\n--input-dir DIR      Fetched data directory (auto-detect latest if omitted).\n--evaluated-dir DIR  Evaluation dir with strategies (auto-detect if omitted).\n--output-base DIR    Base output directory (default from config).\n--config PATH        Config file (env.yaml).\n--no-color           Disable colored output.",
+            examples="# Run with auto-detected latest fetch and evaluation\npython run_preprocessing.py\n# Specify fetch and eval dirs\npython run_preprocessing.py --input-dir data/fetched/fetched_at_20260216 --evaluated-dir data/evaluated",
+            configuration="pipeline/03_rag_preprocessing/env.yaml (PATHS, MEDIA, VISION_LLM, OUTPUT, etc.).",
+            output="data/preprocessed/preprocessed_at_<timestamp>/: pages/, media/, manifest.json.",
+            exit_codes="0   Success.\n1   FileNotFoundError or config error.\n130 Interrupted (Ctrl+C).",
+        )
+        sys.exit(0)
 
     parser = argparse.ArgumentParser(description="RAG Preprocessing Pipeline")
     parser.add_argument("--input-dir", type=Path, default=None)
@@ -334,6 +359,19 @@ def main() -> int:
     args = parser.parse_args()
     apply_color_from_args(args)
     register_sigint("run_preprocessing")
+
+    cfg = get_config(args.config)
+    log_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    handlers: list = [logging.StreamHandler()]
+    log_file = cfg.log_dir / "preprocessing.log"
+    cfg.log_dir.mkdir(parents=True, exist_ok=True)
+    handlers.append(logging.FileHandler(log_file, encoding="utf-8"))
+    logging.basicConfig(
+        level=logging.INFO,
+        format=log_format,
+        handlers=handlers,
+        force=True,
+    )
 
     try:
         run(

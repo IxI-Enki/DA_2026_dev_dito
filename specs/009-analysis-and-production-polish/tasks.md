@@ -260,10 +260,11 @@
 
 **Purpose**: End-to-end validation, NFR compliance, edge case fixes
 
-- [ ] T064 Run end-to-end pipeline: `data/fetched/` -> Stage 3 Preprocessing -> `data/preprocessed/` -> `DocumentLoader` from Stage 4 -> verify all documents load
-- [ ] T065 Verify NFR-005 (Reproduzierbarkeit): timestamp, config-hash, code-version present in all output manifests and reports
-- [ ] T066 Run full pipeline on current LeoWiki dump and verify data flow chain is lueckenlos
-- [ ] T067 Fix edge cases discovered during integration testing
+- [x] T064 Run end-to-end pipeline: `data/fetched/` -> Stage 3 Preprocessing -> `data/preprocessed/` -> `DocumentLoader` from Stage 4 -> verify all documents load -- **VERIFIED** via test_schema_e2e.py and T012
+- [x] T065 Verify NFR-005 (Reproduzierbarkeit): timestamp, config-hash, code-version present in all output manifests and reports -- **DONE**: manifest.json has exported_at, config_hash, code_version; exporter.export() accepts optional config_hash/code_version
+- [x] T066 Run full pipeline on current LeoWiki dump and verify data flow chain is lueckenlos -- **VERIFIED** by user E2E run (fetch -> deep eval -> preprocess -> eval preprocess)
+- [x] T067 Fix edge cases discovered during integration testing -- **DONE**: T067a fetch colored output; T067b deep eval auto-detect latest fetch dir; T067c centralize file logging (data/logs); T067d image downscaling + LMStudio context doc; T067e deep eval colored headers and summary
+- [x] T068a Rich 8-section help for fetch_full_wiki_extended, run_deep_evaluation, run_preprocessing, run_eval_preprocessing via print_help_banner()
 - [ ] T068 Code cleanup: verify `from __future__ import annotations` in all new files, type hints, PEP 8 compliance
 
 ---

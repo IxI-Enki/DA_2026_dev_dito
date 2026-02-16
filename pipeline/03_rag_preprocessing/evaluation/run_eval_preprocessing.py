@@ -23,12 +23,16 @@ from typing import Any, Optional
 # Ensure package is importable
 _here = Path(__file__).resolve().parent
 _module_root = _here.parent
+_pipeline_root = _module_root.parent
 if str(_module_root) not in sys.path:
     sys.path.insert(0, str(_module_root))
 if str(_here) not in sys.path:
     sys.path.insert(0, str(_here))
+if str(_pipeline_root / "shared") not in sys.path:
+    sys.path.insert(0, str(_pipeline_root / "shared"))
 
 from config import get_config, get_latest_fetch_dir
+from cli_utils import enable_windows_ansi, print_help_banner, set_use_color
 from evaluation.metrics import (
     DocumentScore,
     SemanticSimilarityMetric,
@@ -183,10 +187,20 @@ def _print_summary(scores: list[DocumentScore], report_path: Path) -> None:
 
 def main() -> int:
     """CLI entry point."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    )
+    if "-h" in sys.argv or "--help" in sys.argv:
+        set_use_color("--no-color" not in sys.argv)
+        enable_windows_ansi()
+        print_help_banner(
+            what="Pairs original DokuWiki content from data/fetched/ with preprocessed Markdown from data/preprocessed/, runs the 7-Metrik-Suite per document, and generates JSON + Markdown evaluation report (US8).",
+            usage="python run_eval_preprocessing.py [OPTIONS]",
+            parameters="(none)",
+            options="-h, --help           Show this help and exit.\n--fetched-dir DIR      Fetched data directory (auto-detect if omitted).\n--preprocessed-dir DIR Preprocessed output directory (auto-detect if omitted).\n--output-dir DIR       Report output directory (defaults to preprocessed dir).\n--config PATH          Config file (env.yaml).\n--use-embeddings       Use sentence-transformers for semantic similarity (slower).",
+            examples="# Run with auto-detected latest fetch and preprocessed\npython run_eval_preprocessing.py\n# Specify dirs\npython run_eval_preprocessing.py --fetched-dir data/fetched/fetched_at_20260216 --preprocessed-dir data/preprocessed/preprocessed_at_20260216",
+            configuration="pipeline/03_rag_preprocessing/env.yaml (PATHS, CONVERSION, etc.).",
+            output="<preprocessed_dir>/evaluation_report_<timestamp>.json and .md.",
+            exit_codes="0   Success.\n1   No fetched/preprocessed data or evaluation error.",
+        )
+        sys.exit(0)
 
     parser = argparse.ArgumentParser(
         description="Preprocessing Evaluation -- 7-Metrik-Suite",
@@ -204,6 +218,17 @@ def main() -> int:
     args = parser.parse_args()
 
     cfg = get_config(args.config)
+    log_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    handlers: list = [logging.StreamHandler()]
+    log_file = cfg.log_dir / "eval_preprocessing.log"
+    cfg.log_dir.mkdir(parents=True, exist_ok=True)
+    handlers.append(logging.FileHandler(log_file, encoding="utf-8"))
+    logging.basicConfig(
+        level=logging.INFO,
+        format=log_format,
+        handlers=handlers,
+        force=True,
+    )
 
     # Resolve fetched dir
     fetched_dir = args.fetched_dir

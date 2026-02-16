@@ -173,3 +173,4 @@ coverage.xml
 .hypothesis/
 pipeline/03_embeddings_creator/env.yaml
 pipeline/02_deep_evaluation/env.yaml
+.prompts/Full_test_run_I_omitted_only_lines_which_200_ok_for_breivity_here.txt
