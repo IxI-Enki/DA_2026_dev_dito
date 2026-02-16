@@ -1,4 +1,4 @@
-"""RAG Preprocessing Orchestrator (T079)
+"""RAG Preprocessing Orchestrator
 
 Runs the complete preprocessing pipeline:
   DokuWiki fetched data -> Strategy routing -> Markdown + YAML frontmatter -> Export
@@ -34,6 +34,34 @@ from strategy_loader import StrategyLoader
 logger = logging.getLogger(__name__)
 
 
+def _load_backlinks(input_dir: Path) -> dict[str, list[str]]:
+    """Load backlinks from page_backlinks/*.json into a lookup dict.
+
+    Returns:
+        Dict mapping page_id -> list of page_ids that link TO this page.
+    """
+    backlinks: dict[str, list[str]] = {}
+    backlinks_dir = input_dir / "page_backlinks"
+    if not backlinks_dir.exists():
+        logger.info("No page_backlinks/ directory found, linked_from will be empty")
+        return backlinks
+
+    for f in backlinks_dir.glob("*.json"):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            page_id = f.stem.replace("_", ":")
+            # data is typically a list of page_ids that link to this page
+            if isinstance(data, list):
+                backlinks[page_id] = data
+            elif isinstance(data, dict):
+                backlinks[page_id] = data.get("backlinks", [])
+        except Exception as e:
+            logger.warning("Failed to load backlinks from %s: %s", f, e)
+
+    logger.info("Loaded backlinks for %d pages", len(backlinks))
+    return backlinks
+
+
 def run(
     input_dir: Optional[Path] = None,
     evaluated_dir: Optional[Path] = None,
@@ -44,7 +72,7 @@ def run(
 
     Args:
         input_dir: Fetched data directory (auto-detect if None).
-        evaluated_dir: Directory with page_strategies.json.
+        evaluated_dir: Directory with preprocessing_strategies.yaml.
         output_base: Base output directory.
         config_path: YAML config file path.
 
@@ -85,13 +113,19 @@ def run(
     )
     exporter = Exporter()
 
+    # T011a: Load backlinks
+    backlinks_lookup = _load_backlinks(input_dir)
+
     # Process pages
     page_content_dir = input_dir / "page_content"
     raw_json_dir = input_dir / "raw_json"
+    page_links_dir = input_dir / "page_links"
 
     pages: list[dict[str, Any]] = []
+    media: list[dict[str, Any]] = []
     stats = {"pages_total": 0, "pages_ok": 0, "pages_fail": 0, "media_processed": 0}
 
+    # T011b: Process pages with full Qdrant-schema metadata
     if page_content_dir.exists():
         for f in sorted(page_content_dir.glob("*.txt")):
             stats["pages_total"] += 1
@@ -114,40 +148,84 @@ def run(
                 except Exception:
                     pass
 
-            # Compute freshness + access
-            last_mod = ""
-            if raw_meta:
-                last_mod = raw_meta.get("page_info", {}).get("last_modified", "")
-            freshness = meta_enricher.calculate_freshness_score(last_mod) if last_mod else "unknown"
+            # Extract metadata fields
+            page_info = raw_meta.get("page_info", {}) if raw_meta else {}
+            last_mod = page_info.get("last_modified", "")
+            author = page_info.get("author", "")
             namespace = page_id.rsplit(":", 1)[0] if ":" in page_id else ""
+
+            # Freshness + access
+            freshness = meta_enricher.calculate_freshness_score(last_mod) if last_mod else "unknown"
             access = meta_enricher.determine_access_level(namespace)
 
+            # Links
+            links_to: list[str] = []
+            links_file = page_links_dir / f"{f.stem}_links.json" if page_links_dir.exists() else None
+            if links_file and links_file.exists():
+                try:
+                    links_data = json.loads(links_file.read_text(encoding="utf-8"))
+                    links_to = [
+                        link.get("target", "")
+                        for link in links_data.get("internal_links", [])
+                        if link.get("target")
+                    ]
+                except Exception:
+                    pass
+
+            # Backlinks
+            linked_from = backlinks_lookup.get(page_id, [])
+
+            # Build page dict with Qdrant-schema fields
             pages.append({
                 "page_id": page_id,
                 "title": result.get("title", ""),
                 "namespace": namespace,
+                "source": f"{cfg.wiki_base_url}{page_id.replace('_', ':')}",
+                "access_level": access,
+                "content_type": result.get("content_type", "KNOWLEDGE"),
+                "freshness_score": 0.5,  # Placeholder until US5 Freshness-Scoring
+                "freshness_category": freshness,
+                "chunking_method": result.get("chunking_method", "semantic"),
+                "last_modified": last_mod,
+                "author": author,
+                "links_to": links_to,
+                "linked_from": linked_from,
                 "content": result.get("markdown", ""),
-                "metadata": {
-                    "content_type": result.get("content_type", "knowledge"),
-                    "priority": result.get("priority", "normal"),
-                    "rag_readiness": result.get("rag_readiness", 0.5),
-                    "chunk_size": result.get("chunk_size", 512),
-                    "freshness": freshness,
-                    "access_level": access,
-                },
             })
             stats["pages_ok"] += 1
 
     stats["pages_fail"] = stats["pages_total"] - stats["pages_ok"]
 
-    # Process media
+    # T011c: Process media with full Qdrant-schema metadata
     media_dir = input_dir / "media"
     if media_dir.exists():
         media_results = media_proc.process_media_directory(media_dir)
-        stats["media_processed"] = len(media_results)
+        for mr in media_results:
+            file_path = mr.get("file_path", Path())
+            if isinstance(file_path, str):
+                file_path = Path(file_path)
+            media_id = mr.get("media_id", file_path.name if file_path else "unknown")
 
-    # Export
-    out_dir = exporter.export(pages, output_base)
+            media.append({
+                "media_id": media_id,
+                "title": file_path.stem.replace("_", " ").title() if file_path else "",
+                "namespace": media_id.rsplit(":", 1)[0] if ":" in media_id else "",
+                "source": f"{cfg.wiki_base_url}lib/exe/fetch.php?media={media_id}" if cfg.wiki_base_url else "",
+                "access_level": "public",
+                "content_type": mr.get("content_type", "DOCUMENT"),
+                "freshness_score": 0.5,
+                "freshness_category": "recent",
+                "chunking_method": "metadata_only",
+                "last_modified": "",
+                "author": "",
+                "links_to": [],
+                "linked_from": [],
+                "content": mr.get("text", ""),
+            })
+        stats["media_processed"] = len(media)
+
+    # T011d: Export with new API
+    out_dir = exporter.export(pages, media, output_base)
     logger.info("Exported to %s", out_dir)
     logger.info("Stats: %s", stats)
     return stats

@@ -60,6 +60,7 @@ class MetadataEnricher:
         raw_metadata: Optional[Dict[str, Any]] = None,
         links_data: Optional[Dict[str, Any]] = None,
         fetch_timestamp: Optional[str] = None,
+        backlinks: Optional[List[str]] = None,
     ) -> str:
         """
         Generate YAML frontmatter for a page.
@@ -101,7 +102,7 @@ class MetadataEnricher:
             
             # Timestamps
             if page_info.get('last_modified'):
-                fm['modified_at'] = page_info['last_modified']
+                fm['last_modified'] = page_info['last_modified']
             
             # Author
             if page_info.get('author'):
@@ -138,14 +139,21 @@ class MetadataEnricher:
                 'media': len(media_links),
             }
         
+        # Ensure links_to is always present (even if empty)
+        if 'links_to' not in fm:
+            fm['links_to'] = []
+
+        # Backlinks -> linked_from
+        fm['linked_from'] = list(backlinks) if backlinks else []
+
         # Evaluation data
         eval_data = self.get_page_evaluation(page_id)
         if eval_data.get('is_flagged'):
             fm['quality_flag'] = 'review_needed'
-        
+
         # Content type (default - can be enhanced with NLP later)
         fm['content_type'] = self._classify_content_type(page_id, fm.get('namespace', ''))
-        
+
         # Generate YAML
         return self._to_yaml(fm)
     
@@ -267,11 +275,11 @@ class MetadataEnricher:
 
 
 class MediaMetadataEnricher:
-    """Generates YAML frontmatter for media files."""
-    
+    """Generates YAML frontmatter for media files (Qdrant-compatible schema)."""
+
     def __init__(self, wiki_base_url: str = ''):
         self.wiki_base_url = wiki_base_url
-    
+
     def generate_frontmatter(
         self,
         media_id: str,
@@ -279,34 +287,39 @@ class MediaMetadataEnricher:
         file_size: int = 0,
         referenced_by: Optional[List[str]] = None,
         fetch_timestamp: Optional[str] = None,
+        content_type: str = '',
+        freshness_score: float = 0.5,
+        freshness_category: str = 'recent',
+        chunking_method: str = 'metadata_only',
+        last_modified: str = '',
+        author: str = '',
     ) -> str:
-        """Generate YAML frontmatter for a media file."""
-        fm = {}
-        
-        # Core identification
-        fm['media_id'] = media_id
-        fm['filename'] = file_path.name
-        fm['file_type'] = file_path.suffix.lower().lstrip('.')
-        fm['file_size'] = file_size
-        
-        # Namespace from path
+        """Generate YAML frontmatter for a media file.
+
+        Produces the same Qdrant-compatible schema as page frontmatter,
+        using ``media_id`` instead of ``page_id``.
+        """
+        fm: Dict[str, Any] = {}
+
+        # Core identification (Qdrant-schema aligned)
+        fm['title'] = file_path.stem.replace('_', ' ').title()
         if ':' in media_id:
             fm['namespace'] = media_id.rsplit(':', 1)[0]
         else:
             fm['namespace'] = ''
-        
-        # Content type based on file extension
-        fm['content_type'] = self._classify_media_type(file_path.suffix.lower())
-        
-        # References
-        if referenced_by:
-            fm['referenced_by'] = referenced_by[:20]
-        
-        # Timestamps
-        if fetch_timestamp:
-            fm['fetched_at'] = fetch_timestamp
-        fm['preprocessed_at'] = datetime.now().isoformat()
-        
+        fm['source'] = f"{self.wiki_base_url}lib/exe/fetch.php?media={media_id}" if self.wiki_base_url else ''
+        fm['media_id'] = media_id
+        fm['access_level'] = 'public'
+        fm['content_type'] = content_type or self._classify_media_type(file_path.suffix.lower())
+        fm['freshness_score'] = freshness_score
+        fm['freshness_category'] = freshness_category
+        fm['chunking_method'] = chunking_method
+        fm['last_modified'] = last_modified
+        fm['author'] = author
+        # content_hash is computed by the Exporter from the body
+        fm['links_to'] = []
+        fm['linked_from'] = []
+
         # Generate YAML
         yaml_content = yaml.dump(
             fm,
@@ -314,35 +327,24 @@ class MediaMetadataEnricher:
             allow_unicode=True,
             sort_keys=False,
         )
-        
+
         return f"---\n{yaml_content}---\n"
-    
+
     def _classify_media_type(self, extension: str) -> str:
         """Classify media type based on file extension."""
         ext = extension.lstrip('.')
-        
-        # Documents
+
         if ext in ['pdf']:
             return 'DOCUMENT'
         if ext in ['doc', 'docx', 'odt']:
-            return 'OFFICE_DOCUMENT'
+            return 'DOCUMENT'
         if ext in ['xls', 'xlsx', 'ods']:
-            return 'SPREADSHEET'
+            return 'DOCUMENT'
         if ext in ['ppt', 'pptx', 'odp']:
-            return 'PRESENTATION'
-        
-        # Images
+            return 'DOCUMENT'
         if ext in ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp']:
             return 'IMAGE'
-        
-        # Archives
-        if ext in ['zip', 'rar', '7z', 'tar', 'gz']:
-            return 'ARCHIVE'
-        
-        # Code/Text
         if ext in ['txt', 'md', 'rst']:
-            return 'TEXT'
-        if ext in ['py', 'js', 'java', 'c', 'cpp', 'h', 'cs']:
-            return 'SOURCE_CODE'
-        
-        return 'OTHER'
+            return 'DOCUMENT'
+
+        return 'DOCUMENT'
