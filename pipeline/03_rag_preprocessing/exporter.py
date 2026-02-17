@@ -1,7 +1,7 @@
 """Exporter -- Qdrant-compatible schema output.
 
 Exports preprocessed content to timestamped directories with YAML frontmatter
-matching the fields expected by pipeline/03_embeddings_creator/document_loader.py.
+matching the fields expected by pipeline/04_embeddings_creator/document_loader.py.
 
 Output layout::
 

@@ -50,7 +50,7 @@ class TestDirectUpload:
     def test_deploy_direct_returns_count(
         self, sample_jsonl: Path, mock_qdrant_client: MagicMock
     ) -> None:
-        from pipeline.deploy_qdrant import QdrantDeployer
+        from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)
         deployer.client = mock_qdrant_client
@@ -60,7 +60,7 @@ class TestDirectUpload:
     def test_deploy_direct_calls_upsert(
         self, sample_jsonl: Path, mock_qdrant_client: MagicMock
     ) -> None:
-        from pipeline.deploy_qdrant import QdrantDeployer
+        from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)
         deployer.client = mock_qdrant_client
@@ -70,7 +70,7 @@ class TestDirectUpload:
     def test_deploy_direct_creates_collection_if_missing(
         self, sample_jsonl: Path, mock_qdrant_client: MagicMock
     ) -> None:
-        from pipeline.deploy_qdrant import QdrantDeployer
+        from deploy_qdrant import QdrantDeployer
 
         mock_qdrant_client.get_collections.return_value = MagicMock(collections=[])
         deployer = QdrantDeployer.__new__(QdrantDeployer)
@@ -81,7 +81,7 @@ class TestDirectUpload:
     def test_deploy_direct_empty_file(
         self, tmp_path: Path, mock_qdrant_client: MagicMock
     ) -> None:
-        from pipeline.deploy_qdrant import QdrantDeployer
+        from deploy_qdrant import QdrantDeployer
 
         empty = tmp_path / "empty.jsonl"
         empty.write_text("", encoding="utf-8")
@@ -97,7 +97,7 @@ class TestWatchdogMode:
     def test_deploy_watchdog_returns_path(
         self, sample_jsonl: Path, tmp_path: Path
     ) -> None:
-        from pipeline.deploy_qdrant import QdrantDeployer
+        from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)
         deployer.client = MagicMock()
@@ -109,7 +109,7 @@ class TestWatchdogMode:
     def test_deploy_watchdog_copies_file(
         self, sample_jsonl: Path, tmp_path: Path
     ) -> None:
-        from pipeline.deploy_qdrant import QdrantDeployer
+        from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)
         deployer.client = MagicMock()
@@ -120,7 +120,7 @@ class TestWatchdogMode:
     def test_deploy_watchdog_creates_output_dir(
         self, sample_jsonl: Path, tmp_path: Path
     ) -> None:
-        from pipeline.deploy_qdrant import QdrantDeployer
+        from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)
         deployer.client = MagicMock()
@@ -135,7 +135,7 @@ class TestRecreateCollection:
     def test_recreate_deletes_existing_collection(
         self, sample_jsonl: Path, mock_qdrant_client: MagicMock
     ) -> None:
-        from pipeline.deploy_qdrant import QdrantDeployer
+        from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)
         deployer.client = mock_qdrant_client
@@ -148,7 +148,7 @@ class TestRecreateCollection:
     def test_recreate_false_keeps_collection(
         self, sample_jsonl: Path, mock_qdrant_client: MagicMock
     ) -> None:
-        from pipeline.deploy_qdrant import QdrantDeployer
+        from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)
         deployer.client = mock_qdrant_client
@@ -162,7 +162,7 @@ class TestUpsertOnly:
     def test_upsert_adds_to_existing_collection(
         self, sample_jsonl: Path, mock_qdrant_client: MagicMock
     ) -> None:
-        from pipeline.deploy_qdrant import QdrantDeployer
+        from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)
         deployer.client = mock_qdrant_client
@@ -179,7 +179,7 @@ class TestDryRun:
     def test_dry_run_does_not_upload(
         self, sample_jsonl: Path, mock_qdrant_client: MagicMock
     ) -> None:
-        from pipeline.deploy_qdrant import QdrantDeployer
+        from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)
         deployer.client = mock_qdrant_client

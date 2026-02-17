@@ -2,7 +2,7 @@
 """
 Dev Dito Module Embedder - Entrypoint
 =====================================
-Thin wrapper around embeddings_creator/main.py.
+Thin wrapper around 04_embeddings_creator/run_embeddings.py.
 Updates job status and progress in pipeline files.
 
 Constitution Article VII: NO business logic here!
@@ -27,7 +27,7 @@ from typing import Any, Dict, Optional
 
 CONFIG_PATH = Path(os.environ.get("CONFIG_PATH", "/config/env.yaml"))
 DATA_PATH = Path(os.environ.get("DATA_PATH", "/data"))
-PIPELINE_PATH = Path(os.environ.get("PIPELINE_PATH", "/pipeline/03_embeddings_creator"))
+PIPELINE_PATH = Path(os.environ.get("PIPELINE_PATH", "/pipeline/04_embeddings_creator"))
 
 STATUS_FILE = DATA_PATH / "logs" / "pipeline_runs.json"
 PROGRESS_FILE = DATA_PATH / "logs" / "pipeline_progress.json"
@@ -85,14 +85,14 @@ class ProgressTracker:
         })
         self._write()
     
-    def update_progress(self, current: int, total: int, message: str = None):
+    def update_progress(self, current: int, total: int, message: str | None = None):
         pct = int((current / total) * 100) if total > 0 else 0
         self.state["progress"] = {"current": current, "total": total, "percentage": pct}
         if message:
             self.state["message"] = message
         self._write()
     
-    def complete(self, stats: Dict = None):
+    def complete(self, stats: Dict | None = None):
         self.state["status"] = "success"
         self.state["completed_at"] = datetime.now().isoformat()
         self.state["progress"]["percentage"] = 100
@@ -126,23 +126,22 @@ def save_status_file(runs: list) -> None:
     STATUS_FILE.write_text(json.dumps(runs, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def update_status(job_id: str, status: str, **kwargs) -> None:
+def update_status(job_id: str, status: str, **kwargs: Any) -> None:
     runs = load_status_file()
-    
-    job = next((r for r in runs if isinstance(r, dict) and r.get("job_id") == job_id), None)
+    job: Dict[str, Any] | None = next(
+        (r for r in runs if isinstance(r, dict) and r.get("job_id") == job_id), None
+    )
     if not job:
         job = {"job_id": job_id, "stage": STAGE_NAME, "started_at": datetime.now().isoformat()}
         runs.append(job)
-    
+    assert job is not None
     job["status"] = status
     job["updated_at"] = datetime.now().isoformat()
-    
     for key, value in kwargs.items():
         job[key] = value
-    
     if status in ("success", "error") and "started_at" in job:
         try:
-            start = datetime.fromisoformat(job["started_at"])
+            start = datetime.fromisoformat(str(job["started_at"]))
             job["finished_at"] = datetime.now().isoformat()
             job["duration_seconds"] = int((datetime.now() - start).total_seconds())
         except ValueError:
@@ -221,7 +220,7 @@ def main():
     
     # Check main script
     tracker.set_step("[2/10] Checking embedder script", 2)
-    main_script = PIPELINE_PATH / "main.py"
+    main_script = PIPELINE_PATH / "run_embeddings.py"
     if not main_script.exists():
         error = f"Embedder script not found: {main_script}"
         update_status(job_id, "error", error=error)

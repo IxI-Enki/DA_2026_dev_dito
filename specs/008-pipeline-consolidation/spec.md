@@ -20,7 +20,7 @@ Feature 007 lieferte die **Evaluations-Infrastruktur**: reine IR-Metriken (MRR, 
 
 Eine Gap-Analyse (2026-02-14) zeigt: 30 von 61 Prototyp-Features sind portiert (49%), 7 teilweise (11%), 24 fehlen (39%). Die 3 **Critical** und 5 **High** Gaps blockieren alle die Thesis-Qualitaet.
 
-**Betroffene Schichten**: `evaluation/` (RAGAS, Statistik, Visualisierung), `pipeline/03_rag_preprocessing/` (Preprocessing), `pipeline/04_deploy/` (Qdrant-Deployment)
+**Betroffene Schichten**: `evaluation/` (RAGAS, Statistik, Visualisierung), `pipeline/03_rag_preprocessing/` (Preprocessing), `pipeline/05_deploy/` (Qdrant-Deployment)
 **Abgrenzung**: MCP-Server (Imres Teil) wird NICHT veraendert. Pipeline Stages 1-2 (Fetch, Deep Evaluation) und Stage 3b (Embeddings Creator) sind bereits portiert und werden nicht umgeschrieben.
 
 ---

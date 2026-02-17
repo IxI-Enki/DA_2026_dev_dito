@@ -1,7 +1,7 @@
 # =============================================================================
 # Dev Dito - Module Embedder
 # =============================================================================
-# Executes the Embeddings Creator (main.py) inside Docker.
+# Executes the Embeddings Creator (run_embeddings.py) inside Docker.
 # Constitution Article VII: Thin Wrapper only!
 #
 # Build: docker compose build module_embedder
@@ -19,7 +19,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV CONFIG_PATH=/config/env.yaml
 ENV DATA_PATH=/data
-ENV PIPELINE_PATH=/pipeline/03_embeddings_creator
+ENV PIPELINE_PATH=/pipeline/04_embeddings_creator
 
 WORKDIR /app
 

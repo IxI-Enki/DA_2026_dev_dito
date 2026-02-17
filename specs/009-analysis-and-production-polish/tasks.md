@@ -56,7 +56,7 @@
 - [x] T011b [US3] Update `pipeline/03_rag_preprocessing/run_preprocessing.py` -- restructure page processing loop to collect all page dicts (with `source`, `last_modified`, `linked_from` from backlinks, `content_type`, `chunking_method`) into a `pages: list[dict]` before export
 - [x] T011c [US3] Update `pipeline/03_rag_preprocessing/run_preprocessing.py` -- restructure media processing to collect all media dicts (with full Qdrant-schema metadata) into a `media: list[dict]` before export
 - [x] T011d [US3] Update `pipeline/03_rag_preprocessing/run_preprocessing.py` -- call new Exporter API `export(pages, media, output_base)` to write both collections in a single pass
-- [x] T012 [US3] Run all tests including `test_schema_e2e.py` and verify `DocumentLoader` from `pipeline/03_embeddings_creator/document_loader.py` can load the generated output without errors
+- [x] T012 [US3] Run all tests including `test_schema_e2e.py` and verify `DocumentLoader` from `pipeline/04_embeddings_creator/document_loader.py` can load the generated output without errors
 
 **Checkpoint**: Stage 4 (Embeddings Creator) can now successfully load Stage 3 output. Pipeline data flow is unblocked.
 

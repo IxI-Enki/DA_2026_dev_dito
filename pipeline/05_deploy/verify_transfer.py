@@ -3,11 +3,13 @@
 Verify Transfer to Raspberry Pi
 ================================
 Verifies that the embeddings file was correctly transferred
-by comparing MD5 checksums.
+by comparing MD5 checksums. Reads config from config.yaml (same dir);
+Qdrant URL and paths come from config when present.
 
 Usage:
-    python verify_transfer.py                    # Use default config
+    python verify_transfer.py                    # Use config.yaml
     python verify_transfer.py --host 192.168.1.100
+    python verify_transfer.py --check-qdrant     # Also check Qdrant collection
 """
 
 import os
@@ -18,14 +20,13 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
-# Default configuration (same as transfer_to_pi.py)
-DEFAULT_CONFIG = {
-    "ssh_host": "raspberry-pi.local",
-    "ssh_user": "pi",
-    "ssh_port": 22,
-    "remote_path": "/home/pi/qdrant/data/embeddings/embedded_chunks.jsonl",
-    "local_file": "../03_embeddings_creator/output/embedded_chunks.jsonl",
-}
+from deploy_config import (
+    SCRIPT_DIR,
+    get_defaults,
+    load_config,
+    find_latest_embeddings_file,
+    get_local_embeddings_dir,
+)
 
 
 def get_local_hash(filepath: Path) -> Optional[str]:
@@ -83,16 +84,22 @@ def get_remote_file_info(host: str, user: str, port: int, remote_path: str, key_
         return {"exists": False, "error": str(e)}
 
 
-def verify_qdrant_collection(host: str, user: str, port: int, key_path: Optional[str] = None) -> dict:
-    """Check Qdrant collection status on remote host."""
+def verify_qdrant_collection(
+    ssh_host: str,
+    ssh_user: str,
+    ssh_port: int,
+    qdrant_host: str,
+    qdrant_port: int,
+    collection_name: str,
+    key_path: Optional[str] = None,
+) -> dict:
+    """Check Qdrant collection status on remote host (via SSH + curl on Pi)."""
+    url = f"http://{qdrant_host}:{qdrant_port}/collections/{collection_name}"
+    curl_cmd = f"curl -s {url} || echo 'QDRANT_NOT_RUNNING'"
     cmd = ["ssh"]
     if key_path:
         cmd.extend(["-i", key_path])
-    cmd.extend([
-        "-p", str(port), 
-        f"{user}@{host}", 
-        "curl -s http://localhost:18334/collections/wiki_embeddings || echo 'QDRANT_NOT_RUNNING'"
-    ])
+    cmd.extend(["-p", str(ssh_port), f"{ssh_user}@{ssh_host}", curl_cmd])
     
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -118,29 +125,40 @@ def verify_qdrant_collection(host: str, user: str, port: int, key_path: Optional
 
 
 def main():
+    defaults = get_defaults()
     parser = argparse.ArgumentParser(
         description="Verify embeddings transfer to Raspberry Pi",
     )
-    
-    parser.add_argument("--host", "-H", default=DEFAULT_CONFIG["ssh_host"])
-    parser.add_argument("--user", "-u", default=DEFAULT_CONFIG["ssh_user"])
-    parser.add_argument("--port", "-p", type=int, default=DEFAULT_CONFIG["ssh_port"])
-    parser.add_argument("--remote-path", "-r", default=DEFAULT_CONFIG["remote_path"])
-    parser.add_argument("--local-file", "-f", default=DEFAULT_CONFIG["local_file"])
+    parser.add_argument("--host", "-H", default=defaults["ssh_host"])
+    parser.add_argument("--user", "-u", default=defaults["ssh_user"])
+    parser.add_argument("--port", "-p", type=int, default=defaults["ssh_port"])
+    parser.add_argument("--remote-path", "-r", default=defaults["remote_embeddings_file"])
+    parser.add_argument("--local-file", "-f", default=None, metavar="PATH", help="Local JSONL (default: latest from config)")
     parser.add_argument("--key", "-k", default=os.environ.get("SSH_KEY_PATH"))
-    parser.add_argument("--check-qdrant", action="store_true", help="Also check Qdrant collection")
-    
+    parser.add_argument("--check-qdrant", action="store_true", help="Also check Qdrant collection on Pi")
     args = parser.parse_args()
-    
+
     print("="*60)
     print("DEV DITO - TRANSFER VERIFICATION")
     print("="*60)
-    
-    # Resolve local file path
-    script_dir = Path(__file__).parent
-    local_path = Path(args.local_file)
-    if not local_path.is_absolute():
-        local_path = (script_dir / local_path).resolve()
+
+    # Resolve local file path: explicit or latest from config
+    if args.local_file is not None:
+        local_path = Path(args.local_file)
+        if not local_path.is_absolute():
+            local_path = (SCRIPT_DIR / local_path).resolve()
+    else:
+        base_dir = get_local_embeddings_dir()
+        latest = find_latest_embeddings_file(base_dir)
+        if latest is None:
+            print(
+                f"[ERROR] No local embeddings file found. Looked for\n"
+                f"  {base_dir}/embedded_at_*/embedded_chunks.jsonl\n"
+                f"Use --local-file PATH to specify."
+            )
+            sys.exit(1)
+        local_path = latest
+        print(f"[INFO] Using latest local file: {local_path}")
     
     # Get local hash
     print(f"\n[1/3] Calculating local file hash...")
@@ -180,10 +198,18 @@ def main():
         print(f"        Remote: {remote_hash}")
         sys.exit(1)
     
-    # Optional: Check Qdrant collection
+    # Optional: Check Qdrant collection on Pi
     if args.check_qdrant:
         print(f"\n[EXTRA] Checking Qdrant collection...")
-        qdrant_status = verify_qdrant_collection(args.host, args.user, args.port, args.key)
+        qdrant_status = verify_qdrant_collection(
+            ssh_host=args.host,
+            ssh_user=args.user,
+            ssh_port=args.port,
+            qdrant_host=defaults["qdrant_host"],
+            qdrant_port=defaults["qdrant_port"],
+            collection_name=defaults["collection_name"],
+            key_path=args.key,
+        )
         if qdrant_status["status"] == "ok":
             print(f"        [OK] Qdrant collection accessible")
             if "points_count" in qdrant_status:

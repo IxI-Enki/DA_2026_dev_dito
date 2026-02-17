@@ -101,7 +101,7 @@ loest Platzhalter (`${var}`) auf und stellt typisierte Exports bereit.
 
 **Known Config Violations (v1.4.0):**
 - `pipeline/02_deep_evaluation/env.yaml`: Pfade zeigen auf Prototype-Location ausserhalb dev_dito → **Tier 1 Fix**
-- `pipeline/03_embeddings_creator/env.yaml`: Lokale hardcodierte Pfade → Deferred (post-thesis)
+- `pipeline/04_embeddings_creator/env.yaml`: Lokale hardcodierte Pfade → Deferred (post-thesis)
 - `pipeline/03_rag_preprocessing/env.yaml`: Lokale Config → Deferred (post-thesis)
 
 **Pattern (aus Wiki Fetcher uebernommen):**
@@ -170,7 +170,7 @@ unverhältnismaessig. Tests dort, wo Fehler schwer zu diagnostizieren sind (Embe
 Vektor-Dimensionen, HTTP-Timeouts), liefern den hoechsten Nutzen.
 
 **Enforcement**:
-- [ ] `pipeline/03_embeddings_creator/` hat Unit-Tests fuer Chunking und Embedding-Output-Format
+- [ ] `pipeline/04_embeddings_creator/` hat Unit-Tests fuer Chunking und Embedding-Output-Format
 - [ ] `dokuwiki_plugin/` HTTP-Client-Code hat Tests fuer JSON-RPC Request/Response-Format
 - [ ] `evaluation/` dient als Referenz-Implementierung (56+ Tests fuer Metriken und Config)
 - [ ] Docker-Services definieren `healthcheck` in `docker-compose.yml`
@@ -646,7 +646,7 @@ erneut triagieren.
 | Article | Violation                                        | Status                 | Target             |
 | ------- | ------------------------------------------------ | ---------------------- | ------------------ |
 | II-B    | `02_deep_evaluation/env.yaml` Prototype-Pfade    | Fix Scheduled (Tier 1) | 2026-02-28         |
-| II-B    | `03_embeddings_creator/env.yaml` hardcoded paths | Deferred               | Post-thesis        |
+| II-B    | `04_embeddings_creator/env.yaml` hardcoded paths | Deferred               | Post-thesis        |
 | II-B    | `03_rag_preprocessing/env.yaml` local config     | Deferred               | Post-thesis        |
 | VII     | `module_deployer/entrypoint.py` 377 LOC          | Accepted               | Post-thesis        |
 | XII     | Keine Resource Limits auf Services               | Accepted (Tier 2)      | Nach Eval-Results  |

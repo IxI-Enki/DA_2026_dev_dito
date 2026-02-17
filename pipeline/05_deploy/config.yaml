@@ -14,8 +14,9 @@ remote:
   qdrant_compose: /home/pi/qdrant/docker-compose.yml
 
 # Local Paths (relative to this config file)
+# Stage 04 writes to: <embeddings_dir>/embedded_at_YYYYMMDD_HHMMSS/embedded_chunks.jsonl
 local:
-  embeddings_file: ../../data/embeddings/embedded_chunks.jsonl
+  embeddings_dir: ../../data/embeddings
 
 # Transfer Settings
 transfer:

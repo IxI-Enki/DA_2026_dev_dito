@@ -117,7 +117,6 @@ class PathsConfig:
     log_dir: str
     preprocessing_base: str
     input_dir: str
-    input_fallback: str
 
 
 @dataclass
@@ -189,7 +188,6 @@ class Config:
                 log_dir=f"{data_path}/logs",
                 preprocessing_base=f"{data_path}/preprocessed",
                 input_dir=f"{data_path}/preprocessed",
-                input_fallback=f"{data_path}/evaluated/for_qdrant",
             )
         else:
             # Running locally - use paths from env.yaml
@@ -201,7 +199,6 @@ class Config:
                 log_dir=raw['PATHS']['log_dir'],
                 preprocessing_base=raw['PATHS'].get('preprocessing_base', raw['PATHS']['input_dir']),
                 input_dir=raw['PATHS']['input_dir'],
-                input_fallback=raw['PATHS']['input_fallback'],
             )
         
         openai = OpenAIConfig(

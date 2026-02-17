@@ -116,7 +116,7 @@ pipeline/03_rag_preprocessing/           # EXISTING -- erweitert
     ├── test_media_processor.py          # NEW
     └── test_exporter.py                 # NEW
 
-pipeline/04_deploy/                      # EXISTING -- erweitert
+pipeline/05_deploy/                      # EXISTING -- erweitert
 ├── transfer_to_pi.py                    # existing
 ├── verify_transfer.py                   # existing
 ├── deploy_qdrant.py                     # NEW: US6 -- direct upload + watchdog
@@ -392,7 +392,7 @@ class Exporter:
 ### 6. Qdrant Deployment (US6)
 
 ```python
-# pipeline/04_deploy/deploy_qdrant.py
+# pipeline/05_deploy/deploy_qdrant.py
 from __future__ import annotations
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
@@ -450,7 +450,7 @@ class EvaluationPipeline:
 | OpenAIProvider      | `evaluation/providers/openai_provider.py`                 | Embedding generation           |
 | PageProcessor       | `pipeline/03_rag_preprocessing/page_processor.py`         | DokuWiki-to-MD conversion      |
 | MetadataEnricher    | `pipeline/03_rag_preprocessing/metadata_enricher.py`      | YAML frontmatter               |
-| ContentAwareChunker | `pipeline/03_embeddings_creator/content_aware_chunker.py` | Chunking                       |
+| ContentAwareChunker | `pipeline/04_embeddings_creator/content_aware_chunker.py` | Chunking                       |
 | WikiAPIClient       | `pipeline/01_wiki_fetcher/api_client.py`                  | Keyword baseline               |
 | Ground Truth        | `evaluation/ground_truth/leowiki_qa_50_verified.json`     | All evaluations                |
 
@@ -511,7 +511,7 @@ class EvaluationPipeline:
 - **Deliverable**: `data/fetched/` -> `data/preprocessed/` full conversion
 
 ### Phase 6: Qdrant Deployment (US6) -- Day 11
-- `pipeline/04_deploy/deploy_qdrant.py` + tests
+- `pipeline/05_deploy/deploy_qdrant.py` + tests
 - Direct upload mode via `qdrant_client`
 - Watchdog export mode (file copy)
 - **Deliverable**: Embeddings in Qdrant, queryable

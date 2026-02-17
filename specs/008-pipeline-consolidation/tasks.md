@@ -17,7 +17,7 @@
 
 - **evaluation/**: All evaluation-related modules (metrics, RAGAS, statistics, visualization, reports)
 - **pipeline/03_rag_preprocessing/**: RAG preprocessing pipeline components
-- **pipeline/04_deploy/**: Deployment scripts
+- **pipeline/05_deploy/**: Deployment scripts
 
 ---
 
@@ -222,23 +222,23 @@
 
 **Goal**: Direct upload to Qdrant via `qdrant_client` or watchdog export mode
 
-**Independent Test**: `python pipeline/04_deploy/deploy_qdrant.py --mode direct --dry-run` validates without uploading
+**Independent Test**: `python pipeline/05_deploy/deploy_qdrant.py --mode direct --dry-run` validates without uploading
 
 ### Tests for User Story 6
 
-- [X] T082 [P] [US6] Create `pipeline/04_deploy/tests/test_deploy_qdrant.py` with direct upload tests (mocked client)
+- [X] T082 [P] [US6] Create `pipeline/05_deploy/tests/test_deploy_qdrant.py` with direct upload tests (mocked client)
 - [X] T083 [P] [US6] Add tests for watchdog mode (file copy) to test_deploy_qdrant.py
 - [X] T084 [P] [US6] Add tests for `--recreate` collection behavior to test_deploy_qdrant.py
 - [X] T085 [P] [US6] Add tests for upsert-only behavior (without --recreate) to test_deploy_qdrant.py
 
 ### Implementation for User Story 6
 
-- [X] T086 [US6] Implement `pipeline/04_deploy/deploy_qdrant.py` with `QdrantDeployer` class
+- [X] T086 [US6] Implement `pipeline/05_deploy/deploy_qdrant.py` with `QdrantDeployer` class
 - [X] T087 [US6] Implement `deploy_direct()` method for direct Qdrant upload via `qdrant_client`
 - [X] T088 [US6] Implement `deploy_watchdog()` method for MCP watchdog folder copy
 - [X] T089 [US6] Add `--recreate` flag to delete and recreate existing collections
 - [X] T090 [US6] Add `--dry-run` flag for validation without actual upload
-- [X] T091 [US6] Verify deploy tests pass: `pytest pipeline/04_deploy/tests/test_deploy_qdrant.py`
+- [X] T091 [US6] Verify deploy tests pass: `pytest pipeline/05_deploy/tests/test_deploy_qdrant.py`
 
 **Checkpoint**: Embeddings uploadable to Qdrant directly or via watchdog folder
 
@@ -276,7 +276,7 @@
 - [ ] T104 Run full pipeline on actual LeoWiki data
 - [X] T105 [P] Fix edge cases discovered during integration testing
 - [X] T106 [P] Verify all existing tests still pass: `pytest evaluation/tests/test_metrics.py` (56 tests)
-- [X] T107 [P] Run full test suite: `pytest evaluation/tests/ pipeline/03_rag_preprocessing/tests/ pipeline/04_deploy/tests/`
+- [X] T107 [P] Run full test suite: `pytest evaluation/tests/ pipeline/03_rag_preprocessing/tests/ pipeline/05_deploy/tests/`
 - [X] T108 Update `evaluation/experiments/full_eval.yaml` with production-ready configuration
 
 **Checkpoint**: Complete pipeline works end-to-end with all 8 user stories

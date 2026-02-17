@@ -3,9 +3,9 @@
 Deploys embeddings to Qdrant via direct upload or watchdog export mode.
 
 Usage:
-  python -m pipeline.deploy_qdrant --mode direct --jsonl path/to/embedded.jsonl
-  python -m pipeline.deploy_qdrant --mode watchdog --jsonl path/to/embedded.jsonl --output-dir /mnt/watchdog
-  python -m pipeline.deploy_qdrant --mode direct --dry-run --jsonl path/to/embedded.jsonl
+  python pipeline/05_deploy/deploy_qdrant.py --mode direct --jsonl path/to/embedded.jsonl
+  python pipeline/05_deploy/deploy_qdrant.py --mode watchdog --jsonl path/to/embedded.jsonl --output-dir /mnt/watchdog
+  python pipeline/05_deploy/deploy_qdrant.py --mode direct --dry-run --jsonl path/to/embedded.jsonl
 """
 
 from __future__ import annotations
@@ -28,8 +28,8 @@ _UPSERT_BATCH_SIZE = 100
 def _parse_jsonl(jsonl_path: Path) -> list[dict[str, Any]]:
     """Parse a JSONL file into a list of dicts.
 
-    Each line must be a JSON object with at least ``id``, ``vector``,
-    and ``payload`` keys.
+    Accepts MCP/embeddings_creator schema: id, text, embedding, metadata.
+    Also accepts deploy schema: id, vector, payload.
     """
     records: list[dict[str, Any]] = []
     with open(jsonl_path, encoding="utf-8") as f:
@@ -42,6 +42,28 @@ def _parse_jsonl(jsonl_path: Path) -> list[dict[str, Any]]:
             except json.JSONDecodeError as e:
                 logger.warning("Skipped malformed line %d: %s", lineno, e)
     return records
+
+
+def _normalize_record(record: dict[str, Any]) -> dict[str, Any]:
+    """Normalize record to deploy schema (id, vector, payload).
+
+    Accepts MCP schema (id, text, embedding, metadata) or deploy schema
+    (id, vector, payload). Returns dict with id, vector, payload.
+    """
+    vector = record.get("vector") or record.get("embedding")
+    payload = record.get("payload")
+    if payload is None:
+        metadata = record.get("metadata") or {}
+        payload = dict(metadata)
+        if "text" not in payload and "text" in record:
+            payload["text"] = record["text"]
+    elif "text" not in payload and record.get("text") is not None:
+        payload = {**payload, "text": record["text"]}
+    rid = record.get("id")
+    if rid is None and payload:
+        text = payload.get("text", "")
+        rid = hashlib.md5(text.encode()).hexdigest()
+    return {"id": rid, "vector": vector, "payload": payload}
 
 
 class QdrantDeployer:
@@ -83,13 +105,17 @@ class QdrantDeployer:
         Returns:
             Number of points uploaded (or validated in dry-run mode).
         """
-        records = _parse_jsonl(jsonl_path)
-        if not records:
+        raw_records = _parse_jsonl(jsonl_path)
+        if not raw_records:
             logger.warning("No records in %s", jsonl_path)
             return 0
-
-        # Infer vector dimension from first record
-        first_vec = records[0].get("vector", [])
+        records = [_normalize_record(r) for r in raw_records]
+        first_vec = records[0].get("vector") if records else None
+        if not first_vec:
+            raise ValueError(
+                "JSONL records must have 'vector' or 'embedding' field. "
+                "Check file format (MCP: id, text, embedding, metadata)."
+            )
         vec_dim = len(first_vec)
         logger.info(
             "Loaded %d records (vector_dim=%d) from %s",
@@ -126,7 +152,7 @@ class QdrantDeployer:
             )
             logger.info("Created collection '%s' (dim=%d)", collection_name, vec_dim)
 
-        # Upsert in batches
+        # Upsert in batches (records already normalized: id, vector, payload)
         from qdrant_client.models import PointStruct
 
         total = 0
@@ -136,7 +162,7 @@ class QdrantDeployer:
                 PointStruct(
                     id=_point_id(rec),
                     vector=rec["vector"],
-                    payload=rec.get("payload", {}),
+                    payload=rec.get("payload") or {},
                 )
                 for rec in batch
             ]
@@ -169,12 +195,11 @@ class QdrantDeployer:
 
 
 def _point_id(record: dict[str, Any]) -> str | int:
-    """Extract or generate a stable point ID from a record."""
+    """Extract or generate a stable point ID from a normalized record."""
     rid = record.get("id")
     if rid is not None:
         return rid
-    # Fallback: hash the payload text
-    text = record.get("payload", {}).get("text", "")
+    text = (record.get("payload") or {}).get("text", "")
     return hashlib.md5(text.encode()).hexdigest()
 
 

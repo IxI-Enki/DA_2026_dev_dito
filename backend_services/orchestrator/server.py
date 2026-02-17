@@ -124,7 +124,7 @@ STAGE_DOCKER = {
         "pipeline_dir": "03_rag_preprocessing",
     },
     "embed": {
-        "pipeline_dir": "03_embeddings_creator",
+        "pipeline_dir": "04_embeddings_creator",
         "needs_openai_key": True,
     },
     "deploy": {

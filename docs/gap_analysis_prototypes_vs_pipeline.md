@@ -106,9 +106,9 @@
 ### dev_dito Pipeline (44 files)
 - `01_wiki_fetcher/` (12 files) -- WikiAPIClient, fetch_full_wiki_extended, resume_fetch, media_cache, etc.
 - `02_deep_evaluation/` (18 files) -- content_classifier, document_deep_analyzer, wiki_deep_analyzer, etc.
-- `03_embeddings_creator/` (7 files) -- ContentAwareChunker, DocumentLoader, Embedder, Pipeline
+- `04_embeddings_creator/` (7 files) -- ContentAwareChunker, DocumentLoader, Embedder, Pipeline
 - `03_rag_preprocessing/` (5 files) -- PageProcessor, MetadataEnricher
-- `04_deploy/` (2 files) -- transfer_to_pi, verify_transfer
+- `05_deploy/` (2 files) -- transfer_to_pi, verify_transfer
 
 ### dev_dito Evaluation (39 files)
 - `metrics/` (3 files) -- MRR, NDCG@K, P@K (pure functions, 56 tests)

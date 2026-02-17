@@ -84,8 +84,11 @@ class WikiAPIClient:
     
     def _is_transient_error(self, error: Exception) -> bool:
         """Check if error is transient (might work on retry)"""
-        if isinstance(error, (requests.exceptions.Timeout, 
-                               requests.exceptions.ConnectionError)):
+        if isinstance(
+            error, (
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError
+            )):
             return True
         if isinstance(error, requests.exceptions.HTTPError):
             if error.response is not None:
@@ -420,8 +423,14 @@ class WikiAPIClient:
     # Media Methods
     # =========================================================================
     
-    def get_all_media(self, namespace: str = "", pattern: str = "", depth: int = 0,
-                      include_hash: bool = True, include_author: bool = True) -> list:
+    def get_all_media(
+        self,
+        namespace: str = "",
+        pattern: str = "",
+        depth: int = 0,
+        include_hash: bool = True,
+        include_author: bool = True,
+    ) -> list:
         """
         Get list of all media files with full metadata.
         
@@ -447,8 +456,12 @@ class WikiAPIClient:
         except (PermanentError, TransientError):
             return []
     
-    def get_media_info(self, media_id: str, revision: int = 0,
-                       include_author: bool = True, include_hash: bool = True) -> Dict:
+    def get_media_info(
+        self,
+        media_id: str, revision: int = 0,
+        include_author: bool = True,
+        include_hash: bool = True,
+    ) -> Dict:
         """
         Get detailed media file information.
         
@@ -528,8 +541,12 @@ class WikiAPIClient:
     # File Downloads
     # =========================================================================
 
-    def download_file(self, media_id: str, target_path: 'Path',
-                      timeout_multiplier: float = 1.0) -> int:
+    def download_file(
+        self,
+        media_id: str,
+        target_path: 'Path',
+        timeout_multiplier: float = 1.0,
+    ) -> int:
         """
         Download a media file via fetch.php using the shared session.
 

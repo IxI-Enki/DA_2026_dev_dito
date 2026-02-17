@@ -15,7 +15,7 @@ import yaml
 
 # Ensure both preprocessing and embeddings_creator are importable
 _preproc = Path(__file__).resolve().parent.parent
-_embeddings = _preproc.parent / "03_embeddings_creator"
+_embeddings = _preproc.parent / "04_embeddings_creator"
 for p in [_preproc, _embeddings]:
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))

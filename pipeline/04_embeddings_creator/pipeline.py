@@ -234,17 +234,20 @@ class EmbeddingPipeline:
                 }
                 records.append(record)
             
-            # 5. Write output
+            # 5. Write output (timestamped subdir: embedded_at_YYYYMMDD_HHMMSS)
             logger.info("\n" + "=" * 60)
             logger.info("Writing output...")
             logger.info("=" * 60)
             
-            output_file = Path(self.config.paths.output_dir) / self.config.output.filename
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            run_output_dir = Path(self.config.paths.output_dir) / f"embedded_at_{timestamp}"
+            run_output_dir.mkdir(parents=True, exist_ok=True)
+            output_file = run_output_dir / self.config.output.filename
             self._write_jsonl(output_file, records)
             
             logger.info(f"Wrote {len(records)} records to {output_file}")
             
-            # 6. Write statistics
+            # 6. Write statistics (same timestamped dir)
             elapsed = time.time() - start_time
             emb_stats = self.embedder.get_statistics()
             
@@ -263,9 +266,7 @@ class EmbeddingPipeline:
                 'timestamp': datetime.now().isoformat(),
             }
             
-            stats_file = Path(self.config.statistics.get('output_file', 
-                str(Path(self.config.paths.output_dir) / 'embedding_statistics.json')))
-            
+            stats_file = run_output_dir / "embedding_statistics.json"
             with open(stats_file, 'w', encoding='utf-8') as f:
                 json.dump(final_stats, f, indent=2, ensure_ascii=False)
             

@@ -137,7 +137,7 @@ class Exporter:
     """Exports preprocessed content in Qdrant-compatible schema.
 
     Every output file is .md with YAML frontmatter matching the
-    fields expected by pipeline/03_embeddings_creator/document_loader.py.
+    fields expected by pipeline/04_embeddings_creator/document_loader.py.
     """
 
     def export(
@@ -796,7 +796,7 @@ Ordner erstellt und entfernen.
 | MediaProcessor      | `pipeline/03_rag_preprocessing/media_processor.py`             | PDF/Image text extraction    |
 | Exporter            | `pipeline/03_rag_preprocessing/exporter.py`                    | Output file generation       |
 | StrategyLoader      | `pipeline/03_rag_preprocessing/strategy_loader.py`             | Strategy routing             |
-| DocumentLoader      | `pipeline/03_embeddings_creator/document_loader.py`            | Schema validation (E2E test) |
+| DocumentLoader      | `pipeline/04_embeddings_creator/document_loader.py`            | Schema validation (E2E test) |
 | StrategyGenerator   | `pipeline/02_deep_evaluation/generators/strategy_generator.py` | YAML-Dedup Bugfix            |
 | PreprocessingConfig | `pipeline/03_rag_preprocessing/config.py`                      | Config loading               |
 

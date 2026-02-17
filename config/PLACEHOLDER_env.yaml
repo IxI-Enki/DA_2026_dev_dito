@@ -129,7 +129,7 @@ PIPELINE:
     max_tokens: 4000
   
   # -------------------------------------------------------------------------
-  # 03_embeddings_creator - Erstellt Vektor-Embeddings
+  # 04_embeddings_creator - Erstellt Vektor-Embeddings
   # -------------------------------------------------------------------------
   embedder:
     chunk_size: 512
@@ -139,7 +139,7 @@ PIPELINE:
     dimensions: 3072
   
   # -------------------------------------------------------------------------
-  # 04_deploy - Deployed Embeddings zu Qdrant
+  # 05_deploy - Deployed Embeddings zu Qdrant
   # -------------------------------------------------------------------------
   deploy:
     target: qdrant

@@ -3,10 +3,12 @@
 Transfer Embeddings to Raspberry Pi via SSH/SCP
 ===============================================
 Transfers the embedded_chunks.jsonl file to a remote Raspberry Pi
-where Qdrant is running.
+where Qdrant is running. Reads config from config.yaml (same dir);
+resolves latest Stage 04 output: <embeddings_dir>/embedded_at_*/embedded_chunks.jsonl.
 
 Usage:
-    python transfer_to_pi.py                    # Use default config
+    python transfer_to_pi.py                    # Use config.yaml, latest embeddings
+    python transfer_to_pi.py --local-file path  # Explicit JSONL path
     python transfer_to_pi.py --host 192.168.1.100
     python transfer_to_pi.py --dry-run          # Show what would be done
 
@@ -23,14 +25,13 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime
 
-# Default configuration
-DEFAULT_CONFIG = {
-    "ssh_host": "raspberry-pi.local",
-    "ssh_user": "pi",
-    "ssh_port": 22,
-    "remote_path": "/home/pi/qdrant/data/embeddings/",
-    "local_file": "../03_embeddings_creator/output/embedded_chunks.jsonl",
-}
+from deploy_config import (
+    SCRIPT_DIR,
+    get_defaults,
+    load_config,
+    find_latest_embeddings_file,
+    get_local_embeddings_dir,
+)
 
 
 def get_file_hash(filepath: Path) -> str:
@@ -152,36 +153,37 @@ def transfer_file(
 
 
 def main():
+    defaults = get_defaults()
     parser = argparse.ArgumentParser(
         description="Transfer embeddings to Raspberry Pi via SSH/SCP",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    
     parser.add_argument(
         "--host", "-H",
-        default=DEFAULT_CONFIG["ssh_host"],
-        help=f"SSH host (default: {DEFAULT_CONFIG['ssh_host']})"
+        default=defaults["ssh_host"],
+        help=f"SSH host (default from config or {defaults['ssh_host']})",
     )
     parser.add_argument(
         "--user", "-u",
-        default=DEFAULT_CONFIG["ssh_user"],
-        help=f"SSH user (default: {DEFAULT_CONFIG['ssh_user']})"
+        default=defaults["ssh_user"],
+        help=f"SSH user (default from config or {defaults['ssh_user']})",
     )
     parser.add_argument(
         "--port", "-p",
         type=int,
-        default=DEFAULT_CONFIG["ssh_port"],
-        help=f"SSH port (default: {DEFAULT_CONFIG['ssh_port']})"
+        default=defaults["ssh_port"],
+        help=f"SSH port (default from config or {defaults['ssh_port']})",
     )
     parser.add_argument(
         "--remote-path", "-r",
-        default=DEFAULT_CONFIG["remote_path"],
-        help=f"Remote path (default: {DEFAULT_CONFIG['remote_path']})"
+        default=defaults["remote_embeddings_dir"],
+        help="Remote directory on Pi (default from config.yaml)",
     )
     parser.add_argument(
         "--local-file", "-f",
-        default=DEFAULT_CONFIG["local_file"],
-        help=f"Local file to transfer (default: {DEFAULT_CONFIG['local_file']})"
+        default=None,
+        metavar="PATH",
+        help="Embeddings JSONL file (default: latest from config local.embeddings_dir)",
     )
     parser.add_argument(
         "--key", "-k",
@@ -200,16 +202,28 @@ def main():
     )
     
     args = parser.parse_args()
-    
+
     print("="*60)
     print("DEV DITO - RASPBERRY PI TRANSFER")
     print("="*60)
-    
-    # Resolve local file path
-    script_dir = Path(__file__).parent
-    local_path = Path(args.local_file)
-    if not local_path.is_absolute():
-        local_path = (script_dir / local_path).resolve()
+
+    # Resolve local file path: explicit --local-file or latest from config
+    if args.local_file is not None:
+        local_path = Path(args.local_file)
+        if not local_path.is_absolute():
+            local_path = (SCRIPT_DIR / local_path).resolve()
+    else:
+        base_dir = get_local_embeddings_dir()
+        latest = find_latest_embeddings_file(base_dir)
+        if latest is None:
+            print(
+                f"[ERROR] No embeddings file found. Looked for\n"
+                f"  {base_dir}/embedded_at_*/embedded_chunks.jsonl\n"
+                f"Use --local-file PATH to specify the JSONL file."
+            )
+            sys.exit(1)
+        local_path = latest
+        print(f"[INFO] Using latest embeddings: {local_path}")
     
     # Test SSH connection first
     if not args.skip_test and not args.dry_run:

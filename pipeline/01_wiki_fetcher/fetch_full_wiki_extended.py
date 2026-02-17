@@ -639,8 +639,7 @@ class ExtendedWikiFetcher:
         
         # Track all media IDs for later
         self._all_media_ids = media_ids
-        
-        # Fix smallest if no files
+
         if self.stats["media"]["smallest_file"]["size"] == float("inf"):
             self.stats["media"]["smallest_file"] = {"id": "", "size": 0}
         
@@ -1400,8 +1399,7 @@ class ExtendedWikiFetcher:
                 self.stats["pages"]["total_html_bytes"] / self.stats["pages"]["with_html"]
                 if self.stats["pages"]["with_html"] > 0 else 0
             )
-        
-        # Fix smallest page if none found
+
         if self.stats["pages"]["smallest_page"]["size"] == float("inf"):
             self.stats["pages"]["smallest_page"] = {"id": "", "size": 0}
         

@@ -25,8 +25,13 @@ from datetime import datetime
 class MediaCache:
     """Manages cached media files from archived fetches"""
     
-    def __init__(self, content_output_dir: Path, archive_dirs: Optional[List[str]] = None,
-                 hash_algorithm: str = "sha256", verbose: bool = True):
+    def __init__(
+        self,
+        content_output_dir: Path,
+        archive_dirs: Optional[List[str]] = None,
+        hash_algorithm: str = "sha256",
+        verbose: bool = True,
+    ):
         """
         Initialize media cache.
         
