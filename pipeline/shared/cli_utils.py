@@ -22,21 +22,21 @@ _use_color: bool = True
 
 # ANSI escape codes (subset: keeps it portable and simple)
 _COLORS = {
-    "reset": "\033[0m",
-    "bold": "\033[1m",
     "dim": "\033[2m",
+    "bold": "\033[1m",
     "red": "\033[31m",
-    "green": "\033[32m",
-    "yellow": "\033[33m",
+    "reset": "\033[0m",
     "blue": "\033[34m",
-    "magenta": "\033[35m",
     "cyan": "\033[36m",
     "white": "\033[37m",
+    "green": "\033[32m",
+    "yellow": "\033[33m",
+    "magenta": "\033[35m",
     "bright_red": "\033[91m",
-    "bright_green": "\033[92m",
-    "bright_yellow": "\033[93m",
     "bright_blue": "\033[94m",
     "bright_cyan": "\033[96m",
+    "bright_green": "\033[92m",
+    "bright_yellow": "\033[93m",
 }
 
 
