@@ -188,11 +188,29 @@ def _get_git_version() -> str:
         return "unknown"
 
 
+def _build_query(qa: dict, mode: str) -> str:
+    """Build search query from a ground-truth Q&A pair.
+
+    Args:
+        qa: Ground truth entry with 'question' and 'context_keywords'.
+        mode: Query strategy — 'fullquestion' or 'keywords'.
+
+    Returns:
+        Query string for DokuWiki ``core.searchPages``.
+    """
+    if mode == "keywords":
+        keywords = qa.get("context_keywords", [])
+        if keywords:
+            return " ".join(keywords[:5])
+    return qa["question"]
+
+
 def run_keyword_baseline(
     config: ExperimentConfig,
     *,
     top_k: int | None = None,
     verbose: bool = False,
+    query_mode: str = "fullquestion",
 ) -> dict:
     """Execute the keyword-search baseline evaluation.
 
@@ -200,6 +218,8 @@ def run_keyword_baseline(
         config: Experiment configuration.
         top_k: Override top_k from config.
         verbose: Print per-query results.
+        query_mode: 'fullquestion' sends the raw question; 'keywords'
+            uses context_keywords from ground truth (best-case for keyword search).
 
     Returns:
         Result dict ready for JSON serialisation.
@@ -210,7 +230,7 @@ def run_keyword_baseline(
     gt_path = EVAL_ROOT / config.ground_truth_file
     gt_data = load_ground_truth(gt_path)
     qa_pairs = gt_data["qa_pairs"]
-    logger.info("Loaded %d ground-truth Q&A pairs", len(qa_pairs))
+    logger.info("Loaded %d ground-truth Q&A pairs (query_mode=%s)", len(qa_pairs), query_mode)
 
     # Connect to DokuWiki
     client = WikiSearchClient()
@@ -222,17 +242,24 @@ def run_keyword_baseline(
 
     for i, qa in enumerate(qa_pairs):
         question = qa["question"]
-        expected_page = source_file_to_page_id(qa["source_file"])
-        relevant = {expected_page}
+        query = _build_query(qa, query_mode)
+        # Prefer explicit 'sources' field; fall back to filename derivation
+        sources = qa.get("sources", [])
+        if sources:
+            expected_pages = list(sources)
+        else:
+            expected_pages = [source_file_to_page_id(qa["source_file"])]
+        relevant = set(expected_pages)
 
         try:
-            search_results = client.search_pages(question)
+            search_results = client.search_pages(query)
         except requests.RequestException as exc:
             logger.error("Query %d failed: %s", i + 1, exc)
             per_query_results.append({
                 "id": qa["id"],
                 "question": question,
-                "expected_page": expected_page,
+                "query_sent": query,
+                "expected_sources": expected_pages,
                 "error": str(exc),
                 "ranked_pages": [],
                 "rr": 0.0,
@@ -254,11 +281,12 @@ def run_keyword_baseline(
         entry = {
             "id": qa["id"],
             "question": question,
-            "expected_page": expected_page,
+            "query_sent": query,
+            "expected_sources": expected_pages,
             "ranked_pages": ranked_pages[:10],
             "rr": round(rr, 4),
             "p_at_5": round(p5, 4),
-            "hit_in_top_k": expected_page in ranked_pages,
+            "hit_in_top_k": bool(relevant & set(ranked_pages)),
         }
         per_query_results.append(entry)
 
@@ -283,6 +311,7 @@ def run_keyword_baseline(
             "code_version": _get_git_version(),
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "top_k": k,
+            "query_mode": query_mode,
         },
         "aggregate_metrics": {
             "mrr": round(agg_mrr, 4),
@@ -336,6 +365,16 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Directory for result JSON files (default: evaluation/results/)",
     )
     parser.add_argument(
+        "--query-mode",
+        choices=["fullquestion", "keywords"],
+        default="fullquestion",
+        help=(
+            "Query strategy: 'fullquestion' sends the raw question "
+            "(realistic user scenario); 'keywords' uses context_keywords "
+            "from ground truth (best-case for keyword search)."
+        ),
+    )
+    parser.add_argument(
         "--verbose", "-v",
         action="store_true",
         help="Print per-query results to stdout",
@@ -362,6 +401,7 @@ def main() -> None:
             config,
             top_k=args.top_k,
             verbose=args.verbose,
+            query_mode=args.query_mode,
         )
     except FileNotFoundError as exc:
         logger.error("File not found: %s", exc)
@@ -380,7 +420,8 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = output_dir / f"keyword_baseline_{timestamp}.json"
+    mode_suffix = f"_{args.query_mode}" if args.query_mode != "fullquestion" else ""
+    output_file = output_dir / f"keyword_baseline{mode_suffix}_{timestamp}.json"
 
     with open(output_file, "w", encoding="utf-8") as fh:
         json.dump(result, fh, indent=2, ensure_ascii=False)
@@ -392,6 +433,7 @@ def main() -> None:
     summary = result["summary"]
     print("\n" + "=" * 50)
     print(f"  FF1 Keyword Baseline — {config.name}")
+    print(f"  Query mode:   {args.query_mode}")
     print("=" * 50)
     print(f"  MRR:          {agg['mrr']:.4f}")
     print(f"  Precision@5:  {agg['precision_at_5']:.4f}")

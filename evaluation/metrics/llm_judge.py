@@ -68,53 +68,76 @@ class LLMJudgeMetrics:
                     },
                     json={
                         "model": self.llm_model,
-                        "messages": [{"role": "user", "content": prompt}],
+                        "messages": [
+                            {
+                                "role": "system",
+                                "content": (
+                                    "You are a precise evaluation assistant. "
+                                    "Always reply with a single JSON object "
+                                    'containing "score" (float 0.0-1.0) and '
+                                    '"reasoning" (brief string). No other text.'
+                                ),
+                            },
+                            {"role": "user", "content": prompt},
+                        ],
                         "temperature": self.temperature,
                         "max_tokens": self.max_tokens,
-                        "stop": ["\n\n", "```", "---"],
                     },
                     timeout=self.timeout,
                 )
                 if r.status_code != 200:
+                    logger.warning(
+                        "LLM HTTP %d (attempt %d): %s",
+                        r.status_code, attempt + 1, r.text[:200],
+                    )
                     if attempt < max_retries:
+                        time.sleep(1)
                         continue
                     return f"ERROR: HTTP {r.status_code}"
                 content = r.json()["choices"][0]["message"]["content"].strip()
-                if content and ("{" in content or "score" in content.lower()):
+                if content:
                     return content
                 if attempt < max_retries:
                     continue
-                return content or "ERROR: empty response"
+                return "ERROR: empty response"
             except requests.exceptions.Timeout:
                 if attempt < max_retries:
                     logger.warning("LLM timeout (attempt %d), retrying", attempt + 1)
+                    time.sleep(1)
                     continue
                 return f"ERROR: Timeout after {self.timeout}s"
             except Exception as e:
                 if attempt < max_retries:
+                    time.sleep(1)
                     continue
                 return f"ERROR: {e}"
         return "ERROR: All retries failed"
 
     def _parse_score(self, response: str) -> Optional[float]:
         """Extract a score in [0, 1] from LLM response."""
+        if response.startswith("ERROR"):
+            logger.debug("LLM error response: %s", response[:100])
+            return None
         try:
-            if "{" in response:
+            # Try JSON extraction first (preferred)
+            if "{" in response and "}" in response:
                 start = response.find("{")
                 end = response.rfind("}") + 1
                 data = json.loads(response[start:end])
                 if "score" in data:
                     val = float(data["score"])
                     return self._normalize_score(val)
-            for num in re.findall(
-                r"(?:score|Score|SCORE)?[:\s]*([0-9]*\.?[0-9]+)", response
-            ):
-                val = float(num)
-                n = self._normalize_score(val)
-                if n is not None:
-                    return n
+            # Fallback: look for "score": <number> pattern
+            m = re.search(r'"?score"?\s*[:=]\s*([0-9]*\.?[0-9]+)', response, re.IGNORECASE)
+            if m:
+                return self._normalize_score(float(m.group(1)))
+            # Last resort: any standalone number
+            m = re.search(r'\b([01]\.?\d*)\b', response)
+            if m:
+                return self._normalize_score(float(m.group(1)))
             return None
         except Exception:
+            logger.debug("Score parse failed for: %s", response[:100])
             return None
 
     @staticmethod
@@ -129,27 +152,71 @@ class LLMJudgeMetrics:
             return val / 100
         return None
 
+    def _call_llm_generate(self, prompt: str) -> str:
+        """Call LLM for free-form generation (no scoring system prompt)."""
+        try:
+            r = requests.post(
+                f"{self.llm_base_url}/chat/completions",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.llm_api_key}",
+                },
+                json={
+                    "model": self.llm_model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": self.temperature,
+                    "max_tokens": self.max_tokens,
+                },
+                timeout=self.timeout,
+            )
+            if r.status_code != 200:
+                return ""
+            return r.json()["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            logger.warning("LLM generate call failed: %s", e)
+            return ""
+
+    def generate_answer(self, question: str, contexts: list[str]) -> str:
+        """Generate an answer from retrieved contexts (for answer-based metrics).
+
+        Args:
+            question: The user question.
+            contexts: Retrieved text chunks.
+
+        Returns:
+            Generated answer string, or empty string on failure.
+        """
+        if not contexts:
+            return ""
+        context_text = "\n---\n".join(c[:800] for c in contexts[:5])
+        prompt = (
+            f"Answer the following question based ONLY on the provided contexts. "
+            f"Be concise and factual. If the contexts don't contain the answer, say so.\n\n"
+            f"QUESTION: {question}\n\nCONTEXTS:\n{context_text}"
+        )
+        return self._call_llm_generate(prompt)
+
     def _faithfulness(self, answer: str, contexts: list[str]) -> Optional[float]:
-        context_text = "\n---\n".join((c[:500] for c in (contexts or [])[:5]))
-        prompt = f"""You are an evaluator for RAG systems. Rate the FAITHFULNESS of the following answer to the context.
-
-CONTEXT:
-{context_text}
-
-ANSWER:
-{answer}
-
-TASK: Identify all factual claims in the answer. For each, check if it is supported by the context. Score = (supported claims) / (total claims). Reply ONLY with JSON: {{"score": <0.0-1.0>, "reasoning": "<brief>"}}"""
+        if not contexts or not answer:
+            return None
+        context_text = "\n---\n".join(c[:800] for c in contexts[:5])
+        prompt = (
+            f"Rate FAITHFULNESS: Is the answer factually supported by the contexts?\n\n"
+            f"CONTEXTS:\n{context_text}\n\n"
+            f"ANSWER: {answer}\n\n"
+            f"Count factual claims in the answer. Score = supported_claims / total_claims."
+        )
         return self._parse_score(self._call_llm(prompt))
 
     def _answer_relevancy(self, question: str, answer: str) -> Optional[float]:
-        prompt = f"""You are an evaluator for RAG systems. Rate how well the ANSWER addresses the QUESTION.
-
-QUESTION: {question}
-
-ANSWER: {answer}
-
-Score: 1.0 = fully answers, 0.7-0.9 = mostly, 0.4-0.6 = partially, 0.0 = irrelevant. Reply ONLY with JSON: {{"score": <0.0-1.0>, "reasoning": "<brief>"}}"""
+        if not answer:
+            return None
+        prompt = (
+            f"Rate ANSWER RELEVANCY: How well does the answer address the question?\n\n"
+            f"QUESTION: {question}\n\n"
+            f"ANSWER: {answer}\n\n"
+            f"1.0=fully answers, 0.7-0.9=mostly, 0.4-0.6=partially, 0.0=irrelevant."
+        )
         return self._parse_score(self._call_llm(prompt))
 
     def _context_precision(
@@ -158,42 +225,39 @@ Score: 1.0 = fully answers, 0.7-0.9 = mostly, 0.4-0.6 = partially, 0.0 = irrelev
         if not contexts:
             return 0.0
         numbered = "\n".join(
-            f"[{i+1}] {c[:400]}..." if len(c) > 400 else f"[{i+1}] {c}"
-            for i, c in enumerate(contexts[:5])
+            f"[{i+1}] {c[:600]}" for i, c in enumerate(contexts[:5])
         )
-        prompt = f"""Rate CONTEXT PRECISION for this RAG query.
-
-QUESTION: {question}
-EXPECTED ANSWER: {ground_truth}
-
-CONTEXTS:
-{numbered}
-
-How many contexts are relevant? 1.0=all, 0.8=most, 0.5=half, 0.0=none. Reply ONLY with JSON: {{"score": <0.0-1.0>, "reasoning": "<brief>"}}"""
+        prompt = (
+            f"Rate CONTEXT PRECISION: What fraction of retrieved contexts are relevant?\n\n"
+            f"QUESTION: {question}\n"
+            f"EXPECTED ANSWER: {ground_truth}\n\n"
+            f"RETRIEVED CONTEXTS:\n{numbered}\n\n"
+            f"1.0=all relevant, 0.5=half relevant, 0.0=none relevant."
+        )
         return self._parse_score(self._call_llm(prompt))
 
     def _context_recall(self, contexts: list[str], ground_truth: str) -> Optional[float]:
-        context_text = "\n---\n".join(
-            (c[:300] for c in (contexts or [])[:3])
+        if not contexts:
+            return 0.0
+        context_text = "\n---\n".join(c[:600] for c in contexts[:5])
+        prompt = (
+            f"Rate CONTEXT RECALL: How much of the expected answer can be derived "
+            f"from the retrieved contexts?\n\n"
+            f"EXPECTED ANSWER: {ground_truth}\n\n"
+            f"RETRIEVED CONTEXTS:\n{context_text}\n\n"
+            f"1.0=fully derivable, 0.5=partially, 0.0=not at all."
         )
-        prompt = f"""CONTEXT RECALL: How much of the expected answer can be derived from the contexts?
-
-Expected answer: "{ground_truth}"
-
-Contexts:
-{context_text}
-
-Score: 1.0=100%, 0.8=80%, 0.5=50%, 0.0=0%. Reply ONLY with JSON: {{"score": <0.0-1.0>, "reasoning": "<brief>"}}"""
         return self._parse_score(self._call_llm(prompt))
 
     def _answer_correctness(self, answer: str, ground_truth: str) -> Optional[float]:
-        prompt = f"""You are an evaluator for RAG systems. Compare the GENERATED answer to the GROUND TRUTH.
-
-GROUND TRUTH: {ground_truth}
-
-GENERATED ANSWER: {answer}
-
-Score: 1.0=semantically same, 0.8-0.9=mostly correct, 0.5-0.7=partial, 0.0=wrong. Reply ONLY with JSON: {{"score": <0.0-1.0>, "reasoning": "<brief>"}}"""
+        if not answer or answer == ground_truth:
+            return None
+        prompt = (
+            f"Rate ANSWER CORRECTNESS: Compare the generated answer to the ground truth.\n\n"
+            f"GROUND TRUTH: {ground_truth}\n\n"
+            f"GENERATED ANSWER: {answer}\n\n"
+            f"1.0=semantically identical, 0.7-0.9=mostly correct, 0.4-0.6=partial, 0.0=wrong."
+        )
         return self._parse_score(self._call_llm(prompt))
 
     def evaluate_single(

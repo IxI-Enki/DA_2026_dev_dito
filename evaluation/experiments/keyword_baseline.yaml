@@ -19,7 +19,7 @@ retrieval:
   collection_prefix: "n/a"
 
 ground_truth:
-  file: "ground_truth/leowiki_qa_50_verified.json"
+  file: "ground_truth/leowiki_qa_78_Opus_46.json"
 
 metrics:
   - mrr

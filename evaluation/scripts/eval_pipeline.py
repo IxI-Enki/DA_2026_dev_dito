@@ -262,42 +262,59 @@ class EvaluationPipeline:
     # ------------------------------------------------------------------
 
     def _step_ragas(self) -> None:
-        """Run LLM-as-Judge evaluation (RAGAS-style metrics)."""
+        """Run LLM-as-Judge evaluation (RAGAS-style metrics).
+
+        Generates answers from retrieved contexts using the LLM, then
+        evaluates faithfulness, relevancy, context precision/recall,
+        and answer correctness against ground truth.
+        """
         logger.info("[Step 3/6] LLM-as-Judge (RAGAS-style) Metrics")
         try:
-            from evaluation.metrics.llm_judge import LLMJudgeEvaluator
+            from evaluation.metrics.llm_judge import LLMJudgeMetrics
 
-            evaluator = LLMJudgeEvaluator(
+            judge = LLMJudgeMetrics(
                 llm_base_url=self.config.llm_base_url,
-                model=self.config.llm_model,
+                llm_model=self.config.llm_model,
                 temperature=self.config.ragas_temperature,
             )
 
             gt = load_ground_truth(EVAL_ROOT / self.config.ground_truth_file)
             qa_pairs = gt.get("qa_pairs", [])
-            ragas_data = []
+
+            # Build evaluation data with generated answers
+            ragas_data: list[dict[str, Any]] = []
+            logger.info("  Generating answers from contexts for %d queries...", len(qa_pairs))
             for i, qa in enumerate(qa_pairs):
-                answer = qa.get("answer", qa.get("ground_truth", ""))
                 contexts = (
                     self._retrieved_contexts[i]
                     if i < len(self._retrieved_contexts)
                     else []
                 )
+                question = qa.get("question", "")
+                ground_truth = qa.get("ground_truth", "")
+
+                # Generate answer from retrieved contexts via LLM
+                generated_answer = judge.generate_answer(question, contexts)
+
                 ragas_data.append({
-                    "question": qa.get("question", ""),
-                    "answer": answer,
-                    "ground_truth": answer,
+                    "question_id": qa.get("id", f"q{i}"),
+                    "question": question,
+                    "answer": generated_answer,
+                    "ground_truth": ground_truth,
                     "contexts": contexts,
                 })
 
-            self._ragas_scores = evaluator.evaluate(ragas_data)
+            logger.info("  Evaluating with LLM-as-Judge...")
+            results = judge.evaluate_batch(ragas_data, show_progress=True)
+            self._ragas_scores = judge.aggregate(results)
+
             for metric, score in sorted(self._ragas_scores.items()):
                 logger.info("  %s: %.4f", metric, score)
 
         except ImportError as e:
             logger.warning("  RAGAS not available: %s", e)
         except Exception as e:
-            logger.warning("  RAGAS evaluation failed: %s", e)
+            logger.warning("  RAGAS evaluation failed: %s", e, exc_info=True)
 
     # ------------------------------------------------------------------
     # Step 4: Statistical Analysis (T096)
