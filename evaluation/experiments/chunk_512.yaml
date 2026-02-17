@@ -1,15 +1,15 @@
+# J4 — Chunk Size 512 Tokens
 experiment:
-  name: "Chunk Size 512 Tokens"
+  name: "Chunk Size 512 — text-embedding-3-large"
   type: chunk_size
   thesis_id: "J4"
 
 embedding:
-  provider: ollama
-  model: "bge-m3"
-  dimensions: 1024
+  provider: openai
+  model: "text-embedding-3-large"
+  dimensions: 3072
 
 chunking:
-  strategy: content_aware
   chunk_size: 512
   chunk_overlap: 50
 
@@ -19,7 +19,7 @@ retrieval:
   collection_prefix: "eval_chunk_"
 
 ground_truth:
-  file: "ground_truth/leowiki_qa_50_verified.json"
+  file: "ground_truth/leowiki_qa_78_Opus_46.json"
 
 metrics:
   - mrr

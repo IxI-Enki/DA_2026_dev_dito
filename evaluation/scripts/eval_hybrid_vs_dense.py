@@ -16,21 +16,28 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import subprocess
+import math
+import re
 import sys
 import time
 import uuid
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
+    Fusion,
+    FusionQuery,
+    NamedSparseVector,
+    NamedVector,
+    Prefetch,
     PointStruct,
+    SparseVector,
+    SparseVectorParams,
     VectorParams,
 )
-
-import yaml
 
 EVAL_ROOT = Path(__file__).resolve().parent.parent
 REPO_ROOT = EVAL_ROOT.parent
@@ -45,7 +52,6 @@ from evaluation.config import (
 from evaluation.metrics.mrr import mean_reciprocal_rank, reciprocal_rank
 from evaluation.metrics.ndcg import mean_ndcg_at_k, ndcg_at_k
 from evaluation.metrics.precision_at_k import mean_precision_at_k, precision_at_k
-from evaluation.providers.ollama_provider import OllamaProvider
 from evaluation.scripts.eval_keyword_baseline import source_file_to_page_id
 from evaluation.scripts.eval_model_comparison import (
     _embed_in_batches,
@@ -54,41 +60,151 @@ from evaluation.scripts.eval_model_comparison import (
     _std,
     calculate_relevance_score,
     create_provider,
-    load_corpus_for_ground_truth,
-    simple_chunk,
+    load_corpus,
 )
 
 logger = logging.getLogger(__name__)
+
+# German stopwords for BM25 tokenizer (common words that add noise)
+_DE_STOPWORDS = frozenset(
+    "der die das ein eine einer eines einem einen und oder aber auch"
+    "ist sind war waren wird werden hat hatte haben zu in von mit"
+    "auf für an bei nach über aus um durch als wie nicht noch wenn"
+    "wir sie er es ich du ihr man so da wo was wer wie kann nur"
+    "sein seine seiner seinem seinen ihre ihrem ihren ihres im"
+    "zum zur des den dem vor bis alle einem einer keine mehr"
+    "diese dieser diesem dieses welche welcher welchem welches"
+    "schon bereits dann dort hier jetzt sehr viel".split()
+)
+
+_TOKEN_RE = re.compile(r"[a-zäöüß]{2,}", re.IGNORECASE)
+
+
+# ---------------------------------------------------------------------------
+# BM25 sparse vector builder
+# ---------------------------------------------------------------------------
+
+def _tokenize(text: str) -> list[str]:
+    """Tokenize text into lowercase terms, filtering stopwords."""
+    return [
+        t.lower()
+        for t in _TOKEN_RE.findall(text)
+        if t.lower() not in _DE_STOPWORDS
+    ]
+
+
+def build_vocabulary(corpus_texts: list[str]) -> dict[str, int]:
+    """Build a token-to-index vocabulary from the corpus."""
+    vocab: dict[str, int] = {}
+    for text in corpus_texts:
+        for token in set(_tokenize(text)):
+            if token not in vocab:
+                vocab[token] = len(vocab)
+    return vocab
+
+
+def compute_idf(corpus_texts: list[str], vocab: dict[str, int]) -> dict[int, float]:
+    """Compute IDF values for each vocabulary term."""
+    n = len(corpus_texts)
+    doc_freq: Counter[int] = Counter()
+    for text in corpus_texts:
+        tokens = set(_tokenize(text))
+        for token in tokens:
+            if token in vocab:
+                doc_freq[vocab[token]] += 1
+
+    idf: dict[int, float] = {}
+    for idx, df in doc_freq.items():
+        idf[idx] = math.log((n - df + 0.5) / (df + 0.5) + 1.0)
+    return idf
+
+
+def text_to_sparse_vector(
+    text: str,
+    vocab: dict[str, int],
+    idf: dict[int, float],
+    *,
+    k1: float = 1.5,
+    b: float = 0.75,
+    avgdl: float = 100.0,
+) -> SparseVector:
+    """Convert text to a BM25-weighted sparse vector."""
+    tokens = _tokenize(text)
+    tf: Counter[int] = Counter()
+    for token in tokens:
+        if token in vocab:
+            tf[vocab[token]] += 1
+
+    dl = len(tokens)
+    indices: list[int] = []
+    values: list[float] = []
+
+    for idx, count in tf.items():
+        tf_norm = (count * (k1 + 1)) / (count + k1 * (1 - b + b * dl / avgdl))
+        score = idf.get(idx, 0.0) * tf_norm
+        if score > 0:
+            indices.append(idx)
+            values.append(round(score, 6))
+
+    return SparseVector(indices=indices, values=values)
 
 
 # ---------------------------------------------------------------------------
 # Evaluation runner
 # ---------------------------------------------------------------------------
 
-def _evaluate_queries(
+def _evaluate_dense(
+    qdrant: QdrantClient,
+    collection_name: str,
+    provider,
+    qa_pairs: list[dict],
+    *,
+    top_k: int = 10,
+    verbose: bool = False,
+) -> dict:
+    """Run dense-only evaluation using named vectors."""
+    return _run_queries(
+        qdrant, collection_name, provider, qa_pairs,
+        mode="dense", use_hybrid=False, vocab=None, idf=None, avgdl=0,
+        top_k=top_k, verbose=verbose,
+    )
+
+
+def _evaluate_hybrid(
+    qdrant: QdrantClient,
+    collection_name: str,
+    provider,
+    qa_pairs: list[dict],
+    *,
+    vocab: dict[str, int],
+    idf: dict[int, float],
+    avgdl: float,
+    top_k: int = 10,
+    verbose: bool = False,
+) -> dict:
+    """Run hybrid (dense + BM25 sparse) evaluation with RRF fusion."""
+    return _run_queries(
+        qdrant, collection_name, provider, qa_pairs,
+        mode="hybrid", use_hybrid=True, vocab=vocab, idf=idf, avgdl=avgdl,
+        top_k=top_k, verbose=verbose,
+    )
+
+
+def _run_queries(
     qdrant: QdrantClient,
     collection_name: str,
     provider,
     qa_pairs: list[dict],
     *,
     mode: str,
+    use_hybrid: bool,
+    vocab: dict[str, int] | None,
+    idf: dict[int, float] | None,
+    avgdl: float,
     top_k: int = 10,
     verbose: bool = False,
 ) -> dict:
-    """Run evaluation queries against a Qdrant collection.
-
-    Args:
-        qdrant: Qdrant client.
-        collection_name: Collection to query.
-        provider: Embedding provider for query embedding.
-        qa_pairs: Ground truth Q&A pairs.
-        mode: 'dense' or 'hybrid' (for result labelling).
-        top_k: Number of results per query.
-        verbose: Print per-query results.
-
-    Returns:
-        Dict with per_query results and aggregates.
-    """
+    """Run evaluation queries in dense or hybrid mode."""
     per_query: list[dict] = []
     mrr_inputs: list[tuple[list[str], set[str]]] = []
     ndcg_inputs: list[tuple[list[str], dict[str, int]]] = []
@@ -96,37 +212,54 @@ def _evaluate_queries(
 
     for i, qa in enumerate(qa_pairs):
         question = qa["question"]
-        expected_page = source_file_to_page_id(qa["source_file"])
-        relevant = {expected_page}
-        relevance_map = {expected_page: 1}
+        # Use explicit sources field if present, fall back to source_file
+        if qa.get("sources"):
+            expected_pages = set(qa["sources"])
+        else:
+            expected_pages = {source_file_to_page_id(qa["source_file"])}
+        relevance_map = {p: 1 for p in expected_pages}
         gt_text = qa["ground_truth"]
         keywords = qa.get("context_keywords", [])
         difficulty = qa.get("difficulty", "unknown")
 
         query_embedding = provider.embed([question])[0]
 
-        # Search — Qdrant uses query_vector for dense search
-        search_results = qdrant.search(
-            collection_name=collection_name,
-            query_vector=query_embedding,
-            limit=top_k,
-            with_payload=True,
-        )
+        if use_hybrid and vocab is not None and idf is not None:
+            # Hybrid: dense + sparse with RRF fusion
+            query_sparse = text_to_sparse_vector(
+                question, vocab, idf, avgdl=avgdl,
+            )
+            search_results = qdrant.query_points(
+                collection_name=collection_name,
+                prefetch=[
+                    Prefetch(
+                        query=query_embedding,
+                        using="dense",
+                        limit=top_k * 2,
+                    ),
+                    Prefetch(
+                        query=query_sparse,
+                        using="sparse",
+                        limit=top_k * 2,
+                    ),
+                ],
+                query=FusionQuery(fusion=Fusion.RRF),
+                limit=top_k,
+                with_payload=True,
+            ).points
+        else:
+            # Dense only: use named vector
+            search_results = qdrant.query_points(
+                collection_name=collection_name,
+                query=query_embedding,
+                using="dense",
+                limit=top_k,
+                with_payload=True,
+            ).points
 
         # Deduplicate by page_id
         seen: set[str] = set()
         ranked_pages: list[str] = []
-        # #region agent log
-        _log_path = REPO_ROOT / ".cursor" / "debug.log"
-        try:
-            _first = next(iter(search_results), None)
-            if _first is not None:
-                _pl = getattr(_first, "payload", None)
-                with open(_log_path, "a", encoding="utf-8") as _f:
-                    _f.write(json.dumps({"location": "eval_hybrid_vs_dense.py:hit_loop", "message": "first hit payload check", "data": {"hit_is_none": False, "payload_is_none": _pl is None, "payload_type": type(_pl).__name__ if _pl is not None else "NoneType"}, "hypothesisId": "A", "timestamp": time.time() * 1000}) + "\n")
-        except Exception:
-            pass
-        # #endregion
         for hit in search_results:
             if hit.payload is None or "page_id" not in hit.payload:
                 continue
@@ -135,9 +268,9 @@ def _evaluate_queries(
                 seen.add(pid)
                 ranked_pages.append(pid)
 
-        rr = reciprocal_rank(ranked_pages, relevant)
+        rr = reciprocal_rank(ranked_pages, expected_pages)
         ndcg = ndcg_at_k(ranked_pages, relevance_map, k=10)
-        p5 = precision_at_k(ranked_pages, relevant, k=5)
+        p5 = precision_at_k(ranked_pages, expected_pages, k=5)
 
         # Content relevance of best chunk
         best_rel = 0.0
@@ -148,14 +281,14 @@ def _evaluate_queries(
             if rel > best_rel:
                 best_rel = rel
 
-        mrr_inputs.append((ranked_pages, relevant))
+        mrr_inputs.append((ranked_pages, expected_pages))
         ndcg_inputs.append((ranked_pages, relevance_map))
-        p5_inputs.append((ranked_pages, relevant))
+        p5_inputs.append((ranked_pages, expected_pages))
 
         entry = {
             "id": qa["id"],
             "question": question,
-            "expected_page": expected_page,
+            "expected_pages": sorted(expected_pages),
             "difficulty": difficulty,
             "mode": mode,
             "ranked_pages": ranked_pages[:10],
@@ -163,7 +296,7 @@ def _evaluate_queries(
             "ndcg_at_10": round(ndcg, 4),
             "p_at_5": round(p5, 4),
             "top1_content_relevance": round(best_rel, 4),
-            "hit_in_top_k": expected_page in ranked_pages,
+            "hit_in_top_k": bool(expected_pages & set(ranked_pages)),
         }
         per_query.append(entry)
 
@@ -209,6 +342,11 @@ def run_hybrid_vs_dense(
 ) -> dict:
     """Run both dense and hybrid retrieval and compare.
 
+    Creates a Qdrant collection with both dense vectors (embedding model)
+    and sparse vectors (BM25-weighted term frequencies).  Dense mode queries
+    only the dense vectors; hybrid mode uses Reciprocal Rank Fusion (RRF)
+    to combine dense and sparse results.
+
     Args:
         config: Experiment configuration.
         verbose: Print per-query results.
@@ -223,8 +361,8 @@ def run_hybrid_vs_dense(
     gt_data = load_ground_truth(gt_path)
     qa_pairs = gt_data["qa_pairs"]
 
-    corpus_chunks = load_corpus_for_ground_truth(
-        gt_data,
+    corpus_chunks = load_corpus(
+        corpus_source="preprocessed",
         chunk_size=config.chunk_size,
         chunk_overlap=config.chunk_overlap,
     )
@@ -232,7 +370,7 @@ def run_hybrid_vs_dense(
     if not corpus_chunks:
         raise RuntimeError("No corpus chunks loaded")
 
-    # Embed corpus
+    # Embed corpus (dense)
     provider = create_provider(config)
     logger.info("Embedding %d chunks with %s", len(corpus_chunks), provider.model_name)
 
@@ -241,7 +379,22 @@ def run_hybrid_vs_dense(
     chunk_embeddings = _embed_in_batches(provider, chunk_texts)
     embed_time = time.monotonic() - t_start
 
-    # Create temp Qdrant collection
+    # Build BM25 sparse vectors
+    logger.info("Building BM25 sparse vectors for %d chunks...", len(chunk_texts))
+    vocab = build_vocabulary(chunk_texts)
+    idf = compute_idf(chunk_texts, vocab)
+    avgdl = sum(len(_tokenize(t)) for t in chunk_texts) / len(chunk_texts)
+    logger.info(
+        "Vocabulary: %d terms, avg document length: %.1f tokens",
+        len(vocab), avgdl,
+    )
+
+    sparse_vectors = [
+        text_to_sparse_vector(text, vocab, idf, avgdl=avgdl)
+        for text in chunk_texts
+    ]
+
+    # Create temp Qdrant collection with both dense + sparse vectors
     collection_name = (
         f"{config.collection_prefix}hybrid_dense_{uuid.uuid4().hex[:6]}"
     )
@@ -250,16 +403,24 @@ def run_hybrid_vs_dense(
     try:
         qdrant.create_collection(
             collection_name=collection_name,
-            vectors_config=VectorParams(
-                size=config.dimensions,
-                distance=Distance.COSINE,
-            ),
+            vectors_config={
+                "dense": VectorParams(
+                    size=config.dimensions,
+                    distance=Distance.COSINE,
+                ),
+            },
+            sparse_vectors_config={
+                "sparse": SparseVectorParams(),
+            },
         )
 
         points = [
             PointStruct(
                 id=i,
-                vector=chunk_embeddings[i],
+                vector={
+                    "dense": chunk_embeddings[i],
+                    "sparse": sparse_vectors[i],
+                },
                 payload={
                     "page_id": corpus_chunks[i]["page_id"],
                     "chunk_index": corpus_chunks[i]["chunk_index"],
@@ -277,22 +438,19 @@ def run_hybrid_vs_dense(
             )
         logger.info("Upserted %d points into %s", len(points), collection_name)
 
-        # Run DENSE evaluation
+        # Run DENSE evaluation (vector search only)
         logger.info("Running dense retrieval evaluation...")
-        dense_result = _evaluate_queries(
+        dense_result = _evaluate_dense(
             qdrant, collection_name, provider, qa_pairs,
-            mode="dense", top_k=config.top_k, verbose=verbose,
+            top_k=config.top_k, verbose=verbose,
         )
 
-        # Run HYBRID evaluation (same collection, same vectors)
-        # Note: True hybrid with BM25 requires Qdrant's payload index.
-        # For now we evaluate the same dense search as a baseline —
-        # hybrid mode can be enabled via Qdrant's query API when a
-        # full-text index is configured on the collection.
-        logger.info("Running hybrid retrieval evaluation...")
-        hybrid_result = _evaluate_queries(
+        # Run HYBRID evaluation (dense + BM25 sparse with RRF fusion)
+        logger.info("Running hybrid retrieval evaluation (dense + BM25 RRF)...")
+        hybrid_result = _evaluate_hybrid(
             qdrant, collection_name, provider, qa_pairs,
-            mode="hybrid", top_k=config.top_k, verbose=verbose,
+            vocab=vocab, idf=idf, avgdl=avgdl,
+            top_k=config.top_k, verbose=verbose,
         )
 
     finally:
@@ -313,6 +471,10 @@ def run_hybrid_vs_dense(
             "config_hash": config.config_hash,
             "code_version": _get_git_version(),
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            "sparse_method": "BM25 (k1=1.5, b=0.75)",
+            "fusion_method": "Reciprocal Rank Fusion (RRF)",
+            "vocabulary_size": len(vocab),
+            "avg_doc_length": round(avgdl, 1),
         },
         "comparison": {
             "dense": dense_result["aggregate_metrics"],

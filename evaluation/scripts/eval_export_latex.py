@@ -12,6 +12,8 @@ Usage::
 Generates tables:
 - FF1: Keyword vs Semantic Search
 - FF3: Embedding Model Comparison (aggregate + by difficulty)
+- J4: Chunk Size Impact
+- J6: Hybrid vs Dense Search
 
 Thesis-ID: US5 (LaTeX Export)
 """
@@ -325,6 +327,94 @@ def generate_ff3_performance_table(results_dir: Path) -> str | None:
     return "\n".join(lines)
 
 
+def generate_j4_table(results_dir: Path) -> str | None:
+    """J4: Chunk Size Impact on retrieval quality."""
+    result_file = _find_latest(results_dir, "chunk_comparison_*.json")
+    if not result_file:
+        logger.warning("J4: No chunk_comparison_*.json found")
+        return None
+
+    data = _load_json(result_file)
+    chunks = sorted(data["chunk_sizes"], key=lambda c: c["chunk_size"])
+
+    best_mrr = max(c["mrr"] for c in chunks)
+
+    lines = [
+        r"\begin{table}[htbp]",
+        r"  \centering",
+        r"  \caption{J4 --- Chunk Size Impact on Retrieval Quality (78 queries, text-embedding-3-large)}",
+        r"  \label{tab:j4-chunk-size}",
+        r"  \begin{tabular}{rrcccr}",
+        r"    \toprule",
+        r"    Chunk Size & Chunks & MRR & NDCG@10 & P@5 & Hit Rate \\",
+        r"    \midrule",
+    ]
+    for c in chunks:
+        mrr_str = f"\\textbf{{{c['mrr']:.4f}}}" if c["mrr"] == best_mrr else f"{c['mrr']:.4f}"
+        lines.append(
+            f"    {c['chunk_size']} & {c['corpus_chunks']:,} "
+            f"& {mrr_str} & {c['ndcg_at_10']:.4f} "
+            f"& {c['precision_at_5']:.4f} & {c['hit_rate']:.1%} \\\\"
+        )
+    lines.extend([
+        r"    \bottomrule",
+        r"  \end{tabular}",
+        r"\end{table}",
+    ])
+    return "\n".join(lines)
+
+
+def generate_j6_table(results_dir: Path) -> str | None:
+    """J6: Hybrid vs Dense Search comparison."""
+    result_file = _find_latest(results_dir, "hybrid_vs_dense_*.json")
+    if not result_file:
+        logger.warning("J6: No hybrid_vs_dense_*.json found")
+        return None
+
+    data = _load_json(result_file)
+    comp = data["comparison"]
+    exp = data["experiment"]
+
+    dense = comp["dense"]
+    hybrid = comp["hybrid"]
+
+    dense_mrr = _metric_val(dense["mrr"])
+    hybrid_mrr = _metric_val(hybrid["mrr"])
+    best_mrr = max(dense_mrr, hybrid_mrr)
+
+    def _fmt_mrr(val: float) -> str:
+        return f"\\textbf{{{val:.4f}}}" if val == best_mrr else f"{val:.4f}"
+
+    chunks = data["performance"]["corpus_chunks"]
+
+    lines = [
+        r"\begin{table}[htbp]",
+        r"  \centering",
+        f"  \\caption{{J6 --- Dense vs.\\ Hybrid Search ({chunks:,} chunks, {_short_model_name(exp['model'])})}}",
+        r"  \label{tab:j6-hybrid-vs-dense}",
+        r"  \begin{tabular}{lccccr}",
+        r"    \toprule",
+        r"    Mode & MRR & $\sigma$ & NDCG@10 & P@5 & Hit Rate \\",
+        r"    \midrule",
+    ]
+    for mode_name, m in [("Dense", dense), ("Hybrid (BM25 + RRF)", hybrid)]:
+        mrr = _metric_val(m["mrr"])
+        std = _metric_std(m["mrr"])
+        std_str = f"{std:.3f}" if std is not None else "---"
+        lines.append(
+            f"    {mode_name} & {_fmt_mrr(mrr)} & {std_str} "
+            f"& {_metric_val(m['ndcg_at_10']):.4f} "
+            f"& {_metric_val(m['precision_at_5']):.4f} "
+            f"& {_metric_val(m['hit_rate']):.1%} \\\\"
+        )
+    lines.extend([
+        r"    \bottomrule",
+        r"  \end{tabular}",
+        r"\end{table}",
+    ])
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -377,6 +467,8 @@ def main() -> None:
         "ff3_model_comparison": generate_ff3_table,
         "ff3_by_difficulty": generate_ff3_difficulty_table,
         "ff3_performance": generate_ff3_performance_table,
+        "j4_chunk_size": generate_j4_table,
+        "j6_hybrid_vs_dense": generate_j6_table,
     }
 
     generated = 0

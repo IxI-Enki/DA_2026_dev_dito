@@ -132,7 +132,9 @@ def main() -> None:
             logger.info("Running: %s (chunk_size=%d)", config.name, config.chunk_size)
 
             try:
-                result = run_model_evaluation(config, verbose=args.verbose)
+                result = run_model_evaluation(
+                    config, verbose=args.verbose, corpus_source="preprocessed",
+                )
                 # Add chunk_overlap to experiment for display
                 result["experiment"]["chunk_overlap"] = config.chunk_overlap
                 all_results.append(result)
