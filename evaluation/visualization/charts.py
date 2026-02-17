@@ -234,3 +234,102 @@ class EvaluationVisualizer:
         )
         ax.set_title(title, fontweight="bold")
         return self._save(fig, "heatmap")
+
+    # ------------------------------------------------------------------
+    # Speed vs. quality scatter
+    # ------------------------------------------------------------------
+    def speed_vs_quality_scatter(
+        self,
+        model_names: list[str],
+        quality_scores: list[float],
+        chunks_per_second: list[float],
+        sizes: list[float] | None = None,
+        quality_label: str = "MRR",
+        title: str = "Embedding speed vs. retrieval quality",
+        name: str = "speed_vs_quality",
+    ) -> Path:
+        """Scatter: x=quality (e.g. MRR), y=chunks/sec; optional bubble size.
+
+        Args:
+            model_names: Short names per model.
+            quality_scores: e.g. MRR mean per model.
+            chunks_per_second: Throughput per model.
+            sizes: Optional bubble sizes (e.g. param count in B).
+            quality_label: Label for x-axis.
+            title: Chart title.
+            name: Base filename for save.
+
+        Returns:
+            Path to saved chart file.
+        """
+        fig, ax = plt.subplots(figsize=(8, 6))
+        n = len(model_names)
+        if sizes is None:
+            sizes = [80] * n
+        else:
+            sizes = [80 + s * 40 for s in sizes]
+        colours = sns.color_palette("colorblind", n)
+        for i in range(n):
+            ax.scatter(
+                quality_scores[i],
+                chunks_per_second[i],
+                s=sizes[i],
+                alpha=0.7,
+                label=model_names[i],
+                color=colours[i],
+            )
+            ax.annotate(
+                model_names[i],
+                (quality_scores[i], chunks_per_second[i]),
+                xytext=(5, 5),
+                textcoords="offset points",
+                fontsize=9,
+            )
+        ax.set_xlabel(quality_label)
+        ax.set_ylabel("Chunks per second")
+        ax.set_title(title, fontweight="bold")
+        ax.legend(loc="upper left")
+        return self._save(fig, name)
+
+    # ------------------------------------------------------------------
+    # Miss analysis heatmap
+    # ------------------------------------------------------------------
+    def miss_analysis_heatmap(
+        self,
+        model_names: list[str],
+        question_ids: list[str],
+        hit_matrix: list[list[float]],
+        title: str = "Hit/Miss by model and question",
+        name: str = "miss_heatmap",
+    ) -> Path:
+        """Heatmap: rows=models, cols=questions, color=hit (1) / miss (0).
+
+        Args:
+            model_names: One per row.
+            question_ids: One per column.
+            hit_matrix: [model_idx][query_idx] = 1.0 (hit) or 0.0 (miss).
+            title: Chart title.
+            name: Base filename for save.
+
+        Returns:
+            Path to saved chart file.
+        """
+        data = np.asarray(hit_matrix)
+        n_m, n_q = data.shape
+        fig, ax = plt.subplots(
+            figsize=(max(12, n_q * 0.15), max(5, n_m * 1.2))
+        )
+        sns.heatmap(
+            data,
+            xticklabels=question_ids,
+            yticklabels=model_names,
+            cmap="RdYlGn",
+            vmin=0,
+            vmax=1,
+            cbar_kws={"label": "Hit (1) / Miss (0)"},
+            ax=ax,
+        )
+        ax.set_title(title, fontweight="bold")
+        ax.set_xlabel("Question ID")
+        plt.setp(ax.get_xticklabels(), rotation=90, fontsize=8)
+        return self._save(fig, name)

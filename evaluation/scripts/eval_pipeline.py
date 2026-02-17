@@ -56,6 +56,7 @@ class EvaluationPipeline:
         self._scores: dict[str, Any] = {}
         self._ragas_scores: dict[str, float] = {}
         self._per_query: list[dict] = []
+        self._retrieved_contexts: list[list[str]] = []
 
     def run(self, skip_ragas: bool = False) -> Path:
         """Run the full pipeline. Returns path to results directory.
@@ -110,8 +111,13 @@ class EvaluationPipeline:
     # ------------------------------------------------------------------
 
     def _step_retrieval(self) -> None:
-        """Retrieve top-k documents from Qdrant for each ground-truth query."""
+        """Retrieve top-k documents from Qdrant for each ground-truth query.
+
+        Uses config embedding model to embed questions and search. If no collection
+        exists or search fails, falls back to mock retrieval (ground truth as hits).
+        """
         logger.info("[Step 1/6] Qdrant Retrieval")
+        self._retrieved_contexts = []
         gt = load_ground_truth(
             EVAL_ROOT / self.config.ground_truth_file
         )
@@ -121,27 +127,47 @@ class EvaluationPipeline:
         try:
             from qdrant_client import QdrantClient
 
-            # Parse host from llm_base_url or use default
+            from evaluation.scripts.eval_model_comparison import create_provider
+
+            provider = create_provider(self.config)
             host = "192.168.8.3"
             client = QdrantClient(host=host, port=6333, timeout=10)
-            collection = f"{self.config.collection_prefix}{self.config.name}"
+            collection = (
+                f"{self.config.collection_prefix}{self.config.model.replace('/', '_')}"
+            )
 
             retrieved: list[dict] = []
-            for qa in qa_pairs:
+            for idx, qa in enumerate(qa_pairs):
                 query = qa.get("question", "")
                 expected_sources = _expected_sources_for_qa(qa)
                 try:
+                    query_vector = provider.embed([query])[0]
                     results = client.search(
                         collection_name=collection,
-                        query_vector=[0.0] * self.config.dimensions,  # placeholder
+                        query_vector=query_vector,
                         limit=self.config.top_k,
+                        with_payload=True,
                     )
                     hits = [
                         {"page_id": (r.payload or {}).get("page_id", ""), "score": r.score}
                         for r in results
                     ]
-                except Exception:
+                    context_texts = [
+                        (r.payload or {}).get("text", "")
+                        for r in results
+                        if (r.payload or {}).get("text")
+                    ]
+                    self._retrieved_contexts.append(context_texts)
+                except Exception as e:
+                    if idx == 0:
+                        logger.warning(
+                            "  Real retrieval failed on first query (%s) - using mock",
+                            e,
+                        )
+                        self._mock_retrieval(qa_pairs)
+                        return
                     hits = []
+                    self._retrieved_contexts.append([])
                 retrieved.append({
                     "question": query,
                     "retrieved": hits,
@@ -152,8 +178,10 @@ class EvaluationPipeline:
             self._per_query = retrieved
             logger.info("  Retrieved results for %d queries", len(retrieved))
 
-        except ImportError:
-            logger.warning("  qdrant_client not available - using ground truth sources as mock retrieval")
+        except ImportError as e:
+            logger.warning(
+                "  Embedding or Qdrant not available (%s) - using mock retrieval", e
+            )
             self._mock_retrieval(qa_pairs)
         except Exception as e:
             logger.warning("  Qdrant retrieval failed (%s) - using mock retrieval", e)
@@ -172,6 +200,8 @@ class EvaluationPipeline:
                 "difficulty": qa.get("difficulty", "medium"),
             })
         self._per_query = retrieved
+        answer = lambda q: q.get("answer", q.get("ground_truth", ""))
+        self._retrieved_contexts = [[answer(qa)] for qa in qa_pairs]
 
     # ------------------------------------------------------------------
     # Step 2: Custom Metrics (T094)
@@ -232,12 +262,12 @@ class EvaluationPipeline:
     # ------------------------------------------------------------------
 
     def _step_ragas(self) -> None:
-        """Run RAGAS LLM-as-Judge evaluation."""
-        logger.info("[Step 3/6] RAGAS Metrics")
+        """Run LLM-as-Judge evaluation (RAGAS-style metrics)."""
+        logger.info("[Step 3/6] LLM-as-Judge (RAGAS-style) Metrics")
         try:
-            from evaluation.ragas import RAGASEvaluator
+            from evaluation.metrics.llm_judge import LLMJudgeEvaluator
 
-            evaluator = RAGASEvaluator(
+            evaluator = LLMJudgeEvaluator(
                 llm_base_url=self.config.llm_base_url,
                 model=self.config.llm_model,
                 temperature=self.config.ragas_temperature,
@@ -246,13 +276,18 @@ class EvaluationPipeline:
             gt = load_ground_truth(EVAL_ROOT / self.config.ground_truth_file)
             qa_pairs = gt.get("qa_pairs", [])
             ragas_data = []
-            for qa in qa_pairs:
+            for i, qa in enumerate(qa_pairs):
                 answer = qa.get("answer", qa.get("ground_truth", ""))
+                contexts = (
+                    self._retrieved_contexts[i]
+                    if i < len(self._retrieved_contexts)
+                    else []
+                )
                 ragas_data.append({
                     "question": qa.get("question", ""),
                     "answer": answer,
                     "ground_truth": answer,
-                    "contexts": [],  # ground-truth only mode
+                    "contexts": contexts,
                 })
 
             self._ragas_scores = evaluator.evaluate(ragas_data)

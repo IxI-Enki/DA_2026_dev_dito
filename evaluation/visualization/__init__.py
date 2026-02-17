@@ -1,7 +1,7 @@
 """Thesis-quality evaluation charts.
 
-Provides EvaluationVisualizer for radar, box, bar, and heatmap charts
-with German labels and DPI >= 300.
+Provides EvaluationVisualizer for radar, box, bar, heatmap,
+speed-vs-quality scatter, and miss-analysis heatmap (DPI >= 300).
 """
 
 from evaluation.visualization.charts import EvaluationVisualizer

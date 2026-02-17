@@ -16,7 +16,7 @@ chunking:
 retrieval:
   mode: dense
   top_k: 10
-  collection_name: "eval_bge_m3"
+  collection_name: "eval_bge_m3_unsupervised"
 
 qdrant:
   host: "localhost"

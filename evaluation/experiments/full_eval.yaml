@@ -20,8 +20,8 @@ experiment:
   thesis_id: "J2/FF3"
 
 embedding:
-  provider: ollama
-  model: "bge-m3"
+  provider: sentence-transformers
+  model: "BAAI/bge-m3-unsupervised"
   dimensions: 1024
 
 chunking:
@@ -35,7 +35,7 @@ retrieval:
   collection_prefix: "eval_"
 
 ground_truth:
-  file: "ground_truth/leowiki_qa_50_verified.json"
+  file: "ground_truth/leowiki_qa_78_Opus_46.json"
 
 metrics:
   - mrr
@@ -47,8 +47,8 @@ metrics:
 
 # RAGAS (LLM-as-Judge) - optional, skip with --skip ragas
 ragas:
-  llm_base_url: "http://192.168.8.3:11434/v1"
-  model: "llama3.2"
+  llm_base_url: "http://localhost:1234/v1"
+  model: "qwen2.5-7b-instruct"
   temperature: 0.0
 
 # Report and visualization

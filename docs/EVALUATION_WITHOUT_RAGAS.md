@@ -96,11 +96,7 @@ Falls ihr zusaetzliche oder andere Testfragen braucht, ohne RAGAS TestsetGenerat
    `python -m evaluation.scripts.generate_ground_truth_from_test_corpus`  
    Schreibt `evaluation/ground_truth/test_corpus_qa.json`. In den Experiment-YAMLs `ground_truth.file` auf `ground_truth/test_corpus_qa.json` setzen. Optional: `--max-questions 50` um auf 50 Fragen zu begrenzen.
 
-3. **Template-basiert (bereits im Repo)**  
-   `python -m evaluation.ragas_agents.scripts.generate_questions --no-ragas --corpus-dir <path> --num-questions 30`  
-   Erzeugt Platzhalter-Fragen aus Dateinamen. Anschliessend muesst ihr manuell `sources`/`source_file` und ggf. `ground_truth` ergaenzen und in das Pipeline-Ground-Truth-Format (qa_pairs) ueberfuehren.
-
-4. **Einfacher LLM-Generator (ohne RAGAS)**  
+3. **Einfacher LLM-Generator (ohne RAGAS)**  
    Eigenes kleines Skript: z.B. pro Korpus-Dokument einen Aufruf an OpenAI/ollama: "Erzeuge eine kurze deutschsprachige Frage, die dieses Dokument beantwortet." Fragen sammeln, manuell pruefen und mit `source_file` oder `sources` in die Ground-Truth-JSON eintragen. Kein RAGAS noetig.
 
 ---
@@ -121,4 +117,4 @@ Falls ihr zusaetzliche oder andere Testfragen braucht, ohne RAGAS TestsetGenerat
 - **Metriken:** `evaluation/metrics/` (mrr, ndcg, precision_at_k, recall_at_k, mean_average_precision, hit_rate).
 - **Experiment-Configs:** `evaluation/experiments/*.yaml` – `ground_truth.file` auf eure JSON setzen (z.B. `ground_truth/test_corpus_qa.json` fuer test_corpus-basierte Evaluation).
 
-Die RAGAS-Ausgabe `questions_ragas.json` (leere question_text/ground_truth) wird fuer die Evaluation nicht benoetigt; die Pipeline arbeitet mit dem verifizierten 50-Q&A-Set oder mit test_corpus_qa.json.
+Die Pipeline unterstuetzt optional LLM-as-Judge-Metriken (RAGAS-style) ueber `evaluation.metrics.llm_judge`; mit `--skip ragas` werden nur Retrieval-Metriken berechnet. Ground Truth: z.B. `leowiki_qa_78_Opus_46.json`, `test_corpus_qa.json` oder `leowiki_qa_50_verified.json`.
