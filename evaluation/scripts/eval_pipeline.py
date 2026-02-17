@@ -25,8 +25,20 @@ from pathlib import Path
 from typing import Any
 
 from evaluation.config import EVAL_ROOT, load_experiment_config, load_ground_truth
+from evaluation.scripts.eval_keyword_baseline import source_file_to_page_id
 
 logger = logging.getLogger(__name__)
+
+
+def _expected_sources_for_qa(qa: dict) -> list[str]:
+    """Resolve expected page IDs for metrics. Prefer 'sources'; fallback to source_file."""
+    sources = qa.get("sources", [])
+    if sources:
+        return list(sources)
+    sf = qa.get("source_file")
+    if sf:
+        return [source_file_to_page_id(sf)]
+    return []
 
 
 class EvaluationPipeline:
@@ -117,6 +129,7 @@ class EvaluationPipeline:
             retrieved: list[dict] = []
             for qa in qa_pairs:
                 query = qa.get("question", "")
+                expected_sources = _expected_sources_for_qa(qa)
                 try:
                     results = client.search(
                         collection_name=collection,
@@ -129,7 +142,12 @@ class EvaluationPipeline:
                     ]
                 except Exception:
                     hits = []
-                retrieved.append({"question": query, "retrieved": hits})
+                retrieved.append({
+                    "question": query,
+                    "retrieved": hits,
+                    "expected_sources": expected_sources,
+                    "difficulty": qa.get("difficulty", "medium"),
+                })
 
             self._per_query = retrieved
             logger.info("  Retrieved results for %d queries", len(retrieved))
@@ -145,7 +163,7 @@ class EvaluationPipeline:
         """Create mock retrieval results from ground truth for offline testing."""
         retrieved: list[dict] = []
         for qa in qa_pairs:
-            sources = qa.get("sources", [])
+            sources = _expected_sources_for_qa(qa)
             hits = [{"page_id": s, "score": 1.0 / (i + 1)} for i, s in enumerate(sources)]
             retrieved.append({
                 "question": qa.get("question", ""),
@@ -229,10 +247,11 @@ class EvaluationPipeline:
             qa_pairs = gt.get("qa_pairs", [])
             ragas_data = []
             for qa in qa_pairs:
+                answer = qa.get("answer", qa.get("ground_truth", ""))
                 ragas_data.append({
                     "question": qa.get("question", ""),
-                    "answer": qa.get("answer", ""),
-                    "ground_truth": qa.get("answer", ""),
+                    "answer": answer,
+                    "ground_truth": answer,
                     "contexts": [],  # ground-truth only mode
                 })
 

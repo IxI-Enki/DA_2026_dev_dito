@@ -51,13 +51,13 @@ logger = logging.getLogger(__name__)
 def source_file_to_page_id(source_file: str) -> str:
     """Convert ground-truth ``source_file`` to a DokuWiki page ID.
 
-    The fetcher stores pages as text files where DokuWiki namespace
-    colons (``:``) are replaced with underscores (``_``).  Hyphens
-    remain as-is.  Examples:
+    The fetcher stores pages as .txt; preprocessed test_corpus uses .md.
+    DokuWiki namespace colons (``:``) are replaced with underscores (``_``).
+    Hyphens remain as-is.  Examples:
 
-    - ``exams_matura-tagesschule-if-it.txt``  → ``exams:matura-tagesschule-if-it``
-    - ``archive_exams_semesterpruefungen.txt`` → ``archive:exams:semesterpruefungen``
-    - ``it_studentmail2023_android_gmail.txt`` → ``it:studentmail2023:android_gmail``
+    - ``exams_matura-tagesschule-if-it.txt``  -> ``exams:matura-tagesschule-if-it``
+    - ``org_termine-2026.md``                 -> ``org:termine-2026``
+    - ``archive_exams_semesterpruefungen.txt`` -> ``archive:exams:semesterpruefungen``
 
     Args:
         source_file: Filename from ground truth.
@@ -65,7 +65,7 @@ def source_file_to_page_id(source_file: str) -> str:
     Returns:
         DokuWiki page ID with colons as namespace separators.
     """
-    name = source_file.removesuffix(".txt")
+    name = source_file.removesuffix(".txt").removesuffix(".md")
     page_id = name.replace("_", ":")
     return page_id
 
