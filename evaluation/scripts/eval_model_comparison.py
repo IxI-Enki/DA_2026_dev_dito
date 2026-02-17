@@ -179,8 +179,12 @@ def simple_chunk(text: str, chunk_size: int = 512, overlap: int = 50) -> list[st
 
 
 # ---------------------------------------------------------------------------
-# Corpus loader -- reads ALL files from evaluation/test_corpus/
+# Corpus loader
 # ---------------------------------------------------------------------------
+
+_IMAGE_SUFFIXES = (".jpg.md", ".png.md", ".gif.md", ".jpeg.md",
+                   ".svg.md", ".webp.md", ".bmp.md")
+
 
 def _extract_page_id(text: str, filename: str) -> str:
     """Extract page_id or media_id from YAML frontmatter, fallback to filename."""
@@ -204,55 +208,92 @@ def _strip_frontmatter(text: str) -> str:
     return text[end + 4:].strip()
 
 
-def load_test_corpus(
+def _load_md_dir(
+    directory: Path,
+    chunk_size: int,
+    chunk_overlap: int,
+    exclude_images: bool = True,
+) -> list[dict]:
+    """Load and chunk all .md files from a single directory."""
+    md_files = sorted(directory.glob("*.md"))
+    chunks: list[dict] = []
+    skipped = 0
+    for md_path in md_files:
+        if exclude_images and md_path.name.lower().endswith(_IMAGE_SUFFIXES):
+            skipped += 1
+            continue
+        raw_text = md_path.read_text(encoding="utf-8")
+        page_id = _extract_page_id(raw_text, md_path.name)
+        body = _strip_frontmatter(raw_text)
+        if len(body.strip()) < 50:
+            continue
+        for i, chunk_text in enumerate(
+            simple_chunk(body, chunk_size=chunk_size, overlap=chunk_overlap)
+        ):
+            chunks.append({"page_id": page_id, "chunk_index": i, "text": chunk_text})
+    if skipped:
+        logger.info("  Skipped %d image files in %s", skipped, directory.name)
+    return chunks
+
+
+def _find_preprocessed_dir() -> Path:
+    """Find the most recent preprocessed data directory."""
+    base = REPO_ROOT / "data" / "preprocessed"
+    if not base.exists():
+        raise FileNotFoundError(f"Preprocessed data not found: {base}")
+    candidates = sorted(base.glob("preprocessed_at_*"), reverse=True)
+    if not candidates:
+        raise FileNotFoundError(f"No preprocessed_at_* dirs in {base}")
+    return candidates[0]
+
+
+def load_corpus(
+    corpus_source: str = "test_corpus",
     chunk_size: int = 512,
     chunk_overlap: int = 50,
 ) -> list[dict]:
-    """Load and chunk ALL documents from evaluation/test_corpus/.
-
-    Indexes the full test corpus (not just GT-referenced docs) to provide
-    a realistic search space with distractors.
+    """Load and chunk documents from the specified corpus source.
 
     Args:
+        corpus_source: Either 'test_corpus' (evaluation/test_corpus/, 75 docs)
+            or 'preprocessed' (data/preprocessed/.../{pages,media}, ~436 docs).
         chunk_size: Target chunk size in characters.
         chunk_overlap: Overlap between chunks.
 
     Returns:
         List of dicts with ``page_id``, ``chunk_index``, ``text`` keys.
     """
-    corpus_dir = EVAL_ROOT / "test_corpus"
-    if not corpus_dir.exists():
-        raise FileNotFoundError(f"Test corpus not found: {corpus_dir}")
-
-    md_files = sorted(corpus_dir.glob("*.md"))
-    if not md_files:
-        raise FileNotFoundError(f"No .md files in {corpus_dir}")
-
-    logger.info("Loading %d test corpus documents from %s", len(md_files), corpus_dir)
-
     all_chunks: list[dict] = []
-    for md_path in md_files:
-        raw_text = md_path.read_text(encoding="utf-8")
-        page_id = _extract_page_id(raw_text, md_path.name)
-        body = _strip_frontmatter(raw_text)
 
-        if len(body.strip()) < 50:
-            logger.debug("Skipping near-empty document: %s", md_path.name)
-            continue
+    if corpus_source == "preprocessed":
+        pp_dir = _find_preprocessed_dir()
+        pages_dir = pp_dir / "pages"
+        media_dir = pp_dir / "media"
+        logger.info("Loading FULL preprocessed corpus from %s", pp_dir)
 
-        chunks = simple_chunk(body, chunk_size=chunk_size, overlap=chunk_overlap)
+        if pages_dir.exists():
+            page_chunks = _load_md_dir(pages_dir, chunk_size, chunk_overlap,
+                                       exclude_images=False)
+            logger.info("  Pages: %d chunks", len(page_chunks))
+            all_chunks.extend(page_chunks)
 
-        for i, chunk_text in enumerate(chunks):
-            all_chunks.append({
-                "page_id": page_id,
-                "chunk_index": i,
-                "text": chunk_text,
-            })
+        if media_dir.exists():
+            media_chunks = _load_md_dir(media_dir, chunk_size, chunk_overlap,
+                                        exclude_images=True)
+            logger.info("  Media (no images): %d chunks", len(media_chunks))
+            all_chunks.extend(media_chunks)
 
+    else:
+        corpus_dir = EVAL_ROOT / "test_corpus"
+        if not corpus_dir.exists():
+            raise FileNotFoundError(f"Test corpus not found: {corpus_dir}")
+        all_chunks = _load_md_dir(corpus_dir, chunk_size, chunk_overlap,
+                                  exclude_images=True)
+
+    doc_count = len({c["page_id"] for c in all_chunks})
     logger.info(
-        "Loaded %d chunks from %d documents",
-        len(all_chunks),
-        len(md_files),
+        "Corpus loaded: %d chunks from %d documents (source=%s)",
+        len(all_chunks), doc_count, corpus_source,
     )
     return all_chunks
 
@@ -377,11 +418,12 @@ def run_model_evaluation(
     config: ExperimentConfig,
     *,
     verbose: bool = False,
+    corpus_source: str = "test_corpus",
 ) -> dict:
     """Execute the model evaluation for a single experiment config.
 
     Steps:
-      1. Load and chunk ALL test-corpus documents.
+      1. Load and chunk corpus documents.
       2. Embed all chunks with the configured provider.
       3. Create a temporary Qdrant collection and upsert vectors.
       4. For each ground-truth question, embed the query and search.
@@ -392,18 +434,20 @@ def run_model_evaluation(
     Args:
         config: Experiment configuration.
         verbose: Print per-query results.
+        corpus_source: 'test_corpus' or 'preprocessed'.
 
     Returns:
         Result dict ready for JSON serialisation.
     """
-    # 1. Load ground truth and full test corpus
+    # 1. Load ground truth and corpus
     gt_path = config.ground_truth_file
     if not Path(gt_path).is_absolute():
         gt_path = EVAL_ROOT / gt_path
     gt_data = load_ground_truth(gt_path)
     qa_pairs = gt_data["qa_pairs"]
 
-    corpus_chunks = load_test_corpus(
+    corpus_chunks = load_corpus(
+        corpus_source=corpus_source,
         chunk_size=config.chunk_size,
         chunk_overlap=config.chunk_overlap,
     )
@@ -667,6 +711,17 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print per-query results to stdout",
     )
+    parser.add_argument(
+        "--corpus",
+        choices=["test_corpus", "preprocessed"],
+        default="test_corpus",
+        help="Corpus source: 'test_corpus' (75 docs) or 'preprocessed' (full ~436 docs)",
+    )
+    parser.add_argument(
+        "--gt",
+        default=None,
+        help="Override ground truth file (relative to evaluation/)",
+    )
     return parser
 
 
@@ -746,8 +801,19 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    corpus_source: str = args.corpus
+    gt_override: str | None = args.gt
+
+    def _apply_gt_override(config: ExperimentConfig) -> ExperimentConfig:
+        """Return a new config with overridden ground_truth_file if --gt given."""
+        if gt_override is None:
+            return config
+        return ExperimentConfig(**{
+            **{f.name: getattr(config, f.name) for f in config.__dataclass_fields__.values()},
+            "ground_truth_file": gt_override,
+        })
+
     if args.compare_all:
-        # Find all model_*.yaml configs
         experiments_dir = EVAL_ROOT / "experiments"
         config_files = sorted(experiments_dir.glob("model_*.yaml"))
         if not config_files:
@@ -755,22 +821,27 @@ def main() -> None:
             sys.exit(1)
 
         logger.info("Found %d model configs for comparison", len(config_files))
+        logger.info("Corpus source: %s", corpus_source)
+        if gt_override:
+            logger.info("Ground truth override: %s", gt_override)
         all_results: list[dict] = []
 
         print("=" * 60)
         print("  FF3 Embedding Model Comparison")
+        print(f"  Corpus: {corpus_source}")
         print("=" * 60)
 
         for cf in config_files:
-            config = load_experiment_config(cf)
+            config = _apply_gt_override(load_experiment_config(cf))
             logger.info("Running: %s (%s)", config.name, config.model)
 
             try:
-                result = run_model_evaluation(config, verbose=args.verbose)
+                result = run_model_evaluation(
+                    config, verbose=args.verbose, corpus_source=corpus_source,
+                )
                 all_results.append(result)
                 _print_summary(result)
 
-                # Write individual result
                 out_file = output_dir / f"model_{config.model.replace('/', '_')}_{timestamp}.json"
                 with open(out_file, "w", encoding="utf-8") as fh:
                     json.dump(result, fh, indent=2, ensure_ascii=False)
@@ -781,10 +852,8 @@ def main() -> None:
                 continue
 
         if all_results:
-            # Print comparison table
             _print_comparison_table(all_results)
 
-            # Write comparison JSON
             comparison_file = output_dir / f"model_comparison_{timestamp}.json"
             with open(comparison_file, "w", encoding="utf-8") as fh:
                 json.dump(
@@ -792,6 +861,8 @@ def main() -> None:
                         "thesis_id": "FF3",
                         "timestamp": datetime.now(timezone.utc).isoformat(),
                         "code_version": _get_git_version(),
+                        "corpus_source": corpus_source,
+                        "ground_truth": gt_override or "from config",
                         "models": [
                             {
                                 "model": r["experiment"]["model"],
@@ -813,11 +884,13 @@ def main() -> None:
         print("=" * 60)
 
     else:
-        config = load_experiment_config(args.config)
+        config = _apply_gt_override(load_experiment_config(args.config))
         logger.info("Experiment: %s (thesis_id=%s)", config.name, config.thesis_id)
 
         try:
-            result = run_model_evaluation(config, verbose=args.verbose)
+            result = run_model_evaluation(
+                config, verbose=args.verbose, corpus_source=corpus_source,
+            )
         except Exception as exc:
             logger.error("Evaluation failed: %s", exc)
             sys.exit(1)
@@ -827,7 +900,7 @@ def main() -> None:
             json.dump(result, fh, indent=2, ensure_ascii=False)
 
         print("\n" + "=" * 60)
-        print(f"  FF3 Model Evaluation — {config.name}")
+        print(f"  FF3 Model Evaluation -- {config.name}")
         print("=" * 60)
         _print_summary(result)
         print(f"  Output:       {out_file}")

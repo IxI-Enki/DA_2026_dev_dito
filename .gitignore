@@ -281,3 +281,4 @@ evaluation/test_corpus/teacher_leo_brief_einseitig_2022_neues_logo_v1.docx.md
 evaluation/test_corpus/tutorial_pv-anlage_2223_pv-anlage.pdf.md
 evaluation/test_corpus/werkstaette_luftcheck_bestueckung_bottom.pdf.md
 evaluation/ground_truth/test_corpus_qa_llama31_8b.json
+evaluation/ground_truth/leowiki_qa_78_Opus_46.json
