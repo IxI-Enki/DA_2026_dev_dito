@@ -92,14 +92,14 @@ def main() -> int:
             reload_config(args.config)
         config = get_config()
     except ConfigError as e:
-        print(f"Configuration error: {e}")
+        print(style(f"Configuration error: {e}", "red"))
         return 1
 
     # Check for API key
     try:
         config.get_api_key()
     except ConfigError as e:
-        print(f"Error: {e}")
+        print(style(f"Error: {e}", "red"))
         print("\nPlease set the OPENAI_API_KEY environment variable:")
         print("  PowerShell: $env:OPENAI_API_KEY = 'your-key-here'")
         print("  CMD: set OPENAI_API_KEY=your-key-here")
@@ -110,20 +110,20 @@ def main() -> int:
         pipeline = EmbeddingPipeline()
         stats = pipeline.run(limit=args.limit)
 
-        print("\n[OK] Pipeline completed successfully!")
+        print(style("\n[OK] Pipeline completed successfully!", "bright_green"))
         print(f"  Output: {stats['output']['file']}")
         print(f"  Records: {stats['output']['records']}")
         print(f"  Cost: ${stats['embedding']['total_cost']:.4f}")
         return 0
 
     except FileNotFoundError as e:
-        print(f"Error: {e}")
+        print(style(f"Error: {e}", "red"))
         print("\nMake sure preprocessed documents exist. Run the preprocessing pipeline first:")
         print("  python pipeline/03_rag_preprocessing/run_preprocessing.py")
         return 1
 
     except Exception as e:
-        print(f"Pipeline failed: {e}")
+        print(style(f"Pipeline failed: {e}", "red"))
         return 1
 
 

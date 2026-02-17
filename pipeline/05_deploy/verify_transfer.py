@@ -20,6 +20,12 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
+# Shared CLI (colored banners, fixed-width separators)
+_deploy_dir = Path(__file__).resolve().parent
+if str(_deploy_dir.parent / "shared") not in sys.path:
+    sys.path.insert(0, str(_deploy_dir.parent / "shared"))
+from cli_utils import enable_windows_ansi, style
+
 from deploy_config import (
     SCRIPT_DIR,
     get_defaults,
@@ -137,10 +143,13 @@ def main():
     parser.add_argument("--key", "-k", default=os.environ.get("SSH_KEY_PATH"))
     parser.add_argument("--check-qdrant", action="store_true", help="Also check Qdrant collection on Pi")
     args = parser.parse_args()
+    enable_windows_ansi()
 
-    print("="*60)
-    print("DEV DITO - TRANSFER VERIFICATION")
-    print("="*60)
+    SEP_LEN = 60
+    sep = "=" * SEP_LEN
+    print(style(sep, "cyan"))
+    print(style("  DEV DITO - TRANSFER VERIFICATION", "bold", "bright_cyan"))
+    print(style(sep, "cyan"))
 
     # Resolve local file path: explicit or latest from config
     if args.local_file is not None:
@@ -151,14 +160,12 @@ def main():
         base_dir = get_local_embeddings_dir()
         latest = find_latest_embeddings_file(base_dir)
         if latest is None:
-            print(
-                f"[ERROR] No local embeddings file found. Looked for\n"
-                f"  {base_dir}/embedded_at_*/embedded_chunks.jsonl\n"
-                f"Use --local-file PATH to specify."
-            )
+            print(style("[ERROR] No local embeddings file found.", "red"))
+            print(f"  Looked for: {base_dir}/embedded_at_*/embedded_chunks.jsonl")
+            print("  Use --local-file PATH to specify.")
             sys.exit(1)
         local_path = latest
-        print(f"[INFO] Using latest local file: {local_path}")
+        print(style("[INFO] Using latest local file: ", "cyan") + str(local_path))
     
     # Get local hash
     print(f"\n[1/3] Calculating local file hash...")
@@ -167,7 +174,7 @@ def main():
     if local_hash:
         print(f"      MD5:  {local_hash}")
     else:
-        print(f"      [ERROR] Local file not found!")
+        print(style("      [ERROR] Local file not found!", "red"))
         sys.exit(1)
     
     # Get remote hash
@@ -178,13 +185,13 @@ def main():
     if remote_hash:
         print(f"      MD5:  {remote_hash}")
     else:
-        print(f"      [ERROR] Could not get remote hash!")
+        print(style("      [ERROR] Could not get remote hash!", "red"))
         sys.exit(1)
     
     # Compare hashes
     print(f"\n[3/3] Comparing checksums...")
     if local_hash == remote_hash:
-        print("      [OK] Checksums match! Transfer verified.")
+        print(style("      [OK] Checksums match! Transfer verified.", "bright_green"))
         
         # Get additional remote file info
         remote_info = get_remote_file_info(args.host, args.user, args.port, args.remote_path, args.key)
@@ -193,7 +200,7 @@ def main():
             print(f"        Size:  {remote_info.get('size', 'unknown')} bytes")
             print(f"        Lines: {remote_info.get('lines', 'unknown')}")
     else:
-        print("      [ERROR] Checksums DO NOT match!")
+        print(style("      [ERROR] Checksums DO NOT match!", "red"))
         print(f"        Local:  {local_hash}")
         print(f"        Remote: {remote_hash}")
         sys.exit(1)
@@ -211,15 +218,17 @@ def main():
             key_path=args.key,
         )
         if qdrant_status["status"] == "ok":
-            print(f"        [OK] Qdrant collection accessible")
+            print(style("        [OK] Qdrant collection accessible", "bright_green"))
             if "points_count" in qdrant_status:
                 print(f"        Points: {qdrant_status['points_count']}")
         else:
-            print(f"        [WARN] Qdrant: {qdrant_status.get('error', 'unknown error')}")
+            print(style(f"        [WARN] Qdrant: {qdrant_status.get('error', 'unknown error')}", "yellow"))
     
-    print("\n" + "="*60)
-    print("[OK] Verification complete!")
-    print("="*60)
+    print("")
+    print(style(sep, "green"))
+    print(style("  VERIFICATION COMPLETE", "bold", "bright_green"))
+    print(style(sep, "green"))
+    print(style("\n[OK] Verification complete!", "bright_green"))
 
 
 if __name__ == "__main__":

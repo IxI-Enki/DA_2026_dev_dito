@@ -3,9 +3,9 @@
 Deploys embeddings to Qdrant via direct upload or watchdog export mode.
 
 Usage:
-  python pipeline/05_deploy/deploy_qdrant.py --mode direct --jsonl path/to/embedded.jsonl
-  python pipeline/05_deploy/deploy_qdrant.py --mode watchdog --jsonl path/to/embedded.jsonl --output-dir /mnt/watchdog
-  python pipeline/05_deploy/deploy_qdrant.py --mode direct --dry-run --jsonl path/to/embedded.jsonl
+    python pipeline/05_deploy/deploy_qdrant.py --mode direct --jsonl path/to/embedded.jsonl
+    python pipeline/05_deploy/deploy_qdrant.py --mode watchdog --jsonl path/to/embedded.jsonl --output-dir /mnt/watchdog
+    python pipeline/05_deploy/deploy_qdrant.py --mode direct --dry-run --jsonl path/to/embedded.jsonl
 """
 
 from __future__ import annotations
@@ -19,7 +19,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
+# Shared CLI (colored banners, fixed-width separators)
+_deploy_dir = Path(__file__).resolve().parent
+if str(_deploy_dir.parent / "shared") not in sys.path:
+    sys.path.insert(0, str(_deploy_dir.parent / "shared"))
+from cli_utils import enable_windows_ansi, style
+
 logger = logging.getLogger(__name__)
+SEP_LEN = 60
 
 # Batch size for Qdrant upserts
 _UPSERT_BATCH_SIZE = 100
@@ -210,6 +217,7 @@ def _point_id(record: dict[str, Any]) -> str | int:
 
 def main() -> int:
     """CLI entry point."""
+    enable_windows_ansi()
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -226,6 +234,11 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Validate without uploading")
     args = parser.parse_args()
 
+    sep = "=" * SEP_LEN
+    print(style(sep, "cyan"))
+    print(style("  QDRANT DEPLOY", "bold", "bright_cyan"))
+    print(style(sep, "cyan"))
+
     if not args.jsonl.exists():
         logger.error("JSONL file not found: %s", args.jsonl)
         return 1
@@ -238,13 +251,13 @@ def main() -> int:
                 args.jsonl, args.collection,
                 recreate=args.recreate, dry_run=args.dry_run,
             )
-            print(f"[OK] {count} points {'validated' if args.dry_run else 'uploaded'}")
+            print(style(f"[OK] {count} points {'validated' if args.dry_run else 'uploaded'}", "bright_green"))
         else:
             if args.output_dir is None:
                 logger.error("--output-dir required for watchdog mode")
                 return 1
             dest = deployer.deploy_watchdog(args.jsonl, args.output_dir)
-            print(f"[OK] Copied to {dest}")
+            print(style(f"[OK] Copied to {dest}", "bright_green"))
 
     except KeyboardInterrupt:
         logger.info("Interrupted by user.")
@@ -253,6 +266,10 @@ def main() -> int:
         logger.error("Deployment failed: %s", e)
         return 1
 
+    print("")
+    print(style(sep, "green"))
+    print(style("  DEPLOY COMPLETE", "bold", "bright_green"))
+    print(style(sep, "green"))
     return 0
 
 

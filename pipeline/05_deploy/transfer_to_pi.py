@@ -25,6 +25,12 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime
 
+# Shared CLI (colored banners, fixed-width separators)
+_deploy_dir = Path(__file__).resolve().parent
+if str(_deploy_dir.parent / "shared") not in sys.path:
+    sys.path.insert(0, str(_deploy_dir.parent / "shared"))
+from cli_utils import enable_windows_ansi, style
+
 from deploy_config import (
     SCRIPT_DIR,
     get_defaults,
@@ -32,6 +38,8 @@ from deploy_config import (
     find_latest_embeddings_file,
     get_local_embeddings_dir,
 )
+
+SEP_LEN = 60
 
 
 def get_file_hash(filepath: Path) -> str:
@@ -90,20 +98,21 @@ def transfer_file(
     """Transfer file via SCP."""
     
     if not local_path.exists():
-        print(f"[ERROR] Local file not found: {local_path}")
+        print(style(f"[ERROR] Local file not found: {local_path}", "red"))
         return False
     
     file_size = get_file_size(local_path)
     file_hash = get_file_hash(local_path)
     
-    print(f"\n{'='*60}")
-    print("FILE TRANSFER")
-    print(f"{'='*60}")
+    sep = "=" * SEP_LEN
+    print(f"\n{style(sep, 'cyan')}")
+    print(style("  FILE TRANSFER", "bold", "bright_cyan"))
+    print(style(sep, "cyan"))
     print(f"  Local:  {local_path}")
     print(f"  Remote: {remote_user}@{remote_host}:{remote_path}")
     print(f"  Size:   {file_size}")
     print(f"  MD5:    {file_hash}")
-    print(f"{'='*60}\n")
+    print(f"{style(sep, 'cyan')}\n")
     
     if dry_run:
         print("[DRY-RUN] Would transfer file (no actual transfer)")
@@ -125,7 +134,7 @@ def transfer_file(
         
         if result.returncode == 0:
             elapsed = (datetime.now() - start_time).total_seconds()
-            print(f"[OK] Transfer completed in {elapsed:.1f}s")
+            print(style(f"[OK] Transfer completed in {elapsed:.1f}s", "bright_green"))
             
             # Save transfer log
             log_entry = {
@@ -144,15 +153,16 @@ def transfer_file(
             
             return True
         else:
-            print(f"[ERROR] Transfer failed: {result.stderr}")
+            print(style(f"[ERROR] Transfer failed: {result.stderr}", "red"))
             return False
-            
+
     except Exception as e:
-        print(f"[ERROR] Transfer error: {e}")
+        print(style(f"[ERROR] Transfer error: {e}", "red"))
         return False
 
 
 def main():
+    enable_windows_ansi()
     defaults = get_defaults()
     parser = argparse.ArgumentParser(
         description="Transfer embeddings to Raspberry Pi via SSH/SCP",
@@ -203,9 +213,10 @@ def main():
     
     args = parser.parse_args()
 
-    print("="*60)
-    print("DEV DITO - RASPBERRY PI TRANSFER")
-    print("="*60)
+    sep = "=" * SEP_LEN
+    print(style(sep, "cyan"))
+    print(style("  DEV DITO - RASPBERRY PI TRANSFER", "bold", "bright_cyan"))
+    print(style(sep, "cyan"))
 
     # Resolve local file path: explicit --local-file or latest from config
     if args.local_file is not None:
@@ -216,19 +227,17 @@ def main():
         base_dir = get_local_embeddings_dir()
         latest = find_latest_embeddings_file(base_dir)
         if latest is None:
-            print(
-                f"[ERROR] No embeddings file found. Looked for\n"
-                f"  {base_dir}/embedded_at_*/embedded_chunks.jsonl\n"
-                f"Use --local-file PATH to specify the JSONL file."
-            )
+            print(style("[ERROR] No embeddings file found.", "red"))
+            print(f"  Looked for: {base_dir}/embedded_at_*/embedded_chunks.jsonl")
+            print("  Use --local-file PATH to specify the JSONL file.")
             sys.exit(1)
         local_path = latest
-        print(f"[INFO] Using latest embeddings: {local_path}")
+        print(style("[INFO] Using latest embeddings: ", "cyan") + str(local_path))
     
     # Test SSH connection first
     if not args.skip_test and not args.dry_run:
         if not test_ssh_connection(args.host, args.user, args.port, args.key):
-            print("\n[ERROR] Cannot establish SSH connection. Aborting.")
+            print(style("\n[ERROR] Cannot establish SSH connection. Aborting.", "red"))
             sys.exit(1)
     
     # Transfer file
@@ -243,14 +252,18 @@ def main():
     )
     
     if success:
-        print("\n[OK] Transfer completed successfully!")
+        print("")
+        print(style(sep, "green"))
+        print(style("  TRANSFER COMPLETE", "bold", "bright_green"))
+        print(style(sep, "green"))
+        print(style("\n[OK] Transfer completed successfully!", "bright_green"))
         if not args.dry_run:
             print("\nNext steps:")
             print(f"  1. SSH into Pi: ssh {args.user}@{args.host}")
             print("  2. Run Qdrant init: docker-compose up qdrant_init")
             print("  3. Or use: python verify_transfer.py --host " + args.host)
     else:
-        print("\n[ERROR] Transfer failed!")
+        print(style("\n[ERROR] Transfer failed!", "red"))
         sys.exit(1)
 
 

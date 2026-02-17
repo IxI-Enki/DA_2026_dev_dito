@@ -14,10 +14,19 @@ from datetime import datetime
 
 from tqdm import tqdm
 
+# Shared CLI (colored step headers, fixed-width separators)
+_pkg = Path(__file__).resolve().parent
+if str(_pkg.parent / "shared") not in sys.path:
+    sys.path.insert(0, str(_pkg.parent / "shared"))
+from cli_utils import style
+
 from config import get_config
 from document_loader import DocumentLoader, Document
 from content_aware_chunker import ContentAwareChunker, Chunk
 from embedder import Embedder
+
+# Fixed separator length: no faulty line breaks in headers (same top/bottom)
+SEP_LEN = 60
 
 logger = logging.getLogger(__name__)
 
@@ -151,19 +160,20 @@ class EmbeddingPipeline:
         Returns:
             Pipeline statistics
         """
-        logger.info("=" * 60)
-        logger.info("QDRANT EMBEDDING PIPELINE")
-        logger.info("=" * 60)
+        sep = "=" * SEP_LEN
+        logger.info(style(sep, "cyan"))
+        logger.info(style("  QDRANT EMBEDDING PIPELINE", "bold", "bright_cyan"))
+        logger.info(style(sep, "cyan"))
         logger.info(f"Model: {self.embedder.model}")
         logger.info(f"Dimensions: {self.embedder.dimensions}")
-        
+
         start_time = time.time()
-        
+
         try:
             # 1. Load documents
-            logger.info("\n" + "=" * 60)
-            logger.info("Loading documents...")
-            logger.info("=" * 60)
+            logger.info(style(sep, "cyan"))
+            logger.info(style("  STEP 1: LOADING DOCUMENTS", "bold", "bright_cyan"))
+            logger.info(style(sep, "cyan"))
             
             documents = self.loader.load_all(limit=limit)
             doc_stats = self.loader.get_stats(documents)
@@ -173,11 +183,11 @@ class EmbeddingPipeline:
             self.statistics['documents']['total'] = doc_stats['total']
             
             logger.info(f"Loaded {doc_stats['total']} documents ({doc_stats['pages']} pages, {doc_stats['media']} media)")
-            
+
             # 2. Chunk documents
-            logger.info("\n" + "=" * 60)
-            logger.info("Chunking documents...")
-            logger.info("=" * 60)
+            logger.info(style(sep, "cyan"))
+            logger.info(style("  STEP 2: CHUNKING DOCUMENTS", "bold", "bright_cyan"))
+            logger.info(style(sep, "cyan"))
             
             chunks = self.chunker.chunk_all(documents)
             chunk_stats = self.chunker.get_stats(chunks)
@@ -187,11 +197,11 @@ class EmbeddingPipeline:
             
             logger.info(f"Created {chunk_stats['total']} chunks")
             logger.info(f"Avg chunk size: {chunk_stats['avg_chunk_size']:.0f} chars")
-            
+
             # 3. Create embeddings
-            logger.info("\n" + "=" * 60)
-            logger.info("Creating embeddings...")
-            logger.info("=" * 60)
+            logger.info(style(sep, "cyan"))
+            logger.info(style("  STEP 3: CREATING EMBEDDINGS", "bold", "bright_cyan"))
+            logger.info(style(sep, "cyan"))
             
             # Extract texts for embedding
             texts = [chunk.text for chunk in chunks]
@@ -218,9 +228,9 @@ class EmbeddingPipeline:
                 pbar.set_postfix({'chunks': len(all_embeddings)})
             
             # 4. Build output records
-            logger.info("\n" + "=" * 60)
-            logger.info("Building output records...")
-            logger.info("=" * 60)
+            logger.info(style(sep, "cyan"))
+            logger.info(style("  STEP 4: BUILDING OUTPUT RECORDS", "bold", "bright_cyan"))
+            logger.info(style(sep, "cyan"))
             
             schema = self.config.output.schema
             records = []
@@ -235,9 +245,9 @@ class EmbeddingPipeline:
                 records.append(record)
             
             # 5. Write output (timestamped subdir: embedded_at_YYYYMMDD_HHMMSS)
-            logger.info("\n" + "=" * 60)
-            logger.info("Writing output...")
-            logger.info("=" * 60)
+            logger.info(style(sep, "cyan"))
+            logger.info(style("  STEP 5: WRITING OUTPUT", "bold", "bright_cyan"))
+            logger.info(style(sep, "cyan"))
             
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             run_output_dir = Path(self.config.paths.output_dir) / f"embedded_at_{timestamp}"
@@ -283,34 +293,30 @@ class EmbeddingPipeline:
             raise
     
     def _print_summary(self, stats: Dict[str, Any]):
-        """Print pipeline summary."""
-        logger.info("\n" + "=" * 60)
-        logger.info("PIPELINE SUMMARY")
-        logger.info("=" * 60)
-        
+        """Print pipeline summary with colored completion banner (fixed-width sep)."""
+        sep = "=" * SEP_LEN
         pipe = stats['pipeline']
         emb = stats['embedding']
-        
-        logger.info(f"\nDocuments:")
-        logger.info(f"  Pages: {pipe['documents'].get('pages', 0)}")
-        logger.info(f"  Media: {pipe['documents'].get('media', 0)}")
-        logger.info(f"  Total: {pipe['documents'].get('total', 0)}")
-        
-        logger.info(f"\nChunks:")
-        logger.info(f"  Total: {pipe['chunks'].get('total', 0)}")
-        
-        logger.info(f"\nEmbedding API:")
-        logger.info(f"  Model: {emb['model']}")
-        logger.info(f"  Dimensions: {emb['dimensions']}")
-        logger.info(f"  Total tokens: {emb['total_tokens']:,}")
-        logger.info(f"  Estimated cost: ${emb['total_cost']:.4f}")
-        
-        logger.info(f"\nOutput:")
-        logger.info(f"  File: {stats['output']['file']}")
-        logger.info(f"  Records: {stats['output']['records']}")
-        
-        logger.info(f"\nTime: {pipe['elapsed_seconds']:.2f}s")
-        logger.info("=" * 60)
+        out = stats['output']
+        summary = (
+            "\n"
+            + style(sep, "green") + "\n"
+            + style("  EMBEDDING PIPELINE COMPLETE", "bold", "bright_green") + "\n"
+            + style(sep, "green") + "\n"
+            + f"  Documents total:  {pipe['documents'].get('total', 0)}\n"
+            + f"  - Pages:          {pipe['documents'].get('pages', 0)}\n"
+            + f"  - Media:          {pipe['documents'].get('media', 0)}\n"
+            + f"  Chunks total:     {pipe['chunks'].get('total', 0)}\n"
+            + f"  Model:            {emb['model']}\n"
+            + f"  Dimensions:       {emb['dimensions']}\n"
+            + f"  Total tokens:     {emb['total_tokens']:,}\n"
+            + f"  Estimated cost:   ${emb['total_cost']:.4f}\n"
+            + f"  Output file:      {out['file']}\n"
+            + f"  Records:          {out['records']}\n"
+            + f"  Time:             {pipe['elapsed_seconds']:.2f}s\n"
+            + style(sep, "green")
+        )
+        logger.info(summary)
 
 
 # Entry point for testing
