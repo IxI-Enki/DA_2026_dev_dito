@@ -10,11 +10,11 @@ Usage:
     python run_deep_evaluation.py --show-config # Zeigt aktuelle Konfiguration
 """
 
-import sys
 import json
 import logging
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 from typing import List, Set
 
 # Add parent directory to path
@@ -22,6 +22,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 # Shared CLI utilities
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
+from analyzers.document_deep_analyzer import DocumentDeepAnalyzer
+from analyzers.media_deep_analyzer import MediaDeepAnalyzer
+from analyzers.wiki_deep_analyzer import WikiDeepAnalyzer
 from cli_utils import (
     add_no_color_arg,
     apply_color_from_args,
@@ -31,33 +34,30 @@ from cli_utils import (
     set_use_color,
     style,
 )
-
-from config import get_config, EvaluationConfig
-from analyzers.wiki_deep_analyzer import WikiDeepAnalyzer
-from analyzers.document_deep_analyzer import DocumentDeepAnalyzer
-from analyzers.media_deep_analyzer import MediaDeepAnalyzer
-from report_generator import ReportGenerator
 from generators.strategy_generator import StrategyGenerator
+from report_generator import ReportGenerator
+
+from config import EvaluationConfig, get_config
 
 
 def setup_logging(config: EvaluationConfig) -> logging.Logger:
     """
     Konfiguriert Logging basierend auf env.yaml.
-    
+
     Args:
         config: EvaluationConfig Instanz
-        
+
     Returns:
         Konfigurierter Logger
     """
-    log_cfg = config.raw_config.get('LOGGING', {})
-    
+    log_cfg = config.raw_config.get("LOGGING", {})
+
     # Get log file path (result-dir log)
     if config.results_dir:
-        default_log = str(config.results_dir / 'deep_evaluation.log')
+        default_log = str(config.results_dir / "deep_evaluation.log")
     else:
-        default_log = 'deep_evaluation.log'
-    log_file = log_cfg.get('deep_eval_log', default_log)
+        default_log = "deep_evaluation.log"
+    log_file = log_cfg.get("deep_eval_log", default_log)
 
     # Central log under data/logs (alongside other pipeline stages)
     central_log_dir = config.results_dir.parent / "logs" if config.results_dir else None
@@ -72,17 +72,17 @@ def setup_logging(config: EvaluationConfig) -> logging.Logger:
     # Configure logging
     handlers: List[logging.Handler] = [logging.StreamHandler()]
     if log_file:
-        handlers.append(logging.FileHandler(log_file, encoding='utf-8'))
+        handlers.append(logging.FileHandler(log_file, encoding="utf-8"))
     if central_log_file and central_log_file != log_file:
-        handlers.append(logging.FileHandler(central_log_file, encoding='utf-8'))
-    
+        handlers.append(logging.FileHandler(central_log_file, encoding="utf-8"))
+
     logging.basicConfig(
-        level=getattr(logging, log_cfg.get('level', 'INFO')),
-        format=log_cfg.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
+        level=getattr(logging, log_cfg.get("level", "INFO")),
+        format=log_cfg.get("format", "%(asctime)s - %(name)s - %(levelname)s - %(message)s"),
         handlers=handlers,
-        force=True
+        force=True,
     )
-    
+
     logger = logging.getLogger("DeepEval")
     log_targets = [log_file]
     if central_log_file and central_log_file != log_file:
@@ -94,65 +94,63 @@ def setup_logging(config: EvaluationConfig) -> logging.Logger:
 def get_file_extensions_from_config(config: EvaluationConfig) -> dict:
     """
     Lädt Dateiendungen aus config/env.yaml.
-    
+
     Args:
         config: EvaluationConfig Instanz
-        
+
     Returns:
         Dictionary mit extensions für pages, documents, images
     """
-    format_cfg = config.raw_config.get('FORMAT_ANALYSIS', {}).get('supported_formats', {})
-    
+    format_cfg = config.raw_config.get("FORMAT_ANALYSIS", {}).get("supported_formats", {})
+
     # Page extensions
-    page_exts = set(format_cfg.get('pages', {}).get('extensions', ['.txt', '.md']))
-    
+    page_exts = set(format_cfg.get("pages", {}).get("extensions", [".txt", ".md"]))
+
     # Document extensions (PDF + Office)
     doc_exts = set()
-    if 'documents' in format_cfg:
-        docs_cfg = format_cfg['documents']
-        if 'pdf' in docs_cfg:
-            doc_exts.update(docs_cfg['pdf'].get('extensions', ['.pdf']))
-        if 'office' in docs_cfg:
-            for office_type in docs_cfg['office'].values():
-                doc_exts.update(office_type.get('extensions', []))
-    
+    if "documents" in format_cfg:
+        docs_cfg = format_cfg["documents"]
+        if "pdf" in docs_cfg:
+            doc_exts.update(docs_cfg["pdf"].get("extensions", [".pdf"]))
+        if "office" in docs_cfg:
+            for office_type in docs_cfg["office"].values():
+                doc_exts.update(office_type.get("extensions", []))
+
     # Image extensions
-    img_exts = set(format_cfg.get('images', {}).get('extensions', ['.jpg', '.jpeg', '.png', '.svg']))
-    
-    return {
-        'pages': page_exts,
-        'documents': doc_exts,
-        'images': img_exts
-    }
+    img_exts = set(
+        format_cfg.get("images", {}).get("extensions", [".jpg", ".jpeg", ".png", ".svg"])
+    )
+
+    return {"pages": page_exts, "documents": doc_exts, "images": img_exts}
 
 
 def validate_paths(config: EvaluationConfig, logger: logging.Logger) -> bool:
     """
     Validiert dass alle benötigten Pfade existieren.
-    
+
     Args:
         config: EvaluationConfig Instanz
         logger: Logger Instanz
-        
+
     Returns:
         True wenn alle Pfade gültig sind, False sonst
     """
     errors = []
-    
+
     if not config.page_content_dir or not config.page_content_dir.exists():
         errors.append(f"Page content directory not found: {config.page_content_dir}")
-    
+
     if not config.media_dir or not config.media_dir.exists():
         errors.append(f"Media directory not found: {config.media_dir}")
-    
+
     if not config.results_dir:
         errors.append("Results directory not configured")
-    
+
     if errors:
         for error in errors:
             logger.error(error)
         return False
-    
+
     return True
 
 
@@ -160,51 +158,51 @@ def analyze_wiki_pages(
     config: EvaluationConfig,
     wiki_analyzer: WikiDeepAnalyzer,
     extensions: Set[str],
-    logger: logging.Logger
+    logger: logging.Logger,
 ) -> List[dict]:
     """
     Analysiert alle Wiki-Seiten.
-    
+
     Args:
         config: EvaluationConfig Instanz
         wiki_analyzer: WikiDeepAnalyzer Instanz
         extensions: Set von Dateiendungen
         logger: Logger Instanz
-        
+
     Returns:
         Liste von Analyse-Ergebnissen
     """
     results = []
     content_dir = config.page_content_dir
-    
+
     if not content_dir or not content_dir.exists():
         logger.error(f"Page content directory not found: {content_dir}")
         return results
-    
+
     logger.info(f"Analyzing Wiki Pages in {content_dir}...")
-    
+
     # Find all page files with configured extensions
     pages: List[Path] = []
     for ext in extensions:
         pages.extend(content_dir.glob(f"*{ext}"))
-    
+
     total_pages = len(pages)
     logger.info(f"Found {total_pages} page files")
-    
+
     if total_pages == 0:
         logger.warning("No page files found!")
         return results
-    
+
     # Process pages
     continue_on_error = config.continue_on_error
     show_progress = config.show_progress
-    
+
     for i, page_file in enumerate(pages):
         if show_progress and (i % 10 == 0 or i == total_pages - 1):
             logger.info(f"Processing Page {i+1}/{total_pages}: {page_file.name}")
-        
+
         try:
-            content = page_file.read_text(encoding='utf-8')
+            content = page_file.read_text(encoding="utf-8")
             res = wiki_analyzer.analyze_page(page_file.stem, content)
             results.append(res)
         except Exception as e:
@@ -212,7 +210,7 @@ def analyze_wiki_pages(
             logger.error(error_msg)
             if not continue_on_error:
                 raise
-    
+
     logger.info(f"Successfully analyzed {len(results)}/{total_pages} pages")
     return results
 
@@ -221,51 +219,51 @@ def analyze_documents(
     config: EvaluationConfig,
     doc_analyzer: DocumentDeepAnalyzer,
     extensions: Set[str],
-    logger: logging.Logger
+    logger: logging.Logger,
 ) -> List[dict]:
     """
     Analysiert alle Dokumente (PDF, Office) in Media-Ordnern.
-    
+
     Args:
         config: EvaluationConfig Instanz
         doc_analyzer: DocumentDeepAnalyzer Instanz
         extensions: Set von Dateiendungen
         logger: Logger Instanz
-        
+
     Returns:
         Liste von Analyse-Ergebnissen
     """
     results = []
     media_dir = config.media_dir
-    
+
     if not media_dir or not media_dir.exists():
         logger.error(f"Media directory not found: {media_dir}")
         return results
-    
+
     logger.info(f"Analyzing Documents in {media_dir}...")
-    
+
     # Recursive search for documents (set-based dedup for case-insensitive FS)
     doc_files_set: Set[Path] = set()
     for ext in extensions:
         doc_files_set.update(media_dir.rglob(f"*{ext}"))
         doc_files_set.update(media_dir.rglob(f"*{ext.upper()}"))
     doc_files = sorted(doc_files_set)
-    
+
     total_docs = len(doc_files)
     logger.info(f"Found {total_docs} document files")
-    
+
     if total_docs == 0:
         logger.warning("No document files found!")
         return results
-    
+
     # Process documents
     continue_on_error = config.continue_on_error
     show_progress = config.show_progress
-    
+
     for i, doc_file in enumerate(doc_files):
         if show_progress and (i % 5 == 0 or i == total_docs - 1):
             logger.info(f"Processing Document {i+1}/{total_docs}: {doc_file.name}")
-        
+
         try:
             res = doc_analyzer.analyze_document(doc_file)
             results.append(res)
@@ -274,7 +272,7 @@ def analyze_documents(
             logger.error(error_msg)
             if not continue_on_error:
                 raise
-    
+
     logger.info(f"Successfully analyzed {len(results)}/{total_docs} documents")
     return results
 
@@ -283,51 +281,51 @@ def analyze_images(
     config: EvaluationConfig,
     media_analyzer: MediaDeepAnalyzer,
     extensions: Set[str],
-    logger: logging.Logger
+    logger: logging.Logger,
 ) -> List[dict]:
     """
     Analysiert alle Bilder mit Vision AI.
-    
+
     Args:
         config: EvaluationConfig Instanz
         media_analyzer: MediaDeepAnalyzer Instanz
         extensions: Set von Dateiendungen
         logger: Logger Instanz
-        
+
     Returns:
         Liste von Analyse-Ergebnissen
     """
     results = []
     media_dir = config.media_dir
-    
+
     if not media_dir or not media_dir.exists():
         logger.error(f"Media directory not found: {media_dir}")
         return results
-    
+
     logger.info(f"Analyzing Images in {media_dir}...")
-    
+
     # Recursive search for images (set-based dedup for case-insensitive FS)
     img_files_set: Set[Path] = set()
     for ext in extensions:
         img_files_set.update(media_dir.rglob(f"*{ext}"))
         img_files_set.update(media_dir.rglob(f"*{ext.upper()}"))
     img_files = sorted(img_files_set)
-    
+
     total_imgs = len(img_files)
     logger.info(f"Found {total_imgs} image files")
-    
+
     if total_imgs == 0:
         logger.warning("No image files found!")
         return results
-    
+
     # Process images
     continue_on_error = config.continue_on_error
     show_progress = config.show_progress
-    
+
     for i, img_file in enumerate(img_files):
         if show_progress and (i % 5 == 0 or i == total_imgs - 1):
             logger.info(f"Processing Image {i+1}/{total_imgs}: {img_file.name}")
-        
+
         try:
             res = media_analyzer.analyze_image(img_file)
             results.append(res)
@@ -336,7 +334,7 @@ def analyze_images(
             logger.error(error_msg)
             if not continue_on_error:
                 raise
-    
+
     logger.info(f"Successfully analyzed {len(results)}/{total_imgs} images")
     return results
 
@@ -369,13 +367,13 @@ def main():
 
     # Load configuration
     config = get_config()
-    
+
     # Setup logging
     logger = setup_logging(config)
     logger.info(style("=" * 70, "cyan"))
     logger.info(style("  DEEP CONTENT EVALUATION", "bold", "bright_cyan"))
     logger.info(style("=" * 70, "cyan"))
-    
+
     # Validate paths
     if not validate_paths(config, logger):
         logger.error("Path validation failed. Please check your config/env.yaml")
@@ -383,55 +381,51 @@ def main():
 
     if config.fetched_data_dir:
         logger.info("Using fetched data dir: %s", config.fetched_data_dir)
-    
+
     # Get file extensions from config
     extensions = get_file_extensions_from_config(config)
-    logger.info(f"Configured extensions - Pages: {extensions['pages']}, "
-                f"Documents: {extensions['documents']}, Images: {extensions['images']}")
-    
+    logger.info(
+        f"Configured extensions - Pages: {extensions['pages']}, "
+        f"Documents: {extensions['documents']}, Images: {extensions['images']}"
+    )
+
     # Initialize Analyzers
     logger.info("Initializing analyzers...")
     wiki_analyzer = WikiDeepAnalyzer(config)
     doc_analyzer = DocumentDeepAnalyzer(config)
     media_analyzer = MediaDeepAnalyzer(config)
-    
+
     # Timestamp für diesen Run (vollständig: YYYYMMDD_HHMMSS)
     now = datetime.now()
-    timestamp_full = now.strftime('%Y%m%d_%H%M%S')
-    
+    timestamp_full = now.strftime("%Y%m%d_%H%M%S")
+
     results = {
         "timestamp": timestamp_full,
         "timestamp_iso": now.isoformat(),
         "wiki_pages": [],
         "documents": [],
-        "media": []
+        "media": [],
     }
-    
+
     # 1. Analyze Wiki Pages
     sep = "=" * 70
     logger.info(style(sep, "cyan"))
     logger.info(style("  STEP 1: WIKI PAGES ANALYSIS", "bold", "bright_cyan"))
     logger.info(style(sep, "cyan"))
-    results["wiki_pages"] = analyze_wiki_pages(
-        config, wiki_analyzer, extensions['pages'], logger
-    )
-    
+    results["wiki_pages"] = analyze_wiki_pages(config, wiki_analyzer, extensions["pages"], logger)
+
     # 2. Analyze Documents
     logger.info(style(sep, "cyan"))
     logger.info(style("  STEP 2: DOCUMENTS ANALYSIS", "bold", "bright_cyan"))
     logger.info(style(sep, "cyan"))
-    results["documents"] = analyze_documents(
-        config, doc_analyzer, extensions['documents'], logger
-    )
-    
+    results["documents"] = analyze_documents(config, doc_analyzer, extensions["documents"], logger)
+
     # 3. Analyze Images
     logger.info(style(sep, "cyan"))
     logger.info(style("  STEP 3: IMAGES ANALYSIS", "bold", "bright_cyan"))
     logger.info(style(sep, "cyan"))
-    results["media"] = analyze_images(
-        config, media_analyzer, extensions['images'], logger
-    )
-    
+    results["media"] = analyze_images(config, media_analyzer, extensions["images"], logger)
+
     # 4. Save Raw Results
     logger.info(style(sep, "cyan"))
     logger.info(style("  STEP 4: SAVING RESULTS", "bold", "bright_cyan"))
@@ -441,13 +435,13 @@ def main():
         sys.exit(1)
     output_dir = config.results_dir / f"deep_eval_{timestamp_full}"
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     json_path = output_dir / "deep_analysis_results.json"
-    with open(json_path, "w", encoding='utf-8') as f:
+    with open(json_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
-    
+
     logger.info(f"Raw results saved to: {json_path}")
-    
+
     # 5. Generate Preprocessing Strategies
     logger.info(style(sep, "cyan"))
     logger.info(style("  STEP 5: GENERATING PREPROCESSING STRATEGIES", "bold", "bright_cyan"))
@@ -460,7 +454,7 @@ def main():
         logger.error(f"Failed to generate preprocessing strategies: {e}")
         if not config.continue_on_error:
             raise
-    
+
     # 6. Generate Comprehensive Markdown Report
     logger.info(style(sep, "cyan"))
     logger.info(style("  STEP 6: GENERATING REPORT", "bold", "bright_cyan"))
@@ -473,13 +467,16 @@ def main():
         logger.error(f"Failed to generate report: {e}")
         if not config.continue_on_error:
             raise
-    
+
     # Summary -- logged as a single cohesive block (AC3), with styled banner
     summary = (
         "\n"
-        + style(sep, "cyan") + "\n"
-        + style("  DEEP EVALUATION COMPLETE", "bold", "bright_cyan") + "\n"
-        + style(sep, "cyan") + "\n"
+        + style(sep, "cyan")
+        + "\n"
+        + style("  DEEP EVALUATION COMPLETE", "bold", "bright_cyan")
+        + "\n"
+        + style(sep, "cyan")
+        + "\n"
         + f"  Wiki Pages:    {len(results['wiki_pages'])}\n"
         + f"  Documents:     {len(results['documents'])}\n"
         + f"  Images:        {len(results['media'])}\n"

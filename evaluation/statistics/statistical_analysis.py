@@ -88,8 +88,7 @@ class StatisticalAnalyzer:
         n = len(arr)
         rng = np.random.default_rng()
         bootstrap_means = [
-            float(np.mean(rng.choice(arr, size=n, replace=True)))
-            for _ in range(n_iterations)
+            float(np.mean(rng.choice(arr, size=n, replace=True))) for _ in range(n_iterations)
         ]
         alpha = 1.0 - confidence
         low = (alpha / 2) * 100
@@ -140,7 +139,9 @@ class StatisticalAnalyzer:
                 stat, p_value = stats.wilcoxon(a, b)
             if np.std(a) > 0 or np.std(b) > 0:
                 pooled_std = np.sqrt((np.var(a) + np.var(b)) / 2)
-                effect_size = float((np.mean(b) - np.mean(a)) / pooled_std) if pooled_std > 0 else 0.0
+                effect_size = (
+                    float((np.mean(b) - np.mean(a)) / pooled_std) if pooled_std > 0 else 0.0
+                )
             else:
                 effect_size = 0.0
         interp = _interpret_cohens_d(effect_size)

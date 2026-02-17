@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import matplotlib
+
 matplotlib.use("Agg")  # non-interactive backend; must be before pyplot import
 
 import matplotlib.pyplot as plt
@@ -29,17 +30,19 @@ def _apply_style() -> None:
     if _STYLE_APPLIED:
         return
     sns.set_theme(style="whitegrid", font="serif")
-    plt.rcParams.update({
-        "axes.labelsize": 12,
-        "axes.titlesize": 14,
-        "xtick.labelsize": 10,
-        "ytick.labelsize": 10,
-        "legend.fontsize": 10,
-        "figure.titlesize": 16,
-        "figure.dpi": 300,
-        "savefig.bbox": "tight",
-        "savefig.pad_inches": 0.1,
-    })
+    plt.rcParams.update(
+        {
+            "axes.labelsize": 12,
+            "axes.titlesize": 14,
+            "xtick.labelsize": 10,
+            "ytick.labelsize": 10,
+            "legend.fontsize": 10,
+            "figure.titlesize": 16,
+            "figure.dpi": 300,
+            "savefig.bbox": "tight",
+            "savefig.pad_inches": 0.1,
+        }
+    )
     _STYLE_APPLIED = True
 
 
@@ -146,7 +149,7 @@ class EvaluationVisualizer:
             meanprops={"marker": "D", "markerfacecolor": "red", "markersize": 6},
         )
         colours = sns.color_palette("pastel", len(labels))
-        for patch, colour in zip(bp["boxes"], colours):
+        for patch, colour in zip(bp["boxes"], colours, strict=False):
             patch.set_facecolor(colour)
         ax.set_ylabel("Score")
         ax.set_title(title, fontweight="bold")
@@ -316,9 +319,7 @@ class EvaluationVisualizer:
         """
         data = np.asarray(hit_matrix)
         n_m, n_q = data.shape
-        fig, ax = plt.subplots(
-            figsize=(max(12, n_q * 0.15), max(5, n_m * 1.2))
-        )
+        fig, ax = plt.subplots(figsize=(max(12, n_q * 0.15), max(5, n_m * 1.2)))
         sns.heatmap(
             data,
             xticklabels=question_ids,

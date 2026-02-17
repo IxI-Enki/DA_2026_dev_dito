@@ -7,20 +7,20 @@ Generiert:
 - RAGAS-kompatible Test-Sets
 """
 
-import json
 import random
-from pathlib import Path
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, field
 import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Relative import für config
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import get_config, EvaluationConfig
+from config import EvaluationConfig, get_config
 
 # Optional OpenAI-compatible client
 try:
     from openai import OpenAI
+
     HAS_OPENAI = True
 except ImportError:
     HAS_OPENAI = False
@@ -29,6 +29,7 @@ except ImportError:
 @dataclass
 class GeneratedQuery:
     """Eine generierte Test-Query."""
+
     question: str
     source_page: str
     source_chunk: str
@@ -41,6 +42,7 @@ class GeneratedQuery:
 @dataclass
 class QueryGenerationResult:
     """Gesamtergebnis der Query-Generierung."""
+
     total_queries: int = 0
     queries_by_type: Dict[str, int] = field(default_factory=dict)
     queries_by_namespace: Dict[str, int] = field(default_factory=dict)
@@ -75,18 +77,19 @@ class QueryGenerator:
         self.min_chunk_length = self.query_cfg.min_chunk_length
 
         # Query type templates from config
-        query_types_cfg = self.raw_config.get('QUERY_GENERATION', {}).get('query_types', {})
-        self.factual_template = query_types_cfg.get('factual', {}).get('prompt_template', self._default_factual_template())
-        self.procedural_template = query_types_cfg.get('procedural', {}).get('prompt_template', self._default_procedural_template())
+        query_types_cfg = self.raw_config.get("QUERY_GENERATION", {}).get("query_types", {})
+        self.factual_template = query_types_cfg.get("factual", {}).get(
+            "prompt_template", self._default_factual_template()
+        )
+        self.procedural_template = query_types_cfg.get("procedural", {}).get(
+            "prompt_template", self._default_procedural_template()
+        )
 
         # Initialize LLM client
         self.client = None
         if HAS_OPENAI and self.enabled:
             try:
-                self.client = OpenAI(
-                    base_url=self.llm_cfg.base_url,
-                    api_key=self.llm_cfg.api_key
-                )
+                self.client = OpenAI(base_url=self.llm_cfg.base_url, api_key=self.llm_cfg.api_key)
             except Exception as e:
                 print(f"  WARNUNG: LLM-Client konnte nicht initialisiert werden: {e}")
 
@@ -170,14 +173,14 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
             page_id = content_file.stem
 
             # Extract namespace
-            namespace = page_id.split(':')[0] if ':' in page_id else 'root'
+            namespace = page_id.split(":")[0] if ":" in page_id else "root"
 
             # Skip archived content
-            if namespace == 'archive':
+            if namespace == "archive":
                 continue
 
             try:
-                content = content_file.read_text(encoding='utf-8')
+                content = content_file.read_text(encoding="utf-8")
 
                 # Skip short content
                 if len(content) < self.min_chunk_length * 2:
@@ -186,10 +189,7 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
                 if namespace not in pages_by_ns:
                     pages_by_ns[namespace] = []
 
-                pages_by_ns[namespace].append({
-                    'page_id': page_id,
-                    'content': content
-                })
+                pages_by_ns[namespace].append({"page_id": page_id, "content": content})
 
             except Exception:
                 continue
@@ -205,56 +205,56 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
     def _generate_queries_for_page(self, page_data: Dict, namespace: str):
         """
         Generiert Queries für eine Seite.
-        
+
         Gemäß Microsoft RAG Guide:
         - Query: Die Frage
         - Context: Collection der tatsächlichen Textstellen (hier: der Chunk)
         - Answer: Gültige Antwort (optional, kann später generiert werden)
         """
-        page_id = page_data['page_id']
-        content = page_data['content']
+        page_id = page_data["page_id"]
+        content = page_data["content"]
 
         # Split into chunks (one-off chunking für Query-Generierung, nicht für finale Lösung)
         chunks = self._chunk_content(content)
 
         # Sample chunks
-        sampled_chunks = chunks[:self.chunks_per_page]
+        sampled_chunks = chunks[: self.chunks_per_page]
 
         for chunk in sampled_chunks:
             # Generate factual query
-            factual_q = self._generate_query(chunk, 'factual')
+            factual_q = self._generate_query(chunk, "factual")
             if factual_q:
                 # Context: Der tatsächliche Text der die Query beantwortet (Microsoft Guide)
                 query = GeneratedQuery(
                     question=factual_q,
                     source_page=page_id,
                     source_chunk=chunk[:500],
-                    query_type='factual',
+                    query_type="factual",
                     namespace=namespace,
                     context=chunk,  # Context gemäß Microsoft Guide
-                    expected_answer=None  # Kann später mit LLM generiert werden
+                    expected_answer=None,  # Kann später mit LLM generiert werden
                 )
                 self._add_query(query)
 
             # Generate procedural query for suitable pages
             if self._is_procedural_candidate(page_id, chunk):
-                proc_q = self._generate_query(chunk, 'procedural')
+                proc_q = self._generate_query(chunk, "procedural")
                 if proc_q:
                     query = GeneratedQuery(
                         question=proc_q,
                         source_page=page_id,
                         source_chunk=chunk[:500],
-                        query_type='procedural',
+                        query_type="procedural",
                         namespace=namespace,
                         context=chunk,  # Context gemäß Microsoft Guide
-                        expected_answer=None  # Kann später mit LLM generiert werden
+                        expected_answer=None,  # Kann später mit LLM generiert werden
                     )
                     self._add_query(query)
 
     def _chunk_content(self, content: str) -> List[str]:
         """Teilt Inhalt in Chunks auf."""
         # Simple paragraph-based chunking
-        paragraphs = content.split('\n\n')
+        paragraphs = content.split("\n\n")
 
         chunks = []
         current_chunk = ""
@@ -278,34 +278,39 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
 
     def _is_procedural_candidate(self, page_id: str, chunk: str) -> bool:
         """Prüft ob ein Chunk für Prozess-Fragen geeignet ist."""
-        indicators = ['schritt', 'anleitung', 'wie', 'ablauf', 'prozess',
-                     'vorgehen', 'formular', 'antrag', 'muss', 'sollte']
+        indicators = [
+            "schritt",
+            "anleitung",
+            "wie",
+            "ablauf",
+            "prozess",
+            "vorgehen",
+            "formular",
+            "antrag",
+            "muss",
+            "sollte",
+        ]
 
         page_lower = page_id.lower()
         chunk_lower = chunk.lower()
 
-        for indicator in indicators:
-            if indicator in page_lower or indicator in chunk_lower:
-                return True
-        return False
+        return any(indicator in page_lower or indicator in chunk_lower for indicator in indicators)
 
     def _generate_query(self, chunk: str, query_type: str) -> Optional[str]:
         """Generiert eine Query mit LLM."""
         if not self.client:
             return None
 
-        template = self.factual_template if query_type == 'factual' else self.procedural_template
-        prompt = template.replace('{chunk}', chunk[:800])
+        template = self.factual_template if query_type == "factual" else self.procedural_template
+        prompt = template.replace("{chunk}", chunk[:800])
 
         try:
             response = self.client.chat.completions.create(
                 model=self.llm_cfg.model,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
+                messages=[{"role": "user", "content": prompt}],
                 temperature=self.llm_cfg.temperature,
                 max_tokens=self.llm_cfg.max_tokens,
-                top_p=self.llm_cfg.top_p
+                top_p=self.llm_cfg.top_p,
             )
 
             content = response.choices[0].message.content
@@ -320,12 +325,12 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
                 self.result.failed_generations += 1
                 return None
 
-            if not question.endswith('?'):
-                question += '?'
+            if not question.endswith("?"):
+                question += "?"
 
             return question
 
-        except Exception as e:
+        except Exception:
             self.result.failed_generations += 1
             return None
 
@@ -335,38 +340,40 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
         self.result.total_queries += 1
 
         # Update stats
-        self.result.queries_by_type[query.query_type] = \
+        self.result.queries_by_type[query.query_type] = (
             self.result.queries_by_type.get(query.query_type, 0) + 1
+        )
 
-        self.result.queries_by_namespace[query.namespace] = \
+        self.result.queries_by_namespace[query.namespace] = (
             self.result.queries_by_namespace.get(query.namespace, 0) + 1
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         """Konvertiert Ergebnisse zu Dictionary für JSON-Export."""
         return {
-            'summary': {
-                'total_queries': self.result.total_queries,
-                'pages_sampled': self.result.pages_sampled,
-                'failed_generations': self.result.failed_generations
+            "summary": {
+                "total_queries": self.result.total_queries,
+                "pages_sampled": self.result.pages_sampled,
+                "failed_generations": self.result.failed_generations,
             },
-            'by_type': self.result.queries_by_type,
-            'by_namespace': self.result.queries_by_namespace,
-            'queries': [
+            "by_type": self.result.queries_by_type,
+            "by_namespace": self.result.queries_by_namespace,
+            "queries": [
                 {
-                    'question': q.question,
-                    'source_page': q.source_page,
-                    'query_type': q.query_type,
-                    'namespace': q.namespace,
-                    'context': q.context[:500] if q.context else None
+                    "question": q.question,
+                    "source_page": q.source_page,
+                    "query_type": q.query_type,
+                    "namespace": q.namespace,
+                    "context": q.context[:500] if q.context else None,
                 }
                 for q in self.result.queries
-            ]
+            ],
         }
 
     def to_ragas_format(self) -> List[Dict[str, Any]]:
         """
         Exportiert Queries im RAGAS-kompatiblen Format.
-        
+
         Format entspricht Microsoft RAG Guide:
         - Query: Die Frage
         - Context: Collection der tatsächlichen Textstellen (hier: contexts array)
@@ -379,17 +386,19 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
 
         for query in self.result.queries:
             # Microsoft Guide Format: Query + Context + Answer
-            ragas_data.append({
-                'question': query.question,  # Query
-                'contexts': [query.context] if query.context else [],  # Context (Collection)
-                'ground_truth': query.expected_answer or "",  # Answer (optional)
-                'metadata': {
-                    'source_page': query.source_page,
-                    'query_type': query.query_type,
-                    'namespace': query.namespace,
-                    'source_chunk': query.source_chunk[:200] if query.source_chunk else None
+            ragas_data.append(
+                {
+                    "question": query.question,  # Query
+                    "contexts": [query.context] if query.context else [],  # Context (Collection)
+                    "ground_truth": query.expected_answer or "",  # Answer (optional)
+                    "metadata": {
+                        "source_page": query.source_page,
+                        "query_type": query.query_type,
+                        "namespace": query.namespace,
+                        "source_chunk": query.source_chunk[:200] if query.source_chunk else None,
+                    },
                 }
-            })
+            )
 
         return ragas_data
 

@@ -19,7 +19,7 @@ import argparse
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 EVAL_ROOT = Path(__file__).resolve().parent.parent
@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -72,7 +73,8 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Directory for result JSON files (default: evaluation/results/)",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Print per-query results to stdout",
     )
@@ -133,7 +135,9 @@ def main() -> None:
 
             try:
                 result = run_model_evaluation(
-                    config, verbose=args.verbose, corpus_source="preprocessed",
+                    config,
+                    verbose=args.verbose,
+                    corpus_source="preprocessed",
                 )
                 # Add chunk_overlap to experiment for display
                 result["experiment"]["chunk_overlap"] = config.chunk_overlap
@@ -157,7 +161,7 @@ def main() -> None:
                 json.dump(
                     {
                         "thesis_id": "J4",
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                         "code_version": _get_git_version(),
                         "chunk_sizes": [
                             {
@@ -165,7 +169,9 @@ def main() -> None:
                                 "corpus_chunks": r["performance"]["corpus_chunks"],
                                 "mrr": _metric_mean(r["aggregate_metrics"]["mrr"]),
                                 "ndcg_at_10": _metric_mean(r["aggregate_metrics"]["ndcg_at_10"]),
-                                "precision_at_5": _metric_mean(r["aggregate_metrics"]["precision_at_5"]),
+                                "precision_at_5": _metric_mean(
+                                    r["aggregate_metrics"]["precision_at_5"]
+                                ),
                                 "hit_rate": r["aggregate_metrics"]["hit_rate"],
                             }
                             for r in all_results

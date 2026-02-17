@@ -8,21 +8,22 @@ Prüft:
 - Link-Integrität
 """
 
-import re
 import json
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
+import re
 import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 # Relative import für config
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import get_config, EvaluationConfig
+from config import EvaluationConfig, get_config
 
 
 @dataclass
 class PageRAGReadiness:
     """RAG-Eignung einer einzelnen Seite."""
+
     page_id: str
     readiness_score: float  # 0.0 - 1.0
     chunking_score: float
@@ -37,6 +38,7 @@ class PageRAGReadiness:
 @dataclass
 class RAGReadinessResult:
     """Gesamtergebnis der RAG-Readiness-Analyse."""
+
     total_pages: int = 0
     avg_readiness_score: float = 0.0
     readiness_distribution: Dict[str, int] = field(default_factory=dict)
@@ -61,11 +63,11 @@ class RAGReadinessChecker:
         self.raw_config = self.config.raw_config
 
         # Load RAG readiness settings
-        rag_cfg = self.raw_config.get('RAG_READINESS', {})
-        self.chunking_cfg = rag_cfg.get('chunking', {})
-        self.noise_cfg = rag_cfg.get('noise_detection', {})
-        self.metadata_cfg = rag_cfg.get('metadata_requirements', {})
-        self.link_cfg = rag_cfg.get('link_quality', {})
+        rag_cfg = self.raw_config.get("RAG_READINESS", {})
+        self.chunking_cfg = rag_cfg.get("chunking", {})
+        self.noise_cfg = rag_cfg.get("noise_detection", {})
+        self.metadata_cfg = rag_cfg.get("metadata_requirements", {})
+        self.link_cfg = rag_cfg.get("link_quality", {})
 
         # Compile patterns
         self._compile_patterns()
@@ -76,20 +78,20 @@ class RAGReadinessChecker:
     def _compile_patterns(self):
         """Kompiliert Regex-Patterns für Performance."""
         # Removable syntax patterns
-        removable = self.noise_cfg.get('removable_syntax', [])
+        removable = self.noise_cfg.get("removable_syntax", [])
         self.removable_patterns = [re.compile(p, re.IGNORECASE) for p in removable]
 
         # Boilerplate patterns
-        boilerplate = self.noise_cfg.get('boilerplate_patterns', [])
+        boilerplate = self.noise_cfg.get("boilerplate_patterns", [])
         self.boilerplate_patterns = [re.compile(p, re.MULTILINE) for p in boilerplate]
 
         # Structure indicators (DokuWiki syntax)
-        self.headline_pattern = re.compile(r'^={2,6}.+={2,6}$', re.MULTILINE)
-        self.list_pattern = re.compile(r'^[\s]*[\*\-]\s+', re.MULTILINE)
-        self.table_pattern = re.compile(r'^\|.*\|$', re.MULTILINE)
-        self.link_pattern = re.compile(r'\[\[([^\]]+)\]\]')
-        self.media_pattern = re.compile(r'\{\{([^}]+)\}\}')
-        self.code_block_pattern = re.compile(r'<code.*?>.*?</code>', re.DOTALL)
+        self.headline_pattern = re.compile(r"^={2,6}.+={2,6}$", re.MULTILINE)
+        self.list_pattern = re.compile(r"^[\s]*[\*\-]\s+", re.MULTILINE)
+        self.table_pattern = re.compile(r"^\|.*\|$", re.MULTILINE)
+        self.link_pattern = re.compile(r"\[\[([^\]]+)\]\]")
+        self.media_pattern = re.compile(r"\{\{([^}]+)\}\}")
+        self.code_block_pattern = re.compile(r"<code.*?>.*?</code>", re.DOTALL)
 
     def analyze(self) -> RAGReadinessResult:
         """
@@ -134,7 +136,7 @@ class RAGReadinessChecker:
             page_id = content_file.stem
 
             try:
-                content = content_file.read_text(encoding='utf-8')
+                content = content_file.read_text(encoding="utf-8")
             except Exception:
                 continue
 
@@ -144,18 +146,14 @@ class RAGReadinessChecker:
                 meta_file = metadata_dir / f"{page_id}_info.json"
                 if meta_file.exists():
                     try:
-                        metadata = json.loads(meta_file.read_text(encoding='utf-8'))
+                        metadata = json.loads(meta_file.read_text(encoding="utf-8"))
                     except Exception:
                         pass
 
             # Use real page ID from metadata if available
-            real_page_id = metadata.get('id', page_id)
+            real_page_id = metadata.get("id", page_id)
 
-            pages.append({
-                'page_id': real_page_id,
-                'content': content,
-                'metadata': metadata
-            })
+            pages.append({"page_id": real_page_id, "content": content, "metadata": metadata})
 
         return pages
 
@@ -169,9 +167,9 @@ class RAGReadinessChecker:
         Returns:
             PageRAGReadiness Objekt
         """
-        page_id = page_data['page_id']
-        content = page_data['content']
-        metadata = page_data['metadata']
+        page_id = page_data["page_id"]
+        content = page_data["content"]
+        metadata = page_data["metadata"]
 
         issues = []
         recommendations = []
@@ -208,10 +206,10 @@ class RAGReadinessChecker:
         # Noise is inverted (high noise = low score)
         adjusted_noise = 1.0 - noise_score
         readiness_score = (
-            structure_score * 0.25 +
-            adjusted_noise * 0.30 +
-            chunking_score * 0.30 +
-            metadata_score * 0.15
+            structure_score * 0.25
+            + adjusted_noise * 0.30
+            + chunking_score * 0.30
+            + metadata_score * 0.15
         )
 
         return PageRAGReadiness(
@@ -223,48 +221,44 @@ class RAGReadinessChecker:
             structure_score=structure_score,
             issues=issues,
             recommendations=recommendations,
-            stats={
-                'structure': structure_stats,
-                'noise': noise_stats,
-                'chunking': chunking_stats
-            }
+            stats={"structure": structure_stats, "noise": noise_stats, "chunking": chunking_stats},
         )
 
     def _analyze_structure(self, content: str) -> Tuple[float, Dict]:
         """Analysiert die Struktur des Inhalts."""
         stats = {
-            'headlines': len(self.headline_pattern.findall(content)),
-            'lists': len(self.list_pattern.findall(content)),
-            'tables': len(self.table_pattern.findall(content)),
-            'links': len(self.link_pattern.findall(content)),
-            'media_refs': len(self.media_pattern.findall(content)),
-            'code_blocks': len(self.code_block_pattern.findall(content)),
-            'paragraphs': content.count('\n\n') + 1,
-            'char_count': len(content),
-            'line_count': content.count('\n') + 1
+            "headlines": len(self.headline_pattern.findall(content)),
+            "lists": len(self.list_pattern.findall(content)),
+            "tables": len(self.table_pattern.findall(content)),
+            "links": len(self.link_pattern.findall(content)),
+            "media_refs": len(self.media_pattern.findall(content)),
+            "code_blocks": len(self.code_block_pattern.findall(content)),
+            "paragraphs": content.count("\n\n") + 1,
+            "char_count": len(content),
+            "line_count": content.count("\n") + 1,
         }
 
         # Score calculation
         score = 0.0
 
         # Headlines are good for chunking
-        if stats['headlines'] > 0:
+        if stats["headlines"] > 0:
             score += 0.4
-        elif stats['paragraphs'] > 3:
+        elif stats["paragraphs"] > 3:
             score += 0.2
 
         # Lists indicate structured content
-        if stats['lists'] > 0:
+        if stats["lists"] > 0:
             score += 0.2
 
         # Reasonable length
-        if 500 <= stats['char_count'] <= 10000:
+        if 500 <= stats["char_count"] <= 10000:
             score += 0.3
-        elif stats['char_count'] > 100:
+        elif stats["char_count"] > 100:
             score += 0.2
 
         # Tables can be tricky but indicate data
-        if stats['tables'] > 0:
+        if stats["tables"] > 0:
             score += 0.1
 
         return min(score, 1.0), stats
@@ -272,11 +266,11 @@ class RAGReadinessChecker:
     def _analyze_noise(self, content: str) -> Tuple[float, Dict]:
         """Analysiert den Noise-Anteil im Inhalt."""
         stats = {
-            'removable_matches': 0,
-            'boilerplate_matches': 0,
-            'empty_lines_ratio': 0.0,
-            'short_lines_ratio': 0.0,
-            'wiki_syntax_chars': 0
+            "removable_matches": 0,
+            "boilerplate_matches": 0,
+            "empty_lines_ratio": 0.0,
+            "short_lines_ratio": 0.0,
+            "wiki_syntax_chars": 0,
         }
 
         original_len = len(content)
@@ -286,43 +280,43 @@ class RAGReadinessChecker:
         # Count removable patterns
         for pattern in self.removable_patterns:
             matches = pattern.findall(content)
-            stats['removable_matches'] += len(matches)
+            stats["removable_matches"] += len(matches)
 
         # Count boilerplate
         for pattern in self.boilerplate_patterns:
             matches = pattern.findall(content)
-            stats['boilerplate_matches'] += len(matches)
+            stats["boilerplate_matches"] += len(matches)
 
         # Count wiki syntax characters
-        wiki_chars = content.count('{{') + content.count('}}')
-        wiki_chars += content.count('[[') + content.count(']]')
-        wiki_chars += content.count('====') + content.count('===')
-        wiki_chars += content.count('<code') + content.count('</code>')
-        wiki_chars += content.count('<wrap') + content.count('</wrap>')
-        stats['wiki_syntax_chars'] = wiki_chars
+        wiki_chars = content.count("{{") + content.count("}}")
+        wiki_chars += content.count("[[") + content.count("]]")
+        wiki_chars += content.count("====") + content.count("===")
+        wiki_chars += content.count("<code") + content.count("</code>")
+        wiki_chars += content.count("<wrap") + content.count("</wrap>")
+        stats["wiki_syntax_chars"] = wiki_chars
 
         # Analyze lines
-        lines = content.split('\n')
+        lines = content.split("\n")
         non_empty = [l for l in lines if l.strip()]
         if lines:
-            stats['empty_lines_ratio'] = 1 - (len(non_empty) / len(lines))
+            stats["empty_lines_ratio"] = 1 - (len(non_empty) / len(lines))
 
         short_lines = [l for l in non_empty if len(l.strip()) < 20]
         if non_empty:
-            stats['short_lines_ratio'] = len(short_lines) / len(non_empty)
+            stats["short_lines_ratio"] = len(short_lines) / len(non_empty)
 
         # Calculate noise score
         noise_score = 0.0
 
         # Removable content
-        noise_score += min(stats['removable_matches'] * 0.05, 0.2)
+        noise_score += min(stats["removable_matches"] * 0.05, 0.2)
 
         # Empty lines ratio
-        if stats['empty_lines_ratio'] > 0.3:
+        if stats["empty_lines_ratio"] > 0.3:
             noise_score += 0.1
 
         # Short lines ratio
-        if stats['short_lines_ratio'] > 0.5:
+        if stats["short_lines_ratio"] > 0.5:
             noise_score += 0.1
 
         # Wiki syntax density
@@ -333,68 +327,68 @@ class RAGReadinessChecker:
 
     def _analyze_chunking(self, content: str, structure_stats: Dict) -> Tuple[float, Dict]:
         """Analysiert die Chunking-Eignung."""
-        ideal_min = self.chunking_cfg.get('ideal_paragraph_length', {}).get('min', 100)
-        ideal_max = self.chunking_cfg.get('ideal_paragraph_length', {}).get('max', 500)
+        ideal_min = self.chunking_cfg.get("ideal_paragraph_length", {}).get("min", 100)
+        ideal_max = self.chunking_cfg.get("ideal_paragraph_length", {}).get("max", 500)
 
         # Split by double newlines (paragraphs)
-        paragraphs = [p.strip() for p in content.split('\n\n') if p.strip()]
+        paragraphs = [p.strip() for p in content.split("\n\n") if p.strip()]
 
         stats = {
-            'paragraph_count': len(paragraphs),
-            'avg_paragraph_length': 0,
-            'paragraphs_in_ideal_range': 0,
-            'too_short': 0,
-            'too_long': 0,
-            'has_natural_breaks': structure_stats.get('headlines', 0) > 0
+            "paragraph_count": len(paragraphs),
+            "avg_paragraph_length": 0,
+            "paragraphs_in_ideal_range": 0,
+            "too_short": 0,
+            "too_long": 0,
+            "has_natural_breaks": structure_stats.get("headlines", 0) > 0,
         }
 
         if paragraphs:
             lengths = [len(p) for p in paragraphs]
-            stats['avg_paragraph_length'] = sum(lengths) / len(lengths)
+            stats["avg_paragraph_length"] = sum(lengths) / len(lengths)
 
             for length in lengths:
                 if ideal_min <= length <= ideal_max:
-                    stats['paragraphs_in_ideal_range'] += 1
+                    stats["paragraphs_in_ideal_range"] += 1
                 elif length < ideal_min:
-                    stats['too_short'] += 1
+                    stats["too_short"] += 1
                 else:
-                    stats['too_long'] += 1
+                    stats["too_long"] += 1
 
         # Score calculation
         score = 0.0
 
         # Natural breaks (headlines)
-        if stats['has_natural_breaks']:
+        if stats["has_natural_breaks"]:
             score += 0.4
 
         # Ideal paragraph distribution
-        if stats['paragraph_count'] > 0:
-            ideal_ratio = stats['paragraphs_in_ideal_range'] / stats['paragraph_count']
+        if stats["paragraph_count"] > 0:
+            ideal_ratio = stats["paragraphs_in_ideal_range"] / stats["paragraph_count"]
             score += ideal_ratio * 0.4
 
         # Reasonable paragraph count
-        if 3 <= stats['paragraph_count'] <= 20:
+        if 3 <= stats["paragraph_count"] <= 20:
             score += 0.2
-        elif stats['paragraph_count'] > 0:
+        elif stats["paragraph_count"] > 0:
             score += 0.1
 
         return min(score, 1.0), stats
 
     def _analyze_metadata(self, metadata: Dict) -> Tuple[float, List[str]]:
         """Analysiert die Metadaten-Qualität."""
-        required = self.metadata_cfg.get('required', ['title', 'namespace', 'last_modified'])
-        optional = self.metadata_cfg.get('optional', ['author', 'revision'])
+        required = self.metadata_cfg.get("required", ["title", "namespace", "last_modified"])
+        optional = self.metadata_cfg.get("optional", ["author", "revision"])
 
         issues = []
         score = 0.0
 
         # Check required fields
         required_found = 0
-        for field in required:
-            if field in metadata and metadata[field]:
+        for field_name in required:
+            if field_name in metadata and metadata[field_name]:
                 required_found += 1
             else:
-                issues.append(f"Fehlendes Metadatum: {field}")
+                issues.append(f"Fehlendes Metadatum: {field_name}")
 
         if required:
             score += (required_found / len(required)) * 0.7
@@ -413,9 +407,8 @@ class RAGReadinessChecker:
         # Track common issues
         for issue in readiness.issues:
             # Simplify issue for grouping
-            simplified = issue.split('(')[0].strip()
-            self.result.common_issues[simplified] = \
-                self.result.common_issues.get(simplified, 0) + 1
+            simplified = issue.split("(")[0].strip()
+            self.result.common_issues[simplified] = self.result.common_issues.get(simplified, 0) + 1
 
     def _calculate_summary(self):
         """Berechnet Zusammenfassungsstatistiken."""
@@ -429,28 +422,30 @@ class RAGReadinessChecker:
         # Distribution
         for page in self.result.pages:
             if page.readiness_score >= 0.7:
-                bucket = 'high'
+                bucket = "high"
             elif page.readiness_score >= 0.4:
-                bucket = 'medium'
+                bucket = "medium"
             else:
-                bucket = 'low'
-            self.result.readiness_distribution[bucket] = \
+                bucket = "low"
+            self.result.readiness_distribution[bucket] = (
                 self.result.readiness_distribution.get(bucket, 0) + 1
+            )
 
         # Aggregate noise stats
         all_noise = [p.noise_score for p in self.result.pages]
         self.result.noise_statistics = {
-            'avg_noise': sum(all_noise) / len(all_noise) if all_noise else 0,
-            'max_noise': max(all_noise) if all_noise else 0,
-            'pages_with_high_noise': sum(1 for n in all_noise if n > 0.3)
+            "avg_noise": sum(all_noise) / len(all_noise) if all_noise else 0,
+            "max_noise": max(all_noise) if all_noise else 0,
+            "pages_with_high_noise": sum(1 for n in all_noise if n > 0.3),
         }
 
         # Aggregate structure stats
-        all_headlines = [p.stats.get('structure', {}).get('headlines', 0)
-                        for p in self.result.pages]
+        all_headlines = [
+            p.stats.get("structure", {}).get("headlines", 0) for p in self.result.pages
+        ]
         self.result.structure_statistics = {
-            'pages_with_headlines': sum(1 for h in all_headlines if h > 0),
-            'avg_headlines': sum(all_headlines) / len(all_headlines) if all_headlines else 0
+            "pages_with_headlines": sum(1 for h in all_headlines if h > 0),
+            "avg_headlines": sum(all_headlines) / len(all_headlines) if all_headlines else 0,
         }
 
     def _generate_recommendations(self):
@@ -458,23 +453,23 @@ class RAGReadinessChecker:
         recommendations = []
 
         # Noise recommendations
-        if self.result.noise_statistics.get('pages_with_high_noise', 0) > 10:
+        if self.result.noise_statistics.get("pages_with_high_noise", 0) > 10:
             recommendations.append(
                 "Wiki-Syntax-Bereinigung empfohlen: "
                 f"{self.result.noise_statistics['pages_with_high_noise']} Seiten mit hohem Noise"
             )
 
         # Structure recommendations
-        pages_without_headlines = self.result.total_pages - \
-            self.result.structure_statistics.get('pages_with_headlines', 0)
+        pages_without_headlines = self.result.total_pages - self.result.structure_statistics.get(
+            "pages_with_headlines", 0
+        )
         if pages_without_headlines > self.result.total_pages * 0.3:
             recommendations.append(
                 f"Absatz-basiertes Chunking für {pages_without_headlines} Seiten ohne Überschriften"
             )
 
         # Common issues recommendations
-        for issue, count in sorted(self.result.common_issues.items(),
-                                   key=lambda x: -x[1])[:5]:
+        for issue, count in sorted(self.result.common_issues.items(), key=lambda x: -x[1])[:5]:
             if count > 5:
                 recommendations.append(f"Häufiges Problem ({count}x): {issue}")
 
@@ -483,34 +478,30 @@ class RAGReadinessChecker:
     def to_dict(self) -> Dict[str, Any]:
         """Konvertiert Ergebnisse zu Dictionary für JSON-Export."""
         return {
-            'summary': {
-                'total_pages': self.result.total_pages,
-                'avg_readiness_score': round(self.result.avg_readiness_score, 3),
-                'readiness_distribution': self.result.readiness_distribution
+            "summary": {
+                "total_pages": self.result.total_pages,
+                "avg_readiness_score": round(self.result.avg_readiness_score, 3),
+                "readiness_distribution": self.result.readiness_distribution,
             },
-            'noise_statistics': self.result.noise_statistics,
-            'structure_statistics': self.result.structure_statistics,
-            'common_issues': dict(sorted(
-                self.result.common_issues.items(),
-                key=lambda x: -x[1]
-            )[:10]),
-            'preprocessing_recommendations': self.result.preprocessing_recommendations,
-            'low_readiness_pages': [
+            "noise_statistics": self.result.noise_statistics,
+            "structure_statistics": self.result.structure_statistics,
+            "common_issues": dict(
+                sorted(self.result.common_issues.items(), key=lambda x: -x[1])[:10]
+            ),
+            "preprocessing_recommendations": self.result.preprocessing_recommendations,
+            "low_readiness_pages": [
                 {
-                    'page_id': p.page_id,
-                    'readiness_score': round(p.readiness_score, 2),
-                    'issues': p.issues,
-                    'recommendations': p.recommendations
+                    "page_id": p.page_id,
+                    "readiness_score": round(p.readiness_score, 2),
+                    "issues": p.issues,
+                    "recommendations": p.recommendations,
                 }
                 for p in sorted(self.result.pages, key=lambda x: x.readiness_score)[:20]
             ],
-            'high_readiness_pages': [
-                {
-                    'page_id': p.page_id,
-                    'readiness_score': round(p.readiness_score, 2)
-                }
+            "high_readiness_pages": [
+                {"page_id": p.page_id, "readiness_score": round(p.readiness_score, 2)}
                 for p in sorted(self.result.pages, key=lambda x: -x.readiness_score)[:10]
-            ]
+            ],
         }
 
 

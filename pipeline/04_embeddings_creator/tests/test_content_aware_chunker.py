@@ -6,9 +6,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
+from content_aware_chunker import ContentAwareChunker
 from document_loader import Document
-from content_aware_chunker import ContentAwareChunker, Chunk
 
 
 def _make_document(

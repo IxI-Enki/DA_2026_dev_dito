@@ -48,6 +48,14 @@ addopts = [
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+exclude = [
+    "backend_services/",
+    "research/",
+    "dokuwiki_plugin/",
+    ".planning/",
+    "data/",
+    "__pycache__/",
+]
 
 [tool.ruff.lint]
 select = [
@@ -62,6 +70,20 @@ select = [
 ]
 ignore = [
     "E501",  # line too long (handled by formatter)
+    "W293",  # blank line contains whitespace (cosmetic, auto-fixable)
+    "W291",  # trailing whitespace (cosmetic, auto-fixable)
+    "E402",  # module-level import not at top (pipeline modules do conditional imports)
+    "UP035", # deprecated typing imports (widespread, non-breaking)
+    "UP006", # non-PEP585 annotation e.g. List -> list (widespread, non-breaking)
+    "UP007", # non-PEP604 annotation Union[X,Y] -> X|Y (widespread, non-breaking)
+    "F541",  # f-string without placeholders (many are intentional format strings)
+    "N999",  # invalid module name (pipeline dirs like 01_wiki_fetcher)
+    "N806",  # non-lowercase variable in function (common for constants)
+    "UP038", # non-PEP604 isinstance (isinstance(x, int | str) -- widespread)
+    "SIM108", # ternary instead of if-else (readability preference)
+    "SIM105", # contextlib.suppress instead of try-except-pass (readability)
+    "B005",  # strip with multi-char string (intentional usage)
+    "E741",  # ambiguous variable name (e.g., l, O -- context-dependent)
 ]
 
 [tool.ruff.lint.isort]
@@ -73,3 +95,12 @@ known-first-party = ["config"]
 [tool.black]
 target-version = ["py311"]
 line-length = 100
+extend-exclude = '''
+(
+    backend_services/
+    | research/
+    | dokuwiki_plugin/
+    | \.planning/
+    | data/
+)
+'''

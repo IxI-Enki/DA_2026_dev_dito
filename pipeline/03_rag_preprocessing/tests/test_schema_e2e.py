@@ -72,9 +72,7 @@ def sample_media() -> dict:
 class TestSchemaE2E:
     """Exporter -> DocumentLoader roundtrip."""
 
-    def test_page_roundtrip_all_fields_present(
-        self, sample_page: dict, tmp_path: Path
-    ) -> None:
+    def test_page_roundtrip_all_fields_present(self, sample_page: dict, tmp_path: Path) -> None:
         """Exported page can be loaded by DocumentLoader with all 14 fields."""
         from exporter import Exporter
 
@@ -113,9 +111,7 @@ class TestSchemaE2E:
         assert isinstance(fm["links_to"], list)
         assert isinstance(fm["linked_from"], list)
 
-    def test_media_roundtrip_uses_media_id(
-        self, sample_media: dict, tmp_path: Path
-    ) -> None:
+    def test_media_roundtrip_uses_media_id(self, sample_media: dict, tmp_path: Path) -> None:
         """Exported media uses media_id (not page_id) and has all fields."""
         from exporter import Exporter
 
@@ -169,11 +165,10 @@ class TestSchemaE2E:
         assert (out_dir / "pages").is_dir()
         assert (out_dir / "media").is_dir()
 
-    def test_manifest_json_created(
-        self, sample_page: dict, tmp_path: Path
-    ) -> None:
+    def test_manifest_json_created(self, sample_page: dict, tmp_path: Path) -> None:
         """Export creates a manifest.json."""
         import json
+
         from exporter import Exporter
 
         exp = Exporter()

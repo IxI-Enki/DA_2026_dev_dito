@@ -77,5 +77,3 @@ def bootstrap_confidence_interval(
         confidence_level=confidence_level,
         method="bootstrap",
     )
-
-

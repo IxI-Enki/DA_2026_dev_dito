@@ -130,12 +130,14 @@ def _build_data(gt: dict, result_data: dict | None) -> list[dict]:
             if not isinstance(contexts, list):
                 contexts = [contexts] if contexts else []
             answer = row.get("answer", row.get("response", ground_truth))
-        data.append({
-            "question": question,
-            "ground_truth": ground_truth,
-            "contexts": contexts,
-            "answer": answer,
-        })
+        data.append(
+            {
+                "question": question,
+                "ground_truth": ground_truth,
+                "contexts": contexts,
+                "answer": answer,
+            }
+        )
     return data
 
 
@@ -230,7 +232,9 @@ def main() -> int:
     if args.ollama_url:
         llm_base_url = _normalize_ollama_base_url(args.ollama_url)
         if not _check_ollama_reachable(llm_base_url):
-            logger.error("Ollama not reachable at %s. Start Ollama or check --ollama-url.", llm_base_url)
+            logger.error(
+                "Ollama not reachable at %s. Start Ollama or check --ollama-url.", llm_base_url
+            )
             return 1
         logger.info("Ollama base URL: %s", llm_base_url)
     else:
@@ -269,7 +273,9 @@ def main() -> int:
         temperature=config.ragas_temperature,
     )
     n_samples = len(data)
-    logger.info("Running RAGAS evaluation on %d samples (this may take several minutes)...", n_samples)
+    logger.info(
+        "Running RAGAS evaluation on %d samples (this may take several minutes)...", n_samples
+    )
     sys.stdout.flush()
     sys.stderr.flush()
     try:

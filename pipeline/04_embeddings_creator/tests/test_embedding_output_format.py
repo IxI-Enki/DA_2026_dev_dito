@@ -5,22 +5,21 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from document_loader import Document
 from content_aware_chunker import Chunk
-
+from document_loader import Document
 
 # MCP / jsonl_ingestion expects: id, text, embedding (3072), metadata
 # metadata (flat or frontmatter): source, collection, access_level, chunk_index, total_chunks, ...
-MCP_REQUIRED_PAYLOAD_KEYS = frozenset({
-    "text",
-    "source",
-    "collection",
-    "access_level",
-    "chunk_index",
-    "total_chunks",
-})
+MCP_REQUIRED_PAYLOAD_KEYS = frozenset(
+    {
+        "text",
+        "source",
+        "collection",
+        "access_level",
+        "chunk_index",
+        "total_chunks",
+    }
+)
 EMBEDDING_DIMENSIONS = 3072  # text-embedding-3-large
 
 
@@ -71,7 +70,12 @@ class TestRecordSchema:
         mock_config = MagicMock()
         mock_config.output.schema = minimal_output_schema
         mock_config.output.include_metadata = minimal_include_metadata
-        mock_config.logging = {"level": "INFO", "format": "%(message)s", "console": True, "file": None}
+        mock_config.logging = {
+            "level": "INFO",
+            "format": "%(message)s",
+            "console": True,
+            "file": None,
+        }
         mock_config.paths = MagicMock()
         mock_config.paths.output_dir = "/tmp/out"
         mock_config.paths.log_dir = "/tmp/logs"
@@ -80,9 +84,12 @@ class TestRecordSchema:
         mock_embedder.model = "text-embedding-3-large"
         mock_embedder.dimensions = EMBEDDING_DIMENSIONS
 
-        with patch("pipeline.get_config", return_value=mock_config), patch(
-            "pipeline.Embedder", return_value=mock_embedder
-        ), patch("pipeline.DocumentLoader"), patch("pipeline.ContentAwareChunker"):
+        with (
+            patch("pipeline.get_config", return_value=mock_config),
+            patch("pipeline.Embedder", return_value=mock_embedder),
+            patch("pipeline.DocumentLoader"),
+            patch("pipeline.ContentAwareChunker"),
+        ):
             from pipeline import EmbeddingPipeline
 
             pipeline = EmbeddingPipeline()
@@ -129,7 +136,12 @@ class TestMetadataHasMcpPayloadFields:
         )
         mock_config = MagicMock()
         mock_config.output.include_metadata = minimal_include_metadata
-        mock_config.logging = {"level": "INFO", "format": "%(message)s", "console": True, "file": None}
+        mock_config.logging = {
+            "level": "INFO",
+            "format": "%(message)s",
+            "console": True,
+            "file": None,
+        }
         mock_config.paths = MagicMock()
         mock_config.paths.output_dir = "/tmp/out"
         mock_config.paths.log_dir = "/tmp/logs"
@@ -138,9 +150,12 @@ class TestMetadataHasMcpPayloadFields:
         mock_embedder.model = "text-embedding-3-large"
         mock_embedder.dimensions = EMBEDDING_DIMENSIONS
 
-        with patch("pipeline.get_config", return_value=mock_config), patch(
-            "pipeline.Embedder", return_value=mock_embedder
-        ), patch("pipeline.DocumentLoader"), patch("pipeline.ContentAwareChunker"):
+        with (
+            patch("pipeline.get_config", return_value=mock_config),
+            patch("pipeline.Embedder", return_value=mock_embedder),
+            patch("pipeline.DocumentLoader"),
+            patch("pipeline.ContentAwareChunker"),
+        ):
             from pipeline import EmbeddingPipeline
 
             pipeline = EmbeddingPipeline()

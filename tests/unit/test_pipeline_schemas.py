@@ -10,15 +10,15 @@ Tests:
 - Invalid data is correctly rejected
 - JSONL output format expectations
 """
+
 import json
 from pathlib import Path
 from typing import Any
 
-import pytest
 import jsonschema
+import pytest
 
 from tests.conftest import DATA_DIR
-
 
 # =============================================================================
 # Test: Schema File Validity

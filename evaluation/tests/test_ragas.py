@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -75,5 +75,7 @@ class TestRAGASEvaluatorErrorHandling:
             ev = RAGASEvaluator(llm_base_url="http://x", model="y")
         with patch.object(ev, "_run_ragas_evaluate") as run:
             run.return_value = {}
-            result = ev.evaluate([{"question": "Q", "ground_truth": "A", "contexts": ["c"], "answer": "A"}])
+            result = ev.evaluate(
+                [{"question": "Q", "ground_truth": "A", "contexts": ["c"], "answer": "A"}]
+            )
         assert isinstance(result, dict)

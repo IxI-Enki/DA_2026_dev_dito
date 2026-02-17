@@ -24,11 +24,10 @@ import subprocess
 import sys
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
-import yaml
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
@@ -46,11 +45,11 @@ from evaluation.config import (
     load_experiment_config,
     load_ground_truth,
 )
+from evaluation.metrics.mean_average_precision import average_precision
 from evaluation.metrics.mrr import mean_reciprocal_rank, reciprocal_rank
 from evaluation.metrics.ndcg import mean_ndcg_at_k, ndcg_at_k
 from evaluation.metrics.precision_at_k import mean_precision_at_k, precision_at_k
 from evaluation.metrics.recall_at_k import recall_at_k
-from evaluation.metrics.mean_average_precision import average_precision
 from evaluation.providers.base import EmbeddingProvider
 
 logger = logging.getLogger(__name__)
@@ -60,6 +59,7 @@ logger = logging.getLogger(__name__)
 # Multi-signal relevance scoring (aligned with prototype in
 # research/techstack/ragas/professional_evaluation/metrics/retrieval_metrics.py)
 # ---------------------------------------------------------------------------
+
 
 def calculate_relevance_score(
     chunk_text: str,
@@ -116,6 +116,7 @@ def _std(values: list[float]) -> float:
 # ---------------------------------------------------------------------------
 # Simple chunker (evaluation-only, no pipeline dependency)
 # ---------------------------------------------------------------------------
+
 
 def simple_chunk(text: str, chunk_size: int = 512, overlap: int = 50) -> list[str]:
     """Split text into chunks by paragraph boundaries respecting size limits.
@@ -182,8 +183,7 @@ def simple_chunk(text: str, chunk_size: int = 512, overlap: int = 50) -> list[st
 # Corpus loader
 # ---------------------------------------------------------------------------
 
-_IMAGE_SUFFIXES = (".jpg.md", ".png.md", ".gif.md", ".jpeg.md",
-                   ".svg.md", ".webp.md", ".bmp.md")
+_IMAGE_SUFFIXES = (".jpg.md", ".png.md", ".gif.md", ".jpeg.md", ".svg.md", ".webp.md", ".bmp.md")
 
 
 def _extract_page_id(text: str, filename: str) -> str:
@@ -205,7 +205,7 @@ def _strip_frontmatter(text: str) -> str:
     end = text.find("\n---", 3)
     if end == -1:
         return text
-    return text[end + 4:].strip()
+    return text[end + 4 :].strip()
 
 
 def _load_md_dir(
@@ -272,14 +272,12 @@ def load_corpus(
         logger.info("Loading FULL preprocessed corpus from %s", pp_dir)
 
         if pages_dir.exists():
-            page_chunks = _load_md_dir(pages_dir, chunk_size, chunk_overlap,
-                                       exclude_images=False)
+            page_chunks = _load_md_dir(pages_dir, chunk_size, chunk_overlap, exclude_images=False)
             logger.info("  Pages: %d chunks", len(page_chunks))
             all_chunks.extend(page_chunks)
 
         if media_dir.exists():
-            media_chunks = _load_md_dir(media_dir, chunk_size, chunk_overlap,
-                                        exclude_images=True)
+            media_chunks = _load_md_dir(media_dir, chunk_size, chunk_overlap, exclude_images=True)
             logger.info("  Media (no images): %d chunks", len(media_chunks))
             all_chunks.extend(media_chunks)
 
@@ -287,13 +285,14 @@ def load_corpus(
         corpus_dir = EVAL_ROOT / "test_corpus"
         if not corpus_dir.exists():
             raise FileNotFoundError(f"Test corpus not found: {corpus_dir}")
-        all_chunks = _load_md_dir(corpus_dir, chunk_size, chunk_overlap,
-                                  exclude_images=True)
+        all_chunks = _load_md_dir(corpus_dir, chunk_size, chunk_overlap, exclude_images=True)
 
     doc_count = len({c["page_id"] for c in all_chunks})
     logger.info(
         "Corpus loaded: %d chunks from %d documents (source=%s)",
-        len(all_chunks), doc_count, corpus_source,
+        len(all_chunks),
+        doc_count,
+        corpus_source,
     )
     return all_chunks
 
@@ -301,6 +300,7 @@ def load_corpus(
 # ---------------------------------------------------------------------------
 # Provider factory
 # ---------------------------------------------------------------------------
+
 
 def create_provider(config: ExperimentConfig) -> EmbeddingProvider:
     """Instantiate the embedding provider from experiment config.
@@ -346,6 +346,7 @@ def create_provider(config: ExperimentConfig) -> EmbeddingProvider:
 # Qdrant helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_qdrant_client(host: str = "localhost", port: int = 6333) -> QdrantClient:
     """Create Qdrant client for local evaluation instance.
 
@@ -376,6 +377,7 @@ def _embed_in_batches(
 # ---------------------------------------------------------------------------
 # Evaluation runner
 # ---------------------------------------------------------------------------
+
 
 def _get_git_version() -> str:
     try:
@@ -625,6 +627,7 @@ def run_model_evaluation(
 
     cost_info = {}
     from evaluation.providers.openai_provider import OpenAIProvider
+
     if isinstance(provider, OpenAIProvider):
         cost_info = {
             "total_tokens": provider.total_tokens,
@@ -645,7 +648,7 @@ def run_model_evaluation(
             "top_k": config.top_k,
             "config_hash": config.config_hash,
             "code_version": _get_git_version(),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         },
         "aggregate_metrics": {
             "mrr": {"mean": round(agg_mrr, 4), "std": round(_std(rr_values), 4)},
@@ -653,7 +656,10 @@ def run_model_evaluation(
             "precision_at_5": {"mean": round(agg_p5, 4), "std": round(_std(p5_values), 4)},
             "recall_at_10": {"mean": round(agg_recall, 4), "std": round(_std(rec10_values), 4)},
             "map": {"mean": round(agg_map, 4), "std": round(_std(ap_values), 4)},
-            "content_relevance": {"mean": round(sum(rel_values) / max(len(rel_values), 1), 4), "std": round(_std(rel_values), 4)},
+            "content_relevance": {
+                "mean": round(sum(rel_values) / max(len(rel_values), 1), 4),
+                "std": round(_std(rel_values), 4),
+            },
             "hit_rate": round(hits / total, 4) if total else 0.0,
         },
         "by_difficulty": by_difficulty,
@@ -676,6 +682,7 @@ def run_model_evaluation(
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -707,7 +714,8 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Directory for result JSON files (default: evaluation/results/)",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Print per-query results to stdout",
     )
@@ -762,7 +770,9 @@ def _print_summary(result: dict) -> None:
     if by_diff:
         print("  By difficulty:")
         for diff, metrics in sorted(by_diff.items()):
-            print(f"    {diff:8s}: MRR={metrics['mrr']:.3f}  NDCG@10={metrics['ndcg_at_10']:.3f}  hit={metrics['hit_rate']:.0%}  (n={metrics['count']})")
+            print(
+                f"    {diff:8s}: MRR={metrics['mrr']:.3f}  NDCG@10={metrics['ndcg_at_10']:.3f}  hit={metrics['hit_rate']:.0%}  (n={metrics['count']})"
+            )
 
 
 def _print_comparison_table(results: list[dict]) -> None:
@@ -808,10 +818,12 @@ def main() -> None:
         """Return a new config with overridden ground_truth_file if --gt given."""
         if gt_override is None:
             return config
-        return ExperimentConfig(**{
-            **{f.name: getattr(config, f.name) for f in config.__dataclass_fields__.values()},
-            "ground_truth_file": gt_override,
-        })
+        return ExperimentConfig(
+            **{
+                **{f.name: getattr(config, f.name) for f in config.__dataclass_fields__.values()},
+                "ground_truth_file": gt_override,
+            }
+        )
 
     if args.compare_all:
         experiments_dir = EVAL_ROOT / "experiments"
@@ -837,7 +849,9 @@ def main() -> None:
 
             try:
                 result = run_model_evaluation(
-                    config, verbose=args.verbose, corpus_source=corpus_source,
+                    config,
+                    verbose=args.verbose,
+                    corpus_source=corpus_source,
                 )
                 all_results.append(result)
                 _print_summary(result)
@@ -859,7 +873,7 @@ def main() -> None:
                 json.dump(
                     {
                         "thesis_id": "FF3",
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                         "code_version": _get_git_version(),
                         "corpus_source": corpus_source,
                         "ground_truth": gt_override or "from config",
@@ -870,7 +884,9 @@ def main() -> None:
                                 "dimensions": r["experiment"]["dimensions"],
                                 "mrr": _metric_mean(r["aggregate_metrics"]["mrr"]),
                                 "ndcg_at_10": _metric_mean(r["aggregate_metrics"]["ndcg_at_10"]),
-                                "precision_at_5": _metric_mean(r["aggregate_metrics"]["precision_at_5"]),
+                                "precision_at_5": _metric_mean(
+                                    r["aggregate_metrics"]["precision_at_5"]
+                                ),
                                 "hit_rate": r["aggregate_metrics"]["hit_rate"],
                             }
                             for r in all_results
@@ -889,7 +905,9 @@ def main() -> None:
 
         try:
             result = run_model_evaluation(
-                config, verbose=args.verbose, corpus_source=corpus_source,
+                config,
+                verbose=args.verbose,
+                corpus_source=corpus_source,
             )
         except Exception as exc:
             logger.error("Evaluation failed: %s", exc)

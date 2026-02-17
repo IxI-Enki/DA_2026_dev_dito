@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
@@ -110,9 +110,7 @@ def load_experiment_config(config_path: str | Path) -> ExperimentConfig:
         retrieval_mode=retrieval.get("mode", "dense"),
         top_k=retrieval.get("top_k", 10),
         collection_prefix=retrieval.get("collection_prefix", "eval_"),
-        ground_truth_file=ground_truth.get(
-            "file", "ground_truth/leowiki_qa_50_verified.json"
-        ),
+        ground_truth_file=ground_truth.get("file", "ground_truth/leowiki_qa_50_verified.json"),
         metrics=tuple(metrics_list),
         config_hash=f"sha256:{config_hash}",
         llm_base_url=ragas.get("llm_base_url", "http://192.168.8.3:11434/v1"),

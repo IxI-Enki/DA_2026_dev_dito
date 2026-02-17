@@ -53,7 +53,10 @@ class SentenceTransformersProvider(EmbeddingProvider):
 
         logger.info(
             "Loading %s (dim=%d, dtype=%s, device=%s)",
-            model, dimensions, torch_dtype, device,
+            model,
+            dimensions,
+            torch_dtype,
+            device,
         )
 
         self._st_model = SentenceTransformer(

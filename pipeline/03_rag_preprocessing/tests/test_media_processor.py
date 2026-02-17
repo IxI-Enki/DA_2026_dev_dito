@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -30,7 +30,9 @@ class TestMediaProcessorPDF:
         mp = MediaProcessor()
         pdf = tmp_path / "test.pdf"
         pdf.write_bytes(b"%PDF")
-        with patch("media_processor.MediaProcessor._extract_pdf_text", return_value="Extracted text"):
+        with patch(
+            "media_processor.MediaProcessor._extract_pdf_text", return_value="Extracted text"
+        ):
             result = mp.process_pdf(pdf)
         assert isinstance(result, str)
 
@@ -42,7 +44,9 @@ class TestMediaProcessorPDF:
         pdf = tmp_path / "docling.pdf"
         pdf.write_bytes(b"%PDF")
         docling_md = "# Title\n\nParagraph from Docling."
-        with patch("media_processor.MediaProcessor._extract_pdf_text_docling", return_value=docling_md):
+        with patch(
+            "media_processor.MediaProcessor._extract_pdf_text_docling", return_value=docling_md
+        ):
             result = mp.process_pdf(pdf)
         assert result == docling_md
         assert result.strip().startswith("# Title")
@@ -54,9 +58,11 @@ class TestMediaProcessorPDF:
         pdf = tmp_path / "scanned.pdf"
         pdf.write_bytes(b"%PDF")
         # Simulate Docling empty, pypdf empty -> should attempt OCR fallback
-        with patch("media_processor.MediaProcessor._extract_pdf_text_docling", return_value=""), \
-             patch("media_processor.MediaProcessor._extract_pdf_text", return_value=""), \
-             patch("media_processor.MediaProcessor._ocr_pdf", return_value="OCR result"):
+        with (
+            patch("media_processor.MediaProcessor._extract_pdf_text_docling", return_value=""),
+            patch("media_processor.MediaProcessor._extract_pdf_text", return_value=""),
+            patch("media_processor.MediaProcessor._ocr_pdf", return_value="OCR result"),
+        ):
             result = mp.process_pdf(pdf)
         assert result == "OCR result"
 
@@ -82,7 +88,9 @@ class TestMediaProcessorDOCX:
         doc.save(str(docx_path))
         mp = MediaProcessor()
         docling_md = "# Docling Title\n\nStructured content."
-        with patch("media_processor.MediaProcessor._extract_docx_text_docling", return_value=docling_md):
+        with patch(
+            "media_processor.MediaProcessor._extract_docx_text_docling", return_value=docling_md
+        ):
             result = mp.process_docx(docx_path)
         assert result == docling_md
         assert result.strip().startswith("# Docling Title")
@@ -115,8 +123,8 @@ class TestMediaProcessorXLSX:
 
     def test_process_xlsx_tries_docling_first(self, tmp_path: Path) -> None:
         """When Docling returns non-empty text, that text is returned."""
-        from openpyxl import Workbook
         from media_processor import MediaProcessor
+        from openpyxl import Workbook
 
         xlsx_path = tmp_path / "sample.xlsx"
         wb = Workbook()
@@ -126,14 +134,16 @@ class TestMediaProcessorXLSX:
         wb.save(str(xlsx_path))
         mp = MediaProcessor()
         docling_md = "## Sheet1\n\n| Col1 | Col2 |"
-        with patch("media_processor.MediaProcessor._extract_xlsx_text_docling", return_value=docling_md):
+        with patch(
+            "media_processor.MediaProcessor._extract_xlsx_text_docling", return_value=docling_md
+        ):
             result = mp.process_xlsx(xlsx_path)
         assert result == docling_md
 
     def test_process_xlsx_fallback_produces_markdown_tables(self, tmp_path: Path) -> None:
         """Fallback openpyxl produces proper Markdown table syntax with | and ---."""
-        from openpyxl import Workbook
         from media_processor import MediaProcessor
+        from openpyxl import Workbook
 
         xlsx_path = tmp_path / "data.xlsx"
         wb = Workbook()
@@ -178,8 +188,10 @@ class TestMediaProcessorDirectory:
         from media_processor import MediaProcessor
 
         mp = MediaProcessor()
-        with patch.object(mp, "process_pdf", return_value="pdf text"), \
-             patch.object(mp, "process_image", return_value="image text"):
+        with (
+            patch.object(mp, "process_pdf", return_value="pdf text"),
+            patch.object(mp, "process_image", return_value="image text"),
+        ):
             results = mp.process_media_directory(media_dir)
         assert isinstance(results, list)
 
@@ -187,8 +199,10 @@ class TestMediaProcessorDirectory:
         from media_processor import MediaProcessor
 
         mp = MediaProcessor()
-        with patch.object(mp, "process_pdf", return_value="pdf text"), \
-             patch.object(mp, "process_image", return_value="image text"):
+        with (
+            patch.object(mp, "process_pdf", return_value="pdf text"),
+            patch.object(mp, "process_image", return_value="image text"),
+        ):
             results = mp.process_media_directory(media_dir)
         for entry in results:
             assert "filename" in entry

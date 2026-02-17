@@ -39,17 +39,13 @@ class TestOllamaProvider:
     @patch("evaluation.providers.ollama_provider.ollama.Client")
     def test_embed_calls_sdk(self, mock_client_cls: MagicMock) -> None:
         mock_client = MagicMock()
-        mock_client.embed.return_value = {
-            "embeddings": [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
-        }
+        mock_client.embed.return_value = {"embeddings": [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]}
         mock_client_cls.return_value = mock_client
 
         provider = OllamaProvider(model="bge-m3", dimensions=3)
         result = provider.embed(["hello", "world"])
 
-        mock_client.embed.assert_called_once_with(
-            model="bge-m3", input=["hello", "world"]
-        )
+        mock_client.embed.assert_called_once_with(model="bge-m3", input=["hello", "world"])
         assert len(result) == 2
         assert result[0] == [0.1, 0.2, 0.3]
 
@@ -59,9 +55,7 @@ class TestOpenAIProvider:
 
     @patch("evaluation.providers.openai_provider.openai.OpenAI")
     def test_properties(self, mock_openai_cls: MagicMock) -> None:
-        provider = OpenAIProvider(
-            model="text-embedding-3-large", dimensions=3072
-        )
+        provider = OpenAIProvider(model="text-embedding-3-large", dimensions=3072)
         assert provider.model_name == "text-embedding-3-large"
         assert provider.dimensions == 3072
         assert provider.cost_per_token > 0.0
@@ -69,9 +63,7 @@ class TestOpenAIProvider:
 
     @patch("evaluation.providers.openai_provider.openai.OpenAI")
     def test_is_embedding_provider(self, mock_openai_cls: MagicMock) -> None:
-        provider = OpenAIProvider(
-            model="text-embedding-3-large", dimensions=3072
-        )
+        provider = OpenAIProvider(model="text-embedding-3-large", dimensions=3072)
         assert isinstance(provider, EmbeddingProvider)
 
     @patch("evaluation.providers.openai_provider.openai.OpenAI")
@@ -92,9 +84,7 @@ class TestOpenAIProvider:
 
         mock_client.embeddings.create.return_value = mock_response
 
-        provider = OpenAIProvider(
-            model="text-embedding-3-large", dimensions=3
-        )
+        provider = OpenAIProvider(model="text-embedding-3-large", dimensions=3)
         result = provider.embed(["hello"])
 
         assert len(result) == 1

@@ -9,20 +9,20 @@ Analysiert und klassifiziert:
 
 import json
 import re
-from pathlib import Path
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, field
-from collections import defaultdict
 import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Relative import für config
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import get_config, EvaluationConfig
+from config import EvaluationConfig, get_config
 
 
 @dataclass
 class PageClassification:
     """Klassifizierung einer einzelnen Seite."""
+
     page_id: str
     namespace: str
     is_teacher_restricted: bool
@@ -39,6 +39,7 @@ class PageClassification:
 @dataclass
 class ClassificationResult:
     """Gesamtergebnis der Content-Klassifizierung."""
+
     total_pages: int = 0
     pages_by_namespace: Dict[str, int] = field(default_factory=dict)
     pages_by_content_type: Dict[str, int] = field(default_factory=dict)
@@ -64,11 +65,13 @@ class ContentClassifier:
         self.raw_config = self.config.raw_config
 
         # Load classification settings
-        content_cfg = self.raw_config.get('CONTENT_CLASSIFICATION', {})
-        self.teacher_namespaces = content_cfg.get('namespaces', {}).get('teacher_restricted', ['teacher'])
-        self.public_namespaces = content_cfg.get('namespaces', {}).get('public', [])
-        self.content_types = content_cfg.get('content_types', {})
-        self.page_type_patterns = content_cfg.get('page_type_patterns', {})
+        content_cfg = self.raw_config.get("CONTENT_CLASSIFICATION", {})
+        self.teacher_namespaces = content_cfg.get("namespaces", {}).get(
+            "teacher_restricted", ["teacher"]
+        )
+        self.public_namespaces = content_cfg.get("namespaces", {}).get("public", [])
+        self.content_types = content_cfg.get("content_types", {})
+        self.page_type_patterns = content_cfg.get("page_type_patterns", {})
 
         # Results
         self.result = ClassificationResult()
@@ -116,7 +119,7 @@ class ContentClassifier:
 
             # Load content
             try:
-                with open(content_file, 'r', encoding='utf-8') as f:
+                with open(content_file, encoding="utf-8") as f:
                     content = f.read()
             except Exception as e:
                 print(f"  WARNUNG: Konnte {page_id} nicht lesen: {e}")
@@ -128,13 +131,13 @@ class ContentClassifier:
                 meta_file = metadata_dir / f"{page_id}_info.json"
                 if meta_file.exists():
                     try:
-                        with open(meta_file, 'r', encoding='utf-8') as f:
+                        with open(meta_file, encoding="utf-8") as f:
                             metadata = json.load(f)
                     except Exception:
                         pass
 
             # Use real page ID from metadata if available, else fallback to filename
-            real_page_id = metadata.get('id', page_id)
+            real_page_id = metadata.get("id", page_id)
 
             # Load links if available
             links = []
@@ -142,18 +145,15 @@ class ContentClassifier:
                 links_file = links_dir / f"{page_id}_links.json"
                 if links_file.exists():
                     try:
-                        with open(links_file, 'r', encoding='utf-8') as f:
+                        with open(links_file, encoding="utf-8") as f:
                             links_data = json.load(f)
-                            links = links_data.get('internal', []) + links_data.get('external', [])
+                            links = links_data.get("internal", []) + links_data.get("external", [])
                     except Exception:
                         pass
 
-            pages.append({
-                'page_id': real_page_id,
-                'content': content,
-                'metadata': metadata,
-                'links': links
-            })
+            pages.append(
+                {"page_id": real_page_id, "content": content, "metadata": metadata, "links": links}
+            )
 
         return pages
 
@@ -167,10 +167,10 @@ class ContentClassifier:
         Returns:
             PageClassification Objekt
         """
-        page_id = page_data['page_id']
-        content = page_data['content']
-        metadata = page_data['metadata']
-        links = page_data['links']
+        page_id = page_data["page_id"]
+        content = page_data["content"]
+        page_data["metadata"]
+        links = page_data["links"]
 
         # Extract namespace from page_id (format: namespace:subns:page or namespace:page)
         namespace = self._extract_namespace(page_id)
@@ -192,7 +192,7 @@ class ContentClassifier:
         media_refs = self._count_media_refs(content)
 
         # Check if archived
-        is_archived = namespace == 'archive' or page_id.startswith('archive:')
+        is_archived = namespace == "archive" or page_id.startswith("archive:")
 
         return PageClassification(
             page_id=page_id,
@@ -205,7 +205,7 @@ class ContentClassifier:
             has_media=media_refs > 0,
             media_count=media_refs,
             link_count=len(links),
-            is_archived=is_archived
+            is_archived=is_archived,
         )
 
     def _extract_namespace(self, page_id: str) -> str:
@@ -215,16 +215,16 @@ class ContentClassifier:
         # "namespace:subns:page" -> "namespace"
         # "page" -> "root"
 
-        if ':' in page_id:
-            return page_id.split(':')[0]
-        return 'root'
+        if ":" in page_id:
+            return page_id.split(":")[0]
+        return "root"
 
     def _determine_content_type(self, namespace: str) -> str:
         """Bestimmt den Inhaltstyp basierend auf dem Namespace."""
         for content_type, namespaces in self.content_types.items():
             if namespace in namespaces:
                 return content_type
-        return 'other'
+        return "other"
 
     def _determine_page_type(self, page_id: str, content: str) -> str:
         """Bestimmt den Seitentyp basierend auf Patterns."""
@@ -232,17 +232,17 @@ class ContentClassifier:
         content_lower = content[:1000].lower()  # Nur Anfang prüfen
 
         for page_type, config in self.page_type_patterns.items():
-            patterns = config.get('patterns', [])
+            patterns = config.get("patterns", [])
             for pattern in patterns:
                 if re.search(pattern, page_id_lower) or re.search(pattern, content_lower):
                     return page_type
 
-        return 'general'
+        return "general"
 
     def _count_media_refs(self, content: str) -> int:
         """Zählt Media-Referenzen im Content."""
         # DokuWiki media syntax: {{media:file.ext}} or {{:media:file.ext}}
-        pattern = r'\{\{[^}]+\}\}'
+        pattern = r"\{\{[^}]+\}\}"
         matches = re.findall(pattern, content)
         return len(matches)
 
@@ -276,50 +276,50 @@ class ContentClassifier:
         # Namespace details
         if ns not in self.result.namespace_details:
             self.result.namespace_details[ns] = {
-                'page_count': 0,
-                'total_chars': 0,
-                'total_words': 0,
-                'media_refs': 0,
-                'avg_chars': 0,
-                'is_restricted': classification.is_teacher_restricted
+                "page_count": 0,
+                "total_chars": 0,
+                "total_words": 0,
+                "media_refs": 0,
+                "avg_chars": 0,
+                "is_restricted": classification.is_teacher_restricted,
             }
 
         details = self.result.namespace_details[ns]
-        details['page_count'] += 1
-        details['total_chars'] += classification.char_count
-        details['total_words'] += classification.word_count
-        details['media_refs'] += classification.media_count
-        details['avg_chars'] = details['total_chars'] // details['page_count']
+        details["page_count"] += 1
+        details["total_chars"] += classification.char_count
+        details["total_words"] += classification.word_count
+        details["media_refs"] += classification.media_count
+        details["avg_chars"] = details["total_chars"] // details["page_count"]
 
     def to_dict(self) -> Dict[str, Any]:
         """Konvertiert Ergebnisse zu Dictionary für JSON-Export."""
         return {
-            'summary': {
-                'total_pages': self.result.total_pages,
-                'teacher_restricted': self.result.teacher_restricted_count,
-                'public': self.result.public_count,
-                'archived': self.result.archived_count,
-                'namespaces': len(self.result.pages_by_namespace)
+            "summary": {
+                "total_pages": self.result.total_pages,
+                "teacher_restricted": self.result.teacher_restricted_count,
+                "public": self.result.public_count,
+                "archived": self.result.archived_count,
+                "namespaces": len(self.result.pages_by_namespace),
             },
-            'by_namespace': self.result.pages_by_namespace,
-            'by_content_type': self.result.pages_by_content_type,
-            'by_page_type': self.result.pages_by_page_type,
-            'namespace_details': self.result.namespace_details,
-            'pages': [
+            "by_namespace": self.result.pages_by_namespace,
+            "by_content_type": self.result.pages_by_content_type,
+            "by_page_type": self.result.pages_by_page_type,
+            "namespace_details": self.result.namespace_details,
+            "pages": [
                 {
-                    'page_id': p.page_id,
-                    'namespace': p.namespace,
-                    'is_teacher_restricted': p.is_teacher_restricted,
-                    'content_type': p.content_type,
-                    'page_type': p.page_type,
-                    'char_count': p.char_count,
-                    'word_count': p.word_count,
-                    'has_media': p.has_media,
-                    'media_count': p.media_count,
-                    'is_archived': p.is_archived
+                    "page_id": p.page_id,
+                    "namespace": p.namespace,
+                    "is_teacher_restricted": p.is_teacher_restricted,
+                    "content_type": p.content_type,
+                    "page_type": p.page_type,
+                    "char_count": p.char_count,
+                    "word_count": p.word_count,
+                    "has_media": p.has_media,
+                    "media_count": p.media_count,
+                    "is_archived": p.is_archived,
                 }
                 for p in self.result.pages
-            ]
+            ],
         }
 
 

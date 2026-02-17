@@ -9,9 +9,8 @@ import math
 import pytest
 
 from evaluation.metrics.mrr import mean_reciprocal_rank, reciprocal_rank
-from evaluation.metrics.ndcg import ndcg_at_k, mean_ndcg_at_k
-from evaluation.metrics.precision_at_k import precision_at_k, mean_precision_at_k
-
+from evaluation.metrics.ndcg import mean_ndcg_at_k, ndcg_at_k
+from evaluation.metrics.precision_at_k import mean_precision_at_k, precision_at_k
 
 # ── MRR Tests ────────────────────────────────────────────────────────────────
 
@@ -80,9 +79,7 @@ class TestPrecisionAtK:
 
     def test_partial_relevant(self) -> None:
         # 2 out of 5 relevant
-        assert precision_at_k(
-            ["a", "b", "c", "d", "e"], {"a", "c"}, k=5
-        ) == pytest.approx(0.4)
+        assert precision_at_k(["a", "b", "c", "d", "e"], {"a", "c"}, k=5) == pytest.approx(0.4)
 
     def test_k_larger_than_results(self) -> None:
         # Only 2 results but k=5, precision = 1/5 = 0.2
@@ -104,7 +101,7 @@ class TestPrecisionAtK:
 class TestMeanPrecisionAtK:
     def test_basic(self) -> None:
         queries = [
-            (["a", "b"], {"a"}),      # P@2 = 0.5
+            (["a", "b"], {"a"}),  # P@2 = 0.5
             (["c", "d"], {"c", "d"}),  # P@2 = 1.0
         ]
         assert mean_precision_at_k(queries, k=2) == pytest.approx(0.75)

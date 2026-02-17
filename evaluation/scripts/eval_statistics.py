@@ -12,11 +12,11 @@ import logging
 import sys
 from pathlib import Path
 
+from evaluation.statistics.category_analysis import breakdown_by_difficulty
 from evaluation.statistics.statistical_analysis import (
     PER_QUERY_METRIC_KEYS,
     StatisticalAnalyzer,
 )
-from evaluation.statistics.category_analysis import breakdown_by_difficulty
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +80,7 @@ def main() -> None:
             f"  {metric_name:18s}: mean={stats_dict['mean']:.4f} "
             f"median={stats_dict['median']:.4f} std={stats_dict['std']:.4f}"
         )
-        print(
-            f"    {args.confidence:.0%} CI: [{ci.ci_lower:.4f}, {ci.ci_upper:.4f}]"
-        )
+        print(f"    {args.confidence:.0%} CI: [{ci.ci_lower:.4f}, {ci.ci_upper:.4f}]")
 
     by_diff = breakdown_by_difficulty(per_query)
     if by_diff:

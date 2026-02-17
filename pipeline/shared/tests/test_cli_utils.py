@@ -7,11 +7,11 @@ Verifies:
 - print_help_banner() outputs all 8 sections
 - enable_windows_ansi() runs without error on Windows
 """
+
 from __future__ import annotations
 
 import signal
 import sys
-from io import StringIO
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -24,10 +24,10 @@ if str(_shared_root) not in sys.path:
 
 import cli_utils
 
-
 # -----------------------------------------------------------------------
 # style() tests
 # -----------------------------------------------------------------------
+
 
 class TestStyle:
     """Verify ANSI wrapping behaviour."""
@@ -68,6 +68,7 @@ class TestStyle:
 # create_sigint_handler() tests
 # -----------------------------------------------------------------------
 
+
 class TestSigintHandler:
     """Verify handler calls callback and exits 130."""
 
@@ -103,6 +104,7 @@ class TestSigintHandler:
 # print_help_banner() tests
 # -----------------------------------------------------------------------
 
+
 class TestPrintHelpBanner:
     """Verify 8-section help output."""
 
@@ -124,8 +126,16 @@ class TestPrintHelpBanner:
             exit_codes="0=OK, 1=Error, 130=Aborted",
         )
         out = capsys.readouterr().out
-        for section in ["What", "Usage", "Parameters", "Options",
-                        "Examples", "Configuration", "Output", "Exit Codes"]:
+        for section in [
+            "What",
+            "Usage",
+            "Parameters",
+            "Options",
+            "Examples",
+            "Configuration",
+            "Output",
+            "Exit Codes",
+        ]:
             assert section in out, f"Missing section: {section}"
 
     def test_empty_sections_omitted(self, capsys):
@@ -139,6 +149,7 @@ class TestPrintHelpBanner:
 # enable_windows_ansi() tests
 # -----------------------------------------------------------------------
 
+
 class TestEnableWindowsAnsi:
     """Verify that enable_windows_ansi() runs without error."""
 
@@ -150,6 +161,7 @@ class TestEnableWindowsAnsi:
 # add_no_color_arg / apply_color_from_args tests
 # -----------------------------------------------------------------------
 
+
 class TestNoColorArg:
 
     def teardown_method(self):
@@ -157,6 +169,7 @@ class TestNoColorArg:
 
     def test_add_no_color_arg(self):
         import argparse
+
         parser = argparse.ArgumentParser()
         cli_utils.add_no_color_arg(parser)
         args = parser.parse_args(["--no-color"])
@@ -164,6 +177,7 @@ class TestNoColorArg:
 
     def test_apply_disables_color(self):
         import argparse
+
         parser = argparse.ArgumentParser()
         cli_utils.add_no_color_arg(parser)
         args = parser.parse_args(["--no-color"])

@@ -6,6 +6,7 @@ Provides:
 - 8-section help banner template
 - Windows ANSI escape sequence enablement
 """
+
 from __future__ import annotations
 
 import os
@@ -50,6 +51,7 @@ def enable_windows_ansi() -> None:
         return
     try:
         import ctypes
+
         kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
         # STD_OUTPUT_HANDLE = -11
         handle = kernel32.GetStdHandle(-11)
@@ -93,6 +95,7 @@ def style(text: str, *codes: str) -> str:
 # ---------------------------------------------------------------------------
 # Signal handling
 # ---------------------------------------------------------------------------
+
 
 def create_sigint_handler(
     script_name: str = "",
@@ -139,6 +142,7 @@ def register_sigint(
 # Help banner
 # ---------------------------------------------------------------------------
 
+
 def print_help_banner(
     *,
     what: str = "",
@@ -176,6 +180,7 @@ def print_help_banner(
 # ---------------------------------------------------------------------------
 # Argument-parser helper
 # ---------------------------------------------------------------------------
+
 
 def add_no_color_arg(parser: object) -> None:
     """Add ``--no-color`` flag to an argparse parser.

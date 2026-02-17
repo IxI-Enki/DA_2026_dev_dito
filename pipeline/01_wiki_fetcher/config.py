@@ -13,16 +13,14 @@ Usage:
         FETCH_CONFIG, get_fetch_config
     )
 """
+
 import os
 import re
-import json
-import sys
-from pathlib import Path
-from typing import Any, Dict, List, TypedDict
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List
 
 import yaml
-
 
 # =============================================================================
 # Path Resolution
@@ -61,11 +59,9 @@ DEFAULT_FETCH_CONFIG: Dict[str, Any] = {
     "retry_delay": 2,
     "delay_between_requests": 0.05,
     "batch_progress_interval": 20,
-    
     # Namespace scanning
     "max_namespace_depth": 3,
     "scan_all_sub_namespaces": True,
-    
     # Content selection
     "content": {
         "fetch_html": True,
@@ -75,7 +71,6 @@ DEFAULT_FETCH_CONFIG: Dict[str, Any] = {
         "fetch_backlinks": True,
         "fetch_recent_changes": True,
     },
-    
     # Media options
     "media": {
         "enabled": True,
@@ -85,14 +80,12 @@ DEFAULT_FETCH_CONFIG: Dict[str, Any] = {
         "include_types": [],
         "exclude_types": [],
     },
-    
     # Filtering
     "filter": {
         "include_namespaces": [],
         "exclude_namespaces": [],
         "exclude_pages": [],
     },
-    
     # Output
     "output": {
         "directory_pattern": "fetched_at_{timestamp}",
@@ -100,14 +93,12 @@ DEFAULT_FETCH_CONFIG: Dict[str, Any] = {
         "generate_report": True,
         "report_format": "txt",
     },
-    
     # Quality
     "quality": {
         "validate_internal_links": True,
         "report_broken_links": True,
         "verify_media_integrity": False,
     },
-    
     # Cache (Fast-Mode)
     "cache": {
         "enabled": True,
@@ -122,9 +113,11 @@ DEFAULT_FETCH_CONFIG: Dict[str, Any] = {
 # FetchConfig Dataclass
 # =============================================================================
 
+
 @dataclass
 class ContentConfig:
     """Content fetching options"""
+
     fetch_html: bool = True
     fetch_acl: bool = True
     fetch_links: bool = True
@@ -136,31 +129,31 @@ class ContentConfig:
 @dataclass
 class MediaConfig:
     """Media fetching options"""
+
     enabled: bool = True
     max_file_size_mb: int = 50
     from_listings: bool = True
     from_page_links: bool = True
     include_types: List[str] = field(default_factory=list)
     exclude_types: List[str] = field(default_factory=list)
-    
+
     def should_include_file(self, filename: str) -> bool:
         """Check if a file should be included based on type filters"""
         ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-        
+
         if self.include_types and ext not in self.include_types:
             return False
-        if ext in self.exclude_types:
-            return False
-        return True
+        return ext not in self.exclude_types
 
 
 @dataclass
 class FilterConfig:
     """Namespace and page filtering options"""
+
     include_namespaces: List[str] = field(default_factory=list)
     exclude_namespaces: List[str] = field(default_factory=list)
     exclude_pages: List[str] = field(default_factory=list)
-    
+
     def should_include_namespace(self, namespace: str) -> bool:
         """Check if a namespace should be included"""
         if self.include_namespaces and namespace not in self.include_namespaces:
@@ -168,30 +161,28 @@ class FilterConfig:
             included = any(namespace.startswith(ns + ":") for ns in self.include_namespaces)
             if not included and namespace not in self.include_namespaces:
                 return False
-        
+
         if namespace in self.exclude_namespaces:
             return False
-        if any(namespace.startswith(ns + ":") for ns in self.exclude_namespaces):
-            return False
-        
-        return True
-    
+        return not any(namespace.startswith(ns + ":") for ns in self.exclude_namespaces)
+
     def should_include_page(self, page_id: str) -> bool:
         """Check if a page should be included"""
         if page_id in self.exclude_pages:
             return False
-        
+
         # Check namespace of page
         if ":" in page_id:
             namespace = page_id.rsplit(":", 1)[0]
             return self.should_include_namespace(namespace)
-        
+
         return True
 
 
 @dataclass
 class OutputConfig:
     """Output options"""
+
     directory_pattern: str = "fetched_at_{timestamp}"
     save_raw_responses: bool = True
     generate_report: bool = True
@@ -203,6 +194,7 @@ class OutputConfig:
 @dataclass
 class QualityConfig:
     """Quality and validation options"""
+
     validate_internal_links: bool = True
     report_broken_links: bool = True
     verify_media_integrity: bool = False
@@ -211,6 +203,7 @@ class QualityConfig:
 @dataclass
 class CacheConfig:
     """Cache (Fast-Mode) options for media downloading"""
+
     enabled: bool = True
     archive_dirs: List[str] = field(default_factory=lambda: ["archived_fetch_tests"])
     hash_algorithm: str = "sha256"
@@ -220,19 +213,20 @@ class CacheConfig:
 @dataclass
 class FetchConfig:
     """Complete fetch configuration"""
+
     # Performance
     timeout: int = 30
     max_retries: int = 3
     retry_delay: int = 2
     delay_between_requests: float = 0.05
     batch_progress_interval: int = 20
-    
+
     # Namespace scanning
     max_namespace_depth: int = 5
     scan_all_sub_namespaces: bool = True
     use_recursive_listing: bool = True
     use_search_discovery: bool = True
-    
+
     # Sub-configs
     content: ContentConfig = field(default_factory=ContentConfig)
     media: MediaConfig = field(default_factory=MediaConfig)
@@ -246,23 +240,26 @@ class FetchConfig:
 # Placeholder Resolution
 # =============================================================================
 
-def resolve_placeholders(data: Dict[str, Any], context: Dict[str, str] | None = None) -> Dict[str, Any]:
+
+def resolve_placeholders(
+    data: Dict[str, Any], context: Dict[str, str] | None = None
+) -> Dict[str, Any]:
     """
     Recursively resolve ${var} placeholders in a dictionary.
     """
     if context is None:
         context = {}
-    
+
     def resolve_string(s: str) -> str:
         """Resolve placeholders in a single string"""
-        pattern = r'\$\{([^}]+)\}'
-        
+        pattern = r"\$\{([^}]+)\}"
+
         def replacer(match: re.Match[str]) -> str:
             var_name = match.group(1)
             if var_name in context:
                 return context[var_name]
             return match.group(0)
-        
+
         result = s
         for _ in range(5):
             new_result = re.sub(pattern, replacer, result)
@@ -270,7 +267,7 @@ def resolve_placeholders(data: Dict[str, Any], context: Dict[str, str] | None = 
                 break
             result = new_result
         return result
-    
+
     def resolve_value(value: Any) -> Any:
         """Recursively resolve a value"""
         if isinstance(value, str):
@@ -280,7 +277,7 @@ def resolve_placeholders(data: Dict[str, Any], context: Dict[str, str] | None = 
         elif isinstance(value, list):
             return [resolve_value(item) for item in value]
         return value
-    
+
     # First pass: build context from PATHS section
     if "PATHS" in data:
         for key, value in data["PATHS"].items():
@@ -288,7 +285,7 @@ def resolve_placeholders(data: Dict[str, Any], context: Dict[str, str] | None = 
                 resolved = resolve_string(value)
                 context[key] = resolved
                 data["PATHS"][key] = resolved
-    
+
     return resolve_value(data)
 
 
@@ -296,17 +293,18 @@ def resolve_placeholders(data: Dict[str, Any], context: Dict[str, str] | None = 
 # Config Loading
 # =============================================================================
 
+
 def load_yaml_config(yaml_path: Path) -> Dict[str, Any]:
     """Load and parse YAML config file"""
     if not yaml_path.exists():
         raise FileNotFoundError(f"Config file not found: {yaml_path}")
-    
-    with open(yaml_path, "r", encoding="utf-8") as f:
+
+    with open(yaml_path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
-    
+
     if not isinstance(data, dict):
         raise ValueError(f"Invalid config format in {yaml_path}")
-    
+
     return data
 
 
@@ -314,16 +312,16 @@ def load_token(token_path: Path) -> str:
     """Load API token from file"""
     if not token_path.exists():
         raise FileNotFoundError(f"Token file not found: {token_path}")
-    
-    with open(token_path, "r", encoding="utf-8") as f:
+
+    with open(token_path, encoding="utf-8") as f:
         token = f.read().strip()
-    
+
     # Handle KEY=token format (but not JWT tokens which may end with =)
     if "=" in token and not token.startswith("eyJ"):
         parts = token.split("=", 1)
         if len(parts) == 2 and parts[0].isupper():
             token = parts[1]
-    
+
     return token
 
 
@@ -349,10 +347,10 @@ def load_config() -> Dict[str, Any]:
     """
     # Load YAML
     raw_config = load_yaml_config(ENV_YAML_PATH)
-    
+
     # Resolve placeholders
     config = resolve_placeholders(raw_config)
-    
+
     # =========================================================================
     # Config-Key Normalisierung (Zentrale Config -> Lokale Struktur)
     # =========================================================================
@@ -368,11 +366,11 @@ def load_config() -> Dict[str, Any]:
                 "certificate": config["SOURCE_WIKI"].get("certificate", ""),
             }
         }
-    
+
     # Zentrale Config nutzt PIPELINE.fetcher, lokale nutzt FETCH
     if "PIPELINE" in config and "fetcher" in config["PIPELINE"] and "FETCH" not in config:
         config["FETCH"] = config["PIPELINE"]["fetcher"]
-    
+
     # =========================================================================
     # Merge FETCH section with defaults
     # =========================================================================
@@ -380,14 +378,14 @@ def load_config() -> Dict[str, Any]:
         config["FETCH"] = deep_merge(DEFAULT_FETCH_CONFIG, config["FETCH"])
     else:
         config["FETCH"] = DEFAULT_FETCH_CONFIG.copy()
-    
+
     # =========================================================================
     # Load token from file
     # In Docker: TOKEN_PATH environment variable takes precedence
     # =========================================================================
     auth = config.get("JSONRPC", {}).get("api", {}).get("authentication", {})
     token_path_str = os.environ.get("TOKEN_PATH", auth.get("token_file", ""))
-    
+
     if token_path_str:
         token_path = Path(token_path_str)
         if token_path.exists():
@@ -400,7 +398,7 @@ def load_config() -> Dict[str, Any]:
         else:
             print(f"[config] Token file not found: {token_path}")
             config["JSONRPC"]["api"]["authentication"]["token"] = ""
-    
+
     return config
 
 
@@ -408,10 +406,11 @@ def load_config() -> Dict[str, Any]:
 # Build FetchConfig from Dict
 # =============================================================================
 
+
 def build_fetch_config(config_dict: Dict[str, Any]) -> FetchConfig:
     """Build FetchConfig dataclass from dictionary"""
     fetch = config_dict.get("FETCH", DEFAULT_FETCH_CONFIG)
-    
+
     content_dict = fetch.get("content", {})
     content = ContentConfig(
         fetch_html=content_dict.get("fetch_html", True),
@@ -421,7 +420,7 @@ def build_fetch_config(config_dict: Dict[str, Any]) -> FetchConfig:
         fetch_backlinks=content_dict.get("fetch_backlinks", True),
         fetch_recent_changes=content_dict.get("fetch_recent_changes", True),
     )
-    
+
     media_dict = fetch.get("media", {})
     media = MediaConfig(
         enabled=media_dict.get("enabled", True),
@@ -431,14 +430,14 @@ def build_fetch_config(config_dict: Dict[str, Any]) -> FetchConfig:
         include_types=media_dict.get("include_types", []) or [],
         exclude_types=media_dict.get("exclude_types", []) or [],
     )
-    
+
     filter_dict = fetch.get("filter", {})
     filter_cfg = FilterConfig(
         include_namespaces=filter_dict.get("include_namespaces", []) or [],
         exclude_namespaces=filter_dict.get("exclude_namespaces", []) or [],
         exclude_pages=filter_dict.get("exclude_pages", []) or [],
     )
-    
+
     output_dict = fetch.get("output", {})
     output = OutputConfig(
         directory_pattern=output_dict.get("directory_pattern", "fetched_at_{timestamp}"),
@@ -448,22 +447,23 @@ def build_fetch_config(config_dict: Dict[str, Any]) -> FetchConfig:
         recent_changes_count=output_dict.get("recent_changes_count", 30),
         deepest_pages_count=output_dict.get("deepest_pages_count", 20),
     )
-    
+
     quality_dict = fetch.get("quality", {})
     quality = QualityConfig(
         validate_internal_links=quality_dict.get("validate_internal_links", True),
         report_broken_links=quality_dict.get("report_broken_links", True),
         verify_media_integrity=quality_dict.get("verify_media_integrity", False),
     )
-    
+
     cache_dict = fetch.get("cache", {})
     cache = CacheConfig(
         enabled=cache_dict.get("enabled", True),
-        archive_dirs=cache_dict.get("archive_dirs", ["archived_fetch_tests"]) or ["archived_fetch_tests"],
+        archive_dirs=cache_dict.get("archive_dirs", ["archived_fetch_tests"])
+        or ["archived_fetch_tests"],
         hash_algorithm=cache_dict.get("hash_algorithm", "sha256"),
         verify_on_copy=cache_dict.get("verify_on_copy", True),
     )
-    
+
     return FetchConfig(
         timeout=fetch.get("timeout", 30),
         max_retries=fetch.get("max_retries", 3),
@@ -498,6 +498,7 @@ FETCH_CONFIG = build_fetch_config(settings)
 # Helper Functions
 # =============================================================================
 
+
 def get_fetch_config() -> FetchConfig:
     """Get the typed fetch configuration"""
     return FETCH_CONFIG
@@ -506,7 +507,7 @@ def get_fetch_config() -> FetchConfig:
 def get_setting(path: str, default: Any = None) -> Any:
     """
     Get a nested setting by dot-separated path.
-    
+
     Example:
         get_setting("FETCH.media.max_file_size_mb", 50)
     """
@@ -544,13 +545,15 @@ CA_CERT_PATH: str = os.environ.get("SSL_CERT_PATH", _cert_from_settings)
 # Request Headers
 HEADERS: Dict[str, str] = {
     "Content-Type": "application/json",
-    "Authorization": f"Bearer {API_TOKEN}"
+    "Authorization": f"Bearer {API_TOKEN}",
 }
 
 # Output Directory
 # In Docker: Environment variable OUTPUT_DIR takes precedence
 # This allows container mounts to override Windows paths from env.yaml
-_output_from_settings: str = str(settings.get("PATHS", {}).get("output_dir", str(PROJECT_ROOT / "content_output")))
+_output_from_settings: str = str(
+    settings.get("PATHS", {}).get("output_dir", str(PROJECT_ROOT / "content_output"))
+)
 OUTPUT_BASE_DIR: str = os.environ.get("OUTPUT_DIR", _output_from_settings)
 
 # Fetch Configuration (flat exports for backward compatibility)
@@ -575,23 +578,24 @@ TEST_MEDIA: str = str(_testing.get("default_media", ""))
 # Validation
 # =============================================================================
 
+
 def validate_config() -> bool:
     """Validate that essential config values are present"""
     errors = []
-    
+
     if not API_URL:
         errors.append("JSONRPC.api.url is missing")
     if not API_TOKEN:
         errors.append("API token is missing or could not be loaded")
     if not CA_CERT_PATH or not Path(CA_CERT_PATH).exists():
         errors.append(f"SSL certificate not found: {CA_CERT_PATH}")
-    
+
     if errors:
         print("[config] Validation errors:")
         for err in errors:
             print(f"  - {err}")
         return False
-    
+
     return True
 
 

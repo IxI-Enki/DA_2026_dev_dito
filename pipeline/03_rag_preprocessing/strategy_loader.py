@@ -15,7 +15,6 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any
 
 import yaml
 
@@ -205,7 +204,7 @@ class StrategyLoader:
 
         # Media (images): action-based
         media = strategies.get("media", {})
-        for category, info in media.items():
+        for _category, info in media.items():
             if not isinstance(info, dict):
                 continue
             action = info.get("action", "process")

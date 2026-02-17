@@ -32,55 +32,62 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from config import EvaluationConfig, get_config
 from analyzers import (
     ContentClassifier,
     FormatQualityAnalyzer,
+    QueryGenerator,
     RAGReadinessChecker,
     TemporalAnalyzer,
-    QueryGenerator
 )
 from report_generator import ReportGenerator
 
+from config import EvaluationConfig, get_config
+
 # Shared CLI utilities
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
-from cli_utils import add_no_color_arg, apply_color_from_args, register_sigint, style
+from cli_utils import add_no_color_arg, apply_color_from_args, register_sigint
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Fetched Data Evaluation Pipeline',
+        description="Fetched Data Evaluation Pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
 
     # Config options
-    parser.add_argument('--config', '-c', type=str, default=None,
-                        help='Pfad zu alternativer env.yaml')
-    parser.add_argument('--show-config', action='store_true',
-                        help='Zeigt aktuelle Konfiguration und beendet')
+    parser.add_argument(
+        "--config", "-c", type=str, default=None, help="Pfad zu alternativer env.yaml"
+    )
+    parser.add_argument(
+        "--show-config", action="store_true", help="Zeigt aktuelle Konfiguration und beendet"
+    )
 
     # Output options
-    parser.add_argument('--output-dir', '-o', type=str, default=None,
-                        help='Ueberschreibt Output-Verzeichnis aus config')
-    parser.add_argument('--run-name', '-n', type=str, default=None,
-                        help='Name fuer diesen Evaluationslauf')
+    parser.add_argument(
+        "--output-dir",
+        "-o",
+        type=str,
+        default=None,
+        help="Ueberschreibt Output-Verzeichnis aus config",
+    )
+    parser.add_argument(
+        "--run-name", "-n", type=str, default=None, help="Name fuer diesen Evaluationslauf"
+    )
 
     # Evaluation options
-    parser.add_argument('--quick', action='store_true',
-                        help='Schnellmodus: Ueberspringt LLM-Queries')
-    parser.add_argument('--no-queries', action='store_true',
-                        help='Query-Generierung ueberspringen')
-    parser.add_argument('--no-report', action='store_true',
-                        help='Report-Generierung ueberspringen')
-    parser.add_argument('--query-limit', type=int, default=None,
-                        help='Maximale Anzahl generierter Queries')
+    parser.add_argument(
+        "--quick", action="store_true", help="Schnellmodus: Ueberspringt LLM-Queries"
+    )
+    parser.add_argument("--no-queries", action="store_true", help="Query-Generierung ueberspringen")
+    parser.add_argument("--no-report", action="store_true", help="Report-Generierung ueberspringen")
+    parser.add_argument(
+        "--query-limit", type=int, default=None, help="Maximale Anzahl generierter Queries"
+    )
 
     # Verbosity
-    parser.add_argument('--quiet', '-q', action='store_true',
-                        help='Minimale Ausgabe')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                        help='Ausfuehrliche Ausgabe')
+    parser.add_argument("--quiet", "-q", action="store_true", help="Minimale Ausgabe")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Ausfuehrliche Ausgabe")
 
     add_no_color_arg(parser)
     return parser.parse_args()
@@ -126,7 +133,7 @@ def main():
         sys.exit(0)
 
     # Generate run name and output directory
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_name = args.run_name or f"eval_{timestamp}"
 
     if args.output_dir:
@@ -154,74 +161,74 @@ def main():
 
     # Initialize results
     results = {
-        'run_name': run_name,
-        'timestamp': timestamp,
-        'source': str(config.fetched_data_dir),
-        'output_dir': str(output_dir)
+        "run_name": run_name,
+        "timestamp": timestamp,
+        "source": str(config.fetched_data_dir),
+        "output_dir": str(output_dir),
     }
 
     # Step 1: Content Classification
     print("\n[1/5] Content Classification...")
     classifier = ContentClassifier(config)
     classification_result = classifier.analyze()
-    results['content_classification'] = classifier.to_dict()
+    results["content_classification"] = classifier.to_dict()
 
     # Step 2: Format & Quality Analysis
     print("\n[2/5] Format & Quality Analysis...")
     format_analyzer = FormatQualityAnalyzer(config)
     format_result = format_analyzer.analyze()
-    results['format_quality'] = format_analyzer.to_dict()
+    results["format_quality"] = format_analyzer.to_dict()
 
     # Step 3: RAG Readiness Check
     print("\n[3/5] RAG Readiness Check...")
     rag_checker = RAGReadinessChecker(config)
     rag_result = rag_checker.analyze()
-    results['rag_readiness'] = rag_checker.to_dict()
+    results["rag_readiness"] = rag_checker.to_dict()
 
     # Step 4: Temporal Analysis
     print("\n[4/5] Temporal Analysis...")
     temporal_analyzer = TemporalAnalyzer(config)
     temporal_result = temporal_analyzer.analyze()
-    results['temporal_analysis'] = temporal_analyzer.to_dict()
+    results["temporal_analysis"] = temporal_analyzer.to_dict()
 
     # Step 5: Query Generation (unless skipped)
     if not args.quick and not args.no_queries:
         print("\n[5/5] Query Generation...")
         query_gen = QueryGenerator(config)
-        query_result = query_gen.generate(sample_size=args.query_limit)
-        results['query_generation'] = query_gen.to_dict()
+        query_gen.generate(sample_size=args.query_limit)
+        results["query_generation"] = query_gen.to_dict()
 
         # Save RAGAS-compatible queries
         ragas_queries = query_gen.to_ragas_format()
-        ragas_path = output_dir / 'synthetic_queries_ragas.json'
-        with open(ragas_path, 'w', encoding='utf-8') as f:
+        ragas_path = output_dir / "synthetic_queries_ragas.json"
+        with open(ragas_path, "w", encoding="utf-8") as f:
             json.dump(ragas_queries, f, ensure_ascii=False, indent=2)
         print(f"  RAGAS-Queries gespeichert: {ragas_path}")
     else:
         print("\n[5/5] Query Generation... ÜBERSPRUNGEN")
-        results['query_generation'] = {'skipped': True}
+        results["query_generation"] = {"skipped": True}
 
     # Generate summary
-    results['summary'] = {
-        'total_pages': classification_result.total_pages,
-        'total_media_files': format_result.total_files,
-        'teacher_restricted_pages': classification_result.teacher_restricted_count,
-        'archived_pages': temporal_result.archived_count,
-        'avg_rag_readiness': round(rag_result.avg_readiness_score, 3),
-        'avg_freshness': round(temporal_result.avg_freshness_score, 3),
-        'files_needing_ocr': format_result.files_needing_ocr,
-        'diploma_thesis_pdfs': len(format_result.diploma_thesis_files)
+    results["summary"] = {
+        "total_pages": classification_result.total_pages,
+        "total_media_files": format_result.total_files,
+        "teacher_restricted_pages": classification_result.teacher_restricted_count,
+        "archived_pages": temporal_result.archived_count,
+        "avg_rag_readiness": round(rag_result.avg_readiness_score, 3),
+        "avg_freshness": round(temporal_result.avg_freshness_score, 3),
+        "files_needing_ocr": format_result.files_needing_ocr,
+        "diploma_thesis_pdfs": len(format_result.diploma_thesis_files),
     }
 
     # Collect all recommendations
     all_recommendations = []
     all_recommendations.extend(rag_result.preprocessing_recommendations)
     all_recommendations.extend(temporal_result.recommendations)
-    results['recommendations'] = all_recommendations
+    results["recommendations"] = all_recommendations
 
     # Save full results
     results_path = output_dir / f"{run_name}_full_results.json"
-    with open(results_path, 'w', encoding='utf-8') as f:
+    with open(results_path, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2, default=str)
 
     # Generate report
@@ -252,5 +259,5 @@ def main():
     print("=" * 70)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

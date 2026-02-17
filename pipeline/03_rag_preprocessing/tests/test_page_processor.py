@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 
 class TestDokuWikiConversion:
     """Tests for basic DokuWiki -> Markdown conversion."""

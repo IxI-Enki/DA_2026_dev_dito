@@ -126,12 +126,18 @@ class QdrantDeployer:
         vec_dim = len(first_vec)
         logger.info(
             "Loaded %d records (vector_dim=%d) from %s",
-            len(records), vec_dim, jsonl_path.name,
+            len(records),
+            vec_dim,
+            jsonl_path.name,
         )
 
         if dry_run:
-            logger.info("[DRY-RUN] Would upload %d points to '%s' (dim=%d)",
-                        len(records), collection_name, vec_dim)
+            logger.info(
+                "[DRY-RUN] Would upload %d points to '%s' (dim=%d)",
+                len(records),
+                collection_name,
+                vec_dim,
+            )
             return len(records)
 
         if self.client is None:
@@ -140,10 +146,7 @@ class QdrantDeployer:
             )
 
         # Collection management (T089)
-        existing = {
-            c.name
-            for c in self.client.get_collections().collections
-        }
+        existing = {c.name for c in self.client.get_collections().collections}
 
         if recreate and collection_name in existing:
             logger.info("Recreating collection '%s'", collection_name)
@@ -151,7 +154,7 @@ class QdrantDeployer:
             existing.discard(collection_name)
 
         if collection_name not in existing:
-            from qdrant_client.models import VectorParams, Distance
+            from qdrant_client.models import Distance, VectorParams
 
             self.client.create_collection(
                 collection_name=collection_name,
@@ -248,10 +251,17 @@ def main() -> int:
 
         if args.mode == "direct":
             count = deployer.deploy_direct(
-                args.jsonl, args.collection,
-                recreate=args.recreate, dry_run=args.dry_run,
+                args.jsonl,
+                args.collection,
+                recreate=args.recreate,
+                dry_run=args.dry_run,
             )
-            print(style(f"[OK] {count} points {'validated' if args.dry_run else 'uploaded'}", "bright_green"))
+            print(
+                style(
+                    f"[OK] {count} points {'validated' if args.dry_run else 'uploaded'}",
+                    "bright_green",
+                )
+            )
         else:
             if args.output_dir is None:
                 logger.error("--output-dir required for watchdog mode")

@@ -4,13 +4,14 @@ Content-Aware Chunker
 Chunks documents based on their content type using strategies from Deep Evaluation.
 """
 
-import re
 import logging
-from typing import List, Dict, Any, Optional
+import re
 from dataclasses import dataclass
+from typing import Any, Dict, List
+
+from document_loader import Document
 
 from config import get_config
-from document_loader import Document
 
 logger = logging.getLogger(__name__)
 
@@ -18,22 +19,23 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Chunk:
     """Represents a text chunk ready for embedding."""
+
     chunk_id: str
     text: str
     chunk_index: int
     total_chunks: int
     document: Document
-    
+
     # Metadata from document
-    source: str = ''
-    collection: str = ''
-    title: str = ''
-    namespace: str = ''
-    page_id: str = ''
-    media_id: str = ''
-    access_level: str = 'public'
-    content_type: str = ''
-    
+    source: str = ""
+    collection: str = ""
+    title: str = ""
+    namespace: str = ""
+    page_id: str = ""
+    media_id: str = ""
+    access_level: str = "public"
+    content_type: str = ""
+
     def __post_init__(self):
         """Copy metadata from document."""
         self.source = self.document.source
@@ -51,152 +53,156 @@ class ContentAwareChunker:
     Chunks documents based on their content type.
     Uses strategies defined in preprocessing_strategies.yaml from Deep Evaluation.
     """
-    
+
     # Header patterns for semantic chunking
-    HEADER_PATTERN = re.compile(r'^(#{1,6})\s+(.+)$', re.MULTILINE)
-    
+    HEADER_PATTERN = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
+
     def __init__(self):
         self.config = get_config()
         self.default_config = self.config.chunking.default
         self.content_type_configs = self.config.chunking.content_types
         self.text_prep = self.config.text_prep
-    
+
     def get_chunking_config(self, content_type: str) -> Dict[str, Any]:
         """Get chunking configuration for a content type."""
         if content_type and content_type.upper() in self.content_type_configs:
             return self.content_type_configs[content_type.upper()]
         return self.default_config
-    
+
     def should_skip(self, document: Document) -> bool:
         """Check if document should be skipped based on content type."""
         config = self.get_chunking_config(document.content_type)
-        return config.get('action') == 'skip'
-    
+        return config.get("action") == "skip"
+
     def prepare_text(self, document: Document) -> str:
         """
         Prepare text for chunking by optionally including frontmatter fields.
-        
+
         This improves semantic search by adding title, namespace, etc. to the chunk.
         """
         text = document.content
-        
-        if not self.text_prep.get('include_frontmatter_in_text', False):
+
+        if not self.text_prep.get("include_frontmatter_in_text", False):
             return text
-        
-        fields = self.text_prep.get('frontmatter_fields_in_text', [])
+
+        fields = self.text_prep.get("frontmatter_fields_in_text", [])
         if not fields:
             return text
-        
+
         prefix_parts = []
         for field in fields:
             value = document.frontmatter.get(field)
             if value:
                 if isinstance(value, list):
-                    value = ', '.join(str(v) for v in value)
+                    value = ", ".join(str(v) for v in value)
                 prefix_parts.append(f"{field.title()}: {value}")
-        
+
         if prefix_parts:
-            prefix = '\n'.join(prefix_parts)
+            prefix = "\n".join(prefix_parts)
             return f"{prefix}\n\n{text}"
-        
+
         return text
-    
+
     def chunk_document(self, document: Document) -> List[Chunk]:
         """
         Chunk a document based on its content type.
-        
+
         Args:
             document: Document to chunk
-            
+
         Returns:
             List of Chunk objects
         """
         # Check if should skip
         if self.should_skip(document):
-            logger.debug(f"Skipping document: {document.doc_id} (content_type: {document.content_type})")
+            logger.debug(
+                f"Skipping document: {document.doc_id} (content_type: {document.content_type})"
+            )
             return []
-        
+
         # Get chunking config for this content type
         config = self.get_chunking_config(document.content_type)
-        method = config.get('method', 'semantic')
-        
+        method = config.get("method", "semantic")
+
         # Prepare text (add frontmatter fields if configured)
         text = self.prepare_text(document)
-        
+
         # Skip empty documents
         if not text.strip():
             logger.warning(f"Empty document after preparation: {document.doc_id}")
             return []
-        
+
         # Chunk based on method
-        if method == 'recursive_header':
+        if method == "recursive_header":
             raw_chunks = self._chunk_recursive_header(text, config)
-        elif method == 'semantic':
+        elif method == "semantic":
             raw_chunks = self._chunk_semantic(text, config)
-        elif method == 'naive':
+        elif method == "naive":
             raw_chunks = self._chunk_naive(text, config)
-        elif method in ('metadata_only', 'parent_context', 'index_as_context_only'):
+        elif method in ("metadata_only", "parent_context", "index_as_context_only"):
             # For these methods, create a single "metadata" chunk
-            raw_chunks = [text[:config.get('max_chunk_size', 500)]]
+            raw_chunks = [text[: config.get("max_chunk_size", 500)]]
         else:
             raw_chunks = self._chunk_semantic(text, config)
-        
+
         # Create Chunk objects
         total_chunks = len(raw_chunks)
         chunks = []
-        
+
         for i, chunk_text in enumerate(raw_chunks):
             chunk_id = f"{document.collection}_{document.file_path.stem}_{i}"
-            
-            chunks.append(Chunk(
-                chunk_id=chunk_id,
-                text=chunk_text,
-                chunk_index=i,
-                total_chunks=total_chunks,
-                document=document,
-            ))
-        
+
+            chunks.append(
+                Chunk(
+                    chunk_id=chunk_id,
+                    text=chunk_text,
+                    chunk_index=i,
+                    total_chunks=total_chunks,
+                    document=document,
+                )
+            )
+
         return chunks
-    
+
     def _chunk_semantic(self, text: str, config: Dict[str, Any]) -> List[str]:
         """
         Semantic chunking by paragraphs with size limits.
         """
-        max_size = config.get('max_chunk_size', 1024)
-        overlap = config.get('chunk_overlap', 150)
-        min_size = config.get('min_chunk_size', 200)
-        
+        max_size = config.get("max_chunk_size", 1024)
+        overlap = config.get("chunk_overlap", 150)
+        min_size = config.get("min_chunk_size", 200)
+
         chunks = []
         current_chunk = []
         current_size = 0
-        
+
         # Split by paragraphs (double newline)
-        paragraphs = text.split('\n\n')
-        
+        paragraphs = text.split("\n\n")
+
         for para in paragraphs:
             para = para.strip()
             if not para:
                 continue
-            
+
             para_size = len(para)
-            
+
             # If this paragraph alone exceeds max_size, split it
             if para_size > max_size:
                 # Flush current chunk first
                 if current_chunk:
-                    chunks.append('\n\n'.join(current_chunk))
+                    chunks.append("\n\n".join(current_chunk))
                     current_chunk = []
                     current_size = 0
-                
+
                 # Split large paragraph by sentences or fixed size
                 sub_chunks = self._split_large_paragraph(para, max_size, overlap)
                 chunks.extend(sub_chunks)
                 continue
-            
+
             # If adding this paragraph would exceed max_size, start new chunk
             if current_size + para_size > max_size and current_chunk:
-                chunks.append('\n\n'.join(current_chunk))
-                
+                chunks.append("\n\n".join(current_chunk))
+
                 # Keep last paragraph for overlap if configured
                 if overlap > 0 and current_chunk:
                     last_para = current_chunk[-1]
@@ -209,186 +215,188 @@ class ContentAwareChunker:
                 else:
                     current_chunk = []
                     current_size = 0
-            
+
             current_chunk.append(para)
             current_size += para_size
-        
+
         # Add remaining content
         if current_chunk:
-            final_chunk = '\n\n'.join(current_chunk)
+            final_chunk = "\n\n".join(current_chunk)
             if len(final_chunk) >= min_size or not chunks:
                 chunks.append(final_chunk)
             elif chunks:
                 # Append to last chunk if too small
-                chunks[-1] += '\n\n' + final_chunk
-        
+                chunks[-1] += "\n\n" + final_chunk
+
         return chunks
-    
+
     def _chunk_recursive_header(self, text: str, config: Dict[str, Any]) -> List[str]:
         """
         Chunk by headers (Markdown headings), then by size.
         """
-        max_size = config.get('max_chunk_size', 1024)
-        overlap = config.get('chunk_overlap', 150)
-        
+        max_size = config.get("max_chunk_size", 1024)
+        config.get("chunk_overlap", 150)
+
         # Find all headers and their positions
         headers = list(self.HEADER_PATTERN.finditer(text))
-        
+
         if not headers:
             # No headers, fall back to semantic chunking
             return self._chunk_semantic(text, config)
-        
+
         chunks = []
-        
+
         for i, header in enumerate(headers):
             # Get content until next header
             start = header.start()
             end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
-            
+
             section = text[start:end].strip()
-            
+
             if len(section) > max_size:
                 # Split large section semantically
-                sub_config = {**config, 'max_chunk_size': max_size}
+                sub_config = {**config, "max_chunk_size": max_size}
                 sub_chunks = self._chunk_semantic(section, sub_config)
                 chunks.extend(sub_chunks)
             elif section:
                 chunks.append(section)
-        
+
         # Handle content before first header
         if headers and headers[0].start() > 0:
-            intro = text[:headers[0].start()].strip()
+            intro = text[: headers[0].start()].strip()
             if intro:
                 if len(intro) > max_size:
                     chunks = self._chunk_semantic(intro, config) + chunks
                 else:
                     chunks.insert(0, intro)
-        
+
         return chunks
-    
+
     def _chunk_naive(self, text: str, config: Dict[str, Any]) -> List[str]:
         """
         Simple fixed-size chunking with overlap.
         """
-        max_size = config.get('max_chunk_size', 1024)
-        overlap = config.get('chunk_overlap', 150)
-        
+        max_size = config.get("max_chunk_size", 1024)
+        overlap = config.get("chunk_overlap", 150)
+
         chunks = []
         start = 0
-        
+
         while start < len(text):
             end = start + max_size
             chunk = text[start:end]
-            
+
             # Try to end at a sentence boundary
             if end < len(text):
-                last_period = chunk.rfind('. ')
+                last_period = chunk.rfind(". ")
                 if last_period > max_size // 2:
                     end = start + last_period + 1
                     chunk = text[start:end]
-            
+
             chunks.append(chunk.strip())
             start = end - overlap if overlap > 0 else end
-        
+
         return chunks
-    
+
     def _split_large_paragraph(self, text: str, max_size: int, overlap: int) -> List[str]:
         """Split a large paragraph into smaller chunks."""
         # Try to split by sentences first
-        sentences = re.split(r'(?<=[.!?])\s+', text)
-        
+        sentences = re.split(r"(?<=[.!?])\s+", text)
+
         if len(sentences) > 1:
             chunks = []
             current = []
             current_size = 0
-            
+
             for sentence in sentences:
                 if current_size + len(sentence) > max_size and current:
-                    chunks.append(' '.join(current))
+                    chunks.append(" ".join(current))
                     current = [sentence]
                     current_size = len(sentence)
                 else:
                     current.append(sentence)
                     current_size += len(sentence)
-            
+
             if current:
-                chunks.append(' '.join(current))
-            
+                chunks.append(" ".join(current))
+
             return chunks
-        
+
         # Fall back to fixed-size if no sentences
-        return self._chunk_naive(text, {'max_chunk_size': max_size, 'chunk_overlap': overlap})
-    
+        return self._chunk_naive(text, {"max_chunk_size": max_size, "chunk_overlap": overlap})
+
     def chunk_all(self, documents: List[Document]) -> List[Chunk]:
         """
         Chunk all documents.
-        
+
         Args:
             documents: List of documents to chunk
-            
+
         Returns:
             List of all chunks
         """
         all_chunks = []
         skipped = 0
-        
+
         for doc in documents:
             chunks = self.chunk_document(doc)
             if chunks:
                 all_chunks.extend(chunks)
             else:
                 skipped += 1
-        
-        logger.info(f"Created {len(all_chunks)} chunks from {len(documents)} documents ({skipped} skipped)")
+
+        logger.info(
+            f"Created {len(all_chunks)} chunks from {len(documents)} documents ({skipped} skipped)"
+        )
         return all_chunks
-    
+
     def get_stats(self, chunks: List[Chunk]) -> Dict[str, Any]:
         """Get statistics about chunks."""
         if not chunks:
-            return {'total': 0}
-        
+            return {"total": 0}
+
         chunk_sizes = [len(c.text) for c in chunks]
-        
+
         by_collection = {}
         by_content_type = {}
-        
+
         for chunk in chunks:
             by_collection[chunk.collection] = by_collection.get(chunk.collection, 0) + 1
-            ct = chunk.content_type or 'UNKNOWN'
+            ct = chunk.content_type or "UNKNOWN"
             by_content_type[ct] = by_content_type.get(ct, 0) + 1
-        
+
         return {
-            'total': len(chunks),
-            'by_collection': by_collection,
-            'by_content_type': by_content_type,
-            'avg_chunk_size': sum(chunk_sizes) / len(chunk_sizes),
-            'min_chunk_size': min(chunk_sizes),
-            'max_chunk_size': max(chunk_sizes),
-            'total_chars': sum(chunk_sizes),
+            "total": len(chunks),
+            "by_collection": by_collection,
+            "by_content_type": by_content_type,
+            "avg_chunk_size": sum(chunk_sizes) / len(chunk_sizes),
+            "min_chunk_size": min(chunk_sizes),
+            "max_chunk_size": max(chunk_sizes),
+            "total_chars": sum(chunk_sizes),
         }
 
 
 # Test chunking
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
-    
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
     from document_loader import DocumentLoader
-    
+
     loader = DocumentLoader()
     chunker = ContentAwareChunker()
-    
+
     try:
         documents = loader.load_all(limit=5)
         chunks = chunker.chunk_all(documents)
         stats = chunker.get_stats(chunks)
-        
+
         print(f"\nChunking statistics:")
         print(f"  Total chunks: {stats['total']}")
         print(f"  By collection: {stats['by_collection']}")
         print(f"  By content type: {stats['by_content_type']}")
         print(f"  Avg chunk size: {stats['avg_chunk_size']:.0f} chars")
         print(f"  Min/Max: {stats['min_chunk_size']}/{stats['max_chunk_size']} chars")
-        
+
         if chunks:
             print(f"\nFirst chunk:")
             print(f"  ID: {chunks[0].chunk_id}")

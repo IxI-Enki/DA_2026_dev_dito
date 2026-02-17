@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 _here = Path(__file__).resolve().parent.parent
 if str(_here) not in __import__("sys").path:
     __import__("sys").path.insert(0, str(_here))

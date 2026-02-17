@@ -10,7 +10,7 @@ Ausgabeformate:
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from config import EvaluationConfig, get_config
 
@@ -19,9 +19,7 @@ class ReportGenerator:
     """Generiert Evaluierungsberichte in verschiedenen Formaten."""
 
     def __init__(
-        self,
-        config: Optional[EvaluationConfig] = None,
-        results: Optional[Dict[str, Any]] = None
+        self, config: Optional[EvaluationConfig] = None, results: Optional[Dict[str, Any]] = None
     ):
         """
         Initialisiert den ReportGenerator.
@@ -62,24 +60,24 @@ class ReportGenerator:
 
     def _generate_markdown(self, output_dir: Path) -> Path:
         """Generiert den Markdown-Report."""
-        run_name = self.results.get('run_name', 'evaluation')
+        run_name = self.results.get("run_name", "evaluation")
         # Timestamp im Format YYYYMMDD_HHMMSS (konsistent)
-        timestamp = self.results.get('timestamp')
+        timestamp = self.results.get("timestamp")
         if not timestamp:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         elif len(timestamp) == 8:  # Nur Datum, füge Zeit hinzu
             timestamp = f"{timestamp}_{datetime.now().strftime('%H%M%S')}"
-        
+
         # Parse timestamp für schöne Anzeige
         try:
-            if '_' in timestamp:
-                date_part, time_part = timestamp.split('_', 1)
-                dt = datetime.strptime(f"{date_part}_{time_part}", '%Y%m%d_%H%M%S')
-                date_display = dt.strftime('%Y-%m-%d %H:%M:%S')
+            if "_" in timestamp:
+                date_part, time_part = timestamp.split("_", 1)
+                dt = datetime.strptime(f"{date_part}_{time_part}", "%Y%m%d_%H%M%S")
+                date_display = dt.strftime("%Y-%m-%d %H:%M:%S")
             else:
-                date_display = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        except:
-            date_display = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                date_display = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        except (ValueError, KeyError, TypeError):
+            date_display = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         md_path = output_dir / f"{run_name}_report.md"
 
@@ -112,7 +110,9 @@ class ReportGenerator:
         lines.extend(self._section_temporal())
 
         # Query Generation (if available)
-        if 'query_generation' in self.results and not self.results['query_generation'].get('skipped'):
+        if "query_generation" in self.results and not self.results["query_generation"].get(
+            "skipped"
+        ):
             lines.extend(self._section_queries())
 
         # Diploma Thesis Analysis
@@ -122,14 +122,14 @@ class ReportGenerator:
         lines.extend(self._section_recommendations())
 
         # Write file
-        with open(md_path, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(lines))
+        with open(md_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
 
         return md_path
 
     def _section_summary(self) -> list:
         """Generiert die Zusammenfassung."""
-        summary = self.results.get('summary', {})
+        summary = self.results.get("summary", {})
 
         lines = [
             "## Executive Summary",
@@ -152,10 +152,10 @@ class ReportGenerator:
 
     def _section_content_classification(self) -> list:
         """Generiert die Content-Klassifizierung."""
-        cc = self.results.get('content_classification', {})
-        summary = cc.get('summary', {})
-        by_namespace = cc.get('by_namespace', {})
-        by_content_type = cc.get('by_content_type', {})
+        cc = self.results.get("content_classification", {})
+        summary = cc.get("summary", {})
+        by_namespace = cc.get("by_namespace", {})
+        by_content_type = cc.get("by_content_type", {})
 
         lines = [
             "## Content Classification",
@@ -176,13 +176,15 @@ class ReportGenerator:
         for ns, count in sorted(by_namespace.items(), key=lambda x: -x[1]):
             lines.append(f"| {ns} | {count} |")
 
-        lines.extend([
-            "",
-            "### Nach Content-Typ",
-            "",
-            "| Typ | Seiten |",
-            "|-----|--------|",
-        ])
+        lines.extend(
+            [
+                "",
+                "### Nach Content-Typ",
+                "",
+                "| Typ | Seiten |",
+                "|-----|--------|",
+            ]
+        )
 
         for ct, count in sorted(by_content_type.items(), key=lambda x: -x[1]):
             lines.append(f"| {ct} | {count} |")
@@ -192,10 +194,10 @@ class ReportGenerator:
 
     def _section_format_quality(self) -> list:
         """Generiert die Format-Qualitäts-Sektion."""
-        fq = self.results.get('format_quality', {})
-        summary = fq.get('summary', {})
-        by_type = fq.get('by_type', {})
-        quality_dist = fq.get('quality_distribution', {})
+        fq = self.results.get("format_quality", {})
+        summary = fq.get("summary", {})
+        by_type = fq.get("by_type", {})
+        quality_dist = fq.get("quality_distribution", {})
 
         lines = [
             "## Format & Quality Analysis",
@@ -216,15 +218,17 @@ class ReportGenerator:
         for ft, count in sorted(by_type.items(), key=lambda x: -x[1]):
             lines.append(f"| {ft} | {count} |")
 
-        lines.extend([
-            "",
-            "### Qualitätsverteilung",
-            "",
-            "| Level | Anzahl |",
-            "|-------|--------|",
-        ])
+        lines.extend(
+            [
+                "",
+                "### Qualitätsverteilung",
+                "",
+                "| Level | Anzahl |",
+                "|-------|--------|",
+            ]
+        )
 
-        for level in ['high', 'medium', 'low']:
+        for level in ["high", "medium", "low"]:
             count = quality_dist.get(level, 0)
             lines.append(f"| {level} | {count} |")
 
@@ -233,10 +237,10 @@ class ReportGenerator:
 
     def _section_rag_readiness(self) -> list:
         """Generiert die RAG-Readiness-Sektion."""
-        rr = self.results.get('rag_readiness', {})
-        summary = rr.get('summary', {})
-        common_issues = rr.get('common_issues', {})
-        recommendations = rr.get('preprocessing_recommendations', [])
+        rr = self.results.get("rag_readiness", {})
+        summary = rr.get("summary", {})
+        common_issues = rr.get("common_issues", {})
+        recommendations = rr.get("preprocessing_recommendations", [])
 
         lines = [
             "## RAG Readiness Analysis",
@@ -251,26 +255,30 @@ class ReportGenerator:
             "|-------|--------|",
         ]
 
-        dist = summary.get('readiness_distribution', {})
-        for level in ['high', 'medium', 'low']:
+        dist = summary.get("readiness_distribution", {})
+        for level in ["high", "medium", "low"]:
             count = dist.get(level, 0)
             lines.append(f"| {level} | {count} |")
 
         if common_issues:
-            lines.extend([
-                "",
-                "### Häufige Probleme",
-                "",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "### Häufige Probleme",
+                    "",
+                ]
+            )
             for issue, count in list(common_issues.items())[:5]:
                 lines.append(f"- **{issue}:** {count} Seiten")
 
         if recommendations:
-            lines.extend([
-                "",
-                "### Preprocessing-Empfehlungen",
-                "",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "### Preprocessing-Empfehlungen",
+                    "",
+                ]
+            )
             for rec in recommendations:
                 lines.append(f"- {rec}")
 
@@ -279,9 +287,9 @@ class ReportGenerator:
 
     def _section_temporal(self) -> list:
         """Generiert die zeitliche Analyse-Sektion."""
-        ta = self.results.get('temporal_analysis', {})
-        summary = ta.get('summary', {})
-        freshness_dist = ta.get('freshness_distribution', {})
+        ta = self.results.get("temporal_analysis", {})
+        summary = ta.get("summary", {})
+        freshness_dist = ta.get("freshness_distribution", {})
 
         lines = [
             "## Temporal Analysis",
@@ -299,7 +307,7 @@ class ReportGenerator:
             "|-----------|--------|",
         ]
 
-        for cat in ['current', 'recent', 'outdated', 'archived', 'unknown']:
+        for cat in ["current", "recent", "outdated", "archived", "unknown"]:
             count = freshness_dist.get(cat, 0)
             if count > 0:
                 lines.append(f"| {cat} | {count} |")
@@ -309,10 +317,10 @@ class ReportGenerator:
 
     def _section_queries(self) -> list:
         """Generiert die Query-Generierung-Sektion."""
-        qg = self.results.get('query_generation', {})
-        summary = qg.get('summary', {})
-        by_type = qg.get('by_type', {})
-        queries = qg.get('queries', [])
+        qg = self.results.get("query_generation", {})
+        summary = qg.get("summary", {})
+        by_type = qg.get("by_type", {})
+        queries = qg.get("queries", [])
 
         lines = [
             "## Query Generation",
@@ -333,11 +341,13 @@ class ReportGenerator:
             lines.append(f"| {qt} | {count} |")
 
         if queries:
-            lines.extend([
-                "",
-                "### Beispiel-Queries",
-                "",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "### Beispiel-Queries",
+                    "",
+                ]
+            )
             for q in queries[:5]:
                 lines.append(f"- **[{q.get('query_type', 'unknown')}]** {q.get('question', 'N/A')}")
                 lines.append(f"  - *Source:* {q.get('source_page', 'N/A')}")
@@ -348,8 +358,8 @@ class ReportGenerator:
 
     def _section_diploma_thesis(self) -> list:
         """Generiert die Diplomarbeits-Sektion."""
-        fq = self.results.get('format_quality', {})
-        thesis_files = fq.get('diploma_thesis', [])
+        fq = self.results.get("format_quality", {})
+        thesis_files = fq.get("diploma_thesis", [])
 
         if not thesis_files:
             return []
@@ -364,21 +374,25 @@ class ReportGenerator:
         ]
 
         for t in thesis_files:
-            lines.append(f"| {t.get('file_name', 'N/A')} | {t.get('size_mb', 'N/A')} | {t.get('quality_score', 'N/A')} |")
+            lines.append(
+                f"| {t.get('file_name', 'N/A')} | {t.get('size_mb', 'N/A')} | {t.get('quality_score', 'N/A')} |"
+            )
 
-        lines.extend([
-            "",
-            "**Empfehlung:** Diese Dateien sollten in ein separates RAGFlow-Dataset mit",
-            "`paper` Chunk-Methode und größerer Chunk-Size (1024 Token) indexiert werden.",
-            "",
-            "---",
-            "",
-        ])
+        lines.extend(
+            [
+                "",
+                "**Empfehlung:** Diese Dateien sollten in ein separates RAGFlow-Dataset mit",
+                "`paper` Chunk-Methode und größerer Chunk-Size (1024 Token) indexiert werden.",
+                "",
+                "---",
+                "",
+            ]
+        )
         return lines
 
     def _section_recommendations(self) -> list:
         """Generiert die Empfehlungs-Sektion."""
-        recommendations = self.results.get('recommendations', [])
+        recommendations = self.results.get("recommendations", [])
 
         lines = [
             "## Empfehlungen für RAG-Preprocessing",
@@ -391,107 +405,113 @@ class ReportGenerator:
         else:
             lines.append("*Keine spezifischen Empfehlungen.*")
 
-        lines.extend([
-            "",
-            "### Allgemeine Preprocessing-Schritte",
-            "",
-            "1. **Wiki-Syntax bereinigen:** DokuWiki-Markup in Plain-Text konvertieren",
-            "2. **Metadaten anreichern:** Namespace, Freshness-Score, Access-Level hinzufügen",
-            "3. **Teacher-Namespace separieren:** Für getrennte Zugriffssteuerung",
-            "4. **Archiv markieren:** Niedrigere Gewichtung für archivierte Inhalte",
-            "5. **OCR für gescannte PDFs:** Textextraktion vor Indexierung",
-            "6. **Diplomarbeiten separat:** Eigenes Dataset mit optimiertem Chunking",
-            "",
-        ])
+        lines.extend(
+            [
+                "",
+                "### Allgemeine Preprocessing-Schritte",
+                "",
+                "1. **Wiki-Syntax bereinigen:** DokuWiki-Markup in Plain-Text konvertieren",
+                "2. **Metadaten anreichern:** Namespace, Freshness-Score, Access-Level hinzufügen",
+                "3. **Teacher-Namespace separieren:** Für getrennte Zugriffssteuerung",
+                "4. **Archiv markieren:** Niedrigere Gewichtung für archivierte Inhalte",
+                "5. **OCR für gescannte PDFs:** Textextraktion vor Indexierung",
+                "6. **Diplomarbeiten separat:** Eigenes Dataset mit optimiertem Chunking",
+                "",
+            ]
+        )
 
         return lines
 
     def generate_deep_analysis_report(self, output_dir: Path, deep_results: Dict[str, Any]) -> Path:
         """
         Generiert einen umfassenden Deep Analysis Report gemäß Microsoft RAG Guide.
-        
+
         Args:
             output_dir: Ausgabeverzeichnis
             deep_results: Dictionary mit deep_analysis_results.json Inhalt
-            
+
         Returns:
             Pfad zum generierten Report
         """
-        timestamp = deep_results.get('timestamp', datetime.now().strftime('%Y%m%d_%H%M%S'))
+        timestamp = deep_results.get("timestamp", datetime.now().strftime("%Y%m%d_%H%M%S"))
         if len(timestamp) == 8:  # Nur Datum
             timestamp = f"{timestamp}_{datetime.now().strftime('%H%M%S')}"
-        
+
         # Parse timestamp für Anzeige
         try:
-            if '_' in timestamp:
-                date_part, time_part = timestamp.split('_', 1)
-                dt = datetime.strptime(f"{date_part}_{time_part}", '%Y%m%d_%H%M%S')
-                date_display = dt.strftime('%Y-%m-%d %H:%M:%S')
+            if "_" in timestamp:
+                date_part, time_part = timestamp.split("_", 1)
+                dt = datetime.strptime(f"{date_part}_{time_part}", "%Y%m%d_%H%M%S")
+                date_display = dt.strftime("%Y-%m-%d %H:%M:%S")
             else:
-                date_display = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        except:
-            date_display = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
+                date_display = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        except (ValueError, KeyError, TypeError):
+            date_display = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         report_path = output_dir / f"ANALYSIS_REPORT_{timestamp}.md"
-        
+
         lines = []
-        
+
         # Header
-        lines.extend([
-            f"# Comprehensive DokuWiki Content Analysis Report",
-            "",
-            f"**Timestamp:** {timestamp}",
-            f"**Date:** {date_display}",
-            f"**Scope:** Deep Content Evaluation for RAG Pipeline Optimization",
-            f"**Author:** {self.author}",
-            f"**Institution:** {self.institution}",
-            "",
-            f"**Dataset:** {len(deep_results.get('wiki_pages', []))} Wiki Pages, "
-            f"{len(deep_results.get('documents', []))} Documents, "
-            f"{len(deep_results.get('media', []))} Images",
-            "",
-            "---",
-            "",
-        ])
-        
+        lines.extend(
+            [
+                f"# Comprehensive DokuWiki Content Analysis Report",
+                "",
+                f"**Timestamp:** {timestamp}",
+                f"**Date:** {date_display}",
+                f"**Scope:** Deep Content Evaluation for RAG Pipeline Optimization",
+                f"**Author:** {self.author}",
+                f"**Institution:** {self.institution}",
+                "",
+                f"**Dataset:** {len(deep_results.get('wiki_pages', []))} Wiki Pages, "
+                f"{len(deep_results.get('documents', []))} Documents, "
+                f"{len(deep_results.get('media', []))} Images",
+                "",
+                "---",
+                "",
+            ]
+        )
+
         # 1. Solution Domain Definition
         lines.extend(self._section_solution_domain())
-        
+
         # 2. Executive Summary
         lines.extend(self._section_deep_executive_summary(deep_results))
-        
+
         # 3. Security Constraints Analysis
         lines.extend(self._section_security_constraints(deep_results))
-        
+
         # 4. Wiki Page Cluster Analysis
         lines.extend(self._section_wiki_cluster_analysis(deep_results))
-        
+
         # 5. Document Deep Dive
         lines.extend(self._section_document_deep_dive(deep_results))
-        
+
         # 6. Visual Content Strategy
         lines.extend(self._section_visual_content_strategy(deep_results))
-        
+
         # 7. Preprocessing Requirements (Microsoft Guide)
         lines.extend(self._section_preprocessing_requirements(deep_results))
-        
+
         # 8. Preprocessing Strategy Recommendation
         lines.extend(self._section_preprocessing_strategy_recommendation(deep_results))
-        
+
         # Footer
-        lines.extend([
-            "",
-            "---",
-            f"*Report generated automatically by Fetched Data Evaluation Suite (Deep Eval Mode)*",
-            f"*Generated: {date_display}*"
-        ])
-        
+        lines.extend(
+            [
+                "",
+                "---",
+                f"*Report generated automatically by Fetched Data Evaluation Suite (Deep Eval Mode)*",
+                f"*Generated: {date_display}*",
+            ]
+        )
+
         # Write file
-        with open(report_path, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(lines))
-        
+        with open(report_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+
         return report_path
-    
+
     def _section_solution_domain(self) -> list:
         """Solution Domain Definition gemäß Microsoft Guide."""
         return [
@@ -516,13 +536,13 @@ class ReportGenerator:
             "---",
             "",
         ]
-    
+
     def _section_deep_executive_summary(self, results: Dict[str, Any]) -> list:
         """Executive Summary für Deep Analysis."""
-        wiki_pages = results.get('wiki_pages', [])
-        documents = results.get('documents', [])
-        media = results.get('media', [])
-        
+        results.get("wiki_pages", [])
+        results.get("documents", [])
+        results.get("media", [])
+
         return [
             "## 2. Executive Summary",
             "",
@@ -538,18 +558,22 @@ class ReportGenerator:
             "---",
             "",
         ]
-    
+
     def _section_security_constraints(self, results: Dict[str, Any]) -> list:
         """Security Constraints Analysis - explizite Dokumentation."""
         config = self.config
         teacher_ns = config.teacher_namespaces
         public_ns = config.public_namespaces
-        
+
         # Count teacher-restricted vs public content
-        wiki_pages = results.get('wiki_pages', [])
-        teacher_pages = sum(1 for p in wiki_pages if any(p.get('page_id', '').startswith(f"{ns}:") for ns in teacher_ns))
+        wiki_pages = results.get("wiki_pages", [])
+        teacher_pages = sum(
+            1
+            for p in wiki_pages
+            if any(p.get("page_id", "").startswith(f"{ns}:") for ns in teacher_ns)
+        )
         public_pages = len(wiki_pages) - teacher_pages
-        
+
         return [
             "## 3. Security Constraints Analysis",
             "",
@@ -588,15 +612,15 @@ class ReportGenerator:
             "---",
             "",
         ]
-    
+
     def _section_wiki_cluster_analysis(self, results: Dict[str, Any]) -> list:
         """Wiki Page Cluster Analysis."""
-        wiki_pages = results.get('wiki_pages', [])
+        wiki_pages = results.get("wiki_pages", [])
         wiki_cats = {}
         for p in wiki_pages:
-            cat = p.get('semantic', {}).get('category', 'UNKNOWN')
+            cat = p.get("semantic", {}).get("category", "UNKNOWN")
             wiki_cats[cat] = wiki_cats.get(cat, 0) + 1
-        
+
         lines = [
             "## 4. Wiki Page Cluster Analysis",
             "",
@@ -605,38 +629,40 @@ class ReportGenerator:
             "| Category | Count | Description / Strategy |",
             "| :--- | :--- | :--- |",
         ]
-        
+
         cat_descriptions = {
             "KNOWLEDGE": "Educational content, tutorials, legal info. -> **Recursive Header Chunking**.",
             "PORTAL": "Navigation hubs. Low text density. -> **Parent Context Indexing**.",
             "FORM_COLLECTION": "Collections of download links. -> **Metadata Extraction**.",
             "NEWS": "Ankündigungen, Termine. Time-sensitive. -> **Freshness Weighting**.",
             "EMPTY": "Test pages or placeholders. -> **Skip**.",
-            "TABLE_DATA": "Mainly data tables. -> **Markdown Table Parsing**."
+            "TABLE_DATA": "Mainly data tables. -> **Markdown Table Parsing**.",
         }
-        
+
         for cat, count in sorted(wiki_cats.items(), key=lambda x: -x[1]):
             desc = cat_descriptions.get(cat, "Generic content cluster.")
             lines.append(f"| **{cat}** | {count} | {desc} |")
-        
-        lines.extend([
-            "",
-            "**Insight:** Portals should not be indexed as primary content but used to enrich linked documents.",
-            "",
-            "---",
-            "",
-        ])
-        
+
+        lines.extend(
+            [
+                "",
+                "**Insight:** Portals should not be indexed as primary content but used to enrich linked documents.",
+                "",
+                "---",
+                "",
+            ]
+        )
+
         return lines
-    
+
     def _section_document_deep_dive(self, results: Dict[str, Any]) -> list:
         """Document Deep Dive Analysis."""
-        documents = results.get('documents', [])
+        documents = results.get("documents", [])
         doc_types = {}
         for d in documents:
-            t = d.get('semantic', {}).get('type', 'UNKNOWN')
+            t = d.get("semantic", {}).get("type", "UNKNOWN")
             doc_types[t] = doc_types.get(t, 0) + 1
-        
+
         lines = [
             "## 5. Document Deep Dive (PDF/Office)",
             "",
@@ -645,35 +671,35 @@ class ReportGenerator:
             "| Type | Count | Recommended Handler |",
             "| :--- | :--- | :--- |",
         ]
-        
+
         handler_map = {
             "THESIS": "Scientific Paper Parser (Abstract/TOC aware)",
             "FORM": "Metadata-Only / Form Field Indexer",
             "CURRICULUM": "Table-aware PDF Parser",
             "REPORT": "Standard PDF Parser",
-            "INFO_SHEET": "Standard PDF Parser"
+            "INFO_SHEET": "Standard PDF Parser",
         }
-        
+
         for t, count in sorted(doc_types.items(), key=lambda x: -x[1]):
             handler = handler_map.get(t, "Form/Metadata Indexer")
             lines.append(f"| **{t}** | {count} | {handler} |")
-        
+
         lines.extend(["", "---", ""])
         return lines
-    
+
     def _section_visual_content_strategy(self, results: Dict[str, Any]) -> list:
         """Visual Content Strategy."""
-        media = results.get('media', [])
-        img_stats = {'informative': 0, 'decorative': 0, 'skipped': 0}
-        
+        media = results.get("media", [])
+        img_stats = {"informative": 0, "decorative": 0, "skipped": 0}
+
         for m in media:
-            if m.get('status') in ['skipped_too_small', 'skipped_svg_format']:
-                img_stats['skipped'] += 1
-            elif m.get('vision_analysis', {}).get('utility_score', 0) >= 6:
-                img_stats['informative'] += 1
+            if m.get("status") in ["skipped_too_small", "skipped_svg_format"]:
+                img_stats["skipped"] += 1
+            elif m.get("vision_analysis", {}).get("utility_score", 0) >= 6:
+                img_stats["informative"] += 1
             else:
-                img_stats['decorative'] += 1
-        
+                img_stats["decorative"] += 1
+
         return [
             "## 6. Visual Content Strategy",
             "",
@@ -686,7 +712,7 @@ class ReportGenerator:
             "---",
             "",
         ]
-    
+
     def _section_preprocessing_requirements(self, results: Dict[str, Any]) -> list:
         """Preprocessing Requirements gemäß Microsoft Guide."""
         return [
@@ -730,7 +756,7 @@ class ReportGenerator:
             "---",
             "",
         ]
-    
+
     def _section_preprocessing_strategy_recommendation(self, results: Dict[str, Any]) -> list:
         """Preprocessing Strategy Recommendation."""
         return [
@@ -769,17 +795,17 @@ class ReportGenerator:
 
     def _generate_json_summary(self, output_dir: Path):
         """Generiert die JSON-Zusammenfassung."""
-        run_name = self.results.get('run_name', 'evaluation')
+        run_name = self.results.get("run_name", "evaluation")
 
         summary = {
-            'run_name': run_name,
-            'timestamp': self.results.get('timestamp'),
-            'summary': self.results.get('summary', {}),
-            'recommendations': self.results.get('recommendations', [])
+            "run_name": run_name,
+            "timestamp": self.results.get("timestamp"),
+            "summary": self.results.get("summary", {}),
+            "recommendations": self.results.get("recommendations", []),
         }
 
         json_path = output_dir / f"{run_name}_summary.json"
-        with open(json_path, 'w', encoding='utf-8') as f:
+        with open(json_path, "w", encoding="utf-8") as f:
             json.dump(summary, f, ensure_ascii=False, indent=2)
 
 
@@ -790,22 +816,22 @@ class ReportGenerator:
 if __name__ == "__main__":
     # Test with sample data
     sample_results = {
-        'run_name': 'test_eval',
-        'timestamp': '20260103_120000',
-        'summary': {
-            'total_pages': 207,
-            'total_media_files': 330,
-            'teacher_restricted_pages': 79,
-            'archived_pages': 9,
-            'avg_rag_readiness': 0.65,
-            'avg_freshness': 0.72,
-            'files_needing_ocr': 5,
-            'diploma_thesis_pdfs': 7
+        "run_name": "test_eval",
+        "timestamp": "20260103_120000",
+        "summary": {
+            "total_pages": 207,
+            "total_media_files": 330,
+            "teacher_restricted_pages": 79,
+            "archived_pages": 9,
+            "avg_rag_readiness": 0.65,
+            "avg_freshness": 0.72,
+            "files_needing_ocr": 5,
+            "diploma_thesis_pdfs": 7,
         },
-        'recommendations': [
+        "recommendations": [
             "Wiki-Syntax-Bereinigung für 50 Seiten mit hohem Noise",
-            "Absatz-basiertes Chunking für Seiten ohne Überschriften"
-        ]
+            "Absatz-basiertes Chunking für Seiten ohne Überschriften",
+        ],
     }
 
     gen = ReportGenerator(results=sample_results)

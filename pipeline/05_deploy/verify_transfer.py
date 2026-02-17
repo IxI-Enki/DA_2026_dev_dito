@@ -12,11 +12,11 @@ Usage:
     python verify_transfer.py --check-qdrant     # Also check Qdrant collection
 """
 
-import os
-import sys
 import argparse
 import hashlib
+import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -25,12 +25,10 @@ _deploy_dir = Path(__file__).resolve().parent
 if str(_deploy_dir.parent / "shared") not in sys.path:
     sys.path.insert(0, str(_deploy_dir.parent / "shared"))
 from cli_utils import enable_windows_ansi, style
-
 from deploy_config import (
     SCRIPT_DIR,
-    get_defaults,
-    load_config,
     find_latest_embeddings_file,
+    get_defaults,
     get_local_embeddings_dir,
 )
 
@@ -39,7 +37,7 @@ def get_local_hash(filepath: Path) -> Optional[str]:
     """Calculate MD5 hash of local file. Returns None if file does not exist."""
     if not filepath.exists():
         return None
-    
+
     hash_md5 = hashlib.md5()
     with open(filepath, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -47,13 +45,15 @@ def get_local_hash(filepath: Path) -> Optional[str]:
     return hash_md5.hexdigest()
 
 
-def get_remote_hash(host: str, user: str, port: int, remote_path: str, key_path: Optional[str] = None) -> Optional[str]:
+def get_remote_hash(
+    host: str, user: str, port: int, remote_path: str, key_path: Optional[str] = None
+) -> Optional[str]:
     """Get MD5 hash of remote file via SSH. Returns None on failure."""
     cmd = ["ssh"]
     if key_path:
         cmd.extend(["-i", key_path])
     cmd.extend(["-p", str(port), f"{user}@{host}", f"md5sum {remote_path}"])
-    
+
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         if result.returncode == 0:
@@ -67,13 +67,15 @@ def get_remote_hash(host: str, user: str, port: int, remote_path: str, key_path:
         return None
 
 
-def get_remote_file_info(host: str, user: str, port: int, remote_path: str, key_path: Optional[str] = None) -> dict:
+def get_remote_file_info(
+    host: str, user: str, port: int, remote_path: str, key_path: Optional[str] = None
+) -> dict:
     """Get file info from remote host."""
     cmd = ["ssh"]
     if key_path:
         cmd.extend(["-i", key_path])
     cmd.extend(["-p", str(port), f"{user}@{host}", f"ls -la {remote_path} && wc -l {remote_path}"])
-    
+
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         if result.returncode == 0:
@@ -106,13 +108,14 @@ def verify_qdrant_collection(
     if key_path:
         cmd.extend(["-i", key_path])
     cmd.extend(["-p", str(ssh_port), f"{ssh_user}@{ssh_host}", curl_cmd])
-    
+
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         if "QDRANT_NOT_RUNNING" in result.stdout:
             return {"status": "not_running", "error": "Qdrant not accessible"}
         elif result.returncode == 0:
             import json
+
             try:
                 data = json.loads(result.stdout)
                 if "result" in data:
@@ -139,9 +142,17 @@ def main():
     parser.add_argument("--user", "-u", default=defaults["ssh_user"])
     parser.add_argument("--port", "-p", type=int, default=defaults["ssh_port"])
     parser.add_argument("--remote-path", "-r", default=defaults["remote_embeddings_file"])
-    parser.add_argument("--local-file", "-f", default=None, metavar="PATH", help="Local JSONL (default: latest from config)")
+    parser.add_argument(
+        "--local-file",
+        "-f",
+        default=None,
+        metavar="PATH",
+        help="Local JSONL (default: latest from config)",
+    )
     parser.add_argument("--key", "-k", default=os.environ.get("SSH_KEY_PATH"))
-    parser.add_argument("--check-qdrant", action="store_true", help="Also check Qdrant collection on Pi")
+    parser.add_argument(
+        "--check-qdrant", action="store_true", help="Also check Qdrant collection on Pi"
+    )
     args = parser.parse_args()
     enable_windows_ansi()
 
@@ -166,7 +177,7 @@ def main():
             sys.exit(1)
         local_path = latest
         print(style("[INFO] Using latest local file: ", "cyan") + str(local_path))
-    
+
     # Get local hash
     print(f"\n[1/3] Calculating local file hash...")
     print(f"      File: {local_path}")
@@ -176,7 +187,7 @@ def main():
     else:
         print(style("      [ERROR] Local file not found!", "red"))
         sys.exit(1)
-    
+
     # Get remote hash
     print(f"\n[2/3] Getting remote file hash...")
     print(f"      Host: {args.user}@{args.host}:{args.port}")
@@ -187,14 +198,16 @@ def main():
     else:
         print(style("      [ERROR] Could not get remote hash!", "red"))
         sys.exit(1)
-    
+
     # Compare hashes
     print(f"\n[3/3] Comparing checksums...")
     if local_hash == remote_hash:
         print(style("      [OK] Checksums match! Transfer verified.", "bright_green"))
-        
+
         # Get additional remote file info
-        remote_info = get_remote_file_info(args.host, args.user, args.port, args.remote_path, args.key)
+        remote_info = get_remote_file_info(
+            args.host, args.user, args.port, args.remote_path, args.key
+        )
         if remote_info.get("exists"):
             print(f"\n      Remote file info:")
             print(f"        Size:  {remote_info.get('size', 'unknown')} bytes")
@@ -204,7 +217,7 @@ def main():
         print(f"        Local:  {local_hash}")
         print(f"        Remote: {remote_hash}")
         sys.exit(1)
-    
+
     # Optional: Check Qdrant collection on Pi
     if args.check_qdrant:
         print(f"\n[EXTRA] Checking Qdrant collection...")
@@ -222,8 +235,13 @@ def main():
             if "points_count" in qdrant_status:
                 print(f"        Points: {qdrant_status['points_count']}")
         else:
-            print(style(f"        [WARN] Qdrant: {qdrant_status.get('error', 'unknown error')}", "yellow"))
-    
+            print(
+                style(
+                    f"        [WARN] Qdrant: {qdrant_status.get('error', 'unknown error')}",
+                    "yellow",
+                )
+            )
+
     print("")
     print(style(sep, "green"))
     print(style("  VERIFICATION COMPLETE", "bold", "bright_green"))

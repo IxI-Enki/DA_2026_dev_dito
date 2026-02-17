@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -48,7 +48,9 @@ def _aggregate(per_query: list[dict], keys: tuple[str, ...] | None = None) -> di
     return agg
 
 
-def _difficulty_breakdown(per_query: list[dict], keys: tuple[str, ...] | None = None) -> dict[str, dict[str, float]]:
+def _difficulty_breakdown(
+    per_query: list[dict], keys: tuple[str, ...] | None = None
+) -> dict[str, dict[str, float]]:
     """Break down metrics by difficulty level."""
     if not per_query:
         return {}
@@ -119,12 +121,9 @@ class ReportGenerator:
         if not all_results:
             raise FileNotFoundError(f"No JSON result files in {results_dir}")
 
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        timestamp = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         code_version = _git_version()
-        config_hashes = {
-            name: data.get("config_hash", "n/a")
-            for name, data in all_results.items()
-        }
+        config_hashes = {name: data.get("config_hash", "n/a") for name, data in all_results.items()}
 
         # Aggregate per model
         aggregates: dict[str, dict[str, float]] = {}
@@ -157,9 +156,7 @@ class ReportGenerator:
             "config_hashes": config_hashes,
             "executive_summary": executive,
             "custom_metrics": aggregates,
-            "difficulty_breakdown": {
-                name: diff for name, diff in difficulty_all.items()
-            },
+            "difficulty_breakdown": {name: diff for name, diff in difficulty_all.items()},
         }
         if ragas_scores:
             report_json["ragas_metrics"] = ragas_scores
@@ -211,12 +208,14 @@ class ReportGenerator:
             c_headers = ["Metric", "p-value", "Effect Size", "Interpretation"]
             c_rows = []
             for c in comparison:
-                c_rows.append([
-                    c.get("metric", ""),
-                    f"{c.get('p_value', 0.0):.4f}",
-                    f"{c.get('effect_size', 0.0):.4f}",
-                    c.get("interpretation", ""),
-                ])
+                c_rows.append(
+                    [
+                        c.get("metric", ""),
+                        f"{c.get('p_value', 0.0):.4f}",
+                        f"{c.get('effect_size', 0.0):.4f}",
+                        c.get("interpretation", ""),
+                    ]
+                )
             md_lines.append(_md_table(c_headers, c_rows))
             md_lines.append("")
 
@@ -227,7 +226,7 @@ class ReportGenerator:
             md_lines.append(f"### {name}")
             md_lines.append("")
             if diff_data:
-                first_diff_metrics = [k for k in next(iter(diff_data.values())).keys() if k != "count"]
+                first_diff_metrics = [k for k in next(iter(diff_data.values())) if k != "count"]
                 d_headers = ["Difficulty", "Count"] + first_diff_metrics
                 d_rows = []
                 for diff, metrics in diff_data.items():

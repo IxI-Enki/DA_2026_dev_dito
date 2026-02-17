@@ -11,19 +11,14 @@ Tests:
 - Missing config graceful fallback
 - get_setting() nested path access
 """
-import json
-from pathlib import Path
-from typing import Any
-from unittest.mock import patch
-
-import pytest
-import yaml
 
 # Import the functions under test (not the module-level side effects)
 # We import specific functions to avoid triggering load_config() at import time
-import importlib
 import sys
+from pathlib import Path
 
+import pytest
+import yaml
 
 # =============================================================================
 # Helpers

@@ -10,7 +10,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-
 # Ensure 04_embeddings_creator is importable
 _pkg = Path(__file__).resolve().parent.parent
 if str(_pkg) not in sys.path:
@@ -47,6 +46,7 @@ class OutputConfig:
 @dataclass
 class MinimalConfig:
     """Minimal config for unit tests (no env.yaml required)."""
+
     paths: PathsConfig
     chunking: ChunkingConfig
     output: Any = field(default_factory=dict)
@@ -109,7 +109,10 @@ def minimal_chunker_config() -> MinimalConfig:
         processing={},
         validation={},
         app={"name": "test"},
-        _raw={"CHUNKING": {"default": chunking.default, "content_types": chunking.content_types}, "TEXT_PREP": text_prep},
+        _raw={
+            "CHUNKING": {"default": chunking.default, "content_types": chunking.content_types},
+            "TEXT_PREP": text_prep,
+        },
     )
 
 
