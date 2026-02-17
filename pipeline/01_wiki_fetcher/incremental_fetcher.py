@@ -6,10 +6,10 @@ Dramatically reduces sync time for typical updates.
 
 Usage:
     from incremental_fetcher import IncrementalFetcher
-    
+
     fetcher = IncrementalFetcher(manifest_path="data/fetched/fetch_123/fetch_manifest.json")
     stats = fetcher.run_incremental_fetch()
-    
+
     # Or via CLI:
     python incremental_fetcher.py data/fetched/fetch_123/fetch_manifest.json
 """

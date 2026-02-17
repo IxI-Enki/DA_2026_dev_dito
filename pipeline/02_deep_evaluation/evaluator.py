@@ -6,7 +6,7 @@ Integrates with existing analyzers for quality scoring.
 
 Usage:
     from evaluator import ContentEvaluator
-    
+
     evaluator = ContentEvaluator(fetch_dir="data/fetched/fetch_123")
     report = evaluator.evaluate()
     evaluator.save_report(Path("data/evaluated/"))

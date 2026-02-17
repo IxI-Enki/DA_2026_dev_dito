@@ -8,17 +8,17 @@ Constitution Article III: Modular pipeline components.
 
 Usage:
     from manifest import FetchManifest, PageEntry, MediaEntry
-    
+
     # Create new manifest
     manifest = FetchManifest(wiki_url="https://wiki.example.com")
-    
+
     # Add entries during fetch
     manifest.add_page(PageEntry(id="start", revision=1706789400, ...))
     manifest.add_media(MediaEntry(id="wiki:logo.png", hash="sha256:...", ...))
-    
+
     # Save after fetch
     manifest.save(Path("data/fetched/fetch_123/fetch_manifest.json"))
-    
+
     # Load for comparison
     old_manifest = FetchManifest.load(Path("data/fetched/fetch_122/fetch_manifest.json"))
 """

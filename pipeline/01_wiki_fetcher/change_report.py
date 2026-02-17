@@ -6,7 +6,7 @@ Provides human-readable summaries and machine-readable JSON.
 
 Usage:
     from change_report import ChangeReportGenerator
-    
+
     generator = ChangeReportGenerator(current_manifest, previous_manifest)
     report = generator.generate_report()
     generator.save_report(Path("data/logs/change_reports/"))

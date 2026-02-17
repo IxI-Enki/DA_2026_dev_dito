@@ -4,10 +4,10 @@ Scans archived fetches and provides cached media files to avoid re-downloading.
 
 Usage:
     from media_cache import MediaCache
-    
+
     cache = MediaCache(archive_base_path)
     cache.build_index()
-    
+
     # Check if file exists in cache
     cached_path = cache.get_cached_file(media_id)
     if cached_path:

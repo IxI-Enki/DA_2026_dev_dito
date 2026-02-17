@@ -5,7 +5,7 @@ Writes progress updates to a JSON file that can be polled by the dashboard.
 
 Usage:
     from progress_tracker import ProgressTracker
-    
+
     tracker = ProgressTracker(job_id="fetch_20260131_123456", stage="fetch")
     tracker.start()
     tracker.update_step("Fetching pages", current=50, total=209)

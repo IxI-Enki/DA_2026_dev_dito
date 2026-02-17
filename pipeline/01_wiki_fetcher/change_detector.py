@@ -6,10 +6,10 @@ Enables incremental/delta fetching.
 
 Usage:
     from change_detector import ChangeDetector, ChangeSummary
-    
+
     detector = ChangeDetector(manifest, api_client)
     changes = detector.detect_all_changes()
-    
+
     print(f"Pages: {changes.pages_added} added, {changes.pages_modified} modified")
 """
 
