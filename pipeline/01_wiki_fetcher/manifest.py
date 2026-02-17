@@ -27,16 +27,16 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
 # =============================================================================
 # Enums
 # =============================================================================
 
 
-class EntryStatus(str, Enum):
+class EntryStatus(StrEnum):
     """Status of a manifest entry"""
 
     CURRENT = "current"  # Active, successfully fetched
@@ -45,7 +45,7 @@ class EntryStatus(str, Enum):
     SKIPPED = "skipped"  # Intentionally skipped (filter/size)
 
 
-class ChangeType(str, Enum):
+class ChangeType(StrEnum):
     """Type of change detected"""
 
     ADDED = "added"  # New item not in previous manifest
@@ -54,7 +54,7 @@ class ChangeType(str, Enum):
     UNCHANGED = "unchanged"  # No change detected
 
 
-class ChangeMagnitude(str, Enum):
+class ChangeMagnitude(StrEnum):
     """Magnitude of content change"""
 
     MINOR = "minor"  # Small edits (typos, formatting)
@@ -264,11 +264,11 @@ class FetchManifest:
         self._pages[entry.id] = entry
         self.updated_at = datetime.now().isoformat()
 
-    def get_page(self, page_id: str) -> Optional[PageEntry]:
+    def get_page(self, page_id: str) -> PageEntry | None:
         """Get a page entry by ID"""
         return self._pages.get(page_id)
 
-    def remove_page(self, page_id: str) -> Optional[PageEntry]:
+    def remove_page(self, page_id: str) -> PageEntry | None:
         """Remove a page entry, returns the removed entry"""
         entry = self._pages.pop(page_id, None)
         if entry:
@@ -308,11 +308,11 @@ class FetchManifest:
         self._media[entry.id] = entry
         self.updated_at = datetime.now().isoformat()
 
-    def get_media(self, media_id: str) -> Optional[MediaEntry]:
+    def get_media(self, media_id: str) -> MediaEntry | None:
         """Get a media entry by ID"""
         return self._media.get(media_id)
 
-    def remove_media(self, media_id: str) -> Optional[MediaEntry]:
+    def remove_media(self, media_id: str) -> MediaEntry | None:
         """Remove a media entry, returns the removed entry"""
         entry = self._media.pop(media_id, None)
         if entry:

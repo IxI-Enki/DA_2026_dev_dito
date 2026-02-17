@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 import signal
 import sys
-from typing import Callable, Optional
+from typing import Callable
 
 # ---------------------------------------------------------------------------
 # Colour / styling
@@ -99,7 +99,7 @@ def style(text: str, *codes: str) -> str:
 
 def create_sigint_handler(
     script_name: str = "",
-    callback: Optional[Callable[[], None]] = None,
+    callback: Callable[[], None] | None = None,
 ) -> Callable:
     """Return a SIGINT handler that prints an abort banner and exits 130.
 
@@ -132,7 +132,7 @@ def create_sigint_handler(
 
 def register_sigint(
     script_name: str = "",
-    callback: Optional[Callable[[], None]] = None,
+    callback: Callable[[], None] | None = None,
 ) -> None:
     """Convenience: create and register the SIGINT handler in one call."""
     signal.signal(signal.SIGINT, create_sigint_handler(script_name, callback))

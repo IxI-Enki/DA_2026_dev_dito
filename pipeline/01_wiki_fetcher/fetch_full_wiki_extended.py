@@ -17,7 +17,7 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
 from api_client import PermanentError, SkipItemError, TransientError, UserAbortError, WikiAPIClient
 from extract_links_from_html import LinkExtractor
@@ -40,7 +40,7 @@ from cli_utils import (
 from progress_tracker import ProgressTracker, create_tracker_from_env
 
 # Global fetcher reference for signal handler
-_current_fetcher: Optional[ExtendedWikiFetcher] = None
+_current_fetcher: ExtendedWikiFetcher | None = None
 
 
 def _sigint_handler(sig, frame):

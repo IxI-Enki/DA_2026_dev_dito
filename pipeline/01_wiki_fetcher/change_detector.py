@@ -16,7 +16,7 @@ Usage:
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 from api_client import PermanentError, SkipItemError, TransientError, WikiAPIClient
 from manifest import ChangeMagnitude, ChangeType, FetchManifest
@@ -203,7 +203,7 @@ class ChangeDetector:
         self._wiki_media: Dict[str, Dict[str, Any]] = {}
 
         # Results
-        self.summary: Optional[ChangeSummary] = None
+        self.summary: ChangeSummary | None = None
 
     def log(self, message: str):
         """Print if verbose"""
@@ -354,7 +354,7 @@ class ChangeDetector:
     # -------------------------------------------------------------------------
 
     def fetch_wiki_media_list(
-        self, namespaces: Optional[List[str]] = None
+        self, namespaces: List[str] | None = None
     ) -> Dict[str, Dict[str, Any]]:
         """
         Fetch current media list from wiki.

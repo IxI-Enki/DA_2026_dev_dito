@@ -8,7 +8,7 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import yaml
 
@@ -89,7 +89,7 @@ class DocumentLoader:
             f"  - {input_dir} (preprocessed_at_* or upload_at_*)"
         )
 
-    def read_file(self, file_path: Path) -> Optional[str]:
+    def read_file(self, file_path: Path) -> str | None:
         """Read file with encoding fallbacks."""
         for enc in [self.encoding] + self.fallback_encodings:
             try:
@@ -128,7 +128,7 @@ class DocumentLoader:
 
         return {}, content
 
-    def load_document(self, file_path: Path, collection: str) -> Optional[Document]:
+    def load_document(self, file_path: Path, collection: str) -> Document | None:
         """
         Load a single document.
 
@@ -158,7 +158,7 @@ class DocumentLoader:
         )
 
     def load_collection(
-        self, base_dir: Path, collection: str, limit: Optional[int] = None
+        self, base_dir: Path, collection: str, limit: int | None = None
     ) -> List[Document]:
         """
         Load all documents from a collection directory.
@@ -193,7 +193,7 @@ class DocumentLoader:
         logger.info(f"Loaded {len(documents)} documents from {collection}")
         return documents
 
-    def load_all(self, limit: Optional[int] = None) -> List[Document]:
+    def load_all(self, limit: int | None = None) -> List[Document]:
         """
         Load all documents from pages and media collections.
 

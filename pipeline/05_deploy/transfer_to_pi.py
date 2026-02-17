@@ -23,7 +23,6 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 # Shared CLI (colored banners, fixed-width separators)
 _deploy_dir = Path(__file__).resolve().parent
@@ -59,7 +58,7 @@ def get_file_size(filepath: Path) -> str:
     return f"{size:.2f} TB"
 
 
-def test_ssh_connection(host: str, user: str, port: int, key_path: Optional[str] = None) -> bool:
+def test_ssh_connection(host: str, user: str, port: int, key_path: str | None = None) -> bool:
     """Test SSH connection to remote host."""
     print(f"[INFO] Testing SSH connection to {user}@{host}:{port}...")
 
@@ -90,7 +89,7 @@ def transfer_file(
     remote_user: str,
     remote_path: str,
     port: int = 22,
-    key_path: Optional[str] = None,
+    key_path: str | None = None,
     dry_run: bool = False,
 ) -> bool:
     """Transfer file via SCP."""

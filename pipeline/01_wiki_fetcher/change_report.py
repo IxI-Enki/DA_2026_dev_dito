@@ -17,7 +17,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from manifest import ChangeMagnitude, ChangeType, FetchManifest
 
@@ -193,15 +193,15 @@ class ChangeReportGenerator:
         self,
         current_manifest: FetchManifest,
         previous_manifest: FetchManifest,
-        current_content_path: Optional[Path] = None,
-        previous_content_path: Optional[Path] = None,
+        current_content_path: Path | None = None,
+        previous_content_path: Path | None = None,
     ):
         self.current = current_manifest
         self.previous = previous_manifest
         self.current_content_path = current_content_path
         self.previous_content_path = previous_content_path
 
-        self.report: Optional[ChangeReport] = None
+        self.report: ChangeReport | None = None
 
     def generate_report(self) -> ChangeReport:
         """
@@ -641,11 +641,11 @@ class FetchHistory:
         except ValueError:
             return False
 
-    def get_latest(self) -> Optional[FetchHistoryEntry]:
+    def get_latest(self) -> FetchHistoryEntry | None:
         """Get most recent entry"""
         return self.entries[0] if self.entries else None
 
-    def get_entry(self, fetch_id: str) -> Optional[FetchHistoryEntry]:
+    def get_entry(self, fetch_id: str) -> FetchHistoryEntry | None:
         """Get entry by fetch ID"""
         for entry in self.entries:
             if entry.fetch_id == fetch_id:

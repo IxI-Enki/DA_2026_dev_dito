@@ -19,7 +19,7 @@ import json
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class MediaCache:
@@ -28,7 +28,7 @@ class MediaCache:
     def __init__(
         self,
         content_output_dir: Path,
-        archive_dirs: Optional[List[str]] = None,
+        archive_dirs: List[str] | None = None,
         hash_algorithm: str = "sha256",
         verbose: bool = True,
     ):
@@ -77,7 +77,7 @@ class MediaCache:
 
         return hasher.hexdigest()
 
-    def _extract_media_id_from_path(self, file_path: Path, media_base: Path) -> Optional[str]:
+    def _extract_media_id_from_path(self, file_path: Path, media_base: Path) -> str | None:
         """Extract media ID from file path (e.g., departm/forms/doc.pdf -> departm:forms:doc.pdf)"""
         try:
             relative = file_path.relative_to(media_base)
@@ -155,7 +155,7 @@ class MediaCache:
 
         return self.index
 
-    def get_cached_file(self, media_id: str) -> Optional[Path]:
+    def get_cached_file(self, media_id: str) -> Path | None:
         """
         Check if media file exists in cache.
 
@@ -170,7 +170,7 @@ class MediaCache:
             return entry["path"]
         return None
 
-    def get_cached_hash(self, media_id: str) -> Optional[str]:
+    def get_cached_hash(self, media_id: str) -> str | None:
         """Get cached file hash if available"""
         entry = self.index.get(media_id)
         if entry:
@@ -179,7 +179,7 @@ class MediaCache:
 
     def copy_from_cache(
         self, media_id: str, target_path: Path, verify: bool = True
-    ) -> Optional[Dict]:
+    ) -> Dict | None:
         """
         Copy file from cache to target location.
 

@@ -5,7 +5,7 @@ Configuration Loader for RAG Preprocessing Pipeline
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import yaml
 
@@ -101,7 +101,7 @@ class PreprocessingConfig:
     vision_llm: Dict[str, Any]
 
     @classmethod
-    def from_yaml(cls, config_path: Optional[Path] = None) -> "PreprocessingConfig":
+    def from_yaml(cls, config_path: Path | None = None) -> "PreprocessingConfig":
         """Load configuration from YAML file.
 
         Prefers config/env.yaml (Article II-B), then env.yaml in module root.
@@ -133,12 +133,12 @@ class PreprocessingConfig:
         )
 
 
-def get_config(config_path: Optional[Path] = None) -> PreprocessingConfig:
+def get_config(config_path: Path | None = None) -> PreprocessingConfig:
     """Get configuration instance."""
     return PreprocessingConfig.from_yaml(config_path)
 
 
-def get_latest_fetch_dir(fetched_base: Path) -> Optional[Path]:
+def get_latest_fetch_dir(fetched_base: Path) -> Path | None:
     """Find the latest fetched_at_* directory."""
     if not fetched_base.exists():
         return None
@@ -152,7 +152,7 @@ def get_latest_fetch_dir(fetched_base: Path) -> Optional[Path]:
     return fetch_dirs[0] if fetch_dirs else None
 
 
-def get_latest_evaluation(evaluated_base: Path) -> Optional[Path]:
+def get_latest_evaluation(evaluated_base: Path) -> Path | None:
     """Find the latest evaluation directory or file.
 
     Looks for (in order of preference):

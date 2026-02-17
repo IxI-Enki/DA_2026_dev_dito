@@ -14,7 +14,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 # Relative import für config
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -26,14 +26,14 @@ class PageTemporalInfo:
     """Zeitliche Informationen einer Seite."""
 
     page_id: str
-    last_modified: Optional[datetime]
+    last_modified: datetime | None
     freshness_category: str  # current, recent, outdated, archived
     freshness_score: float  # 0.0 - 1.0
     is_archived: bool
     is_time_sensitive: bool
     year_references: List[int]
-    oldest_year_ref: Optional[int]
-    newest_year_ref: Optional[int]
+    oldest_year_ref: int | None
+    newest_year_ref: int | None
     has_outdated_refs: bool
     rag_weight: float  # Empfohlene Gewichtung für RAG
 
@@ -57,7 +57,7 @@ class TemporalAnalysisResult:
 class TemporalAnalyzer:
     """Analysiert zeitliche Aspekte von Wiki-Inhalten."""
 
-    def __init__(self, config: Optional[EvaluationConfig] = None):
+    def __init__(self, config: EvaluationConfig | None = None):
         """
         Initialisiert den TemporalAnalyzer.
 
@@ -222,7 +222,7 @@ class TemporalAnalyzer:
             rag_weight=rag_weight,
         )
 
-    def _parse_last_modified(self, metadata: Dict) -> Optional[datetime]:
+    def _parse_last_modified(self, metadata: Dict) -> datetime | None:
         """Parst das Änderungsdatum aus den Metadaten."""
         # Try different field names
         for field_name in ["last_modified", "lastModified", "modified", "date"]:
@@ -294,7 +294,7 @@ class TemporalAnalyzer:
         return any(year < outdated_threshold for year in years)
 
     def _calculate_freshness(
-        self, last_modified: Optional[datetime], is_archived: bool, year_refs: List[int]
+        self, last_modified: datetime | None, is_archived: bool, year_refs: List[int]
     ) -> Tuple[str, float]:
         """Berechnet Freshness-Kategorie und Score."""
         now = datetime.now()

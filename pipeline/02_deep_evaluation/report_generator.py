@@ -10,7 +10,7 @@ Ausgabeformate:
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from config import EvaluationConfig, get_config
 
@@ -19,7 +19,7 @@ class ReportGenerator:
     """Generiert Evaluierungsberichte in verschiedenen Formaten."""
 
     def __init__(
-        self, config: Optional[EvaluationConfig] = None, results: Optional[Dict[str, Any]] = None
+        self, config: EvaluationConfig | None = None, results: Dict[str, Any] | None = None
     ):
         """
         Initialisiert den ReportGenerator.

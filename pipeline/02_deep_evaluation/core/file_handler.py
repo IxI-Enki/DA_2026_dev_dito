@@ -8,7 +8,7 @@ Alle Einstellungen werden aus config/env.yaml geladen - KEINE hardcoded Werte!
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, Set
 
 # Optional dependencies
 try:
@@ -41,7 +41,7 @@ class FileHandler:
     Alle Einstellungen werden aus config/env.yaml geladen.
     """
 
-    def __init__(self, config: Optional[Any] = None):
+    def __init__(self, config: Any | None = None):
         """
         Initialisiert den FileHandler.
 
@@ -153,7 +153,7 @@ class FileHandler:
             logger.error(f"JSON decode error in {file_path}: {e}")
             return {}
 
-    def extract_text_from_pdf(self, file_path: Path, max_pages: Optional[int] = None) -> str:
+    def extract_text_from_pdf(self, file_path: Path, max_pages: int | None = None) -> str:
         """
         Extrahiert Text aus PDF (benötigt PyMuPDF).
 
@@ -213,7 +213,7 @@ class FileHandler:
             logger.error(f"Error extracting DOCX {file_path}: {e}")
             return f"[Error extracting DOCX: {e}]"
 
-    def extract_text_from_xlsx(self, file_path: Path, max_rows: Optional[int] = None) -> str:
+    def extract_text_from_xlsx(self, file_path: Path, max_rows: int | None = None) -> str:
         """
         Extrahiert Text aus XLSX (benötigt openpyxl).
 

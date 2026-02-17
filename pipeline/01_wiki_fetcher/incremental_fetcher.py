@@ -19,7 +19,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from api_client import UserAbortError, WikiAPIClient
 from change_detector import ChangeDetector, ChangeSummary
@@ -50,8 +50,8 @@ class IncrementalFetcher:
 
     def __init__(
         self,
-        manifest_path: Optional[str] = None,
-        output_dir: Optional[str] = None,
+        manifest_path: str | None = None,
+        output_dir: str | None = None,
         verbose: bool = True,
         dry_run: bool = False,
         interactive: bool = True,
@@ -137,7 +137,7 @@ class IncrementalFetcher:
         }
 
         # Change summary
-        self.changes: Optional[ChangeSummary] = None
+        self.changes: ChangeSummary | None = None
 
     def log(self, message: str):
         """Print if verbose"""

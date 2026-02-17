@@ -17,7 +17,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
 # Add parent directory for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -183,8 +183,8 @@ class ContentEvaluator:
 
     def __init__(
         self,
-        fetch_dir: Optional[str] = None,
-        config: Optional[EvaluationConfig] = None,
+        fetch_dir: str | None = None,
+        config: EvaluationConfig | None = None,
         verbose: bool = True,
     ):
         self.verbose = verbose
@@ -221,7 +221,7 @@ class ContentEvaluator:
         self.page_backlinks_dir = self.fetch_dir / "page_backlinks"
 
         # Results
-        self.report: Optional[EvaluationReport] = None
+        self.report: EvaluationReport | None = None
 
         # Internal tracking
         self._all_page_ids: Set[str] = set()

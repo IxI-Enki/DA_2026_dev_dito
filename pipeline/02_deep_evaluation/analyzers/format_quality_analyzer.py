@@ -11,7 +11,7 @@ Analysiert:
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # Relative import für config
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -93,7 +93,7 @@ class QualityAnalysisResult:
 class FormatQualityAnalyzer:
     """Analysiert die Qualität verschiedener Dateiformate."""
 
-    def __init__(self, config: Optional[EvaluationConfig] = None):
+    def __init__(self, config: EvaluationConfig | None = None):
         """
         Initialisiert den FormatQualityAnalyzer.
 

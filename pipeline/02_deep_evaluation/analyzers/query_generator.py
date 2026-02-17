@@ -11,7 +11,7 @@ import random
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # Relative import für config
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -35,8 +35,8 @@ class GeneratedQuery:
     source_chunk: str
     query_type: str  # factual, procedural
     namespace: str
-    context: Optional[str] = None
-    expected_answer: Optional[str] = None
+    context: str | None = None
+    expected_answer: str | None = None
 
 
 @dataclass
@@ -54,7 +54,7 @@ class QueryGenerationResult:
 class QueryGenerator:
     """Generiert synthetische Test-Queries mit LLM."""
 
-    def __init__(self, config: Optional[EvaluationConfig] = None):
+    def __init__(self, config: EvaluationConfig | None = None):
         """
         Initialisiert den QueryGenerator.
 
@@ -116,7 +116,7 @@ Erstelle eine Frage im Stil "Wie...", "Was muss ich tun um...", etc.
 Die Frage soll auf Deutsch sein.
 Antworte NUR mit der Frage, ohne weitere Erklärung."""
 
-    def generate(self, sample_size: Optional[int] = None) -> QueryGenerationResult:
+    def generate(self, sample_size: int | None = None) -> QueryGenerationResult:
         """
         Generiert Test-Queries aus den Wiki-Inhalten.
 
@@ -296,7 +296,7 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
 
         return any(indicator in page_lower or indicator in chunk_lower for indicator in indicators)
 
-    def _generate_query(self, chunk: str, query_type: str) -> Optional[str]:
+    def _generate_query(self, chunk: str, query_type: str) -> str | None:
         """Generiert eine Query mit LLM."""
         if not self.client:
             return None

@@ -16,13 +16,13 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 
 class ProgressTracker:
     """Tracks and reports progress of pipeline stages."""
 
-    def __init__(self, job_id: str, stage: str, progress_file: Optional[Path] = None):
+    def __init__(self, job_id: str, stage: str, progress_file: Path | None = None):
         """
         Initialize progress tracker.
 
@@ -89,7 +89,7 @@ class ProgressTracker:
         self.state["message"] = f"Starting {self.stage}..."
         self._write()
 
-    def set_step(self, step_name: str, step_index: int, message: Optional[str] = None):
+    def set_step(self, step_name: str, step_index: int, message: str | None = None):
         """
         Set current major step.
 
@@ -119,7 +119,7 @@ class ProgressTracker:
 
         self._write()
 
-    def update_progress(self, current: int, total: int, message: Optional[str] = None):
+    def update_progress(self, current: int, total: int, message: str | None = None):
         """
         Update progress within current step.
 
@@ -143,7 +143,7 @@ class ProgressTracker:
 
         self._write()
 
-    def complete_step(self, stats: Optional[Dict] = None):
+    def complete_step(self, stats: Dict | None = None):
         """
         Mark current step as complete.
 
@@ -159,7 +159,7 @@ class ProgressTracker:
 
         self._write()
 
-    def add_error(self, error: str, context: Optional[str] = None):
+    def add_error(self, error: str, context: str | None = None):
         """
         Log an error.
 
@@ -181,7 +181,7 @@ class ProgressTracker:
 
         self._write()
 
-    def complete(self, stats: Optional[Dict] = None, success: bool = True):
+    def complete(self, stats: Dict | None = None, success: bool = True):
         """
         Mark job as complete.
 
@@ -223,7 +223,7 @@ class ProgressTracker:
 
 
 # Convenience function for creating tracker from environment
-def create_tracker_from_env() -> Optional[ProgressTracker]:
+def create_tracker_from_env() -> ProgressTracker | None:
     """
     Create a ProgressTracker from environment variables.
 

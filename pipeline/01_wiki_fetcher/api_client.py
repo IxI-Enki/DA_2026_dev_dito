@@ -10,7 +10,7 @@ Features:
 
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import requests
 
@@ -170,7 +170,7 @@ class WikiAPIClient:
             except EOFError:
                 return "s"
 
-    def call(self, method: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def call(self, method: str, params: Dict[str, Any] | None = None) -> Dict[str, Any]:
         """
         Make a JSON-RPC call with intelligent retry logic.
 

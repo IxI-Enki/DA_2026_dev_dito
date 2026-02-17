@@ -17,7 +17,7 @@ import logging
 import re
 import time
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import requests
 
@@ -29,12 +29,12 @@ class LLMJudgeResult:
     """Result of LLM-as-Judge evaluation for a single question."""
 
     question_id: str
-    faithfulness: Optional[float] = None
-    answer_relevancy: Optional[float] = None
-    context_precision: Optional[float] = None
-    context_recall: Optional[float] = None
-    answer_correctness: Optional[float] = None
-    error: Optional[str] = None
+    faithfulness: float | None = None
+    answer_relevancy: float | None = None
+    context_precision: float | None = None
+    context_recall: float | None = None
+    answer_correctness: float | None = None
+    error: str | None = None
 
 
 class LLMJudgeMetrics:
@@ -115,7 +115,7 @@ class LLMJudgeMetrics:
                 return f"ERROR: {e}"
         return "ERROR: All retries failed"
 
-    def _parse_score(self, response: str) -> Optional[float]:
+    def _parse_score(self, response: str) -> float | None:
         """Extract a score in [0, 1] from LLM response."""
         if response.startswith("ERROR"):
             logger.debug("LLM error response: %s", response[:100])
@@ -143,7 +143,7 @@ class LLMJudgeMetrics:
             return None
 
     @staticmethod
-    def _normalize_score(val: float) -> Optional[float]:
+    def _normalize_score(val: float) -> float | None:
         if val < 0:
             return None
         if 0 <= val <= 1:
@@ -198,7 +198,7 @@ class LLMJudgeMetrics:
         )
         return self._call_llm_generate(prompt)
 
-    def _faithfulness(self, answer: str, contexts: list[str]) -> Optional[float]:
+    def _faithfulness(self, answer: str, contexts: list[str]) -> float | None:
         if not contexts or not answer:
             return None
         context_text = "\n---\n".join(c[:800] for c in contexts[:5])
@@ -210,7 +210,7 @@ class LLMJudgeMetrics:
         )
         return self._parse_score(self._call_llm(prompt))
 
-    def _answer_relevancy(self, question: str, answer: str) -> Optional[float]:
+    def _answer_relevancy(self, question: str, answer: str) -> float | None:
         if not answer:
             return None
         prompt = (
@@ -223,7 +223,7 @@ class LLMJudgeMetrics:
 
     def _context_precision(
         self, question: str, contexts: list[str], ground_truth: str
-    ) -> Optional[float]:
+    ) -> float | None:
         if not contexts:
             return 0.0
         numbered = "\n".join(f"[{i+1}] {c[:600]}" for i, c in enumerate(contexts[:5]))
@@ -236,7 +236,7 @@ class LLMJudgeMetrics:
         )
         return self._parse_score(self._call_llm(prompt))
 
-    def _context_recall(self, contexts: list[str], ground_truth: str) -> Optional[float]:
+    def _context_recall(self, contexts: list[str], ground_truth: str) -> float | None:
         if not contexts:
             return 0.0
         context_text = "\n---\n".join(c[:600] for c in contexts[:5])
@@ -249,7 +249,7 @@ class LLMJudgeMetrics:
         )
         return self._parse_score(self._call_llm(prompt))
 
-    def _answer_correctness(self, answer: str, ground_truth: str) -> Optional[float]:
+    def _answer_correctness(self, answer: str, ground_truth: str) -> float | None:
         if not answer or answer == ground_truth:
             return None
         prompt = (

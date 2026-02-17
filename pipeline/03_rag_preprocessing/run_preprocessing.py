@@ -18,7 +18,7 @@ import logging
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 # Ensure parent is importable
 _here = Path(__file__).resolve().parent
@@ -148,10 +148,10 @@ def _load_media_usage(input_dir: Path) -> dict[str, list[str]]:
 
 
 def run(
-    input_dir: Optional[Path] = None,
-    evaluated_dir: Optional[Path] = None,
-    output_base: Optional[Path] = None,
-    config_path: Optional[Path] = None,
+    input_dir: Path | None = None,
+    evaluated_dir: Path | None = None,
+    output_base: Path | None = None,
+    config_path: Path | None = None,
 ) -> dict[str, Any]:
     """Execute the full preprocessing pipeline.
 

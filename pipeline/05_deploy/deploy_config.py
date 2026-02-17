@@ -4,7 +4,6 @@ Loads config.yaml (same dir); used by transfer_to_pi.py and verify_transfer.py.
 """
 
 from pathlib import Path
-from typing import Optional
 
 try:
     import yaml
@@ -27,7 +26,7 @@ DEFAULT_CONFIG = {
 }
 
 
-def load_config() -> Optional[dict]:
+def load_config() -> dict | None:
     """Load config.yaml from script directory. Returns None if missing or invalid."""
     if not yaml or not CONFIG_FILE.exists():
         return None
@@ -59,7 +58,7 @@ def get_defaults() -> dict:
     return out
 
 
-def find_latest_embeddings_file(base_dir: Path) -> Optional[Path]:
+def find_latest_embeddings_file(base_dir: Path) -> Path | None:
     """
     Find embedded_chunks.jsonl in the latest embedded_at_YYYYMMDD_HHMMSS directory.
     Returns path to file or None if none found.

@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import yaml
 
@@ -69,10 +69,10 @@ class MetadataEnricher:
         self,
         page_id: str,
         title: str,
-        raw_metadata: Optional[Dict[str, Any]] = None,
-        links_data: Optional[Dict[str, Any]] = None,
-        fetch_timestamp: Optional[str] = None,
-        backlinks: Optional[List[str]] = None,
+        raw_metadata: Dict[str, Any] | None = None,
+        links_data: Dict[str, Any] | None = None,
+        fetch_timestamp: str | None = None,
+        backlinks: List[str] | None = None,
     ) -> str:
         """
         Generate YAML frontmatter for a page.
@@ -351,8 +351,8 @@ class MediaMetadataEnricher:
         media_id: str,
         file_path: Path,
         file_size: int = 0,
-        referenced_by: Optional[List[str]] = None,
-        fetch_timestamp: Optional[str] = None,
+        referenced_by: List[str] | None = None,
+        fetch_timestamp: str | None = None,
         content_type: str = "",
         freshness_score: float = 0.5,
         freshness_category: str = "recent",

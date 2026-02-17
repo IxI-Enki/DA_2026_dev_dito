@@ -7,7 +7,7 @@ Lädt alle Einstellungen aus config/env.yaml - KEINE hardcoded Werte!
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import yaml
 
@@ -32,7 +32,7 @@ def resolve_variables(value: Any, variables: Dict[str, str]) -> Any:
     return value
 
 
-def load_env_yaml(config_path: Optional[Path] = None) -> Dict[str, Any]:
+def load_env_yaml(config_path: Path | None = None) -> Dict[str, Any]:
     """
     Lädt env.yaml und löst Variablen auf.
 
@@ -83,7 +83,7 @@ def load_env_yaml(config_path: Optional[Path] = None) -> Dict[str, Any]:
     return resolved_config
 
 
-def get_latest_fetch_dir(fetched_base: Path) -> Optional[Path]:
+def get_latest_fetch_dir(fetched_base: Path) -> Path | None:
     """Find the latest fetched_at_* directory under the given base.
 
     Used when env.yaml points to a non-existent fetched_data_dir (e.g. after a
@@ -156,19 +156,19 @@ class EvaluationConfig:
     """Haupt-Konfiguration für die Evaluation."""
 
     # Pfade
-    root_dir: Optional[Path] = None
-    config_dir: Optional[Path] = None
-    script_dir: Optional[Path] = None
-    results_dir: Optional[Path] = None
-    fetched_data_dir: Optional[Path] = None
+    root_dir: Path | None = None
+    config_dir: Path | None = None
+    script_dir: Path | None = None
+    results_dir: Path | None = None
+    fetched_data_dir: Path | None = None
 
     # Spezifische Pfade
-    page_content_dir: Optional[Path] = None
-    page_metadata_dir: Optional[Path] = None
-    page_html_dir: Optional[Path] = None
-    page_links_dir: Optional[Path] = None
-    media_dir: Optional[Path] = None
-    wiki_analysis_report: Optional[Path] = None
+    page_content_dir: Path | None = None
+    page_metadata_dir: Path | None = None
+    page_html_dir: Path | None = None
+    page_links_dir: Path | None = None
+    media_dir: Path | None = None
+    wiki_analysis_report: Path | None = None
 
     # Sub-Konfigurationen
     query_generation: QueryGenerationConfig = field(default_factory=QueryGenerationConfig)
@@ -215,7 +215,7 @@ class EvaluationConfig:
                 setattr(self, attr, Path(val))
 
     @classmethod
-    def from_yaml(cls, config_path: Optional[Path] = None) -> "EvaluationConfig":
+    def from_yaml(cls, config_path: Path | None = None) -> "EvaluationConfig":
         """
         Erstellt Konfiguration aus env.yaml.
 
@@ -369,7 +369,7 @@ class EvaluationConfig:
 # Singleton Config Instance
 # =============================================================================
 
-_config_instance: Optional[EvaluationConfig] = None
+_config_instance: EvaluationConfig | None = None
 
 
 def get_config(reload: bool = False) -> EvaluationConfig:

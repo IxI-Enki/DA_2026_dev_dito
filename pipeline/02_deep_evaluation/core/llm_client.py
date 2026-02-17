@@ -9,7 +9,7 @@ import base64
 import io
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import requests
 
@@ -37,7 +37,7 @@ class LLMClient:
     Alle Einstellungen werden aus config/env.yaml geladen.
     """
 
-    def __init__(self, config: Optional[Any] = None):
+    def __init__(self, config: Any | None = None):
         """
         Initialisiert den LLMClient.
 
@@ -102,7 +102,7 @@ class LLMClient:
         )
 
     def analyze_text(
-        self, text: str, prompt_template: str, system_prompt: Optional[str] = None
+        self, text: str, prompt_template: str, system_prompt: str | None = None
     ) -> str:
         """
         Analysiert Text mit dem LLM.
@@ -125,7 +125,7 @@ class LLMClient:
         ]
         return self._chat_completion(messages, self.classification_model)
 
-    def _optimize_image(self, image_path: Path, max_size: Optional[int] = None) -> bytes:
+    def _optimize_image(self, image_path: Path, max_size: int | None = None) -> bytes:
         """
         Lädt ein Bild, skaliert es falls nötig und gibt es als JPEG-Bytes zurück.
         Reduziert die Payload-Größe drastisch.

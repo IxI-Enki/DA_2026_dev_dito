@@ -13,7 +13,7 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 # Relative import für config
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -52,7 +52,7 @@ class RAGReadinessResult:
 class RAGReadinessChecker:
     """Prüft die Eignung von Inhalten für RAG-Pipelines."""
 
-    def __init__(self, config: Optional[EvaluationConfig] = None):
+    def __init__(self, config: EvaluationConfig | None = None):
         """
         Initialisiert den RAGReadinessChecker.
 

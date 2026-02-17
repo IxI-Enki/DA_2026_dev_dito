@@ -7,7 +7,7 @@ Use evaluation.statistics for full StatisticalAnalyzer (paired tests, compare_co
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, List, Optional
+from typing import Callable, List
 
 import numpy as np
 
@@ -28,7 +28,7 @@ def bootstrap_confidence_interval(
     statistic_func: Callable[[np.ndarray], float] = np.mean,
     confidence_level: float = 0.95,
     n_iterations: int = 1000,
-    random_seed: Optional[int] = 42,
+    random_seed: int | None = 42,
 ) -> ConfidenceInterval:
     """Bootstrap confidence interval for a statistic.
 

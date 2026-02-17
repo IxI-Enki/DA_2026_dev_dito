@@ -13,7 +13,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 # Add script directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -66,7 +66,7 @@ class ResumeFetcher:
         if self.verbose:
             print(message)
 
-    def load_existing_stats(self) -> Optional[Dict]:
+    def load_existing_stats(self) -> Dict | None:
         """Load fetch_statistics.json from output directory"""
         stats_path = self.base_path / "fetch_statistics.json"
         if not stats_path.exists():

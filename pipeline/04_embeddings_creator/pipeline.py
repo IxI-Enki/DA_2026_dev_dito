@@ -10,7 +10,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from tqdm import tqdm
 
@@ -150,7 +150,7 @@ class EmbeddingPipeline:
                 json.dump(record, f, ensure_ascii=False)
                 f.write("\n")
 
-    def run(self, limit: Optional[int] = None) -> Dict[str, Any]:
+    def run(self, limit: int | None = None) -> Dict[str, Any]:
         """
         Run the complete embedding pipeline.
 

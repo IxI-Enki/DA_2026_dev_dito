@@ -7,7 +7,7 @@ Nutzt Vision-LLMs um Bildinhalte zu verstehen.
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 # Relative imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class MediaDeepAnalyzer:
     """Führt Analysen auf Bilddateien durch."""
 
-    def __init__(self, config: Optional[EvaluationConfig] = None):
+    def __init__(self, config: EvaluationConfig | None = None):
         self.config = config or get_config()
         self.llm_client = LLMClient(config=self.config)
 

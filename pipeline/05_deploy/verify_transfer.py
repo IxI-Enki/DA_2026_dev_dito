@@ -18,7 +18,6 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 # Shared CLI (colored banners, fixed-width separators)
 _deploy_dir = Path(__file__).resolve().parent
@@ -33,7 +32,7 @@ from deploy_config import (
 )
 
 
-def get_local_hash(filepath: Path) -> Optional[str]:
+def get_local_hash(filepath: Path) -> str | None:
     """Calculate MD5 hash of local file. Returns None if file does not exist."""
     if not filepath.exists():
         return None
@@ -46,8 +45,8 @@ def get_local_hash(filepath: Path) -> Optional[str]:
 
 
 def get_remote_hash(
-    host: str, user: str, port: int, remote_path: str, key_path: Optional[str] = None
-) -> Optional[str]:
+    host: str, user: str, port: int, remote_path: str, key_path: str | None = None
+) -> str | None:
     """Get MD5 hash of remote file via SSH. Returns None on failure."""
     cmd = ["ssh"]
     if key_path:
@@ -68,7 +67,7 @@ def get_remote_hash(
 
 
 def get_remote_file_info(
-    host: str, user: str, port: int, remote_path: str, key_path: Optional[str] = None
+    host: str, user: str, port: int, remote_path: str, key_path: str | None = None
 ) -> dict:
     """Get file info from remote host."""
     cmd = ["ssh"]
@@ -99,7 +98,7 @@ def verify_qdrant_collection(
     qdrant_host: str,
     qdrant_port: int,
     collection_name: str,
-    key_path: Optional[str] = None,
+    key_path: str | None = None,
 ) -> dict:
     """Check Qdrant collection status on remote host (via SSH + curl on Pi)."""
     url = f"http://{qdrant_host}:{qdrant_port}/collections/{collection_name}"

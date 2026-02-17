@@ -9,7 +9,7 @@ import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import yaml
 
@@ -21,7 +21,7 @@ class ConfigError(Exception):
 
 
 def resolve_variables(
-    config: Dict[str, Any], context: Optional[Dict[str, str]] = None
+    config: Dict[str, Any], context: Dict[str, str] | None = None
 ) -> Dict[str, Any]:
     """
     Recursively resolve ${variable} placeholders in configuration.
@@ -77,7 +77,7 @@ def resolve_variables(
     return result
 
 
-def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
+def load_config(config_path: str | None = None) -> Dict[str, Any]:
     """
     Load configuration from YAML file.
 
@@ -179,7 +179,7 @@ class Config:
     _raw: Dict[str, Any] = field(default_factory=dict, repr=False)
 
     @classmethod
-    def load(cls, config_path: Optional[str] = None) -> "Config":
+    def load(cls, config_path: str | None = None) -> "Config":
         """Load and parse configuration."""
         raw = load_config(config_path)
 
@@ -283,7 +283,7 @@ class Config:
 
 
 # Global config instance (lazy loaded)
-_config: Optional[Config] = None
+_config: Config | None = None
 
 
 def get_config() -> Config:
@@ -294,14 +294,14 @@ def get_config() -> Config:
     return _config
 
 
-def reload_config(config_path: Optional[str] = None) -> Config:
+def reload_config(config_path: str | None = None) -> Config:
     """Force reload configuration."""
     global _config
     _config = Config.load(config_path)
     return _config
 
 
-def get_latest_timestamped_path(base_dir: str, prefix: str) -> Optional[Path]:
+def get_latest_timestamped_path(base_dir: str, prefix: str) -> Path | None:
     """
     Get the most recent timestamped subdirectory.
 
