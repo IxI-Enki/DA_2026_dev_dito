@@ -177,9 +177,7 @@ class MediaCache:
             return entry.get("hash")
         return None
 
-    def copy_from_cache(
-        self, media_id: str, target_path: Path, verify: bool = True
-    ) -> Dict | None:
+    def copy_from_cache(self, media_id: str, target_path: Path, verify: bool = True) -> Dict | None:
         """
         Copy file from cache to target location.
 
