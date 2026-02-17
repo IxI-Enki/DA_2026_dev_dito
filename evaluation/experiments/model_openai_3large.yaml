@@ -24,7 +24,7 @@ qdrant:
   port: 6334
 
 ground_truth:
-  file: "ground_truth/leowiki_qa_50_verified.json"
+  file: "ground_truth/test_corpus_qa.json"
 
 metrics:
   - mrr

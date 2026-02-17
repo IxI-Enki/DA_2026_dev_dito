@@ -1,13 +1,15 @@
 """Embedding model comparison evaluation for thesis table FF3.
 
 Compares multiple embedding models on the same corpus and query set
-by embedding ground-truth source documents into temporary Qdrant
-collections and measuring retrieval quality with NDCG@10 + MRR.
+by embedding ALL test-corpus documents into temporary Qdrant collections
+and measuring retrieval quality with NDCG@10, MRR, P@5, Recall@10,
+MAP, and Hit Rate.
 
 Usage::
 
-    python -m evaluation.scripts.eval_model_comparison --config experiments/model_bge_m3.yaml
-    python -m evaluation.scripts.eval_model_comparison --compare-all
+    python -m evaluation.scripts.eval_model_comparison \\
+        --config evaluation/experiments/model_bge_m3_unsupervised.yaml -v
+    python -m evaluation.scripts.eval_model_comparison --compare-all -v
     python -m evaluation.scripts.eval_model_comparison --compare-all --verbose
 
 Thesis-ID: FF3 / J2
@@ -24,15 +26,15 @@ import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Literal
 
+import yaml
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
     PointStruct,
     VectorParams,
 )
-
-import yaml
 
 EVAL_ROOT = Path(__file__).resolve().parent.parent
 REPO_ROOT = EVAL_ROOT.parent
@@ -47,10 +49,9 @@ from evaluation.config import (
 from evaluation.metrics.mrr import mean_reciprocal_rank, reciprocal_rank
 from evaluation.metrics.ndcg import mean_ndcg_at_k, ndcg_at_k
 from evaluation.metrics.precision_at_k import mean_precision_at_k, precision_at_k
+from evaluation.metrics.recall_at_k import recall_at_k
+from evaluation.metrics.mean_average_precision import average_precision
 from evaluation.providers.base import EmbeddingProvider
-from evaluation.providers.ollama_provider import OllamaProvider
-from evaluation.providers.openai_provider import OpenAIProvider
-from evaluation.scripts.eval_keyword_baseline import source_file_to_page_id
 
 logger = logging.getLogger(__name__)
 
@@ -178,56 +179,68 @@ def simple_chunk(text: str, chunk_size: int = 512, overlap: int = 50) -> list[st
 
 
 # ---------------------------------------------------------------------------
-# Corpus loader
+# Corpus loader -- reads ALL files from evaluation/test_corpus/
 # ---------------------------------------------------------------------------
 
-def _find_fetched_dir() -> Path:
-    """Find the most recent fetched data directory."""
-    data_dir = REPO_ROOT / "data" / "fetched"
-    if not data_dir.exists():
-        raise FileNotFoundError(f"Fetched data directory not found: {data_dir}")
+def _extract_page_id(text: str, filename: str) -> str:
+    """Extract page_id or media_id from YAML frontmatter, fallback to filename."""
+    for line in text.split("\n")[:25]:
+        stripped = line.strip()
+        if stripped.startswith("page_id:"):
+            return stripped.split(":", 1)[1].strip().strip("'\"")
+        if stripped.startswith("media_id:"):
+            return stripped.split(":", 1)[1].strip().strip("'\"")
+    stem = filename.rsplit(".", 1)[0] if filename.endswith(".md") else filename
+    return stem.replace("_", ":", 1)
 
-    candidates = sorted(data_dir.glob("fetched_at_*"), reverse=True)
-    if not candidates:
-        raise FileNotFoundError(f"No fetched data in {data_dir}")
 
-    return candidates[0]
+def _strip_frontmatter(text: str) -> str:
+    """Remove YAML frontmatter (between --- markers) from document text."""
+    if not text.startswith("---"):
+        return text
+    end = text.find("\n---", 3)
+    if end == -1:
+        return text
+    return text[end + 4:].strip()
 
 
-def load_corpus_for_ground_truth(
-    gt_data: dict,
+def load_test_corpus(
     chunk_size: int = 512,
     chunk_overlap: int = 50,
 ) -> list[dict]:
-    """Load and chunk source documents referenced in ground truth.
+    """Load and chunk ALL documents from evaluation/test_corpus/.
+
+    Indexes the full test corpus (not just GT-referenced docs) to provide
+    a realistic search space with distractors.
 
     Args:
-        gt_data: Parsed ground truth JSON.
         chunk_size: Target chunk size in characters.
         chunk_overlap: Overlap between chunks.
 
     Returns:
         List of dicts with ``page_id``, ``chunk_index``, ``text`` keys.
     """
-    fetched_dir = _find_fetched_dir()
-    content_dir = fetched_dir / "page_content"
+    corpus_dir = EVAL_ROOT / "test_corpus"
+    if not corpus_dir.exists():
+        raise FileNotFoundError(f"Test corpus not found: {corpus_dir}")
 
-    # Collect unique source files
-    source_files = {qa["source_file"] for qa in gt_data["qa_pairs"]}
-    logger.info("Loading %d unique source documents", len(source_files))
+    md_files = sorted(corpus_dir.glob("*.md"))
+    if not md_files:
+        raise FileNotFoundError(f"No .md files in {corpus_dir}")
+
+    logger.info("Loading %d test corpus documents from %s", len(md_files), corpus_dir)
 
     all_chunks: list[dict] = []
+    for md_path in md_files:
+        raw_text = md_path.read_text(encoding="utf-8")
+        page_id = _extract_page_id(raw_text, md_path.name)
+        body = _strip_frontmatter(raw_text)
 
-    for sf in sorted(source_files):
-        page_id = source_file_to_page_id(sf)
-        txt_path = content_dir / sf
-
-        if not txt_path.exists():
-            logger.warning("Source file not found: %s", txt_path)
+        if len(body.strip()) < 50:
+            logger.debug("Skipping near-empty document: %s", md_path.name)
             continue
 
-        text = txt_path.read_text(encoding="utf-8")
-        chunks = simple_chunk(text, chunk_size=chunk_size, overlap=chunk_overlap)
+        chunks = simple_chunk(body, chunk_size=chunk_size, overlap=chunk_overlap)
 
         for i, chunk_text in enumerate(chunks):
             all_chunks.append({
@@ -237,9 +250,9 @@ def load_corpus_for_ground_truth(
             })
 
     logger.info(
-        "Loaded %d chunks from %d source documents",
+        "Loaded %d chunks from %d documents",
         len(all_chunks),
-        len(source_files),
+        len(md_files),
     )
     return all_chunks
 
@@ -249,14 +262,35 @@ def load_corpus_for_ground_truth(
 # ---------------------------------------------------------------------------
 
 def create_provider(config: ExperimentConfig) -> EmbeddingProvider:
-    """Instantiate the embedding provider from experiment config."""
-    if config.provider == "ollama":
+    """Instantiate the embedding provider from experiment config.
+
+    Supports 'sentence-transformers' (local HF models on GPU),
+    'ollama' (local Ollama server), and 'openai' (API).
+    """
+    if config.provider == "sentence-transformers":
+        from evaluation.providers.sentence_transformers_provider import (
+            SentenceTransformersProvider,
+        )
+
+        dtype_str = getattr(config, "torch_dtype", "float32")
+        dtype_val: Literal["float16", "float32"] = (
+            "float16" if dtype_str == "float16" else "float32"
+        )
+        return SentenceTransformersProvider(
+            model=config.model,
+            dimensions=config.dimensions,
+            torch_dtype=dtype_val,
+        )
+    elif config.provider == "ollama":
+        from evaluation.providers.ollama_provider import OllamaProvider
+
         return OllamaProvider(
             model=config.model,
             dimensions=config.dimensions,
         )
     elif config.provider == "openai":
-        # Look for API key file in config/secrets/
+        from evaluation.providers.openai_provider import OpenAIProvider
+
         api_key_file = REPO_ROOT / "config" / "secrets" / "openai.token"
         return OpenAIProvider(
             model=config.model,
@@ -271,20 +305,15 @@ def create_provider(config: ExperimentConfig) -> EmbeddingProvider:
 # Qdrant helpers
 # ---------------------------------------------------------------------------
 
-def _get_qdrant_client() -> QdrantClient:
-    """Create Qdrant client from central env.yaml."""
-    env_path = REPO_ROOT / "config" / "env.yaml"
-    host = "localhost"
-    port = 18334
+def _get_qdrant_client(host: str = "localhost", port: int = 6333) -> QdrantClient:
+    """Create Qdrant client for local evaluation instance.
 
-    if env_path.exists():
-        with open(env_path, encoding="utf-8") as fh:
-            raw = yaml.safe_load(fh)
-        qdrant_cfg = raw.get("SERVICES", {}).get("qdrant", {})
-        host = qdrant_cfg.get("host", host)
-        port = qdrant_cfg.get("port", port)
-
-    return QdrantClient(host=host, port=port)
+    Args:
+        host: Qdrant host (default: localhost).
+        port: Qdrant gRPC/HTTP port (default: 6333).
+    """
+    logger.info("Connecting to Qdrant at %s:%d", host, port)
+    return QdrantClient(host=host, port=port, timeout=30)
 
 
 def _embed_in_batches(
@@ -321,6 +350,29 @@ def _get_git_version() -> str:
         return "unknown"
 
 
+def _unload_provider(provider: EmbeddingProvider) -> None:
+    """Release GPU memory if the provider supports it."""
+    unload_fn = getattr(provider, "unload", None)
+    if callable(unload_fn):
+        unload_fn()
+
+
+def _expected_sources(qa: dict) -> list[str]:
+    """Get expected source page IDs from ground truth entry.
+
+    Prefers the 'sources' field (from YAML frontmatter).
+    Falls back to deriving from 'source_file' if 'sources' is missing.
+    """
+    sources = qa.get("sources", [])
+    if sources:
+        return list(sources)
+    sf = qa.get("source_file", "")
+    if sf:
+        stem = sf.rsplit(".", 1)[0] if sf.endswith(".md") else sf
+        return [stem.replace("_", ":", 1)]
+    return []
+
+
 def run_model_evaluation(
     config: ExperimentConfig,
     *,
@@ -329,12 +381,12 @@ def run_model_evaluation(
     """Execute the model evaluation for a single experiment config.
 
     Steps:
-      1. Load and chunk corpus documents from fetched data.
+      1. Load and chunk ALL test-corpus documents.
       2. Embed all chunks with the configured provider.
       3. Create a temporary Qdrant collection and upsert vectors.
       4. For each ground-truth question, embed the query and search.
-      5. Compute NDCG@10, MRR, P@5.
-      6. Delete the temporary collection (FR-008).
+      5. Compute NDCG@10, MRR, P@5, Recall@10, MAP, Hit Rate.
+      6. Delete the temporary collection.
       7. Return result dict.
 
     Args:
@@ -344,21 +396,20 @@ def run_model_evaluation(
     Returns:
         Result dict ready for JSON serialisation.
     """
-    # 1. Load corpus
+    # 1. Load ground truth and full test corpus
     gt_path = config.ground_truth_file
     if not Path(gt_path).is_absolute():
         gt_path = EVAL_ROOT / gt_path
     gt_data = load_ground_truth(gt_path)
     qa_pairs = gt_data["qa_pairs"]
 
-    corpus_chunks = load_corpus_for_ground_truth(
-        gt_data,
+    corpus_chunks = load_test_corpus(
         chunk_size=config.chunk_size,
         chunk_overlap=config.chunk_overlap,
     )
 
     if not corpus_chunks:
-        raise RuntimeError("No corpus chunks loaded — check fetched data directory")
+        raise RuntimeError("No corpus chunks loaded -- check evaluation/test_corpus/")
 
     # 2. Embed corpus chunks
     provider = create_provider(config)
@@ -392,7 +443,6 @@ def run_model_evaluation(
         )
         logger.info("Created Qdrant collection: %s", collection_name)
 
-        # Upsert points (store full text for multi-signal relevance scoring)
         points = [
             PointStruct(
                 id=i,
@@ -406,7 +456,6 @@ def run_model_evaluation(
             for i in range(len(corpus_chunks))
         ]
 
-        # Upsert in batches
         batch_size = 100
         for i in range(0, len(points), batch_size):
             qdrant.upsert(
@@ -420,40 +469,37 @@ def run_model_evaluation(
         mrr_inputs: list[tuple[list[str], set[str]]] = []
         ndcg_inputs: list[tuple[list[str], dict[str, int]]] = []
         p_at_5_inputs: list[tuple[list[str], set[str]]] = []
+        recall_inputs: list[tuple[list[str], set[str]]] = []
+        ap_inputs: list[tuple[list[str], set[str]]] = []
 
         for i, qa in enumerate(qa_pairs):
             question = qa["question"]
-            expected_page = source_file_to_page_id(qa["source_file"])
-            relevant = {expected_page}
-            relevance_map = {expected_page: 1}
-            gt_text = qa["ground_truth"]
+            expected_sources = _expected_sources(qa)
+            relevant = set(expected_sources)
+            relevance_map = {pid: 1 for pid in relevant}
+            gt_text = qa.get("ground_truth", "")
             keywords = qa.get("context_keywords", [])
             difficulty = qa.get("difficulty", "unknown")
 
-            # Embed query
             query_embedding = provider.embed([question])[0]
 
-            # Search Qdrant
             search_results = qdrant.search(
                 collection_name=collection_name,
                 query_vector=query_embedding,
-                limit=config.top_k,
+                limit=max(config.top_k, 10),
                 with_payload=True,
             )
 
-            # Extract unique page IDs in ranked order (deduplicate chunks)
-            # Also compute multi-signal relevance for the best chunk per page
             seen: set[str] = set()
             ranked_pages: list[str] = []
             best_relevance_by_page: dict[str, float] = {}
             for hit in search_results:
                 payload: dict = hit.payload if hit.payload is not None else {}
-                if "page_id" not in payload:
+                pid = payload.get("page_id", "")
+                if not pid:
                     continue
-                pid = payload["page_id"]
                 chunk_text = payload.get("text", "")
                 rel_score = calculate_relevance_score(chunk_text, gt_text, keywords)
-                # Track best relevance per page
                 if pid not in best_relevance_by_page or rel_score > best_relevance_by_page[pid]:
                     best_relevance_by_page[pid] = rel_score
                 if pid not in seen:
@@ -463,45 +509,48 @@ def run_model_evaluation(
             rr = reciprocal_rank(ranked_pages, relevant)
             ndcg = ndcg_at_k(ranked_pages, relevance_map, k=10)
             p5 = precision_at_k(ranked_pages, relevant, k=5)
-
-            # Content relevance of top-1 result (multi-signal)
-            top1_relevance = best_relevance_by_page.get(ranked_pages[0], 0.0) if ranked_pages else 0.0
+            rec10 = recall_at_k(ranked_pages, relevant, k=10)
+            ap = average_precision(ranked_pages, relevant)
+            top1_rel = best_relevance_by_page.get(ranked_pages[0], 0.0) if ranked_pages else 0.0
 
             mrr_inputs.append((ranked_pages, relevant))
             ndcg_inputs.append((ranked_pages, relevance_map))
             p_at_5_inputs.append((ranked_pages, relevant))
+            recall_inputs.append((ranked_pages, relevant))
+            ap_inputs.append((ranked_pages, relevant))
 
             entry = {
                 "id": qa["id"],
                 "question": question,
-                "expected_page": expected_page,
+                "expected_sources": expected_sources,
                 "difficulty": difficulty,
                 "ranked_pages": ranked_pages[:10],
                 "rr": round(rr, 4),
                 "ndcg_at_10": round(ndcg, 4),
                 "p_at_5": round(p5, 4),
-                "top1_content_relevance": round(top1_relevance, 4),
-                "hit_in_top_k": expected_page in ranked_pages,
+                "recall_at_10": round(rec10, 4),
+                "average_precision": round(ap, 4),
+                "top1_content_relevance": round(top1_rel, 4),
+                "hit_in_top_k": bool(relevant & set(ranked_pages)),
             }
             per_query_results.append(entry)
 
             if verbose:
-                hit = "HIT" if entry["hit_in_top_k"] else "MISS"
+                hit_str = "[HIT]" if entry["hit_in_top_k"] else "[MISS]"
                 print(
                     f"  [{i+1:2d}/{len(qa_pairs)}] RR={rr:.3f} "
-                    f"NDCG@10={ndcg:.3f} P@5={p5:.3f} "
-                    f"rel={top1_relevance:.2f} {hit}  {qa['id']}"
+                    f"NDCG@10={ndcg:.3f} P@5={p5:.3f} R@10={rec10:.3f} "
+                    f"rel={top1_rel:.2f} {hit_str}  {qa['id']}"
                 )
 
     finally:
-        # 6. Cleanup (FR-008)
         try:
             qdrant.delete_collection(collection_name)
             logger.info("Deleted temporary collection: %s", collection_name)
         except Exception as exc:
             logger.warning("Failed to delete collection %s: %s", collection_name, exc)
 
-    # 5. Aggregate metrics (with std dev, aligned with prototype pattern)
+    # 5. Aggregate metrics
     agg_mrr = mean_reciprocal_rank(mrr_inputs)
     agg_ndcg = mean_ndcg_at_k(ndcg_inputs, k=10)
     agg_p5 = mean_precision_at_k(p_at_5_inputs, k=5)
@@ -509,12 +558,16 @@ def run_model_evaluation(
     rr_values = [q["rr"] for q in per_query_results]
     ndcg_values = [q["ndcg_at_10"] for q in per_query_results]
     p5_values = [q["p_at_5"] for q in per_query_results]
+    rec10_values = [q["recall_at_10"] for q in per_query_results]
+    ap_values = [q["average_precision"] for q in per_query_results]
     rel_values = [q["top1_content_relevance"] for q in per_query_results]
 
+    n = len(per_query_results) or 1
+    agg_recall = sum(rec10_values) / n
+    agg_map = sum(ap_values) / n
     hits = sum(1 for q in per_query_results if q.get("hit_in_top_k", False))
     total = len(per_query_results)
 
-    # Difficulty breakdown (aligned with prototype category_analysis.py)
     by_difficulty: dict[str, dict] = {}
     for diff in ("easy", "medium", "hard"):
         subset = [q for q in per_query_results if q.get("difficulty") == diff]
@@ -526,13 +579,15 @@ def run_model_evaluation(
                 "hit_rate": round(sum(1 for q in subset if q["hit_in_top_k"]) / len(subset), 4),
             }
 
-    # Cost tracking for OpenAI
     cost_info = {}
+    from evaluation.providers.openai_provider import OpenAIProvider
     if isinstance(provider, OpenAIProvider):
         cost_info = {
             "total_tokens": provider.total_tokens,
             "estimated_cost_usd": round(provider.estimated_cost_usd, 6),
         }
+
+    _unload_provider(provider)
 
     result = {
         "experiment": {
@@ -552,6 +607,8 @@ def run_model_evaluation(
             "mrr": {"mean": round(agg_mrr, 4), "std": round(_std(rr_values), 4)},
             "ndcg_at_10": {"mean": round(agg_ndcg, 4), "std": round(_std(ndcg_values), 4)},
             "precision_at_5": {"mean": round(agg_p5, 4), "std": round(_std(p5_values), 4)},
+            "recall_at_10": {"mean": round(agg_recall, 4), "std": round(_std(rec10_values), 4)},
+            "map": {"mean": round(agg_map, 4), "std": round(_std(ap_values), 4)},
             "content_relevance": {"mean": round(sum(rel_values) / max(len(rel_values), 1), 4), "std": round(_std(rel_values), 4)},
             "hit_rate": round(hits / total, 4) if total else 0.0,
         },
@@ -637,6 +694,8 @@ def _print_summary(result: dict) -> None:
     print(f"  MRR:          {_fmt_metric(agg['mrr'])}")
     print(f"  NDCG@10:      {_fmt_metric(agg['ndcg_at_10'])}")
     print(f"  Precision@5:  {_fmt_metric(agg['precision_at_5'])}")
+    print(f"  Recall@10:    {_fmt_metric(agg.get('recall_at_10', 0.0))}")
+    print(f"  MAP:          {_fmt_metric(agg.get('map', 0.0))}")
     print(f"  Content Rel:  {_fmt_metric(agg.get('content_relevance', 0.0))}")
     print(f"  Hit Rate:     {agg['hit_rate']:.1%}")
     print(f"  Queries:      {summary['total_queries']} total, {summary['hits']} hits")
@@ -644,7 +703,6 @@ def _print_summary(result: dict) -> None:
     if "estimated_cost_usd" in perf:
         print(f"  Cost:         ${perf['estimated_cost_usd']:.4f} ({perf['total_tokens']} tokens)")
 
-    # Difficulty breakdown
     by_diff = result.get("by_difficulty", {})
     if by_diff:
         print("  By difficulty:")
@@ -654,16 +712,20 @@ def _print_summary(result: dict) -> None:
 
 def _print_comparison_table(results: list[dict]) -> None:
     """Print a Markdown comparison table to stdout."""
-    print("\n## FF3 — Embedding Model Comparison\n")
-    print("| Model | Provider | Dim | MRR | NDCG@10 | P@5 | Hit Rate |")
-    print("|-------|----------|-----|-----|---------|-----|----------|")
+    print("\n## FF3 -- Embedding Model Comparison\n")
+    print("| Model | Dim | MRR | NDCG@10 | P@5 | R@10 | MAP | Hit Rate |")
+    print("|-------|-----|-----|---------|-----|------|-----|----------|")
     for r in results:
         exp = r["experiment"]
         agg = r["aggregate_metrics"]
         print(
-            f"| {exp['model']} | {exp['provider']} | {exp['dimensions']} "
-            f"| {_metric_mean(agg['mrr']):.4f} | {_metric_mean(agg['ndcg_at_10']):.4f} "
-            f"| {_metric_mean(agg['precision_at_5']):.4f} | {agg['hit_rate']:.1%} |"
+            f"| {exp['model']} | {exp['dimensions']} "
+            f"| {_metric_mean(agg['mrr']):.4f} "
+            f"| {_metric_mean(agg['ndcg_at_10']):.4f} "
+            f"| {_metric_mean(agg['precision_at_5']):.4f} "
+            f"| {_metric_mean(agg.get('recall_at_10', 0.0)):.4f} "
+            f"| {_metric_mean(agg.get('map', 0.0)):.4f} "
+            f"| {agg['hit_rate']:.1%} |"
         )
 
 

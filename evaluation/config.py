@@ -46,7 +46,7 @@ class ExperimentConfig:
         "model_comparison", "chunk_size", "hybrid_vs_dense", "keyword_baseline"
     ]
     thesis_id: str
-    provider: Literal["ollama", "openai"]
+    provider: Literal["ollama", "openai", "sentence-transformers"]
     model: str
     dimensions: int
     chunk_size: int = 512
@@ -56,6 +56,7 @@ class ExperimentConfig:
     collection_prefix: str = "eval_"
     ground_truth_file: str = "ground_truth/leowiki_qa_50_verified.json"
     metrics: tuple[str, ...] = ("mrr", "precision_at_5", "ndcg_at_10")
+    torch_dtype: str = "float32"
     config_hash: str = ""
     # RAGAS (LLM-as-Judge) - optional
     llm_base_url: str = "http://192.168.8.3:11434/v1"
@@ -103,6 +104,7 @@ def load_experiment_config(config_path: str | Path) -> ExperimentConfig:
         provider=embedding.get("provider", "ollama"),
         model=embedding.get("model", ""),
         dimensions=embedding.get("dimensions", 1024),
+        torch_dtype=embedding.get("torch_dtype", "float32"),
         chunk_size=chunking.get("chunk_size", 512),
         chunk_overlap=chunking.get("chunk_overlap", 50),
         retrieval_mode=retrieval.get("mode", "dense"),
