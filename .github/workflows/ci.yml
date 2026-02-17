@@ -1,0 +1,240 @@
+# =============================================================================
+# Dev Dito - CI Pipeline
+# =============================================================================
+# Runs on: Pull Requests to master, Pushes to feature branches
+#
+# Jobs:
+#   lint-python    - ruff + black (Constitution Article IV)
+#   lint-php       - phpcs PSR-12 (Constitution Article IV)
+#   validate-spec  - Spec Kit spec/plan/tasks existence
+#   test-python    - pytest unit + smoke tests (Constitution Article III)
+#   docker-validate - docker-compose.yml syntax validation
+#   secret-scan    - Detect leaked secrets (Constitution Article VI)
+#
+# All jobs run in parallel for fast feedback.
+# =============================================================================
+
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches-ignore:
+      - master
+  pull_request:
+    branches:
+      - master
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ===========================================================================
+  # Python Linting (ruff + black)
+  # ===========================================================================
+  lint-python:
+    name: Lint Python
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linters
+        run: pip install ruff black
+
+      - name: Run ruff
+        run: ruff check . --output-format=github
+
+      - name: Run black (check mode)
+        run: black --check --diff .
+
+  # ===========================================================================
+  # PHP Linting (phpcs PSR-12)
+  # ===========================================================================
+  lint-php:
+    name: Lint PHP
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: phpcs
+
+      - name: Run phpcs
+        run: phpcs --standard=PSR12 --extensions=php dokuwiki_plugin/
+        continue-on-error: true  # Non-blocking until full PSR-12 compliance
+
+  # ===========================================================================
+  # Spec Kit Validation
+  # ===========================================================================
+  validate-spec:
+    name: Validate Spec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for branch name detection
+
+      - name: Extract feature number from branch
+        id: feature
+        run: |
+          BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+          # Extract leading digits (e.g., "006" from "006-simplified-installation")
+          if [[ "$BRANCH" =~ ^([0-9]+)- ]]; then
+            NUM="${BASH_REMATCH[1]}"
+            echo "number=$NUM" >> "$GITHUB_OUTPUT"
+            echo "[INFO] Feature number: $NUM (branch: $BRANCH)"
+          else
+            echo "number=" >> "$GITHUB_OUTPUT"
+            echo "[INFO] Not a numbered feature branch: $BRANCH"
+          fi
+
+      - name: Check spec files exist
+        if: steps.feature.outputs.number != ''
+        run: |
+          NUM="${{ steps.feature.outputs.number }}"
+          SPEC_DIR=$(find specs/ -maxdepth 1 -type d -name "${NUM}-*" | head -1)
+
+          if [ -z "$SPEC_DIR" ]; then
+            echo "[ERROR] No spec directory found for feature $NUM"
+            echo "Expected: specs/${NUM}-*/spec.md"
+            exit 1
+          fi
+
+          echo "[INFO] Found spec directory: $SPEC_DIR"
+
+          ERRORS=0
+
+          if [ ! -f "$SPEC_DIR/spec.md" ]; then
+            echo "[ERROR] Missing: $SPEC_DIR/spec.md"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "[OK] Found: $SPEC_DIR/spec.md"
+          fi
+
+          if [ ! -f "$SPEC_DIR/plan.md" ]; then
+            echo "[WARN] Missing: $SPEC_DIR/plan.md (recommended)"
+          else
+            echo "[OK] Found: $SPEC_DIR/plan.md"
+          fi
+
+          if [ ! -f "$SPEC_DIR/tasks.md" ]; then
+            echo "[WARN] Missing: $SPEC_DIR/tasks.md (recommended)"
+          else
+            echo "[OK] Found: $SPEC_DIR/tasks.md"
+          fi
+
+          if [ $ERRORS -gt 0 ]; then
+            echo "[ERROR] Spec validation failed with $ERRORS error(s)"
+            exit 1
+          fi
+
+      - name: Check constitution exists
+        run: |
+          if [ ! -f ".specify/memory/constitution.md" ]; then
+            echo "[ERROR] Constitution file missing: .specify/memory/constitution.md"
+            exit 1
+          fi
+          echo "[OK] Constitution file exists"
+
+  # ===========================================================================
+  # Python Tests (pytest)
+  # ===========================================================================
+  test-python:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml jsonschema pytest pytest-cov
+
+      - name: Run unit tests
+        run: |
+          python -m pytest tests/unit/ -v --tb=short --junitxml=test-results-unit.xml
+
+      - name: Run smoke tests
+        run: |
+          python -m pytest tests/smoke/ -v --tb=short --junitxml=test-results-smoke.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results-*.xml
+          retention-days: 30
+
+  # ===========================================================================
+  # Docker Compose Validation
+  # ===========================================================================
+  docker-validate:
+    name: Docker Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose syntax
+        run: |
+          # Create the external network so config validation passes
+          docker network create leonidas-network 2>/dev/null || true
+          docker compose -f backend_services/docker-compose.yml config --quiet
+          echo "[OK] docker-compose.yml is valid"
+
+      - name: Check all Dockerfiles parse
+        run: |
+          ERRORS=0
+          for df in $(find backend_services -name "Dockerfile" -type f); do
+            # Basic syntax check: ensure FROM instruction exists
+            if ! grep -q "^FROM " "$df"; then
+              echo "[ERROR] Invalid Dockerfile (no FROM): $df"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo "[OK] $df"
+            fi
+          done
+          if [ $ERRORS -gt 0 ]; then
+            exit 1
+          fi
+
+  # ===========================================================================
+  # Secret Scan (Constitution Article VI)
+  # ===========================================================================
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true  # Non-blocking initially; tighten later

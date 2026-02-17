@@ -1,0 +1,32 @@
+# Dev Dito - Raspberry Pi Deployment Configuration
+# ================================================
+
+# SSH Connection Settings
+ssh:
+  host: raspberry-pi.local
+  user: pi
+  port: 22
+  # key_path: ~/.ssh/id_rsa  # Uncomment if using key authentication
+
+# Remote Paths on Raspberry Pi
+remote:
+  embeddings_dir: /home/pi/qdrant/data/embeddings/
+  qdrant_compose: /home/pi/qdrant/docker-compose.yml
+
+# Local Paths (relative to this config file)
+# Stage 04 writes to: <embeddings_dir>/embedded_at_YYYYMMDD_HHMMSS/embedded_chunks.jsonl
+local:
+  embeddings_dir: ../../data/embeddings
+
+# Transfer Settings
+transfer:
+  verify_checksum: true
+  backup_existing: true
+  max_retries: 3
+  timeout_seconds: 300
+
+# Qdrant Settings on Pi
+qdrant:
+  host: localhost
+  port: 6333
+  collection_name: wiki_embeddings

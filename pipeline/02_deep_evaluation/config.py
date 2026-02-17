@@ -43,13 +43,15 @@ def load_env_yaml(config_path: Optional[Path] = None) -> Dict[str, Any]:
         Dictionary mit allen Konfigurationen
     """
     if config_path is None:
-        # Suche ZENTRALE config/env.yaml im Repository-Root
         script_dir = Path(__file__).parent
         # 02_deep_evaluation -> pipeline -> dev_dito (root)
         repo_root = script_dir.parent.parent
-        config_path = repo_root / "config" / "env.yaml"
-        
-        # Fallback: lokale config falls zentrale nicht existiert
+        # Prefer pipeline-local env.yaml (has PATHS for this pipeline)
+        local_env = script_dir / "env.yaml"
+        if local_env.exists():
+            config_path = local_env
+        else:
+            config_path = repo_root / "config" / "env.yaml"
         if not config_path.exists():
             config_path = script_dir.parent / "config" / "env.yaml"
 
@@ -79,6 +81,22 @@ def load_env_yaml(config_path: Optional[Path] = None) -> Dict[str, Any]:
     resolved_config = resolve_variables(raw_config, variables)
 
     return resolved_config
+
+
+def get_latest_fetch_dir(fetched_base: Path) -> Optional[Path]:
+    """Find the latest fetched_at_* directory under the given base.
+
+    Used when env.yaml points to a non-existent fetched_data_dir (e.g. after a
+    new fetch); deep eval then uses the most recent fetch automatically.
+    """
+    if not fetched_base.exists():
+        return None
+    fetch_dirs = sorted(
+        [d for d in fetched_base.iterdir() if d.is_dir() and d.name.startswith("fetched_at_")],
+        key=lambda x: x.name,
+        reverse=True,
+    )
+    return fetch_dirs[0] if fetch_dirs else None
 
 
 # =============================================================================
@@ -194,6 +212,29 @@ class EvaluationConfig:
         env = load_env_yaml(config_path)
 
         paths = env.get('PATHS', {})
+        # Auto-detect latest fetch dir if configured path does not exist
+        fetched_dir_val = paths.get('fetched_data_dir')
+        fetched_base_val = paths.get('fetched_data_base')
+        if fetched_dir_val and fetched_base_val:
+            fetched_dir = Path(fetched_dir_val)
+            fetched_base = Path(fetched_base_val)
+            if not fetched_dir.exists() and fetched_base.exists():
+                latest = get_latest_fetch_dir(fetched_base)
+                if latest:
+                    paths['fetched_data_dir'] = str(latest)
+                    paths['page_content_dir'] = str(latest / 'page_content')
+                    paths['page_metadata_dir'] = str(latest / 'page_metadata')
+                    paths['page_html_dir'] = str(latest / 'page_html')
+                    paths['page_links_dir'] = str(latest / 'page_links')
+                    paths['page_backlinks_dir'] = str(latest / 'page_backlinks')
+                    paths['page_history_dir'] = str(latest / 'page_history')
+                    paths['media_dir'] = str(latest / 'media')
+                    paths['namespaces_dir'] = str(latest / 'namespaces')
+                    paths['changes_dir'] = str(latest / 'changes')
+                    paths['raw_json_dir'] = str(latest / 'raw_json')
+                    paths['wiki_analysis_report'] = str(latest / 'wiki_analysis_report.txt')
+                    paths['media_usage_index'] = str(latest / 'media_usage_index.json')
+
         query_cfg = env.get('QUERY_GENERATION', {})
         diploma_cfg = env.get('DIPLOMA_THESIS', {})
         reports_cfg = env.get('REPORTS', {})

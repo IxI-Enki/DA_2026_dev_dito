@@ -94,12 +94,21 @@ class PreprocessingConfig:
     
     # Processing settings
     processing: Dict[str, Any]
-    
+
+    # Vision-LLM settings (US6)
+    vision_llm: Dict[str, Any]
+
     @classmethod
     def from_yaml(cls, config_path: Optional[Path] = None) -> 'PreprocessingConfig':
-        """Load configuration from YAML file."""
+        """Load configuration from YAML file.
+
+        Prefers config/env.yaml (Article II-B), then env.yaml in module root.
+        """
         if config_path is None:
-            config_path = Path(__file__).parent / 'env.yaml'
+            base = Path(__file__).parent
+            config_path = base / 'config' / 'env.yaml'
+            if not config_path.exists():
+                config_path = base / 'env.yaml'
         
         raw_config = load_yaml(config_path)
         config = resolve_variables(raw_config)
@@ -118,6 +127,7 @@ class PreprocessingConfig:
             media=config.get('MEDIA', {}),
             output=config.get('OUTPUT', {}),
             processing=config.get('PROCESSING', {}),
+            vision_llm=config.get('VISION_LLM', {}),
         )
 
 
@@ -141,14 +151,31 @@ def get_latest_fetch_dir(fetched_base: Path) -> Optional[Path]:
 
 
 def get_latest_evaluation(evaluated_base: Path) -> Optional[Path]:
-    """Find the latest evaluation_*.json file."""
+    """Find the latest evaluation directory or file.
+
+    Looks for (in order of preference):
+    1. ``deep_eval_*`` directories (from Stage 2 strategy_generator)
+    2. ``evaluation_*.json`` files (legacy)
+
+    Returns:
+        Path to the directory or file, or None if nothing found.
+    """
     if not evaluated_base.exists():
         return None
-    
+
+    # Prefer deep_eval_* directories (Stage 2 output)
+    eval_dirs = sorted(
+        [d for d in evaluated_base.iterdir() if d.is_dir() and d.name.startswith('deep_eval_')],
+        key=lambda x: x.name,
+        reverse=True,
+    )
+    if eval_dirs:
+        return eval_dirs[0]
+
+    # Fallback: evaluation_*.json files (legacy)
     eval_files = sorted(
         [f for f in evaluated_base.iterdir() if f.is_file() and f.name.startswith('evaluation_') and f.suffix == '.json'],
         key=lambda x: x.name,
-        reverse=True
+        reverse=True,
     )
-    
     return eval_files[0] if eval_files else None

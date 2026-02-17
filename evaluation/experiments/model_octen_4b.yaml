@@ -1,0 +1,34 @@
+experiment:
+  name: "Octen-Embedding-4B (MTEB #2, 73.25)"
+  type: model_comparison
+  thesis_id: "J2/FF3"
+
+embedding:
+  provider: sentence-transformers
+  model: "bflhc/Octen-Embedding-4B"
+  dimensions: 2560
+  torch_dtype: float16  # Required: 7.7 GB model on 12 GB VRAM
+
+chunking:
+  strategy: content_aware
+  chunk_size: 512
+  chunk_overlap: 50
+
+retrieval:
+  mode: dense
+  top_k: 10
+  collection_name: "eval_octen_4b"
+
+qdrant:
+  host: "localhost"
+  port: 6334  # Local eval Qdrant, NOT Raspberry Pi
+
+ground_truth:
+  file: "ground_truth/test_corpus_qa.json"
+
+metrics:
+  - mrr
+  - precision_at_5
+  - ndcg_at_10
+  - recall_at_10
+  - hit_rate

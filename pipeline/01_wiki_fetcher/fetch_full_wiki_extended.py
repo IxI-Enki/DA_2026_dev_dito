@@ -5,12 +5,13 @@ Includes detailed statistics about wiki structure and content.
 
 Uses centralized configuration from config.py and config/env.yaml
 """
+from __future__ import annotations
+
 import os
 import sys
 import json
 import time
 import signal
-import requests
 import re
 from collections import defaultdict
 from datetime import datetime
@@ -20,19 +21,20 @@ from api_client import WikiAPIClient, SkipItemError, PermanentError, TransientEr
 from extract_links_from_html import LinkExtractor
 from media_cache import MediaCache
 from config import (
-    OUTPUT_BASE_DIR, HEADERS, CA_CERT_PATH, TIMEOUT,
-    API_BASE_URL, API_FETCH_URL,
+    OUTPUT_BASE_DIR, API_BASE_URL,
     FETCH_CONFIG, get_fetch_config, get_setting
 )
 from manifest import FetchManifest, PageEntry, MediaEntry, EntryStatus
+from utils import format_bytes, sanitize_filename
 
-# Try to import progress tracker (may not be available in all environments)
-try:
-    from progress_tracker import ProgressTracker, create_tracker_from_env
-    PROGRESS_TRACKING_AVAILABLE = True
-except ImportError:
-    PROGRESS_TRACKING_AVAILABLE = False
-    ProgressTracker = None
+# Shared CLI utilities
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
+from cli_utils import (
+    add_no_color_arg, apply_color_from_args, enable_windows_ansi,
+    print_help_banner, register_sigint, set_use_color, style,
+)
+
+from progress_tracker import ProgressTracker, create_tracker_from_env
 
 # Global fetcher reference for signal handler
 _current_fetcher: Optional["ExtendedWikiFetcher"] = None
@@ -40,10 +42,10 @@ _current_fetcher: Optional["ExtendedWikiFetcher"] = None
 
 def _sigint_handler(sig, frame):
     """Handle Ctrl+C gracefully with quick exit"""
-    print("\n")
-    print("=" * 50)
-    print("  FETCH ABGEBROCHEN (Ctrl+C)")
-    print("=" * 50)
+    sep = style("=" * 50, "yellow")
+    print(f"\n\n{sep}")
+    print(f"  {style('FETCH ABGEBROCHEN', 'bright_yellow', 'bold')}  (Ctrl+C)")
+    print(sep)
     
     if _current_fetcher and hasattr(_current_fetcher, 'stats'):
         stats = _current_fetcher.stats
@@ -55,13 +57,8 @@ def _sigint_handler(sig, frame):
         print(f"  Seiten:  {pages_done}/{pages_total}")
         print(f"  Media:   {media_done}/{media_total}")
     
-    print("=" * 50)
-    sys.exit(130)  # Standard exit code for SIGINT
-
-
-def sanitize_filename(name: str) -> str:
-    """Sanitize page/media ID for use as filename"""
-    return name.replace(":", "_").replace("/", "_").replace("\\", "_")
+    print(sep)
+    sys.exit(130)
 
 
 def get_file_extension(filename: str) -> str:
@@ -69,16 +66,6 @@ def get_file_extension(filename: str) -> str:
     if "." in filename:
         return filename.rsplit(".", 1)[-1].lower()
     return "unknown"
-
-
-def format_bytes(size_bytes: int | float) -> str:
-    """Format bytes to human readable string"""
-    size = float(size_bytes)
-    for unit in ["B", "KB", "MB", "GB"]:
-        if size < 1024:
-            return f"{size:.2f} {unit}"
-        size /= 1024
-    return f"{size:.2f} TB"
 
 
 class ExtendedWikiFetcher:
@@ -90,12 +77,11 @@ class ExtendedWikiFetcher:
         # Load config
         self.config = get_fetch_config()
         
-        # Initialize progress tracker if available and job_id provided
-        self.tracker: Optional[ProgressTracker] = None
-        if PROGRESS_TRACKING_AVAILABLE and job_id:
+        # Initialize progress tracker if job_id provided
+        self.tracker: ProgressTracker | None = None
+        if job_id:
             self.tracker = ProgressTracker(job_id=job_id, stage="fetch")
-        elif PROGRESS_TRACKING_AVAILABLE:
-            # Try to create from environment
+        else:
             self.tracker = create_tracker_from_env()
         
         # Generate output directory name if not provided
@@ -130,7 +116,7 @@ class ExtendedWikiFetcher:
             "page_history": self.base_path / "page_history",
             "page_backlinks": self.base_path / "page_backlinks",
             "media": self.base_path / "media",
-            "media_metadata": self.base_path / "media" / "metadata",
+            "media_metadata": self.base_path / "media_metadata",
             "namespaces": self.base_path / "namespaces",
             "changes": self.base_path / "changes"
         }
@@ -653,8 +639,7 @@ class ExtendedWikiFetcher:
         
         # Track all media IDs for later
         self._all_media_ids = media_ids
-        
-        # Fix smallest if no files
+
         if self.stats["media"]["smallest_file"]["size"] == float("inf"):
             self.stats["media"]["smallest_file"] = {"id": "", "size": 0}
         
@@ -790,7 +775,6 @@ class ExtendedWikiFetcher:
         else:
             self.log("  Cache: DISABLED (--no-cache)")
         
-        base_url = API_FETCH_URL
         total = len(media_list)
         max_size_bytes = self.config.media.max_file_size_mb * 1024 * 1024 if self.config.media.max_file_size_mb > 0 else float("inf")
         request_delay = self.config.delay_between_requests
@@ -892,28 +876,7 @@ class ExtendedWikiFetcher:
             
             # Cache miss - download from server
             try:
-                url = f"{base_url}?media={media_id}"
-                response = requests.get(
-                    url,
-                    headers=HEADERS,
-                    verify=CA_CERT_PATH,
-                    timeout=TIMEOUT,
-                    stream=True
-                )
-                response.raise_for_status()
-                
-                # Check content length before downloading
-                content_length = int(response.headers.get('content-length', 0))
-                if content_length > max_size_bytes:
-                    self.stats["media"]["download_skipped"] += 1
-                    continue
-                
-                # Save file
-                with open(file_path, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                
-                file_size = file_path.stat().st_size
+                file_size = self.client.download_file(media_id, file_path)
                 downloaded_count += 1
                 self.stats["media"]["downloaded"] += 1
                 self.stats["media"]["total_size_bytes"] += file_size
@@ -1436,8 +1399,7 @@ class ExtendedWikiFetcher:
                 self.stats["pages"]["total_html_bytes"] / self.stats["pages"]["with_html"]
                 if self.stats["pages"]["with_html"] > 0 else 0
             )
-        
-        # Fix smallest page if none found
+
         if self.stats["pages"]["smallest_page"]["size"] == float("inf"):
             self.stats["pages"]["smallest_page"] = {"id": "", "size": 0}
         
@@ -1981,12 +1943,13 @@ class ExtendedWikiFetcher:
         self.log(f"  Saved analysis report")
     
     def print_summary(self):
-        """Print comprehensive fetch summary"""
-        self.log("\n" + "=" * 70)
-        self.log("FETCH COMPLETE - SUMMARY")
-        self.log("=" * 70)
+        """Print comprehensive fetch summary with colored section headers."""
+        sep = "=" * 70
+        self.log("\n" + style(sep, "cyan"))
+        self.log(style("FETCH COMPLETE - SUMMARY", "bold", "bright_cyan"))
+        self.log(style(sep, "cyan"))
         
-        self.log(f"\n[PAGES]")
+        self.log(style("\n[PAGES]", "cyan"))
         self.log(f"   Total: {self.stats['pages']['total']}")
         self.log(f"   Successful: {self.stats['pages']['successful']}")
         self.log(f"   Failed: {self.stats['pages']['failed']}")
@@ -1997,7 +1960,7 @@ class ExtendedWikiFetcher:
         self.log(f"   Avg size: {format_bytes(int(self.stats['pages']['avg_content_size']))}")
         self.log(f"   Largest: {self.stats['pages']['largest_page']['id']} ({format_bytes(self.stats['pages']['largest_page']['size'])})")
         
-        self.log(f"\n[MEDIA FILES]")
+        self.log(style("\n[MEDIA FILES]", "cyan"))
         self.log(f"   From listings: {self.stats['media']['listed']}")
         self.log(f"   From page links: {self.stats['media']['from_links']}")
         self.log(f"   Total: {self.stats['media']['total']}")
@@ -2011,50 +1974,65 @@ class ExtendedWikiFetcher:
             if data["count"] > 0:
                 self.log(f"   {type_name.title()}: {data['count']} ({format_bytes(data['size'])})")
         
-        self.log(f"\n[NAMESPACES]")
+        self.log(style("\n[NAMESPACES]", "cyan"))
         self.log(f"   Top-level: {self.stats['namespaces']['total']}")
         self.log(f"   Max depth: {self.stats['namespaces']['max_depth']}")
         self.log(f"   Scanned for media: {self.stats['media']['namespaces_scanned']}")
         
-        self.log(f"\n[LINKS]")
+        self.log(style("\n[LINKS]", "cyan"))
         self.log(f"   Internal: {self.stats['links']['internal_total']}")
         self.log(f"   External: {self.stats['links']['external_total']}")
         self.log(f"   Media refs: {self.stats['links']['media_total']}")
         self.log(f"   Broken: {self.stats['links']['broken_links']}")
         self.log(f"   Avg per page: {self.stats['links']['avg_links_per_page']:.1f}")
         
-        self.log(f"\n[ACL]")
+        self.log(style("\n[ACL]", "cyan"))
         self.log(f"   Teacher-likely: {self.stats['acl_summary']['teacher_likely_pages']}")
         self.log(f"   Public: {self.stats['acl_summary']['public_pages']}")
         
         if "changes" in self.stats:
-            self.log(f"\n[RECENT CHANGES]")
+            self.log(style("\n[RECENT CHANGES]", "cyan"))
             self.log(f"   Page changes: {self.stats['changes'].get('page_changes', 0)}")
             self.log(f"   Media changes: {self.stats['changes'].get('media_changes', 0)}")
         
-        self.log(f"\n[TIMING]")
+        self.log(style("\n[TIMING]", "cyan"))
         self.log(f"   Duration: {self.stats['fetch_info']['duration_seconds']:.1f} seconds")
         self.log(f"   Output: {self.base_path}")
         
         if self.stats["errors"]:
-            self.log(f"\n[ERRORS]: {len(self.stats['errors'])}")
+            self.log(style(f"\n[ERRORS]: {len(self.stats['errors'])}", "red"))
             for err in self.stats["errors"][:5]:
                 err_id = err.get('page_id', err.get('media_id', 'unknown'))
                 self.log(f"   - {err_id}: {err['error'][:50]}")
         
-        self.log("\n" + "=" * 70)
+        self.log("\n" + style(sep, "cyan"))
         self.log("See wiki_analysis_report.txt for detailed analysis")
-        self.log("=" * 70)
+        self.log(style(sep, "cyan"))
 
 
 def main():
     """Main entry point"""
     global _current_fetcher
     import argparse
-    
+
+    if "-h" in sys.argv or "--help" in sys.argv:
+        set_use_color("--no-color" not in sys.argv)
+        enable_windows_ansi()
+        print_help_banner(
+            what="Fetches a full DokuWiki via JSON-RPC: pages, ACL, links, history, backlinks, media. Writes to data/fetched/<dir>. Ctrl+C shows progress.",
+            usage="python fetch_full_wiki_extended.py [output_dir] [OPTIONS]",
+            parameters="output_dir   Optional. Name of output dir under data/fetched. Default: fetched_at_<YYYYMMDD_HHMMSS>.",
+            options="-h, --help       Show this help and exit.\n--no-media       Do not download media; only build media inventory.\n--no-cache       Disable cache (always download fresh).\n--quiet          Suppress verbose output.\n--auto-skip      Non-interactive: auto-skip permanent errors (4xx).\n--no-color       Disable colored output.\n--show-manifest PATH   Show manifest summary and exit.\n--verify-manifest PATH   Verify manifest integrity and exit.\n--compare-manifests CURRENT PREVIOUS   Compare two manifests.",
+            examples="# Full fetch, auto-named output dir\npython fetch_full_wiki_extended.py\n# Pages only, no media\npython fetch_full_wiki_extended.py --no-media\n# Help\npython fetch_full_wiki_extended.py -h",
+            configuration="config/env.yaml (API URL, token, timeouts, output pattern).",
+            output="data/fetched/<output_dir>/: page_content, media, namespaces, fetch_manifest.json, wiki_analysis_report.txt.",
+            exit_codes="0   All pages fetched successfully.\n1   One or more pages failed.\n130 Interrupted (Ctrl+C).",
+        )
+        sys.exit(0)
+
     # Register Ctrl+C handler for clean exit
     signal.signal(signal.SIGINT, _sigint_handler)
-    
+
     parser = argparse.ArgumentParser(description="Extended wiki fetch with full coverage")
     parser.add_argument("output_dir", nargs="?", default=None,
                         help="Output directory name (default: auto-generated from pattern)")
@@ -2076,17 +2054,20 @@ def main():
                         help="Verify manifest integrity and exit")
     parser.add_argument("--compare-manifests", nargs=2, metavar=("CURRENT", "PREVIOUS"),
                         help="Compare two manifests and show changes")
+    add_no_color_arg(parser)
     
     args = parser.parse_args()
+    apply_color_from_args(args)
     
     # Handle manifest-only commands
     if args.show_manifest:
         from manifest import FetchManifest
         manifest = FetchManifest.load(Path(args.show_manifest))
         summary = manifest.get_summary()
-        print("=" * 60)
-        print(f"MANIFEST: {summary['fetch_id']}")
-        print("=" * 60)
+        sep60 = "=" * 60
+        print(style(sep60, "cyan"))
+        print(style(f"MANIFEST: {summary['fetch_id']}", "bold", "bright_cyan"))
+        print(style(sep60, "cyan"))
         print(f"Wiki URL:     {summary['wiki_url']}")
         print(f"Created:      {summary['created_at']}")
         print(f"Updated:      {summary['updated_at']}")
@@ -2095,7 +2076,7 @@ def main():
         print(f"Media:        {summary['media']['total']}")
         print(f"  By status:  {summary['media']['by_status']}")
         print(f"Namespaces:   {summary['namespaces']}")
-        print("=" * 60)
+        print(style(sep60, "cyan"))
         return 0
     
     if args.verify_manifest:
@@ -2103,11 +2084,11 @@ def main():
         manifest = FetchManifest.load(Path(args.verify_manifest))
         errors = manifest.validate()
         if errors:
-            print("[ERROR] Manifest validation failed:")
+            print(style("[ERROR] Manifest validation failed:", "red", "bold"))
             for err in errors:
                 print(f"  - {err}")
             return 1
-        print(f"[OK] Manifest valid: {manifest.fetch_id}")
+        print(style(f"[OK] Manifest valid: {manifest.fetch_id}", "green"))
         print(f"     Pages: {manifest.page_count}, Media: {manifest.media_count}")
         return 0
     
@@ -2119,24 +2100,25 @@ def main():
         page_changes = current.get_page_changes(previous)
         media_changes = current.get_media_changes(previous)
         
-        print("=" * 60)
-        print("MANIFEST COMPARISON")
-        print("=" * 60)
+        sep60 = "=" * 60
+        print(style(sep60, "cyan"))
+        print(style("MANIFEST COMPARISON", "bold", "bright_cyan"))
+        print(style(sep60, "cyan"))
         print(f"Current:  {current.fetch_id} ({current.page_count} pages)")
         print(f"Previous: {previous.fetch_id} ({previous.page_count} pages)")
         print()
-        print("PAGE CHANGES:")
+        print(style("PAGE CHANGES:", "cyan"))
         print(f"  Added:     {len(page_changes['added'])}")
         print(f"  Modified:  {len(page_changes['modified'])}")
         print(f"  Deleted:   {len(page_changes['deleted'])}")
         print(f"  Unchanged: {len(page_changes['unchanged'])}")
         print()
-        print("MEDIA CHANGES:")
+        print(style("MEDIA CHANGES:", "cyan"))
         print(f"  Added:     {len(media_changes['added'])}")
         print(f"  Modified:  {len(media_changes['modified'])}")
         print(f"  Deleted:   {len(media_changes['deleted'])}")
         print(f"  Unchanged: {len(media_changes['unchanged'])}")
-        print("=" * 60)
+        print(style(sep60, "cyan"))
         return 0
     
     # Get job_id from args or environment

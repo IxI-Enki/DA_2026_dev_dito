@@ -25,8 +25,13 @@ from datetime import datetime
 class MediaCache:
     """Manages cached media files from archived fetches"""
     
-    def __init__(self, content_output_dir: Path, archive_dirs: List[str] = None, 
-                 hash_algorithm: str = "sha256", verbose: bool = True):
+    def __init__(
+        self,
+        content_output_dir: Path,
+        archive_dirs: Optional[List[str]] = None,
+        hash_algorithm: str = "sha256",
+        verbose: bool = True,
+    ):
         """
         Initialize media cache.
         
@@ -241,16 +246,6 @@ class MediaCache:
         """Get cache statistics"""
         return {
             **self.stats,
-            "hit_rate": (self.stats["cache_hits"] / 
+            "hit_rate": (self.stats["cache_hits"] /
                         max(1, self.stats["cache_hits"] + self.stats["cache_misses"]) * 100)
         }
-
-
-def format_bytes(size_bytes: int) -> str:
-    """Format bytes to human readable string"""
-    size = float(size_bytes)
-    for unit in ["B", "KB", "MB", "GB"]:
-        if size < 1024:
-            return f"{size:.2f} {unit}"
-        size /= 1024
-    return f"{size:.2f} TB"

@@ -1,0 +1,57 @@
+# ==============================================================================
+# Unified Evaluation Pipeline Configuration
+# ==============================================================================
+# Usage:
+#   python -m evaluation.scripts.eval_pipeline --config evaluation/experiments/full_eval.yaml
+#   python -m evaluation.scripts.eval_pipeline --config evaluation/experiments/full_eval.yaml --skip ragas
+#
+# Pipeline steps:
+#   1. Qdrant Retrieval      (top-k for each ground-truth query)
+#   2. Custom Metrics        (MRR, NDCG@10, P@5, MAP, Recall@10, Hit Rate)
+#   3. RAGAS Metrics         (answer_correctness, faithfulness, context_precision)
+#   4. Statistical Analysis  (descriptive stats, bootstrap CIs)
+#   5. Visualization         (radar, bar, box, heatmap charts)
+#   6. Report Generation     (Markdown + JSON with NFR-005 fields)
+# ==============================================================================
+
+experiment:
+  name: "Full Eval Pipeline"
+  type: model_comparison
+  thesis_id: "J2/FF3"
+
+embedding:
+  provider: sentence-transformers
+  model: "BAAI/bge-m3-unsupervised"
+  dimensions: 1024
+
+chunking:
+  strategy: content_aware
+  chunk_size: 512
+  chunk_overlap: 50
+
+retrieval:
+  mode: dense
+  top_k: 10
+  collection_prefix: "eval_"
+
+ground_truth:
+  file: "ground_truth/leowiki_qa_78_Opus_46.json"
+
+metrics:
+  - mrr
+  - precision_at_5
+  - ndcg_at_10
+  - recall_at_k
+  - mean_average_precision
+  - hit_rate
+
+# RAGAS (LLM-as-Judge) - optional, skip with --skip ragas
+ragas:
+  llm_base_url: "http://localhost:1234/v1"
+  model: "qwen2.5-7b-instruct"
+  temperature: 0.0
+
+# Report and visualization
+report:
+  output_format: markdown
+  dpi: 300

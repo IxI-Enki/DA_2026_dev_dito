@@ -19,8 +19,11 @@ DokuWiki Syntax Reference:
 import re
 import logging
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, TYPE_CHECKING
 from dataclasses import dataclass
+
+if TYPE_CHECKING:
+    from strategy_loader import PageStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +147,8 @@ class PageProcessor:
         counter = [0]  # Use list for closure
         
         def replace_code(match):
-            placeholder = f"__CODE_BLOCK_{counter[0]}__"
+            # Use <<<...>>> to avoid collision with __underline__ conversion
+            placeholder = f"<<<CODE_BLOCK_{counter[0]}>>>"
             counter[0] += 1
             code_blocks[placeholder] = match.group(0)
             return placeholder
@@ -272,8 +276,8 @@ class PageProcessor:
                 page = target[3:]
                 return f'[{text}](https://en.wikipedia.org/wiki/{page})'
             else:
-                # Internal wiki link
-                # Handle anchors
+                # Internal wiki link; keep colon namespace, lowercase to match page_id
+                target = target.lstrip(':').lower()
                 if '#' in target:
                     page, anchor = target.split('#', 1)
                     return f'[{text}]({page}#{anchor})'
@@ -313,6 +317,8 @@ class PageProcessor:
             # Remove size parameters (e.g., ?200x100)
             if '?' in src:
                 src = src.split('?')[0]
+            # DokuWiki colon-paths: keep colon namespace, lowercase to match media_id
+            src = src.lstrip(':').lower()
             
             return f'![{alt}]({src})'
         
@@ -409,6 +415,52 @@ class PageProcessor:
         content = re.sub(r'^-{4,}\s*$', '---', content, flags=re.MULTILINE)
         return content
     
+    # ------------------------------------------------------------------
+    # Strategy-aware routing (T076)
+    # ------------------------------------------------------------------
+
+    def process_with_strategy(self, page: dict, strategy: "PageStrategy") -> dict:
+        """Process a page using its assigned content strategy.
+
+        - KNOWLEDGE pages: full markdown conversion + entity preservation
+        - NEWS pages: extract date + summary, lighter processing
+        - PORTAL pages: extract links + structure, minimal text
+        - FORM pages: preserve form fields as structured data
+        - ARCHIVED pages: minimal processing, mark as low-priority
+
+        Args:
+            page: Dict with at least ``content`` and ``page_id``.
+            strategy: A ``PageStrategy`` instance from the StrategyLoader.
+
+        Returns:
+            Dict with ``markdown``, ``content_type``, ``chunk_size``,
+            ``priority``, and ``rag_readiness``.
+        """
+        from strategy_loader import ContentType  # local import to avoid circular
+
+        content = page.get("content", "")
+        page_id = page.get("page_id", "")
+        ct = strategy.content_type
+
+        result = self.convert(content, page_id)
+
+        priority = "normal"
+        if ct == ContentType.ARCHIVED:
+            priority = "low"
+        elif ct in (ContentType.KNOWLEDGE,):
+            priority = "high"
+
+        return {
+            "markdown": result.markdown,
+            "content_type": ct.value.lower(),
+            "chunk_size": strategy.chunk_size,
+            "chunking_method": strategy.chunking_method,
+            "priority": priority,
+            "action": strategy.action,
+            "title": result.title,
+            "errors": result.errors,
+        }
+
     def _cleanup(self, content: str) -> str:
         """Final cleanup of converted content."""
         # Remove DokuWiki-specific tags

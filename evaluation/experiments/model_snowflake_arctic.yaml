@@ -1,0 +1,33 @@
+experiment:
+  name: "snowflake-arctic-embed-l-v2.0 (MTEB #7, 65.48)"
+  type: model_comparison
+  thesis_id: "J2/FF3"
+
+embedding:
+  provider: sentence-transformers
+  model: "Snowflake/snowflake-arctic-embed-l-v2.0"
+  dimensions: 1024
+
+chunking:
+  strategy: content_aware
+  chunk_size: 512
+  chunk_overlap: 50
+
+retrieval:
+  mode: dense
+  top_k: 10
+  collection_name: "eval_snowflake_arctic"
+
+qdrant:
+  host: "localhost"
+  port: 6334
+
+ground_truth:
+  file: "ground_truth/test_corpus_qa.json"
+
+metrics:
+  - mrr
+  - precision_at_5
+  - ndcg_at_10
+  - recall_at_10
+  - hit_rate

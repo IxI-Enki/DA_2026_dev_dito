@@ -1,91 +1,140 @@
-# Dev Dito Backend Services - Standalone Docker Compose
-# =====================================================
-# Startet alle Backend-Services fuer Dev Dito unabhaengig von DokuWiki
+# =============================================================================
+# Dev Dito Backend Services - Stack-G
+# =============================================================================
+# Part of the HTL Wiki multi-stack ecosystem
+# Integrates with: stack-d-ai-core (Qdrant), stack-h-mcp (Semantic Search)
 #
 # Usage:
-#   docker-compose up -d              # Start all services
-#   docker-compose up -d qdrant_db    # Start only Qdrant
-#   docker-compose logs -f            # View logs
-#   docker-compose down               # Stop all services
+#   docker compose -p stack-g-devdito up -d                    # Start core services
+#   docker compose -p stack-g-devdito --profile wiki up -d     # Start with DokuWiki
+#   docker compose -p stack-g-devdito --profile pipeline run   # Run pipeline modules
+#   docker compose -p stack-g-devdito down                     # Stop all
 #
-# Environment Variables:
-#   OPENAI_API_KEY: Required for MCP Server embeddings
+# Network: leonidas-network (external, shared with other stacks)
+#
+# DokuWiki (profile: wiki):
+#   Requires WIKI_ROOT in .env file (see .env.template)
+# =============================================================================
 
-version: '3.8'
+name: stack-g-devdito
 
 services:
   # ==========================================================================
-  # Qdrant Vector Database
+  # DokuWiki Instance (Optional - via profile "wiki")
+  # Development DokuWiki with Dev Dito plugin pre-mounted
+  # Requires WIKI_ROOT set in .env (path to DokuWiki installation root)
   # ==========================================================================
-  qdrant_db:
-    image: qdrant/qdrant:v1.13.2
-    container_name: devdito_qdrant
+  dokuwiki:
+    image: lscr.io/linuxserver/dokuwiki:version-2024-02-06a
+    container_name: dev-dito-wiki
+    profiles: ["wiki"]
     restart: unless-stopped
     ports:
-      - "6333:6333"   # REST API
-      - "6334:6334"   # gRPC
-    volumes:
-      - qdrant_storage:/qdrant/storage
+      - "18080:80"
     environment:
-      - QDRANT__SERVICE__GRPC_PORT=6334
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Vienna}
+      - DEVDITO_MCP_URL=http://semantic-search-wiki-core:3000
+    volumes:
+      - ${WIKI_ROOT}/config:/config
+      - ${WIKI_ROOT}/data:/data
+      - ${WIKI_ROOT}/plugins_dev/devdito:/config/dokuwiki/lib/plugins/devdito
+      - ${WIKI_ROOT}/plugins_dev/leonidas:/config/dokuwiki/lib/plugins/leonidas
+      - ${WIKI_ROOT}/plugins_dev/htlthemesettings:/config/dokuwiki/lib/plugins/htlthemesettings
+      - ${WIKI_ROOT}/plugins_dev/templates/htl_leonidas_dark:/config/dokuwiki/lib/tpl/htl_leonidas_dark
+      - ${WIKI_ROOT}/plugins_dev/templates/htl_leonidas_light:/config/dokuwiki/lib/tpl/htl_leonidas_light
+    networks:
+      - leonidas-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:80/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
 
   # ==========================================================================
-  # Qdrant Initialization Container
-  # Imports embeddings from JSONL file into Qdrant collection
+  # Qdrant Vector Database (Dev Dito Default)
+  # Local vector DB for Dev Dito pipeline - can also use external stack-d
   # ==========================================================================
-  qdrant_init:
-    build:
-      context: ./qdrant_db
-      dockerfile: Dockerfile
-    container_name: devdito_qdrant_init
-    depends_on:
-      qdrant_db:
-        condition: service_healthy
-    environment:
-      - QDRANT_HOST=qdrant_db
-      - QDRANT_PORT=6333
-      - COLLECTION_NAME=wiki_embeddings
-      - EMBEDDINGS_FILE=/data/embeddings/embedded_chunks.jsonl
-    volumes:
-      - ../data/embeddings:/data/embeddings:ro
-    restart: "no"
-
-  # ==========================================================================
-  # Wiki MCP Server (Model Context Protocol)
-  # Provides semantic search tools for Leonidas
-  # ==========================================================================
-  wiki_mcp_server:
-    build:
-      context: ./wiki_dev_mcp_server
-      dockerfile: Dockerfile
-    container_name: devdito_mcp_server
+  qdrant:
+    image: qdrant/qdrant:v1.13.2
+    container_name: dev-dito-qdrant
     restart: unless-stopped
     ports:
-      - "3000:3000"
-    depends_on:
-      qdrant_db:
-        condition: service_healthy
+      - "18334:6333"  # Dev Dito Qdrant (host 18xxx to avoid conflicts)
+      - "18335:6334"  # gRPC
+    volumes:
+      - dev-dito-qdrant-storage:/qdrant/storage
     environment:
-      - QDRANT_HOST=qdrant_db
-      - QDRANT_PORT=6333
-      - COLLECTION_NAME=wiki_embeddings
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - MCP_SERVER_PORT=3000
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    networks:
+      - leonidas-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ==========================================================================
+  # Qdrant Test Instance (Isolated for evaluation/integration tests)
+  # Separate volume to avoid polluting production data
+  # ==========================================================================
+  qdrant-test:
+    image: qdrant/qdrant:v1.13.2
+    container_name: dev-dito-qdrant-test
+    profiles: ["test"]
+    restart: unless-stopped
+    ports:
+      - "18336:6333"  # Test instance (isolated)
+      - "18337:6334"  # gRPC
+    volumes:
+      - dev-dito-qdrant-test-storage:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    networks:
+      - leonidas-network
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ==========================================================================
+  # Orchestrator API
+  # Manages pipeline execution and provides status API for DokuWiki plugin
+  # ==========================================================================
+  orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    container_name: dev-dito-orchestrator
+    restart: unless-stopped
+    ports:
+      - "18089:8089"
+    volumes:
+      - ../config:/config:ro
+      - ../data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - CONFIG_PATH=/config/env.yaml
+      - DATA_PATH=/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DOCKER_API_VERSION=1.46
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    networks:
+      - leonidas-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8089/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
   # ==========================================================================
   # Pipeline Module: Wiki Fetcher
+  # Fetches content from DokuWiki via JSON-RPC API
   # ==========================================================================
-  # Usage: docker compose --profile pipeline run --rm module_fetcher <job_id>
   module_fetcher:
     build:
       context: ./module_fetcher
@@ -96,26 +145,23 @@ services:
       - ../config:/config:ro
       - ../data:/data
       - ../pipeline/01_wiki_fetcher:/pipeline/01_wiki_fetcher:ro
-      # Root config.py for central configuration
       - ../config.py:/app/config.py:ro
     environment:
       - CONFIG_PATH=/config/env.yaml
       - DATA_PATH=/data
       - PIPELINE_PATH=/pipeline/01_wiki_fetcher
-      # Override Windows paths for container
       - OUTPUT_DIR=/data/fetched
       - TOKEN_PATH=/config/secrets/json_rpc_api.token
       - SSL_CERT_PATH=/config/secrets/ssl.cert
-      # SSL certificate trust for Python requests
       - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
       - SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
     networks:
-      - devdito_network
+      - leonidas-network
 
   # ==========================================================================
   # Pipeline Module: Content Evaluator
+  # Evaluates fetched wiki content quality
   # ==========================================================================
-  # Usage: docker compose --profile pipeline run --rm module_evaluator <job_id>
   module_evaluator:
     build:
       context: ./module_evaluator
@@ -131,12 +177,12 @@ services:
       - DATA_PATH=/data
       - PIPELINE_PATH=/pipeline/02_deep_evaluation
     networks:
-      - devdito_network
+      - leonidas-network
 
   # ==========================================================================
   # Pipeline Module: RAG Preprocessor
+  # Converts Wiki syntax to RAG-optimized Markdown with YAML frontmatter
   # ==========================================================================
-  # Usage: docker compose --profile pipeline run --rm module_preprocessor <job_id>
   module_preprocessor:
     build:
       context: ./module_preprocessor
@@ -152,12 +198,12 @@ services:
       - DATA_PATH=/data
       - PIPELINE_PATH=/pipeline/03_rag_preprocessing
     networks:
-      - devdito_network
+      - leonidas-network
 
   # ==========================================================================
   # Pipeline Module: Embeddings Creator
+  # Creates vector embeddings using OpenAI API
   # ==========================================================================
-  # Usage: docker compose --profile pipeline run --rm module_embedder <job_id>
   module_embedder:
     build:
       context: ./module_embedder
@@ -167,19 +213,20 @@ services:
     volumes:
       - ../config:/config:ro
       - ../data:/data
-      - ../pipeline/03_embeddings_creator:/pipeline/03_embeddings_creator:ro
+      - ../pipeline/04_embeddings_creator:/pipeline/04_embeddings_creator:ro
     environment:
       - CONFIG_PATH=/config/env.yaml
       - DATA_PATH=/data
-      - PIPELINE_PATH=/pipeline/03_embeddings_creator
+      - PIPELINE_PATH=/pipeline/04_embeddings_creator
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     networks:
-      - devdito_network
+      - leonidas-network
 
   # ==========================================================================
   # Pipeline Module: Qdrant Deployer
+  # Uploads embeddings to Qdrant vector database
+  # Default: dev-dito-qdrant (Stack-G), can also use stack-d-ai-core
   # ==========================================================================
-  # Usage: docker compose --profile pipeline run --rm module_deployer <job_id>
   module_deployer:
     build:
       context: ./module_deployer
@@ -187,7 +234,7 @@ services:
     container_name: dev-dito-module-deployer
     profiles: ["pipeline"]
     depends_on:
-      qdrant_db:
+      qdrant:
         condition: service_healthy
     volumes:
       - ../config:/config:ro
@@ -195,16 +242,36 @@ services:
     environment:
       - CONFIG_PATH=/config/env.yaml
       - DATA_PATH=/data
-      - QDRANT_HOST=qdrant_db
+      # Default: Local Qdrant in Stack-G (can be overridden via dashboard)
+      - QDRANT_HOST=dev-dito-qdrant
       - QDRANT_PORT=6333
       - COLLECTION_NAME=wiki_embeddings
+      # Alternative targets (set via orchestrator):
+      # - QDRANT_HOST=qdrant-main-vector-db (Stack-D)
+      # - DEPLOY_MODE=local|remote|file
+      # - REMOTE_HOST=raspberry-pi-hostname
     networks:
-      - devdito_network
+      - leonidas-network
 
+# =============================================================================
+# Volumes
+# =============================================================================
 volumes:
-  qdrant_storage:
-    name: devdito_qdrant_storage
+  dev-dito-qdrant-storage:
+    name: dev-dito-qdrant-storage
+  dev-dito-qdrant-test-storage:
+    name: dev-dito-qdrant-test-storage
 
+# =============================================================================
+# Networks
+# =============================================================================
+# External network shared with other HTL Wiki stacks:
+# - stack-a-wiki-sandbox
+# - stack-b-wiki-core (Keycloak)
+# - stack-d-ai-core (Qdrant)
+# - stack-h-mcp (Semantic Search)
+# =============================================================================
 networks:
-  devdito_network:
-    name: devdito_network
+  leonidas-network:
+    external: true
+    name: leonidas-network

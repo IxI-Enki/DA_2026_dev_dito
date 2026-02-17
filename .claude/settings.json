@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "name": "ragas_evaluation_trigger",
+        "description": "Optional: trigger RAGAS evaluation after embedding/preprocessing. Run manually: python -m evaluation.ragas_agents.scripts.run_full_evaluation",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -m evaluation.ragas_agents.scripts.run_full_evaluation"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,84 @@
+name: Bug Report
+description: Report a bug in Dev Dito (plugin, pipeline, or backend services)
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+        Please provide as much detail as possible to help reproduce and fix the issue.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which part of Dev Dito is affected?
+      options:
+        - DokuWiki Plugin (dokuwiki_plugin/)
+        - Pipeline - Wiki Fetcher (pipeline/01_wiki_fetcher/)
+        - Pipeline - Deep Evaluation (pipeline/02_deep_evaluation/)
+        - Pipeline - RAG Preprocessing (pipeline/03_rag_preprocessing/)
+        - Pipeline - Embeddings Creator (pipeline/03_embeddings_creator/)
+        - Pipeline - Deploy (pipeline/04_deploy/)
+        - Backend Services - Orchestrator
+        - Backend Services - Docker Compose
+        - Configuration (config.py, env.yaml)
+        - Installation Script (install.ps1)
+        - CI/CD Pipeline (.github/workflows/)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps_to_reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Minimal steps to reproduce the behavior.
+      placeholder: |
+        1. Run '...'
+        2. Open '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Error Output
+      description: Paste any relevant log output or error messages.
+      render: text
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: System information
+      placeholder: |
+        - OS: Windows 11
+        - Python: 3.11.x
+        - Docker Desktop: x.x.x
+        - Branch: 006-simplified-installation
+      value: |
+        - OS:
+        - Python:
+        - Docker Desktop:
+        - Branch:
+    validations:
+      required: true

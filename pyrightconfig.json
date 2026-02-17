@@ -1,0 +1,13 @@
+{
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic",
+  "executionEnvironments": [
+    { "root": "pipeline/01_wiki_fetcher", "extraPaths": [ "pipeline/01_wiki_fetcher", "pipeline/shared" ] },
+    { "root": "pipeline/02_deep_evaluation", "extraPaths": [ "pipeline/02_deep_evaluation", "pipeline/shared" ] },
+    { "root": "pipeline/04_embeddings_creator", "extraPaths": [ "pipeline/04_embeddings_creator", "pipeline/shared" ] },
+    { "root": "pipeline/03_rag_preprocessing", "extraPaths": [ "pipeline/03_rag_preprocessing", "pipeline/shared" ] },
+    { "root": "pipeline/05_deploy", "extraPaths": [ "pipeline/05_deploy", "pipeline/shared" ] },
+    { "root": "pipeline/shared", "extraPaths": [ "pipeline/shared" ] },
+    { "root": "." }
+  ]
+}

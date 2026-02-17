@@ -9,10 +9,14 @@ beautifulsoup4>=4.12.0
 lxml>=4.9.0
 
 # Document extraction
+docling>=2.0.0
 pypdf2>=3.0.0
 python-docx>=1.0.0
 openpyxl>=3.1.0
 python-pptx>=2.0.0
+
+# Image captioning (US6): resize for Vision-LLM context
+Pillow>=10.2
 
 # OCR fallback (optional)
 # pytesseract>=0.3.10

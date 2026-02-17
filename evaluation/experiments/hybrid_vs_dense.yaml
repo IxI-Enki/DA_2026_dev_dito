@@ -1,0 +1,30 @@
+# J6 — Hybrid vs Dense Retrieval
+# Uses OpenAI text-embedding-3-large (best speed/quality trade-off).
+# Compares dense-only (cosine) against hybrid (dense + BM25 sparse RRF).
+
+experiment:
+  name: "Hybrid vs Dense — text-embedding-3-large"
+  type: hybrid_vs_dense
+  thesis_id: "J6"
+
+embedding:
+  provider: openai
+  model: "text-embedding-3-large"
+  dimensions: 3072
+
+chunking:
+  chunk_size: 512
+  chunk_overlap: 50
+
+retrieval:
+  mode: hybrid
+  top_k: 10
+  collection_prefix: "eval_hybrid_"
+
+ground_truth:
+  file: "ground_truth/leowiki_qa_78_Opus_46.json"
+
+metrics:
+  - mrr
+  - precision_at_5
+  - ndcg_at_10

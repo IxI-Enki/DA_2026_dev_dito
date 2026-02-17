@@ -1,0 +1,34 @@
+experiment:
+  name: "text-embedding-3-large via OpenAI (paid reference ceiling)"
+  type: model_comparison
+  thesis_id: "J2/FF3"
+
+embedding:
+  provider: openai
+  model: "text-embedding-3-large"
+  dimensions: 3072
+  api_key_env: OPENAI_API_KEY
+
+chunking:
+  strategy: content_aware
+  chunk_size: 512
+  chunk_overlap: 50
+
+retrieval:
+  mode: dense
+  top_k: 10
+  collection_name: "eval_openai_3large"
+
+qdrant:
+  host: "localhost"
+  port: 6334
+
+ground_truth:
+  file: "ground_truth/test_corpus_qa.json"
+
+metrics:
+  - mrr
+  - precision_at_5
+  - ndcg_at_10
+  - recall_at_10
+  - hit_rate

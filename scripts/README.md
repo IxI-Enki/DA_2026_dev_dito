@@ -1,8 +1,20 @@
+---
+title: Dev Dito Scripts
+description: Operational PowerShell scripts for plugin deployment, development workflow, and local testing of the Dev Dito DokuWiki extension.
+author:
+  name: Jan Ritt
+  github: 'https://github.com/IxI-Enki'
+version: 1.0.0
+created: 2025-11-01
+updated: 2026-02-13
+tags: [scripts, powershell, deployment, dokuwiki-plugin, development]
+---
+
 # Dev Dito Scripts
 
-Scripts fuer die Entwicklung und das Deployment der Dev Dito DokuWiki Extension.
+Scripts for development and deployment of the Dev Dito DokuWiki extension.
 
-## Verfuegbare Scripts
+## Verfügbare Scripts
 
 ### deploy-plugin.ps1
 
@@ -20,25 +32,25 @@ Deployed das Plugin zum lokalen Test-Wiki.
 ```
 
 **Funktionen:**
-- Prueft alle erforderlichen Plugin-Dateien
-- Fuehrt PHP Syntax-Check durch (`php -l`)
+- Prüft alle erforderlichen Plugin-Dateien
+- Führt PHP Syntax-Check durch (`php -l`)
 - Kopiert alle Dateien zum Ziel-Wiki
 - Verifiziert die Installation
-- Gibt Version und Dateizaehler aus
+- Gibt Version und Datei­zähler aus
 
 **Voraussetzungen:**
 - PowerShell 7+
-- PHP CLI im PATH (fuer Syntax-Check)
+- PHP CLI im PATH (für Syntax-Check)
 - Schreibrechte auf Ziel-Verzeichnis
 
 ## Ziel-Wiki Konfiguration
 
 Das Standard-Ziel-Wiki ist:
-```
+```path
 D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\development\first_own_dokuwiki
 ```
 
-Das Wiki muss laufen damit Aenderungen sichtbar werden:
+Das Wiki muss laufen damit Änderungen sichtbar werden:
 ```powershell
 cd "D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\development\first_own_dokuwiki"
 .\scripts\start.ps1
@@ -46,13 +58,13 @@ cd "D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\developme
 
 ## Entwicklungs-Workflow
 
-1. **Code aendern** in `dokuwiki_plugin/`
-2. **Deploy ausfuehren**:
+1. **Code ändern** in `dokuwiki_plugin/`
+2. **Deploy ausführen**:
    ```powershell
    .\scripts\deploy-plugin.ps1
    ```
 3. **Im Browser testen** (ggf. Hard-Refresh mit Ctrl+Shift+R)
-4. **Bei Fehlern**: PHP Error-Log pruefen
+4. **Bei Fehlern**: PHP Error-Log prüfen
 
 ## Plugin-Struktur
 
@@ -66,8 +78,8 @@ dokuwiki_plugin/
 │   ├── default.php     # Default-Konfiguration
 │   └── metadata.php    # Konfigurationsschema
 ├── lang/
-│   ├── de/             # Deutsche Uebersetzungen
-│   └── en/             # Englische Uebersetzungen
+│   ├── de/             # Deutsche Übersetzungen
+│   └── en/             # Englische Übersetzungen
 ├── dist/               # Kompilierte Assets
 │   ├── devdito.min.css
 │   └── devdito.min.js
@@ -87,6 +99,6 @@ php -l dokuwiki_plugin\action.php
 2. Browser-Cache leeren (Ctrl+Shift+R)
 3. Plugin aktivieren: Admin -> Extension Manager
 
-### CSS/JS-Aenderungen nicht sichtbar
-- Version in `plugin.info.txt` erhoehen
-- Oder: `?purge=true` an URL anhaengen
+### CSS/JS-Änderungen nicht sichtbar
+- Version in `plugin.info.txt` erhöhen
+- Oder: `?purge=true` an URL anhängen

@@ -1,0 +1,42 @@
+# Evaluation infrastructure dependencies
+# Per Article VIII: direct framework usage, no wrapper libraries
+
+# Core
+pyyaml>=6.0
+numpy>=1.26
+
+# Embedding providers
+ollama>=0.4
+openai>=1.50
+
+# Vector database
+qdrant-client>=1.12
+
+# HTTP client (for keyword baseline via DokuWiki JSON-RPC)
+requests>=2.31
+
+# RAGAS (RAG evaluation - LLM-as-Judge, TestsetGenerator, metrics)
+# https://docs.ragas.io/
+ragas>=0.2.0
+datasets>=2.18.0
+# Optional for TestsetGenerator with LangChain docs:
+langchain-core>=0.2.0
+langchain-community>=0.2.0
+langchain-openai>=0.2.0
+
+# Statistical analysis (Bootstrap, t-test, Wilcoxon)
+scipy>=1.11
+
+# Visualization (thesis-quality charts)
+matplotlib>=3.8
+seaborn>=0.13
+
+# OCR (pipeline/03_rag_preprocessing MediaProcessor)
+pytesseract>=0.3.10
+Pillow>=10.2
+
+# Progress bars
+tqdm>=4.66
+
+# Testing
+pytest>=8.0

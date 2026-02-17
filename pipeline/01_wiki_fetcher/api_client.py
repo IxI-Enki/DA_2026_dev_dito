@@ -13,7 +13,7 @@ import requests
 import time
 from pathlib import Path
 from typing import Dict, Any, Optional
-from config import API_URL, HEADERS, CA_CERT_PATH, TIMEOUT, MAX_RETRIES, RETRY_DELAY
+from config import API_URL, HEADERS, CA_CERT_PATH, TIMEOUT, MAX_RETRIES, RETRY_DELAY, API_FETCH_URL
 
 
 class SkipItemError(Exception):
@@ -38,16 +38,22 @@ class UserAbortError(Exception):
 
 class WikiAPIClient:
     """Client for fetching from DokuWiki API with intelligent retry logic"""
-    
-    def __init__(self, verbose=True, interactive=True):
+
+    # Methods where failure is page/item-specific, not method-wide.
+    # A 400 on core.getPage("bad_page") does NOT mean core.getPage is broken.
+    _PAGE_SPECIFIC_METHODS = frozenset({
+        "core.getPage", "core.getPageHTML", "core.getPageInfo",
+        "core.getPageHistory", "core.getPageLinks", "core.getPageBackLinks",
+        "core.aclCheck", "core.getMediaInfo", "core.getMediaUsage",
+        "core.getMediaHistory",
+    })
+
+    def __init__(self, verbose: bool = True, interactive: bool = True):
         self.api_url = API_URL
         self.headers = HEADERS
-        # Use custom cert only if it exists and is not a standard CA (like Let's Encrypt)
-        # For public CAs, use system trust store (verify=True)
+        # Use configured cert path if it exists, otherwise system CA bundle
         if CA_CERT_PATH and Path(CA_CERT_PATH).exists():
-            # Check if it's a self-signed/private cert that needs custom verification
-            # For now: use system bundle for Let's Encrypt (default behavior)
-            self.ca_cert = True  # Use system CA bundle
+            self.ca_cert = CA_CERT_PATH
         else:
             self.ca_cert = True
         self.timeout = TIMEOUT
@@ -56,13 +62,18 @@ class WikiAPIClient:
         self.verbose = verbose
         self.interactive = interactive
         self.request_id = 0
-        
+
+        # HTTP session for connection pooling (TCP/TLS reuse)
+        self.session = requests.Session()
+        self.session.headers.update(self.headers)
+        self.session.verify = self.ca_cert
+
         # Separate skip modes for different error types
         self.skip_permanent_errors = False  # HTTP 4xx - API doesn't support method
         self.skip_transient_errors = False  # Timeouts - network issues
-        
-        # Track known-bad methods to skip immediately
-        self._failed_methods: set = set()
+
+        # Track methods the API genuinely does not support (not page-specific failures)
+        self._unsupported_methods: set = set()
     
     def _is_permanent_error(self, error: Exception) -> bool:
         """Check if error is permanent (no point retrying)"""
@@ -73,8 +84,11 @@ class WikiAPIClient:
     
     def _is_transient_error(self, error: Exception) -> bool:
         """Check if error is transient (might work on retry)"""
-        if isinstance(error, (requests.exceptions.Timeout, 
-                               requests.exceptions.ConnectionError)):
+        if isinstance(
+            error, (
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError
+            )):
             return True
         if isinstance(error, requests.exceptions.HTTPError):
             if error.response is not None:
@@ -168,9 +182,9 @@ class WikiAPIClient:
             TransientError: Timeout/network errors after retries exhausted
             UserAbortError: User chose to abort
         """
-        # Skip known-bad methods immediately
-        if method in self._failed_methods:
-            raise PermanentError(f"Method '{method}' previously failed, skipping")
+        # Skip methods the API genuinely does not support
+        if method in self._unsupported_methods:
+            raise PermanentError(f"Method '{method}' not supported by this wiki, skipping")
         
         self.request_id += 1
         
@@ -193,11 +207,9 @@ class WikiAPIClient:
                 if self.verbose and attempt > 1:
                     print(f"  Retry {attempt-1}/{self.max_retries} (timeout: {current_timeout}s)...")
                 
-                response = requests.post(
+                response = self.session.post(
                     self.api_url,
-                    headers=self.headers,
                     json=payload,
-                    verify=self.ca_cert,
                     timeout=current_timeout
                 )
                 
@@ -218,7 +230,8 @@ class WikiAPIClient:
                 
                 # HTTP 4xx - Permanent error, no retry
                 if self._is_permanent_error(e):
-                    self._failed_methods.add(method)
+                    if method not in self._PAGE_SPECIFIC_METHODS:
+                        self._unsupported_methods.add(method)
                     return self._handle_permanent_error(method, error_msg)
                 
                 # HTTP 5xx - Server error, retry
@@ -247,7 +260,8 @@ class WikiAPIClient:
                 
             except ValueError as e:
                 # JSON-RPC error - treat as permanent
-                self._failed_methods.add(method)
+                if method not in self._PAGE_SPECIFIC_METHODS:
+                    self._unsupported_methods.add(method)
                 return self._handle_permanent_error(method, str(e))
     
     def _handle_permanent_error(self, method: str, error_msg: str):
@@ -409,8 +423,14 @@ class WikiAPIClient:
     # Media Methods
     # =========================================================================
     
-    def get_all_media(self, namespace: str = "", pattern: str = "", depth: int = 0,
-                      include_hash: bool = True, include_author: bool = True) -> list:
+    def get_all_media(
+        self,
+        namespace: str = "",
+        pattern: str = "",
+        depth: int = 0,
+        include_hash: bool = True,
+        include_author: bool = True,
+    ) -> list:
         """
         Get list of all media files with full metadata.
         
@@ -436,8 +456,12 @@ class WikiAPIClient:
         except (PermanentError, TransientError):
             return []
     
-    def get_media_info(self, media_id: str, revision: int = 0,
-                       include_author: bool = True, include_hash: bool = True) -> Dict:
+    def get_media_info(
+        self,
+        media_id: str, revision: int = 0,
+        include_author: bool = True,
+        include_hash: bool = True,
+    ) -> Dict:
         """
         Get detailed media file information.
         
@@ -500,10 +524,10 @@ class WikiAPIClient:
     def get_recent_media_changes(self, timestamp: int = 0) -> list:
         """
         Get recent media changes across the wiki.
-        
+
         Args:
             timestamp: Only show changes newer than this Unix timestamp (0 = all)
-        
+
         Returns:
             List of change dicts with: id, revision, author, ip, summary, type, sizechange
         """
@@ -512,3 +536,42 @@ class WikiAPIClient:
             return response.get("result", [])
         except (PermanentError, TransientError):
             return []
+
+    # =========================================================================
+    # File Downloads
+    # =========================================================================
+
+    def download_file(
+        self,
+        media_id: str,
+        target_path: 'Path',
+        timeout_multiplier: float = 1.0,
+    ) -> int:
+        """
+        Download a media file via fetch.php using the shared session.
+
+        Args:
+            media_id: Media identifier (e.g. "namespace:file.pdf")
+            target_path: Local path to save the file to
+            timeout_multiplier: Multiply base timeout (useful for retries)
+
+        Returns:
+            Size in bytes of the downloaded file
+
+        Raises:
+            requests.exceptions.RequestException on download failure
+        """
+        url = f"{API_FETCH_URL}?media={media_id}"
+        response = self.session.get(
+            url,
+            timeout=self.timeout * timeout_multiplier,
+            stream=True,
+        )
+        response.raise_for_status()
+
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(target_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+
+        return target_path.stat().st_size

@@ -1,0 +1,27 @@
+experiment:
+  name: "BGE-M3 via Ollama"
+  type: model_comparison
+  thesis_id: "J2/FF3"
+
+embedding:
+  provider: ollama
+  model: "bge-m3"
+  dimensions: 1024
+
+chunking:
+  strategy: content_aware
+  chunk_size: 512
+  chunk_overlap: 50
+
+retrieval:
+  mode: dense
+  top_k: 10
+  collection_prefix: "eval_"
+
+ground_truth:
+  file: "ground_truth/leowiki_qa_50_verified.json"
+
+metrics:
+  - mrr
+  - precision_at_5
+  - ndcg_at_10

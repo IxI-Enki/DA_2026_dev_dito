@@ -364,7 +364,7 @@ MCP_SERVER_URL: str = get_setting("SERVICES.mcp_server.url", "http://wiki_dev_mc
 MCP_SERVER_TIMEOUT: int = get_setting("SERVICES.mcp_server.timeout", 30)
 
 QDRANT_HOST: str = get_setting("SERVICES.qdrant.host", "qdrant_db")
-QDRANT_PORT: int = get_setting("SERVICES.qdrant.port", 6333)
+QDRANT_PORT: int = get_setting("SERVICES.qdrant.port", 18334)
 QDRANT_COLLECTION: str = get_setting("SERVICES.qdrant.collection", "wiki_embeddings")
 
 OPENAI_TOKEN: str = get_setting("SERVICES.openai.token", "")
