@@ -9,14 +9,14 @@
 
 This branch delivers **written content and diagrams** for the diploma thesis. It spans multiple chapters:
 
-| Thesis Reference | What                                                          | Chapter   |
-|:-----------------|:--------------------------------------------------------------|:----------|
-| **T6** (ABA)     | MCP vs REST/GraphQL/OData theoretical comparison              | Ch. 2     |
-| **S1, S2**       | System architecture, component interactions, API contracts    | Ch. 4     |
-| **J4**           | Chunk-size impact on retrieval quality (visualizations)       | Ch. 6     |
-| **J6**           | Hybrid Search vs Dense Retrieval (visualizations)             | Ch. 6     |
-| **J8**           | Docker-Stack + npm-Client deployment architecture             | Ch. 4 / 6 |
-| Milestone        | "Theoretische Gegenuberstellung MCP vs REST/OData/GraphQL"    | ABA 15.10 |
+| Thesis Reference | What                                                       | Chapter   |
+| :--------------- | :--------------------------------------------------------- | :-------- |
+| **T6** (ABA)     | MCP vs REST/GraphQL/OData theoretical comparison           | Ch. 2     |
+| **S1, S2**       | System architecture, component interactions, API contracts | Ch. 4     |
+| **J4**           | Chunk-size impact on retrieval quality (visualizations)    | Ch. 6     |
+| **J6**           | Hybrid Search vs Dense Retrieval (visualizations)          | Ch. 6     |
+| **J8**           | Docker-Stack + npm-Client deployment architecture          | Ch. 4 / 6 |
+| Milestone        | "Theoretische Gegenuberstellung MCP vs REST/OData/GraphQL" | ABA 15.10 |
 
 ---
 
@@ -149,6 +149,23 @@ A thesis reader opens Chapter 2 and finds the N x M integration problem diagram 
 - **SC-005**: A thesis advisor reviewing Chapter 6 (J4) can read the chunk-size impact from the bar chart and understand the ContentAwareChunker logic from the flowchart.
 - **SC-006**: A thesis advisor reviewing Chapter 6 (J6) can determine whether Hybrid Search provides an advantage over Dense Retrieval from the two visualizations.
 - **SC-007**: All figures follow the thesis color theme consistently -- no "default matplotlib blue" or mismatched palettes.
+
+## Output Locations
+
+This branch produces **thesis content** (text, diagrams, research notes), not pipeline code.
+All outputs go into the **content repository** (FulllPath: `D:\_Repositories\_Diploma_Thesis_Repositories\dev_prompts_instructions_notes`), not `dev_dito`:
+
+| Artifact Type                       | Target Repository                | Target Path                           |
+| :---------------------------------- | :------------------------------- | :------------------------------------ |
+| Research notes (T6, ch02)           | `dev_prompts_instructions_notes` | `content/research_notes/ch02_shared/` |
+| Research notes (J4, J6)             | `dev_prompts_instructions_notes` | `content/research_notes/ch06_jan/`    |
+| Architecture diagrams (HTML source) | `dev_prompts_instructions_notes` | `content/diagrams/html_projects/`     |
+| Architecture diagrams (PNG output)  | `dev_prompts_instructions_notes` | `content/diagrams/png_output/`        |
+| API comparison draft text           | `dev_prompts_instructions_notes` | `content/chapters/ch02/`              |
+| Evaluation visualizations (J4, J6)  | `dev_dito`                       | `evaluation/figures/`                 |
+| Evaluation notebooks                | `dev_dito`                       | `evaluation/notebooks/`               |
+
+**Rule**: Only evaluation visualizations generated from code (Matplotlib/Seaborn) live in `dev_dito`. All hand-crafted or theory-related content (text, HTML diagrams, research notes) lives in `dev_prompts_instructions_notes`.
 
 ## Assumptions
 
