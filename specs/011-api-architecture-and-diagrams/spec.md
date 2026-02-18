@@ -113,7 +113,7 @@ A thesis reader opens Chapter 2 and finds the N x M integration problem diagram 
 
 ### Functional Requirements
 
-- **FR-001**: The feature MUST produce a structured text comparing MCP, REST, OData, and GraphQL across at least 7 dimensions (paradigm, transport, statefulness, schema/typing, tool discovery, streaming support, AI-integration fit).
+- **FR-001**: The feature MUST produce a structured text comparing MCP, REST, OData, and GraphQL across at least 8 dimensions: (1) Paradigm (Resource-oriented vs. Query-based vs. Protocol-for-tools), (2) Transport (HTTP/1.1 vs. HTTP/2 vs. stdio/SSE), (3) Statefulness (Stateless REST vs. MCP Session lifecycle), (4) Schema/Typing (OpenAPI vs. GraphQL SDL vs. MCP JSON Schema for tools), (5) Discovery (HATEOAS vs. Introspection vs. `tools/list` + `capabilities`), (6) Streaming (SSE/WebSocket vs. GraphQL Subscriptions vs. MCP SSE transport), (7) AI-Integration Fit (suitability for LLM tool-calling), (8) Batching/N+1 (OData $expand vs. GraphQL nested queries vs. MCP tool chaining).
 - **FR-002**: The feature MUST produce a feature-matrix diagram (`ch02_mcp_vs_rest_graphql`) as a thesis-quality PNG (300 DPI, thesis theme colors).
 - **FR-003**: The feature MUST produce a system architecture diagram showing Docker-Stack services, npm-Client, and central Qdrant with labeled interfaces.
 - **FR-004**: The feature MUST produce a Docker deployment diagram (`ch04_deployment`) showing containers, networks, volumes, and ports.
@@ -127,6 +127,9 @@ A thesis reader opens Chapter 2 and finds the N x M integration problem diagram 
 - **FR-012**: All diagrams MUST use the thesis theme `00_thesis_default` (primary #2E4F8F, secondary #72ADCB, accent #F28D2C).
 - **FR-013**: All visualizations from evaluation data MUST load from existing JSON result files in `evaluation/results/` and fail gracefully if files are missing.
 - **FR-014**: All PNG outputs MUST be at 300 DPI and legible at A4 print size.
+- **FR-015**: The feature MUST produce a Pipeline-Flowchart diagram showing the 5 pipeline stages (01_wiki_fetcher, 02_deep_evaluation, 03_rag_preprocessing, 04_embeddings_creator, 05_deploy) with their inputs, outputs, and data formats (Ch. 4, S1).
+- **FR-016**: The API comparison text MUST cite the official specifications of all four protocols as primary sources: MCP Specification (Anthropic, 2024/2025), Fielding REST Dissertation (2000), GraphQL Specification (GraphQL Foundation, 2021), OData v4.01 Specification (OASIS, 2022).
+- **FR-017**: Research notes for the API comparison MUST be created in `dev_prompts_instructions_notes/content/research_notes/ch02_shared/` before writing the comparison text, serving as the source material for the thesis chapter.
 
 ### Key Entities
 
@@ -149,8 +152,10 @@ A thesis reader opens Chapter 2 and finds the N x M integration problem diagram 
 
 ## Assumptions
 
-- Chunk-size evaluation results are available in `evaluation/results/` (from `eval_chunk_size.py` runs on branch 009/010).
-- Hybrid-vs-Dense evaluation results are available in `evaluation/results/` (from `eval_hybrid_vs_dense.py`).
+- Chunk-size evaluation results: `evaluation/results/chunk_comparison_20260217_164647.json` (from `eval_chunk_size.py`, branch 009/010).
+- Hybrid-vs-Dense evaluation results: `evaluation/results/hybrid_vs_dense_20260217_170637.json` (from `eval_hybrid_vs_dense.py`).
+- Per-model results: `evaluation/results/results_of_full_wiki_corpus_78q/` (5 models, 78 Q&A pairs).
+- **Box-plot data (FR-007)**: The chunk-comparison JSON contains only aggregate metrics, not per-chunk length distributions. The box-plot requires parsing the embedded JSONL or preprocessed corpus to compute actual token counts per chunk-size setting.
 - The thesis diagram pipeline (`html_projects/ -> png_output/`) from `diagram_catalog.prompt.md` is the standard for architecture diagrams.
 - Evaluation visualizations (J4, J6 charts) go into the existing Jupyter notebook or a new one under `evaluation/notebooks/`.
 - The API comparison text is a draft that will later be integrated into the LaTeX thesis document.
@@ -168,4 +173,5 @@ A thesis reader opens Chapter 2 and finds the N x M integration problem diagram 
 - Writing the full LaTeX chapter (that happens during thesis writing, not here)
 - OAuth2/Scalekit diagrams (separate branch, J7)
 - MCP Server implementation diagrams (Imre's chapter, Ch. 5)
+- MCP client compatibility matrix / "caniuse" table (I5 -- Imre's chapter, will be handled on a separate branch)
 - Running new evaluations -- this branch only visualizes existing results

@@ -5,11 +5,13 @@ Loads and resolves configuration from env.yaml with variable substitution.
 Pattern follows the RAG Preprocessing Pipeline implementation.
 """
 
+from __future__ import annotations
+
 import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import yaml
 
@@ -21,8 +23,8 @@ class ConfigError(Exception):
 
 
 def resolve_variables(
-    config: Dict[str, Any], context: Dict[str, str] | None = None
-) -> Dict[str, Any]:
+    config: dict[str, Any], context: dict[str, str] | None = None
+) -> dict[str, Any]:
     """
     Recursively resolve ${variable} placeholders in configuration.
 
@@ -56,7 +58,7 @@ def resolve_variables(
             return [resolve_value(item) for item in value]
         return value
 
-    def collect_context(d: Dict[str, Any], prefix: str = "") -> None:
+    def collect_context(d: dict[str, Any], prefix: str = "") -> None:
         for key, value in d.items():
             full_key = f"{prefix}{key}" if prefix else key
             if isinstance(value, str):
@@ -77,7 +79,7 @@ def resolve_variables(
     return result
 
 
-def load_config(config_path: str | None = None) -> Dict[str, Any]:
+def load_config(config_path: str | None = None) -> dict[str, Any]:
     """
     Load configuration from YAML file.
 
@@ -145,8 +147,8 @@ class OpenAIConfig:
 class ChunkingConfig:
     """Chunking configuration."""
 
-    default: Dict[str, Any]
-    content_types: Dict[str, Dict[str, Any]]
+    default: dict[str, Any]
+    content_types: dict[str, dict[str, Any]]
 
 
 @dataclass
@@ -157,29 +159,29 @@ class OutputConfig:
     encoding: str
     combined: bool
     filename: str
-    schema: Dict[str, str]
-    include_metadata: Dict[str, bool]
+    schema: dict[str, str]
+    include_metadata: dict[str, bool]
 
 
 @dataclass
 class Config:
     """Main configuration container."""
 
-    app: Dict[str, Any]
+    app: dict[str, Any]
     paths: PathsConfig
     openai: OpenAIConfig
     chunking: ChunkingConfig
-    text_prep: Dict[str, Any]
+    text_prep: dict[str, Any]
     output: OutputConfig
-    statistics: Dict[str, Any]
-    logging: Dict[str, Any]
-    processing: Dict[str, Any]
-    validation: Dict[str, Any]
+    statistics: dict[str, Any]
+    logging: dict[str, Any]
+    processing: dict[str, Any]
+    validation: dict[str, Any]
 
-    _raw: Dict[str, Any] = field(default_factory=dict, repr=False)
+    _raw: dict[str, Any] = field(default_factory=dict, repr=False)
 
     @classmethod
-    def load(cls, config_path: str | None = None) -> "Config":
+    def load(cls, config_path: str | None = None) -> Config:
         """Load and parse configuration."""
         raw = load_config(config_path)
 

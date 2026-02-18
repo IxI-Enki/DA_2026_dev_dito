@@ -4,11 +4,13 @@ Document Loader
 Loads Markdown documents with YAML frontmatter from preprocessed output.
 """
 
+from __future__ import annotations
+
 import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import yaml
 
@@ -23,7 +25,7 @@ class Document:
 
     file_path: Path
     collection: str  # 'pages' or 'media'
-    frontmatter: Dict[str, Any]
+    frontmatter: dict[str, Any]
     content: str
 
     # Extracted from frontmatter for convenience
@@ -101,7 +103,7 @@ class DocumentLoader:
         logger.error(f"Could not read file {file_path} with any encoding")
         return None
 
-    def extract_frontmatter(self, content: str) -> Tuple[Dict[str, Any], str]:
+    def extract_frontmatter(self, content: str) -> tuple[dict[str, Any], str]:
         """
         Extract YAML frontmatter from Markdown content.
 
@@ -159,7 +161,7 @@ class DocumentLoader:
 
     def load_collection(
         self, base_dir: Path, collection: str, limit: int | None = None
-    ) -> List[Document]:
+    ) -> list[Document]:
         """
         Load all documents from a collection directory.
 
@@ -193,7 +195,7 @@ class DocumentLoader:
         logger.info(f"Loaded {len(documents)} documents from {collection}")
         return documents
 
-    def load_all(self, limit: int | None = None) -> List[Document]:
+    def load_all(self, limit: int | None = None) -> list[Document]:
         """
         Load all documents from pages and media collections.
 
@@ -218,7 +220,7 @@ class DocumentLoader:
         logger.info(f"Total documents loaded: {len(documents)}")
         return documents
 
-    def get_stats(self, documents: List[Document]) -> Dict[str, Any]:
+    def get_stats(self, documents: list[Document]) -> dict[str, Any]:
         """Get statistics about loaded documents."""
         pages = [d for d in documents if d.collection == "pages"]
         media = [d for d in documents if d.collection == "media"]

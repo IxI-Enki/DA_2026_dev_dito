@@ -4,10 +4,12 @@ Content-Aware Chunker
 Chunks documents based on their content type using strategies from Deep Evaluation.
 """
 
+from __future__ import annotations
+
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any
 
 from document_loader import Document
 
@@ -63,7 +65,7 @@ class ContentAwareChunker:
         self.content_type_configs = self.config.chunking.content_types
         self.text_prep = self.config.text_prep
 
-    def get_chunking_config(self, content_type: str) -> Dict[str, Any]:
+    def get_chunking_config(self, content_type: str) -> dict[str, Any]:
         """Get chunking configuration for a content type."""
         if content_type and content_type.upper() in self.content_type_configs:
             return self.content_type_configs[content_type.upper()]
@@ -103,7 +105,7 @@ class ContentAwareChunker:
 
         return text
 
-    def chunk_document(self, document: Document) -> List[Chunk]:
+    def chunk_document(self, document: Document) -> list[Chunk]:
         """
         Chunk a document based on its content type.
 
@@ -164,7 +166,7 @@ class ContentAwareChunker:
 
         return chunks
 
-    def _chunk_semantic(self, text: str, config: Dict[str, Any]) -> List[str]:
+    def _chunk_semantic(self, text: str, config: dict[str, Any]) -> list[str]:
         """
         Semantic chunking by paragraphs with size limits.
         """
@@ -230,7 +232,7 @@ class ContentAwareChunker:
 
         return chunks
 
-    def _chunk_recursive_header(self, text: str, config: Dict[str, Any]) -> List[str]:
+    def _chunk_recursive_header(self, text: str, config: dict[str, Any]) -> list[str]:
         """
         Chunk by headers (Markdown headings), then by size.
         """
@@ -272,7 +274,7 @@ class ContentAwareChunker:
 
         return chunks
 
-    def _chunk_naive(self, text: str, config: Dict[str, Any]) -> List[str]:
+    def _chunk_naive(self, text: str, config: dict[str, Any]) -> list[str]:
         """
         Simple fixed-size chunking with overlap.
         """
@@ -298,7 +300,7 @@ class ContentAwareChunker:
 
         return chunks
 
-    def _split_large_paragraph(self, text: str, max_size: int, overlap: int) -> List[str]:
+    def _split_large_paragraph(self, text: str, max_size: int, overlap: int) -> list[str]:
         """Split a large paragraph into smaller chunks."""
         # Try to split by sentences first
         sentences = re.split(r"(?<=[.!?])\s+", text)
@@ -325,7 +327,7 @@ class ContentAwareChunker:
         # Fall back to fixed-size if no sentences
         return self._chunk_naive(text, {"max_chunk_size": max_size, "chunk_overlap": overlap})
 
-    def chunk_all(self, documents: List[Document]) -> List[Chunk]:
+    def chunk_all(self, documents: list[Document]) -> list[Chunk]:
         """
         Chunk all documents.
 
@@ -350,7 +352,7 @@ class ContentAwareChunker:
         )
         return all_chunks
 
-    def get_stats(self, chunks: List[Chunk]) -> Dict[str, Any]:
+    def get_stats(self, chunks: list[Chunk]) -> dict[str, Any]:
         """Get statistics about chunks."""
         if not chunks:
             return {"total": 0}

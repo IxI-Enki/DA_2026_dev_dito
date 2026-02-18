@@ -4,13 +4,15 @@ Embedding Pipeline
 Orchestrates the complete embedding process.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from tqdm import tqdm
 
@@ -84,7 +86,7 @@ class EmbeddingPipeline:
         Path(self.config.paths.output_dir).mkdir(parents=True, exist_ok=True)
         Path(self.config.paths.log_dir).mkdir(parents=True, exist_ok=True)
 
-    def _build_metadata(self, chunk: Chunk) -> Dict[str, Any]:
+    def _build_metadata(self, chunk: Chunk) -> dict[str, Any]:
         """Build metadata dictionary for a chunk."""
         include = self.config.output.include_metadata
         metadata = {}
@@ -141,7 +143,7 @@ class EmbeddingPipeline:
 
         return metadata
 
-    def _write_jsonl(self, output_path: Path, records: List[Dict[str, Any]]):
+    def _write_jsonl(self, output_path: Path, records: list[dict[str, Any]]):
         """Write records to JSONL file."""
         encoding = self.config.output.encoding
 
@@ -150,7 +152,7 @@ class EmbeddingPipeline:
                 json.dump(record, f, ensure_ascii=False)
                 f.write("\n")
 
-    def run(self, limit: int | None = None) -> Dict[str, Any]:
+    def run(self, limit: int | None = None) -> dict[str, Any]:
         """
         Run the complete embedding pipeline.
 
@@ -294,7 +296,7 @@ class EmbeddingPipeline:
             logger.error(f"Pipeline failed: {e}")
             raise
 
-    def _print_summary(self, stats: Dict[str, Any]):
+    def _print_summary(self, stats: dict[str, Any]):
         """Print pipeline summary with colored completion banner (fixed-width sep)."""
         sep = "=" * SEP_LEN
         pipe = stats["pipeline"]

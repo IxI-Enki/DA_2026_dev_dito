@@ -4,9 +4,11 @@ Embedder
 Creates embeddings using OpenAI API.
 """
 
+from __future__ import annotations
+
 import logging
 import time
-from typing import Any, Dict, List, Literal, cast
+from typing import Any, Literal, cast
 
 from openai import OpenAI
 
@@ -52,7 +54,7 @@ class Embedder:
             max_retries=self.config.openai.max_retries,
         )
 
-    def create_embedding(self, text: str) -> List[float]:
+    def create_embedding(self, text: str) -> list[float]:
         """
         Create embedding for a single text.
 
@@ -65,7 +67,7 @@ class Embedder:
         embeddings = self.create_embeddings([text])
         return embeddings[0] if embeddings else []
 
-    def create_embeddings(self, texts: List[str]) -> List[List[float]]:
+    def create_embeddings(self, texts: list[str]) -> list[list[float]]:
         """
         Create embeddings for a list of texts.
 
@@ -106,7 +108,7 @@ class Embedder:
             logger.error(f"Embedding creation failed: {e}")
             raise
 
-    def create_embeddings_batched(self, texts: List[str]) -> List[List[float]]:
+    def create_embeddings_batched(self, texts: list[str]) -> list[list[float]]:
         """
         Create embeddings in batches.
 
@@ -128,7 +130,7 @@ class Embedder:
 
         return all_embeddings
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get embedding statistics."""
         return {
             **self.stats,
