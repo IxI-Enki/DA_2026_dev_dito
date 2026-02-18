@@ -13,10 +13,11 @@ This branch uses **two repositories**:
 
 | Purpose                     | Repository                     | Path                                                                          |
 | --------------------------- | ------------------------------ | ----------------------------------------------------------------------------- |
-| Research notes (ch02, ch06) | dev_prompts_instructions_notes | `content/research_notes/ch02_shared/`, `ch06_jan/`                            |
-| API comparison draft        | dev_prompts_instructions_notes | `content/chapters/ch02/`                                                      |
-| Diagram HTML sources        | dev_prompts_instructions_notes | `content/diagrams/html_projects/` or `assets/diagrams/sources/html_projects/` |
-| Diagram PNG output          | dev_prompts_instructions_notes | `content/diagrams/png_output/` or `assets/diagrams/exports/png_output/`       |
+| Research notes (ch02, ch06) | dev_prompts_instructions_notes | `content/research_notes/ch02/`, `ch06_jan/` (existing)                         |
+| API comparison draft        | dev_prompts_instructions_notes | `content/research_notes/ch02/` then `content/writing_drafts/`                  |
+| Diagram HTML sources        | dev_prompts_instructions_notes | `assets/diagrams/sources/html_projects/`                                      |
+| Diagram PNG output          | dev_prompts_instructions_notes | `assets/diagrams/exports/png_output/`                                         |
+| Literature (citation check) | dev_prompts_instructions_notes | `content/literature/`                                                         |
 | Evaluation result JSON      | dev_dito                       | `evaluation/results/` (read-only)                                             |
 | Evaluation figures          | dev_dito                       | `evaluation/figures/`                                                         |
 | Evaluation notebooks        | dev_dito                       | `evaluation/notebooks/`                                                       |
@@ -32,11 +33,11 @@ See [data-model.md](./data-model.md) and spec [Output Locations](spec.md#output-
 **Steps**:
 
 1. Open dev_prompts_instructions_notes repo.
-2. Create or edit HTML in `assets/diagrams/sources/html_projects/<diagram_id>/index.html` (or under `content/diagrams/html_projects/` if aligned to spec). Use `theme-loader.js`, `diagram-base.css`, and `var(--th-*)` for colors.
-3. From diagram generator tool directory (e.g. `tools/diagram_generator/`):
+2. Create or edit HTML in `assets/diagrams/sources/html_projects/<diagram_id>/index.html`. Use `theme-loader.js`, `diagram-base.css`, and `var(--th-*)` for colors.
+3. From diagram generator tool directory (e.g. under `assets/diagrams/` or `tools/diagram_generator/`):
    - `npm install` (once)
    - Export: `node src/cli.js generate` (all) or `node src/cli.js generate -d <diagram_id> -t 00_thesis_default`
-4. PNGs appear in `assets/diagrams/exports/png_output/` (or `content/diagrams/png_output/`). Ensure 300 DPI and thesis theme (see [contracts/diagram_output_contract.md](contracts/diagram_output_contract.md)).
+4. PNGs appear in `assets/diagrams/exports/png_output/`. Ensure 300 DPI and thesis theme (see [contracts/diagram_output_contract.md](contracts/diagram_output_contract.md)).
 
 **Diagram IDs for this branch**: `ch02_mcp_vs_rest_graphql`, `ch02_mcp_nxm_problem`, `ch02_mcp_architecture`, `ch04_component_diagram`, `ch04_deployment`, plus pipeline flowchart (FR-015).
 
@@ -70,8 +71,8 @@ See [data-model.md](./data-model.md) and spec [Output Locations](spec.md#output-
 
 **Order** (FR-017):
 
-1. Create research notes in `content/research_notes/ch02_shared/`: protocol summaries, 8 comparison dimensions, primary source citations (FR-016).
-2. Draft comparison text in `content/chapters/ch02/` from those notes (~1.5–2 pages). Include reference to diagram `ch02_mcp_vs_rest_graphql`.
+1. Create research notes in `content/research_notes/ch02/`: protocol summaries, 8 comparison dimensions, primary source citations (FR-016). Use `content/literature/` and verify citations (source URL/page); double-check notes (not whitepapers) and web search where needed (see task T005b).
+2. Draft comparison text in `content/research_notes/ch02/` from those notes (~1.5–2 pages); later move to `content/writing_drafts/`. Include reference to diagram `ch02_mcp_vs_rest_graphql`.
 
 **Primary sources**: MCP spec (Anthropic), Fielding REST dissertation (2000), GraphQL spec (GraphQL Foundation), OData v4.01 (OASIS). See [research.md](research.md) section 6.
 
@@ -87,7 +88,7 @@ See [data-model.md](./data-model.md) and spec [Output Locations](spec.md#output-
 
 ## 6. Checklist (high level)
 
-- [ ] Research notes ch02_shared (and optionally ch06_jan) created.
+- [ ] Research notes ch02 created; ch06_jan already exists and can be used for J4/J6 context.
 - [ ] API comparison draft written and linked to feature-matrix diagram.
 - [ ] All diagram IDs created as HTML and exported to 300 DPI PNG with thesis theme.
 - [ ] J4 bar chart and (if data available) box plot; ContentAwareChunker flowchart.

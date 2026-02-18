@@ -8,11 +8,11 @@ This feature is content- and artifact-oriented; there is no database. The "data 
 
 ## Entities
 
-### 1. Research note (ch02_shared, ch06_jan)
+### 1. Research note (ch02, ch06_jan)
 
 | Field / concept   | Description                                                                                                |
 | ----------------- | ---------------------------------------------------------------------------------------------------------- |
-| **Location**      | `dev_prompts_instructions_notes/content/research_notes/ch02_shared/` (T6), optionally `ch06_jan/` (J4/J6). |
+| **Location**      | `dev_prompts_instructions_notes/content/research_notes/ch02/` (T6), `ch06_jan/` (J4/J6, existing).         |
 | **Format**        | Markdown.                                                                                                  |
 | **Content**       | Protocol summaries, comparison dimensions, citations. Source for API comparison text (FR-017).             |
 | **Relationships** | Feeds into API comparison draft; may reference diagram IDs.                                                |
@@ -23,7 +23,7 @@ This feature is content- and artifact-oriented; there is no database. The "data 
 
 | Field / concept   | Description                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Location**      | `dev_prompts_instructions_notes/content/chapters/ch02/`.                                                                 |
+| **Location**      | `dev_prompts_instructions_notes/content/research_notes/ch02/` then `content/writing_drafts/`.                             |
 | **Format**        | Markdown or LaTeX-ready draft.                                                                                           |
 | **Content**       | Structured comparison of REST, OData, GraphQL, MCP over at least 8 dimensions (FR-001). ~1.5–2 thesis pages.             |
 | **Relationships** | Built from research notes. References feature-matrix diagram `ch02_mcp_vs_rest_graphql`. Cites primary sources (FR-016). |
@@ -35,8 +35,8 @@ This feature is content- and artifact-oriented; there is no database. The "data 
 | Field / concept   | Description                                                                                                                                                             |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ID**            | e.g. `ch02_mcp_vs_rest_graphql`, `ch04_deployment`, `ch04_component_diagram`, `ch02_mcp_nxm_problem`, `ch02_mcp_architecture`, pipeline flowchart (S1).                 |
-| **HTML source**   | Self-contained HTML under `content/diagrams/html_projects/<id>/index.html` (or existing `assets/diagrams/sources/html_projects/`). Uses theme-loader and `var(--th-*)`. |
-| **PNG export**    | 300 DPI, thesis theme, under `content/diagrams/png_output/<id>.png` (or `assets/diagrams/exports/png_output/`).                                                         |
+| **HTML source**   | Self-contained HTML under `assets/diagrams/sources/html_projects/<id>/index.html`. Uses theme-loader and `var(--th-*)`. |
+| **PNG export**    | 300 DPI, thesis theme, under `assets/diagrams/exports/png_output/<id>.png`.                                 |
 | **Relationships** | Theme: `00_thesis_default`. Pipeline: HTML → Puppeteer/CLI → PNG.                                                                                                       |
 
 **Validation**: All diagrams MUST use thesis theme `00_thesis_default` (FR-012) and 300 DPI (FR-014).
@@ -62,7 +62,7 @@ This feature is content- and artifact-oriented; there is no database. The "data 
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **Content**     | 5 stages: 01_wiki_fetcher, 02_deep_evaluation, 03_rag_preprocessing, 04_embeddings_creator, 05_deploy; inputs, outputs, data formats. |
 | **Form**        | Diagram (HTML→PNG) in same pipeline as other architecture diagrams.                                                                   |
-| **Location**    | Same as Diagram (content or assets).                                                                                                  |
+| **Location**    | Same as Diagram: `assets/diagrams/sources/html_projects/`, export to `assets/diagrams/exports/png_output/`. |
 
 ---
 
@@ -70,9 +70,9 @@ This feature is content- and artifact-oriented; there is no database. The "data 
 
 | Entity type            | Repository                     | Path (spec)                                    |
 | ---------------------- | ------------------------------ | ---------------------------------------------- |
-| Research notes         | dev_prompts_instructions_notes | content/research_notes/ch02_shared/, ch06_jan/ |
-| API comparison text    | dev_prompts_instructions_notes | content/chapters/ch02/                         |
-| Diagram HTML/PNG       | dev_prompts_instructions_notes | content/diagrams/html_projects/, png_output/   |
+| Research notes         | dev_prompts_instructions_notes | content/research_notes/ch02/, ch06_jan/ (existing) |
+| API comparison text    | dev_prompts_instructions_notes | content/research_notes/ch02/ then content/writing_drafts/ |
+| Diagram HTML/PNG       | dev_prompts_instructions_notes | assets/diagrams/sources/html_projects/, exports/png_output/ |
 | Evaluation figures     | dev_dito                       | evaluation/figures/                            |
 | Evaluation notebooks   | dev_dito                       | evaluation/notebooks/                          |
 | Evaluation result JSON | dev_dito (read-only)           | evaluation/results/                            |

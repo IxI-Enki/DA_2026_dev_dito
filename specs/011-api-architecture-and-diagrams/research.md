@@ -74,3 +74,13 @@
 **Rationale**: FR-017 requires research notes as source material for the thesis chapter.
 
 **Alternatives considered**: Writing the comparison directly without notes was rejected (violates FR-017).
+
+---
+
+## 8. Citation verification and literature
+
+**Decision**: For accurate citations (FR-016), use `content/literature/` in dev_prompts_instructions_notes as the base. Double-check research notes and literature-derived content (do not re-verify whitepapers/specs themselves). Use web search where a topic requires current URLs or exact page references so the comparison text can cite source site/page accurately.
+
+**Rationale**: User has gathered literature in `content/literature/`; verified, current source references are required for thesis citations.
+
+**Alternatives considered**: Citing without verification was rejected (thesis integrity).

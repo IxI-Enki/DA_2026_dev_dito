@@ -67,14 +67,15 @@ evaluation/
 ```text
 content/
 ├── research_notes/
-│   ├── ch02_shared/            # T6 research notes (before comparison text)
-│   └── ch06_jan/               # J4/J6 research notes (optional)
-├── chapters/ch02/              # API comparison draft text
-├── diagrams/
-│   ├── html_projects/          # HTML sources (ch02_*, ch04_*, pipeline flowchart)
-│   └── png_output/             # Exported PNG (thesis theme, 300 DPI)
-# Existing diagram pipeline may live under assets/diagrams/ and tools/diagram_generator/
-# Spec target paths above; align with existing structure in quickstart.
+│   ├── ch02/                   # T6 research notes and API comparison draft (before move to writing_drafts)
+│   └── ch06_jan/               # J4/J6 research notes (existing)
+├── writing_drafts/             # API comparison draft (final) after ch02
+└── literature/                 # Literature and notes for citation verification
+
+assets/diagrams/
+├── sources/html_projects/      # HTML sources (ch02_*, ch04_*, pipeline flowchart)
+├── exports/png_output/         # Exported PNG (thesis theme, 300 DPI)
+└── themes/                     # e.g. 00_thesis_default
 ```
 
 **Structure Decision**: Dual-repo content feature. No new application code in dev_dito beyond notebook cells and optional small visualization helpers. Diagram authoring and export follow `diagram_catalog.prompt.md` and theme system in dev_prompts_instructions_notes.

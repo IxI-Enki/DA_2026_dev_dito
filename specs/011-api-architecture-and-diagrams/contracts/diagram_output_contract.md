@@ -32,5 +32,5 @@ All thesis diagrams produced in this branch MUST satisfy the following so they c
 
 ## Pipeline
 
-- **Source**: Self-contained HTML in `html_projects/<id>/index.html` (or `content/diagrams/html_projects/` per spec).
-- **Export**: Run diagram generator CLI (e.g. `node src/cli.js generate -d <id>`) → PNG in `png_output/` (or `content/diagrams/png_output/`).
+- **Source**: Self-contained HTML in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/<id>/index.html`.
+- **Export**: Run diagram generator CLI (e.g. `node src/cli.js generate -d <id>`) → PNG in `assets/diagrams/exports/png_output/`.

@@ -28,11 +28,11 @@ A thesis reader opens Chapter 2 and finds a clear, concise (~1.5-2 page) compari
 
 **Why this priority**: ABA milestone (15.10.2025) and professor requirement. T6 is mandatory theory content and must be completed for the written thesis. Without it, the thesis has a gap in the Theoriekapitel.
 
-**Independent Test**: The comparison text can be read standalone in `docs/content/` or as a LaTeX-ready draft. The feature-matrix diagram renders as a PNG. A reviewer can verify completeness by checking that all four protocols are compared on at least: paradigm, transport, statefulness, schema/typing, tool discovery, streaming, and AI-integration fit.
+**Independent Test**: The comparison text can be read standalone in dev_prompts_instructions_notes at `content/research_notes/ch02/` or `content/writing_drafts/` (or as a LaTeX-ready draft). The feature-matrix diagram renders as a PNG. A reviewer can verify completeness by checking that all four protocols are compared on at least: paradigm, transport, statefulness, schema/typing, tool discovery, streaming, and AI-integration fit.
 
 **Acceptance Scenarios**:
 
-1. **Given** the thesis theory chapter (Ch. 2), **When** a reader looks for the API comparison, **Then** they find a structured comparison of REST, OData, GraphQL, and MCP covering at least 7 comparison dimensions with a visual feature matrix.
+1. **Given** the thesis theory chapter (Ch. 2), **When** a reader looks for the API comparison, **Then** they find a structured comparison of REST, OData, GraphQL, and MCP covering at least 8 comparison dimensions with a visual feature matrix.
 2. **Given** the feature matrix diagram, **When** exported as PNG at 300 DPI, **Then** it uses thesis theme `00_thesis_default` colors and is legible at A4 print size.
 
 ---
@@ -129,7 +129,7 @@ A thesis reader opens Chapter 2 and finds the N x M integration problem diagram 
 - **FR-014**: All PNG outputs MUST be at 300 DPI and legible at A4 print size.
 - **FR-015**: The feature MUST produce a Pipeline-Flowchart diagram showing the 5 pipeline stages (01_wiki_fetcher, 02_deep_evaluation, 03_rag_preprocessing, 04_embeddings_creator, 05_deploy) with their inputs, outputs, and data formats (Ch. 4, S1).
 - **FR-016**: The API comparison text MUST cite the official specifications of all four protocols as primary sources: MCP Specification (Anthropic, 2024/2025), Fielding REST Dissertation (2000), GraphQL Specification (GraphQL Foundation, 2021), OData v4.01 Specification (OASIS, 2022).
-- **FR-017**: Research notes for the API comparison MUST be created in `dev_prompts_instructions_notes/content/research_notes/ch02_shared/` before writing the comparison text, serving as the source material for the thesis chapter.
+- **FR-017**: Research notes for the API comparison MUST be created in `dev_prompts_instructions_notes/content/research_notes/ch02/` before writing the comparison text, serving as the source material for the thesis chapter.
 
 ### Key Entities
 
@@ -142,7 +142,7 @@ A thesis reader opens Chapter 2 and finds the N x M integration problem diagram 
 
 ### Measurable Outcomes
 
-- **SC-001**: The API comparison text covers all 4 protocols (REST, OData, GraphQL, MCP) with at least 7 comparison dimensions and fits within ~1.5-2 thesis pages.
+- **SC-001**: The API comparison text covers all 4 protocols (REST, OData, GraphQL, MCP) with at least 8 comparison dimensions and fits within ~1.5-2 thesis pages.
 - **SC-002**: All 9 diagrams/visualizations listed in FR-002 through FR-011 are produced as 300 DPI PNGs and render correctly when included in a LaTeX document.
 - **SC-003**: A thesis advisor reviewing Chapter 2 can understand the MCP value proposition and its architectural differences from REST/GraphQL/OData without prior MCP knowledge.
 - **SC-004**: A thesis advisor reviewing Chapter 4 can identify all system components, their deployment topology, and their interfaces from the architecture diagrams alone.
@@ -153,17 +153,17 @@ A thesis reader opens Chapter 2 and finds the N x M integration problem diagram 
 ## Output Locations
 
 This branch produces **thesis content** (text, diagrams, research notes), not pipeline code.
-All outputs go into the **content repository** (FulllPath: `D:\_Repositories\_Diploma_Thesis_Repositories\dev_prompts_instructions_notes`), not `dev_dito`:
+All outputs go into the **content repository** (FullPath: `D:\_Repositories\_Diploma_Thesis_Repositories\dev_prompts_instructions_notes`), not `dev_dito`:
 
-| Artifact Type                       | Target Repository                | Target Path                           |
-| :---------------------------------- | :------------------------------- | :------------------------------------ |
-| Research notes (T6, ch02)           | `dev_prompts_instructions_notes` | `content/research_notes/ch02_shared/` |
-| Research notes (J4, J6)             | `dev_prompts_instructions_notes` | `content/research_notes/ch06_jan/`    |
-| Architecture diagrams (HTML source) | `dev_prompts_instructions_notes` | `content/diagrams/html_projects/`     |
-| Architecture diagrams (PNG output)  | `dev_prompts_instructions_notes` | `content/diagrams/png_output/`        |
-| API comparison draft text           | `dev_prompts_instructions_notes` | `content/chapters/ch02/`              |
-| Evaluation visualizations (J4, J6)  | `dev_dito`                       | `evaluation/figures/`                 |
-| Evaluation notebooks                | `dev_dito`                       | `evaluation/notebooks/`               |
+| Artifact Type                       | Target Repository                | Target Path                                                   |
+| :---------------------------------- | :------------------------------- | :------------------------------------------------------------ |
+| Research notes (T6, ch02)           | `dev_prompts_instructions_notes` | `content/research_notes/ch02/`                                |
+| Research notes (J4, J6)             | `dev_prompts_instructions_notes` | `content/research_notes/ch06_jan/` (existing)                 |
+| Architecture diagrams (HTML source) | `dev_prompts_instructions_notes` | `assets/diagrams/sources/html_projects/`                      |
+| Architecture diagrams (PNG output)  | `dev_prompts_instructions_notes` | `assets/diagrams/exports/png_output/`                         |
+| API comparison draft text           | `dev_prompts_instructions_notes` | `content/research_notes/ch02/` then `content/writing_drafts/` |
+| Evaluation visualizations (J4, J6)  | `dev_dito`                       | `evaluation/figures/`                                         |
+| Evaluation notebooks                | `dev_dito`                       | `evaluation/notebooks/`                                       |
 
 **Rule**: Only evaluation visualizations generated from code (Matplotlib/Seaborn) live in `dev_dito`. All hand-crafted or theory-related content (text, HTML diagrams, research notes) lives in `dev_prompts_instructions_notes`.
 
@@ -176,6 +176,16 @@ All outputs go into the **content repository** (FulllPath: `D:\_Repositories\_Di
 - The thesis diagram pipeline (`html_projects/ -> png_output/`) from `diagram_catalog.prompt.md` is the standard for architecture diagrams.
 - Evaluation visualizations (J4, J6 charts) go into the existing Jupyter notebook or a new one under `evaluation/notebooks/`.
 - The API comparison text is a draft that will later be integrated into the LaTeX thesis document.
+
+## Literature & citations
+
+Literature and notes for the API comparison (T6) live in **dev_prompts_instructions_notes** at `content/literature/`. To cite verified, current sources (FR-016):
+
+- Use `content/literature/` as the base for protocol summaries and comparison dimensions.
+- Double-check research notes and literature-derived content (whitepapers/specs themselves need not be re-verified).
+- Use web search where a topic requires current URLs or exact page references so the comparison text cites source site/page accurately.
+
+Implementation: see task **T005b** in `specs/011-api-architecture-and-diagrams/tasks.md` (Phase 2: Verify and cite sources for API comparison).
 
 ## Scope Boundaries
 
