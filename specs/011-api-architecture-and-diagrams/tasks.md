@@ -21,9 +21,9 @@
 
 **Purpose**: Ensure both repositories have required output paths and theme available.
 
-- [ ] T001 Ensure output directories exist in dev_prompts_instructions_notes: `content/research_notes/ch02/`, `content/writing_drafts/`, `assets/diagrams/sources/html_projects/`, `assets/diagrams/exports/png_output/` (create if missing)
-- [ ] T002 Ensure dev_dito has `evaluation/figures/` and `evaluation/notebooks/` (create if missing)
-- [ ] T003 [P] Verify thesis theme `00_thesis_default` is available in dev_prompts_instructions_notes (e.g. `assets/diagrams/themes/` or theme_manifest) with primary #2E4F8F, secondary #72ADCB, accent #F28D2C per `specs/011-api-architecture-and-diagrams/contracts/thesis_theme.yaml`
+- [x] T001 Ensure output directories exist in dev_prompts_instructions_notes: `content/research_notes/ch02/`, `content/writing_drafts/`, `assets/diagrams/sources/html_projects/`, `assets/diagrams/exports/png_output/` (create if missing)
+- [x] T002 Ensure dev_dito has `evaluation/figures/` and `evaluation/notebooks/` (create if missing)
+- [x] T003 [P] Verify thesis theme `00_thesis_default` is available in dev_prompts_instructions_notes (e.g. `assets/diagrams/themes/` or theme_manifest) with primary #2E4F8F, secondary #72ADCB, accent #F28D2C per `specs/011-api-architecture-and-diagrams/contracts/thesis_theme.yaml`
 
 ---
 
@@ -31,9 +31,9 @@
 
 **Purpose**: Prerequisites that MUST be done before user-story content work. FR-017 requires research notes before API comparison text.
 
-- [ ] T004 Document or verify diagram generator in dev_prompts_instructions_notes: ensure diagram generator (e.g. under `assets/diagrams/` or `tools/diagram_generator/`) has `npm install` and generate command for 300 DPI PNG to `assets/diagrams/exports/png_output/` per quickstart and `contracts/diagram_output_contract.md`
-- [ ] T005 Create research-notes structure in dev_prompts_instructions_notes at `content/research_notes/ch02/` (e.g. README or index) so T6 research notes have a clear target; FR-017 requires notes before comparison text
-- [ ] T005b [P] Verify and cite sources for API comparison (T6): double-check research notes and content in `content/literature/` (do not re-verify whitepapers); use web search where needed so citations reference accurate source URL/page; ensure FR-016 primary sources are cited correctly
+- [x] T004 Document or verify diagram generator in dev_prompts_instructions_notes: ensure diagram generator (e.g. under `assets/diagrams/` or `tools/diagram_generator/`) has `npm install` and generate command for 300 DPI PNG to `assets/diagrams/exports/png_output/` per quickstart and `contracts/diagram_output_contract.md`
+- [x] T005 Create research-notes structure in dev_prompts_instructions_notes at `content/research_notes/ch02/` (e.g. README or index) so T6 research notes have a clear target; FR-017 requires notes before comparison text
+- [x] T005b [P] Verify and cite sources for API comparison (T6): double-check research notes and content in `content/literature/` (do not re-verify whitepapers); use web search where needed so citations reference accurate source URL/page; ensure FR-016 primary sources are cited correctly
 
 **Checkpoint**: Foundation ready; User Story 1 can start (research notes then comparison text then diagram). T005b (citation verification) can run in parallel with T005 or before T006/T007.
 
@@ -47,10 +47,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] **T6** Create research notes in dev_prompts_instructions_notes at `content/research_notes/ch02/` covering 8 dimensions (paradigm, transport, statefulness, schema/typing, discovery, streaming, AI-integration fit, batching/N+1) and primary sources (MCP spec, Fielding REST, GraphQL spec, OData v4.01) per FR-001 and FR-016
-- [ ] T007 [US1] **T6** Write API comparison draft in dev_prompts_instructions_notes at `content/research_notes/ch02/` (later move to `content/writing_drafts/`) (~1.5–2 pages, all 4 protocols, at least 8 dimensions, cite FR-016 sources, reference diagram `ch02_mcp_vs_rest_graphql`)
-- [ ] T008 [P] [US1] **T6** Create feature-matrix diagram HTML `ch02_mcp_vs_rest_graphql` in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/ch02_mcp_vs_rest_graphql/index.html` using theme-loader and `var(--th-*)` for thesis theme
-- [ ] T009 [US1] **T6** Export `ch02_mcp_vs_rest_graphql` to 300 DPI PNG in dev_prompts_instructions_notes at `assets/diagrams/exports/png_output/` per `contracts/diagram_output_contract.md`
+- [x] T006 [US1] **T6** Create research notes in dev_prompts_instructions_notes at `content/research_notes/ch02/` covering 8 dimensions (paradigm, transport, statefulness, schema/typing, discovery, streaming, AI-integration fit, batching/N+1) and primary sources (MCP spec, Fielding REST, GraphQL spec, OData v4.01) per FR-001 and FR-016
+- [x] T007 [US1] **T6** Write API comparison draft in dev_prompts_instructions_notes at `content/research_notes/ch02/` (later move to `content/writing_drafts/`) (~1.5–2 pages, all 4 protocols, at least 8 dimensions, cite FR-016 sources, reference diagram `ch02_mcp_vs_rest_graphql`)
+- [x] T008 [P] [US1] **T6** Create feature-matrix diagram HTML `ch02_mcp_vs_rest_graphql` in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/ch02_mcp_vs_rest_graphql/index.html` using theme-loader and `var(--th-*)` for thesis theme
+- [x] T009 [US1] **T6** Export `ch02_mcp_vs_rest_graphql` to 300 DPI PNG in dev_prompts_instructions_notes at `assets/diagrams/exports/png_output/` per `contracts/diagram_output_contract.md`
 
 **Checkpoint**: User Story 1 complete; Ch. 2 comparison and feature-matrix diagram are deliverable.
 
@@ -64,9 +64,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T010 [P] [US2] **S1, J8** Create component diagram HTML `ch04_component_diagram` in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/ch04_component_diagram/index.html` (Docker-Stack left, npm-Client right, central Qdrant, labeled interfaces/ports)
-- [ ] T011 [P] [US2] **S2, J8** Create deployment diagram HTML `ch04_deployment` in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/ch04_deployment/index.html` (containers, networks, volumes, ports)
-- [ ] T012 [US2] **S1, S2, J8** Export `ch04_component_diagram` and `ch04_deployment` to 300 DPI PNG in dev_prompts_instructions_notes at `assets/diagrams/exports/png_output/` per `contracts/diagram_output_contract.md`
+- [x] T010 [P] [US2] **S1, J8** Create component diagram HTML `ch04_component_diagram` in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/ch04_component_diagram/index.html` (Docker-Stack left, npm-Client right, central Qdrant, labeled interfaces/ports)
+- [x] T011 [P] [US2] **S2, J8** Create deployment diagram HTML `ch04_deployment` in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/ch04_deployment/index.html` (containers, networks, volumes, ports)
+- [x] T012 [US2] **S1, S2, J8** Export `ch04_component_diagram` and `ch04_deployment` to 300 DPI PNG in dev_prompts_instructions_notes at `assets/diagrams/exports/png_output/` per `contracts/diagram_output_contract.md`
 
 **Checkpoint**: User Story 2 complete; Ch. 4 architecture and deployment diagrams are deliverable.
 
@@ -80,10 +80,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] **J4** Add or create J4 visualization notebook in dev_dito at `evaluation/notebooks/` that loads from `evaluation/results/` and writes to `evaluation/figures/` with thesis theme (contracts/thesis_theme.yaml) and 300 DPI; implement graceful warning if chunk_comparison_*.json missing per FR-013
-- [ ] T014 [US3] **J4** Implement grouped bar chart of MRR and NDCG@10 by chunk-size (256, 512, 1024) and by difficulty if present in chunk_comparison_*.json in dev_dito; save to `evaluation/figures/` per `contracts/evaluation_result_contract.md`
-- [ ] T015 [US3] **J4** Create ContentAwareChunker flowchart (heading detection, table handling, list merging, size-based splitting) per dev_dito `pipeline/04_embeddings_creator/content_aware_chunker.py` and save as 300 DPI PNG to dev_dito `evaluation/figures/` (FR-006)
-- [ ] T016 [US3] **J4** Implement box plot of chunk-size distribution in dev_dito: use preprocessed corpus or chunk-level data if available and save to `evaluation/figures/`; otherwise document limitation in notebook per `specs/011-api-architecture-and-diagrams/research.md` (FR-007)
+- [x] T013 [US3] **J4** Add or create J4 visualization notebook in dev_dito at `evaluation/notebooks/` that loads from `evaluation/results/` and writes to `evaluation/figures/` with thesis theme (contracts/thesis_theme.yaml) and 300 DPI; implement graceful warning if chunk_comparison_*.json missing per FR-013
+- [x] T014 [US3] **J4** Implement grouped bar chart of MRR and NDCG@10 by chunk-size (256, 512, 1024) and by difficulty if present in chunk_comparison_*.json in dev_dito; save to `evaluation/figures/` per `contracts/evaluation_result_contract.md`
+- [x] T015 [US3] **J4** Create ContentAwareChunker flowchart (heading detection, table handling, list merging, size-based splitting) per dev_dito `pipeline/04_embeddings_creator/content_aware_chunker.py` and save as 300 DPI PNG to dev_dito `evaluation/figures/` (FR-006)
+- [x] T016 [US3] **J4** Implement box plot of chunk-size distribution in dev_dito: use preprocessed corpus or chunk-level data if available and save to `evaluation/figures/`; otherwise document limitation in notebook per `specs/011-api-architecture-and-diagrams/research.md` (FR-007)
 
 **Checkpoint**: User Story 3 complete; J4 bar chart, flowchart, and (if data available) box plot in `evaluation/figures/`.
 
@@ -97,8 +97,8 @@
 
 ### Implementation for User Story 4
 
-- [ ] T017 [US4] **J6** Implement grouped bar chart Dense vs Hybrid (MRR, NDCG@10, Precision@5, Hit Rate) from hybrid_vs_dense_*.json in dev_dito at `evaluation/notebooks/` (or existing notebook); save to dev_dito `evaluation/figures/`; thesis theme, 300 DPI; graceful warning if file missing (FR-008)
-- [ ] T018 [US4] **J6** Implement scatter plot Dense-MRR (X) vs Hybrid-MRR (Y) per query with y=x reference line from hybrid_vs_dense_*.json in dev_dito; save to `evaluation/figures/`; thesis theme; show only available data with note if per_query missing per `contracts/evaluation_result_contract.md` (FR-009)
+- [x] T017 [US4] **J6** Implement grouped bar chart Dense vs Hybrid (MRR, NDCG@10, Precision@5, Hit Rate) from hybrid_vs_dense_*.json in dev_dito at `evaluation/notebooks/` (or existing notebook); save to dev_dito `evaluation/figures/`; thesis theme, 300 DPI; graceful warning if file missing (FR-008)
+- [x] T018 [US4] **J6** Implement scatter plot Dense-MRR (X) vs Hybrid-MRR (Y) per query with y=x reference line from hybrid_vs_dense_*.json in dev_dito; save to `evaluation/figures/`; thesis theme; show only available data with note if per_query missing per `contracts/evaluation_result_contract.md` (FR-009)
 
 **Checkpoint**: User Story 4 complete; J6 bar chart and scatter in `evaluation/figures/`.
 
@@ -112,9 +112,9 @@
 
 ### Implementation for User Story 5
 
-- [ ] T019 [P] [US5] **T6** Create N x M problem diagram HTML `ch02_mcp_nxm_problem` in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/ch02_mcp_nxm_problem/index.html` (N clients x M sources direct vs N+M via MCP) (FR-010)
-- [ ] T020 [P] [US5] **T6** Create MCP architecture diagram HTML `ch02_mcp_architecture` in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/ch02_mcp_architecture/index.html` (Host, Client, Server; stdio, HTTP Streamable) (FR-011)
-- [ ] T021 [US5] **T6** Export `ch02_mcp_nxm_problem` and `ch02_mcp_architecture` to 300 DPI PNG in dev_prompts_instructions_notes at `assets/diagrams/exports/png_output/`
+- [x] T019 [P] [US5] **T6** Create N x M problem diagram HTML `ch02_mcp_nxm_problem` in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/ch02_mcp_nxm_problem/index.html` (N clients x M sources direct vs N+M via MCP) (FR-010)
+- [x] T020 [P] [US5] **T6** Create MCP architecture diagram HTML `ch02_mcp_architecture` in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/ch02_mcp_architecture/index.html` (Host, Client, Server; stdio, HTTP Streamable) (FR-011)
+- [x] T021 [US5] **T6** Export `ch02_mcp_nxm_problem` and `ch02_mcp_architecture` to 300 DPI PNG in dev_prompts_instructions_notes at `assets/diagrams/exports/png_output/`
 
 **Checkpoint**: User Story 5 complete; N x M and MCP architecture diagrams deliverable.
 
@@ -124,10 +124,10 @@
 
 **Purpose**: Pipeline flowchart (FR-015), theme/DPI verification, quickstart validation, and checklist alignment.
 
-- [ ] T022 **S1** Create pipeline flowchart diagram (5 stages: 01_wiki_fetcher, 02_deep_evaluation, 03_rag_preprocessing, 04_embeddings_creator, 05_deploy) with inputs, outputs, and data formats in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/`; export to 300 DPI PNG at `assets/diagrams/exports/png_output/` (FR-015)
-- [ ] T023 [P] Verify all diagrams and evaluation figures use thesis theme `00_thesis_default` and 300 DPI per `specs/011-api-architecture-and-diagrams/contracts/diagram_output_contract.md` and `contracts/thesis_theme.yaml`
-- [ ] T024 Run quickstart validation: confirm paths and steps in `specs/011-api-architecture-and-diagrams/quickstart.md` for diagram pipeline and evaluation visualizations; fix or document any path mismatches
-- [ ] T025 [P] Update or add implementation checklist in `specs/011-api-architecture-and-diagrams/checklists/` to reflect completed tasks (e.g. link to tasks.md or add done criteria per user story)
+- [x] T022 **S1** Create pipeline flowchart diagram (5 stages: 01_wiki_fetcher, 02_deep_evaluation, 03_rag_preprocessing, 04_embeddings_creator, 05_deploy) with inputs, outputs, and data formats in dev_prompts_instructions_notes at `assets/diagrams/sources/html_projects/`; export to 300 DPI PNG at `assets/diagrams/exports/png_output/` (FR-015)
+- [x] T023 [P] Verify all diagrams and evaluation figures use thesis theme `00_thesis_default` and 300 DPI per `specs/011-api-architecture-and-diagrams/contracts/diagram_output_contract.md` and `contracts/thesis_theme.yaml`
+- [x] T024 Run quickstart validation: confirm paths and steps in `specs/011-api-architecture-and-diagrams/quickstart.md` for diagram pipeline and evaluation visualizations; fix or document any path mismatches
+- [x] T025 [P] Update or add implementation checklist in `specs/011-api-architecture-and-diagrams/checklists/` to reflect completed tasks (e.g. link to tasks.md or add done criteria per user story)
 
 ---
 

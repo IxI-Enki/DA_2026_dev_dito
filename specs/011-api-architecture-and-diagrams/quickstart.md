@@ -11,16 +11,16 @@ This branch uses **two repositories**:
 
 ## 1. Repositories and paths
 
-| Purpose                     | Repository                     | Path                                                                          |
-| --------------------------- | ------------------------------ | ----------------------------------------------------------------------------- |
-| Research notes (ch02, ch06) | dev_prompts_instructions_notes | `content/research_notes/ch02/`, `ch06_jan/` (existing)                         |
-| API comparison draft        | dev_prompts_instructions_notes | `content/research_notes/ch02/` then `content/writing_drafts/`                  |
-| Diagram HTML sources        | dev_prompts_instructions_notes | `assets/diagrams/sources/html_projects/`                                      |
-| Diagram PNG output          | dev_prompts_instructions_notes | `assets/diagrams/exports/png_output/`                                         |
-| Literature (citation check) | dev_prompts_instructions_notes | `content/literature/`                                                         |
-| Evaluation result JSON      | dev_dito                       | `evaluation/results/` (read-only)                                             |
-| Evaluation figures          | dev_dito                       | `evaluation/figures/`                                                         |
-| Evaluation notebooks        | dev_dito                       | `evaluation/notebooks/`                                                       |
+| Purpose                     | Repository                     | Path                                                          |
+| --------------------------- | ------------------------------ | ------------------------------------------------------------- |
+| Research notes (ch02, ch06) | dev_prompts_instructions_notes | `content/research_notes/ch02/`, `ch06_jan/` (existing)        |
+| API comparison draft        | dev_prompts_instructions_notes | `content/research_notes/ch02/` then `content/writing_drafts/` |
+| Diagram HTML sources        | dev_prompts_instructions_notes | `assets/diagrams/sources/html_projects/`                      |
+| Diagram PNG output          | dev_prompts_instructions_notes | `assets/diagrams/exports/png_output/`                         |
+| Literature (citation check) | dev_prompts_instructions_notes | `content/literature/`                                         |
+| Evaluation result JSON      | dev_dito                       | `evaluation/results/` (read-only)                             |
+| Evaluation figures          | dev_dito                       | `evaluation/figures/`                                         |
+| Evaluation notebooks        | dev_dito                       | `evaluation/notebooks/`                                       |
 
 See [data-model.md](./data-model.md) and spec [Output Locations](spec.md#output-locations).
 
@@ -34,7 +34,7 @@ See [data-model.md](./data-model.md) and spec [Output Locations](spec.md#output-
 
 1. Open dev_prompts_instructions_notes repo.
 2. Create or edit HTML in `assets/diagrams/sources/html_projects/<diagram_id>/index.html`. Use `theme-loader.js`, `diagram-base.css`, and `var(--th-*)` for colors.
-3. From diagram generator tool directory (e.g. under `assets/diagrams/` or `tools/diagram_generator/`):
+3. From diagram generator: `cd tools/diagram_generator` (in dev_prompts_instructions_notes). See also `assets/diagrams/README.md`.
    - `npm install` (once)
    - Export: `node src/cli.js generate` (all) or `node src/cli.js generate -d <diagram_id> -t 00_thesis_default`
 4. PNGs appear in `assets/diagrams/exports/png_output/`. Ensure 300 DPI and thesis theme (see [contracts/diagram_output_contract.md](contracts/diagram_output_contract.md)).
@@ -60,7 +60,7 @@ See [data-model.md](./data-model.md) and spec [Output Locations](spec.md#output-
 4. Load JSON from `evaluation/results/` (see [contracts/evaluation_result_contract.md](contracts/evaluation_result_contract.md)). If file missing, log warning and skip figure.
 5. Save figures to `evaluation/figures/` (e.g. `savefig(..., dpi=300)`).
 
-**J4**: Bar chart (MRR/NDCG by chunk_size); ContentAwareChunker flowchart (from `pipeline/04_embeddings_creator/content_aware_chunker.py`); box plot only if chunk-level token data available (see research.md).  
+**J4**: Bar chart (MRR/NDCG by chunk_size); ContentAwareChunker flowchart (from `pipeline/04_embeddings_creator/content_aware_chunker.py`); box plot only if chunk-level token data available (see research.md).
 **J6**: Bar chart (Dense vs Hybrid per metric); scatter (Dense-MRR vs Hybrid-MRR per query, y=x line).
 
 ---
@@ -88,10 +88,10 @@ See [data-model.md](./data-model.md) and spec [Output Locations](spec.md#output-
 
 ## 6. Checklist (high level)
 
-- [ ] Research notes ch02 created; ch06_jan already exists and can be used for J4/J6 context.
-- [ ] API comparison draft written and linked to feature-matrix diagram.
-- [ ] All diagram IDs created as HTML and exported to 300 DPI PNG with thesis theme.
-- [ ] J4 bar chart and (if data available) box plot; ContentAwareChunker flowchart.
-- [ ] J6 bar chart and scatter plot.
-- [ ] Pipeline flowchart (5 stages) produced.
-- [ ] All figures/diagrams in correct repo paths per spec.
+- [x] Research notes ch02 created; ch06_jan already exists and can be used for J4/J6 context.
+- [x] API comparison draft written and linked to feature-matrix diagram.
+- [x] All diagram IDs created as HTML and exported to 300 DPI PNG with thesis theme.
+- [x] J4 bar chart and (if data available) box plot; ContentAwareChunker flowchart.
+- [x] J6 bar chart and scatter plot.
+- [x] Pipeline flowchart (5 stages) produced.
+- [x] All figures/diagrams in correct repo paths per spec.
