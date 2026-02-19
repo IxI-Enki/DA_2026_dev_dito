@@ -31,6 +31,7 @@ if str(_pipeline_root / "shared") not in sys.path:
     sys.path.insert(0, str(_pipeline_root / "shared"))
 
 from cli_utils import enable_windows_ansi, print_help_banner, set_use_color
+from evaluation.report import generate_report
 
 from config import get_config, get_latest_fetch_dir
 from evaluation.metrics import (
@@ -40,7 +41,6 @@ from evaluation.metrics import (
     evaluate_document,
     passes_thresholds,
 )
-from evaluation.report import generate_report
 
 logger = logging.getLogger(__name__)
 
