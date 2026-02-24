@@ -17,14 +17,14 @@ Metrics:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from difflib import SequenceMatcher
 from typing import Any
-
 
 # ---------------------------------------------------------------------------
 # DocumentScore dataclass
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class DocumentScore:
@@ -83,9 +83,7 @@ def check_regression(scores: list[DocumentScore]) -> dict[str, Any]:
         passing = 0
         for ds in scores:
             sv = getattr(ds, field)
-            if op == ">=" and sv >= val:
-                passing += 1
-            elif op == "<=" and sv <= val:
+            if op == ">=" and sv >= val or op == "<=" and sv <= val:
                 passing += 1
         rate = passing / n
         results[field] = {
@@ -103,12 +101,12 @@ def check_regression(scores: list[DocumentScore]) -> dict[str, Any]:
 
 # Patterns that add markup chars in DokuWiki but are removed in Markdown
 _WIKI_MARKUP_PATTERN = re.compile(
-    r"={2,6}|"          # heading markers
-    r"\[\[|\]\]|"       # link brackets
-    r"\{\{|\}\}|"       # media brackets
-    r"\*\*|//|''|__|"   # bold/italic/mono/underline
+    r"={2,6}|"  # heading markers
+    r"\[\[|\]\]|"  # link brackets
+    r"\{\{|\}\}|"  # media brackets
+    r"\*\*|//|''|__|"  # bold/italic/mono/underline
     r"^[ \t]*[\*\-]\s"  # list markers at line start
-    r"|<[^>]+>",        # HTML-like tags
+    r"|<[^>]+>",  # HTML-like tags
     re.MULTILINE,
 )
 
@@ -119,17 +117,17 @@ _MARKDOWN_LINK_NORM = re.compile(r"!?\[([^\]]*?)\]\(([^\)]*?)\)")
 
 # General markup removal (applied after link normalization)
 _GENERAL_MARKUP = re.compile(
-    r"={2,6}|"                     # DokuWiki headings
-    r"\*\*|//|''|__|"              # DokuWiki bold/italic/mono/underline
-    r"\\\\\s|"                     # DokuWiki forced line break
-    r"~~[A-Z]+~~|"                 # DokuWiki macros (~~NOTOC~~ etc.)
-    r"#{1,6}\s|"                   # Markdown headings
-    r"\|[-:]+\||"                  # Markdown table separator rows
-    r"</?[a-z][^>]*>|"             # HTML tags
-    r"^---$|"                      # Markdown horizontal rules
-    r"^[ \t]*[\*\-]\s|"            # List markers (wiki & markdown)
-    r"^\d+[\.\)]\s|"              # Numbered list markers
-    r"[\^\|]",                     # Table cell separators
+    r"={2,6}|"  # DokuWiki headings
+    r"\*\*|//|''|__|"  # DokuWiki bold/italic/mono/underline
+    r"\\\\\s|"  # DokuWiki forced line break
+    r"~~[A-Z]+~~|"  # DokuWiki macros (~~NOTOC~~ etc.)
+    r"#{1,6}\s|"  # Markdown headings
+    r"\|[-:]+\||"  # Markdown table separator rows
+    r"</?[a-z][^>]*>|"  # HTML tags
+    r"^---$|"  # Markdown horizontal rules
+    r"^[ \t]*[\*\-]\s|"  # List markers (wiki & markdown)
+    r"^\d+[\.\)]\s|"  # Numbered list markers
+    r"[\^\|]",  # Table cell separators
     re.MULTILINE,
 )
 
@@ -144,17 +142,11 @@ def _normalize_text(text: str) -> str:
     Returns lowercase, whitespace-collapsed text for comparison.
     """
     # Step 1: DokuWiki links -> keep display text (or target if no display)
-    cleaned = _DOKUWIKI_LINK_NORM.sub(
-        lambda m: m.group(2) if m.group(2) else m.group(1), text
-    )
+    cleaned = _DOKUWIKI_LINK_NORM.sub(lambda m: m.group(2) if m.group(2) else m.group(1), text)
     # Step 2: DokuWiki media -> keep alt text (or filename)
-    cleaned = _DOKUWIKI_MEDIA_NORM.sub(
-        lambda m: m.group(2) if m.group(2) else m.group(1), cleaned
-    )
+    cleaned = _DOKUWIKI_MEDIA_NORM.sub(lambda m: m.group(2) if m.group(2) else m.group(1), cleaned)
     # Step 3: Markdown links/images -> keep display/alt text (or URL if empty)
-    cleaned = _MARKDOWN_LINK_NORM.sub(
-        lambda m: m.group(1) if m.group(1) else m.group(2), cleaned
-    )
+    cleaned = _MARKDOWN_LINK_NORM.sub(lambda m: m.group(1) if m.group(1) else m.group(2), cleaned)
     # Step 4: Strip remaining markup syntax
     cleaned = _GENERAL_MARKUP.sub(" ", cleaned)
     # Step 5: Collapse whitespace & lowercase
@@ -188,6 +180,7 @@ class ContentCompletenessMetric:
 # 2. SemanticSimilarityMetric (T039)
 # ---------------------------------------------------------------------------
 
+
 class SemanticSimilarityMetric:
     """Metrik 2: Embedding Cosine Similarity.
 
@@ -203,6 +196,7 @@ class SemanticSimilarityMetric:
         if model_name is not None:
             try:
                 from sentence_transformers import SentenceTransformer
+
                 self._model = SentenceTransformer(model_name)
             except ImportError:
                 pass
@@ -217,11 +211,12 @@ class SemanticSimilarityMetric:
 
     def _score_embeddings(self, original: str, processed: str) -> float:
         import numpy as np
+
         assert self._model is not None, "called without model loaded"
         emb = self._model.encode([original, processed])
-        cos_sim = float(np.dot(emb[0], emb[1]) / (
-            np.linalg.norm(emb[0]) * np.linalg.norm(emb[1]) + 1e-10
-        ))
+        cos_sim = float(
+            np.dot(emb[0], emb[1]) / (np.linalg.norm(emb[0]) * np.linalg.norm(emb[1]) + 1e-10)
+        )
         return max(0.0, min(cos_sim, 1.0))
 
     def _score_sequence_matcher(self, original: str, processed: str) -> float:
@@ -351,13 +346,13 @@ class LinkIntegrityMetric:
 # ---------------------------------------------------------------------------
 
 _NOISE_PATTERNS: list[re.Pattern] = [
-    re.compile(r"={2,6}"),                 # wiki heading markers
-    re.compile(r"\[\[.*?\]\]"),            # wiki links
-    re.compile(r"\{\{.*?\}\}"),            # wiki media embeds
-    re.compile(r"</?[a-z]+[^>]*>"),        # HTML tags
-    re.compile(r"&[a-z]+;"),               # HTML entities
-    re.compile(r"[\x80-\x9f]"),            # mojibake range
-    re.compile(r"\\\\ "),                  # DokuWiki forced line break
+    re.compile(r"={2,6}"),  # wiki heading markers
+    re.compile(r"\[\[.*?\]\]"),  # wiki links
+    re.compile(r"\{\{.*?\}\}"),  # wiki media embeds
+    re.compile(r"</?[a-z]+[^>]*>"),  # HTML tags
+    re.compile(r"&[a-z]+;"),  # HTML entities
+    re.compile(r"[\x80-\x9f]"),  # mojibake range
+    re.compile(r"\\\\ "),  # DokuWiki forced line break
 ]
 
 
@@ -388,6 +383,7 @@ class NoiseDetectionMetric:
 # 6. ReadabilityMetric (T043)
 # ---------------------------------------------------------------------------
 
+
 class ReadabilityMetric:
     """Metrik 6: German-adapted Flesch Reading Ease.
 
@@ -410,17 +406,21 @@ class ReadabilityMetric:
         lines = [ln for ln in processed.splitlines() if ln.strip()]
         if lines:
             structured = sum(
-                1 for ln in lines
-                if (ln.strip().startswith(("-", "*", "|", "#"))
+                1
+                for ln in lines
+                if (
+                    ln.strip().startswith(("-", "*", "|", "#"))
                     or re.match(r"^\d+[\.\)]\s", ln.strip())
                     or re.match(r"^!\[", ln.strip())
-                    or re.match(r"^\[.*\]\(", ln.strip()))
+                    or re.match(r"^\[.*\]\(", ln.strip())
+                )
             )
             if structured / len(lines) > 0.60:
                 return self.threshold
 
         try:
             import textstat  # type: ignore[import-untyped]
+
             textstat.set_lang("de")  # type: ignore[attr-defined]
             fre: float = textstat.flesch_reading_ease(processed)  # type: ignore[attr-defined]
             return max(fre, 0.0)
@@ -475,12 +475,8 @@ class StructurePreservationMetric:
         proc_lists = len(_MD_LIST.findall(processed))
 
         # Count paragraphs (blocks separated by blank lines)
-        orig_paragraphs = len([
-            p for p in original.split("\n\n") if p.strip()
-        ])
-        proc_paragraphs = len([
-            p for p in processed.split("\n\n") if p.strip()
-        ])
+        orig_paragraphs = len([p for p in original.split("\n\n") if p.strip()])
+        proc_paragraphs = len([p for p in processed.split("\n\n") if p.strip()])
 
         # If no structure in original, it's trivially preserved
         total_orig = orig_headings + orig_lists + orig_paragraphs
@@ -490,21 +486,22 @@ class StructurePreservationMetric:
         # Component-wise preservation scores
         scores: list[tuple[float, float]] = []  # (score, weight)
         if orig_headings > 0:
-            scores.append(
-                (min(proc_headings / orig_headings, 1.0), 2.0)  # headings weighted 2x
-            )
+            scores.append((min(proc_headings / orig_headings, 1.0), 2.0))  # headings weighted 2x
         if orig_lists > 0:
-            scores.append(
-                (min(proc_lists / orig_lists, 1.0), 2.0)  # lists weighted 2x
-            )
+            scores.append((min(proc_lists / orig_lists, 1.0), 2.0))  # lists weighted 2x
         if orig_paragraphs > 0:
             # Paragraph counts diverge between wiki and markdown due to
             # whitespace conventions; use lenient ratio (allow +/- 30%).
             para_ratio = proc_paragraphs / orig_paragraphs
             scores.append(
-                (min(para_ratio, 1.0) if para_ratio <= 1.0
-                 else max(1.0 - (para_ratio - 1.0) * 0.5, 0.5),
-                 1.0)  # paragraphs weighted 1x (less reliable)
+                (
+                    (
+                        min(para_ratio, 1.0)
+                        if para_ratio <= 1.0
+                        else max(1.0 - (para_ratio - 1.0) * 0.5, 0.5)
+                    ),
+                    1.0,
+                )  # paragraphs weighted 1x (less reliable)
             )
 
         if not scores:
@@ -518,6 +515,7 @@ class StructurePreservationMetric:
 # ---------------------------------------------------------------------------
 # Evaluation runner helper (T045)
 # ---------------------------------------------------------------------------
+
 
 def evaluate_document(
     doc_id: str,

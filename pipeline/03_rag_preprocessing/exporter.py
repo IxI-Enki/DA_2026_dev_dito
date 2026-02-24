@@ -18,7 +18,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -80,19 +80,17 @@ class Exporter:
 
         # Write manifest (NFR-005: timestamp, config_hash, code_version)
         self._write_manifest(
-            out_dir, len(pages), len(media),
+            out_dir,
+            len(pages),
+            len(media),
             config_hash=config_hash,
             code_version=code_version,
         )
 
-        logger.info(
-            "Exported %d pages + %d media to %s", len(pages), len(media), out_dir
-        )
+        logger.info("Exported %d pages + %d media to %s", len(pages), len(media), out_dir)
         return out_dir
 
-    def _build_page_frontmatter(
-        self, page: dict[str, Any], body: str
-    ) -> dict[str, Any]:
+    def _build_page_frontmatter(self, page: dict[str, Any], body: str) -> dict[str, Any]:
         """Build Qdrant-compatible frontmatter for a wiki page.
 
         Required fields (per document_loader.py Document dataclass):
@@ -118,9 +116,7 @@ class Exporter:
             "linked_from": page.get("linked_from", []),
         }
 
-    def _build_media_frontmatter(
-        self, media_item: dict[str, Any], body: str
-    ) -> dict[str, Any]:
+    def _build_media_frontmatter(self, media_item: dict[str, Any], body: str) -> dict[str, Any]:
         """Build Qdrant-compatible frontmatter for a media file.
 
         Uses ``media_id`` instead of ``page_id``, otherwise identical schema.
@@ -142,9 +138,7 @@ class Exporter:
             "linked_from": media_item.get("linked_from", []),
         }
 
-    def _write_md(
-        self, path: Path, frontmatter: dict[str, Any], body: str
-    ) -> None:
+    def _write_md(self, path: Path, frontmatter: dict[str, Any], body: str) -> None:
         """Write a Markdown file with YAML frontmatter."""
         fm_str = yaml.dump(
             frontmatter,
@@ -166,7 +160,7 @@ class Exporter:
     ) -> None:
         """Write manifest.json with export metadata (NFR-005: timestamp, config_hash, code_version)."""
         manifest = {
-            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "exported_at": datetime.now(UTC).isoformat(),
             "pages_count": pages_count,
             "media_count": media_count,
             "total_count": pages_count + media_count,

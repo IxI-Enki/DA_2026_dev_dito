@@ -22,7 +22,7 @@ import sys
 import time
 import uuid
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from qdrant_client import QdrantClient
@@ -30,10 +30,8 @@ from qdrant_client.models import (
     Distance,
     Fusion,
     FusionQuery,
-    NamedSparseVector,
-    NamedVector,
-    Prefetch,
     PointStruct,
+    Prefetch,
     SparseVector,
     SparseVectorParams,
     VectorParams,
@@ -67,14 +65,95 @@ logger = logging.getLogger(__name__)
 
 # German stopwords for BM25 tokenizer (common words that add noise)
 _DE_STOPWORDS = frozenset(
-    "der die das ein eine einer eines einem einen und oder aber auch"
-    "ist sind war waren wird werden hat hatte haben zu in von mit"
-    "auf für an bei nach über aus um durch als wie nicht noch wenn"
-    "wir sie er es ich du ihr man so da wo was wer wie kann nur"
-    "sein seine seiner seinem seinen ihre ihrem ihren ihres im"
-    "zum zur des den dem vor bis alle einem einer keine mehr"
-    "diese dieser diesem dieses welche welcher welchem welches"
-    "schon bereits dann dort hier jetzt sehr viel".split()
+    [
+        "der",
+        "die",
+        "das",
+        "ein",
+        "eine",
+        "einer",
+        "eines",
+        "einem",
+        "einen",
+        "und",
+        "oder",
+        "aber",
+        "auchist",
+        "sind",
+        "war",
+        "waren",
+        "wird",
+        "werden",
+        "hat",
+        "hatte",
+        "haben",
+        "zu",
+        "in",
+        "von",
+        "mitauf",
+        "für",
+        "an",
+        "bei",
+        "nach",
+        "über",
+        "aus",
+        "um",
+        "durch",
+        "als",
+        "wie",
+        "nicht",
+        "noch",
+        "wennwir",
+        "sie",
+        "er",
+        "es",
+        "ich",
+        "du",
+        "ihr",
+        "man",
+        "so",
+        "da",
+        "wo",
+        "was",
+        "wer",
+        "wie",
+        "kann",
+        "nursein",
+        "seine",
+        "seiner",
+        "seinem",
+        "seinen",
+        "ihre",
+        "ihrem",
+        "ihren",
+        "ihres",
+        "imzum",
+        "zur",
+        "des",
+        "den",
+        "dem",
+        "vor",
+        "bis",
+        "alle",
+        "einem",
+        "einer",
+        "keine",
+        "mehrdiese",
+        "dieser",
+        "diesem",
+        "dieses",
+        "welche",
+        "welcher",
+        "welchem",
+        "welchesschon",
+        "bereits",
+        "dann",
+        "dort",
+        "hier",
+        "jetzt",
+        "sehr",
+        "viel",
+    ]
 )
 
 _TOKEN_RE = re.compile(r"[a-zäöüß]{2,}", re.IGNORECASE)
@@ -84,13 +163,10 @@ _TOKEN_RE = re.compile(r"[a-zäöüß]{2,}", re.IGNORECASE)
 # BM25 sparse vector builder
 # ---------------------------------------------------------------------------
 
+
 def _tokenize(text: str) -> list[str]:
     """Tokenize text into lowercase terms, filtering stopwords."""
-    return [
-        t.lower()
-        for t in _TOKEN_RE.findall(text)
-        if t.lower() not in _DE_STOPWORDS
-    ]
+    return [t.lower() for t in _TOKEN_RE.findall(text) if t.lower() not in _DE_STOPWORDS]
 
 
 def build_vocabulary(corpus_texts: list[str]) -> dict[str, int]:
@@ -153,6 +229,7 @@ def text_to_sparse_vector(
 # Evaluation runner
 # ---------------------------------------------------------------------------
 
+
 def _evaluate_dense(
     qdrant: QdrantClient,
     collection_name: str,
@@ -164,9 +241,17 @@ def _evaluate_dense(
 ) -> dict:
     """Run dense-only evaluation using named vectors."""
     return _run_queries(
-        qdrant, collection_name, provider, qa_pairs,
-        mode="dense", use_hybrid=False, vocab=None, idf=None, avgdl=0,
-        top_k=top_k, verbose=verbose,
+        qdrant,
+        collection_name,
+        provider,
+        qa_pairs,
+        mode="dense",
+        use_hybrid=False,
+        vocab=None,
+        idf=None,
+        avgdl=0,
+        top_k=top_k,
+        verbose=verbose,
     )
 
 
@@ -184,9 +269,17 @@ def _evaluate_hybrid(
 ) -> dict:
     """Run hybrid (dense + BM25 sparse) evaluation with RRF fusion."""
     return _run_queries(
-        qdrant, collection_name, provider, qa_pairs,
-        mode="hybrid", use_hybrid=True, vocab=vocab, idf=idf, avgdl=avgdl,
-        top_k=top_k, verbose=verbose,
+        qdrant,
+        collection_name,
+        provider,
+        qa_pairs,
+        mode="hybrid",
+        use_hybrid=True,
+        vocab=vocab,
+        idf=idf,
+        avgdl=avgdl,
+        top_k=top_k,
+        verbose=verbose,
     )
 
 
@@ -227,7 +320,10 @@ def _run_queries(
         if use_hybrid and vocab is not None and idf is not None:
             # Hybrid: dense + sparse with RRF fusion
             query_sparse = text_to_sparse_vector(
-                question, vocab, idf, avgdl=avgdl,
+                question,
+                vocab,
+                idf,
+                avgdl=avgdl,
             )
             search_results = qdrant.query_points(
                 collection_name=collection_name,
@@ -386,18 +482,14 @@ def run_hybrid_vs_dense(
     avgdl = sum(len(_tokenize(t)) for t in chunk_texts) / len(chunk_texts)
     logger.info(
         "Vocabulary: %d terms, avg document length: %.1f tokens",
-        len(vocab), avgdl,
+        len(vocab),
+        avgdl,
     )
 
-    sparse_vectors = [
-        text_to_sparse_vector(text, vocab, idf, avgdl=avgdl)
-        for text in chunk_texts
-    ]
+    sparse_vectors = [text_to_sparse_vector(text, vocab, idf, avgdl=avgdl) for text in chunk_texts]
 
     # Create temp Qdrant collection with both dense + sparse vectors
-    collection_name = (
-        f"{config.collection_prefix}hybrid_dense_{uuid.uuid4().hex[:6]}"
-    )
+    collection_name = f"{config.collection_prefix}hybrid_dense_{uuid.uuid4().hex[:6]}"
     qdrant = _get_qdrant_client()
 
     try:
@@ -441,16 +533,26 @@ def run_hybrid_vs_dense(
         # Run DENSE evaluation (vector search only)
         logger.info("Running dense retrieval evaluation...")
         dense_result = _evaluate_dense(
-            qdrant, collection_name, provider, qa_pairs,
-            top_k=config.top_k, verbose=verbose,
+            qdrant,
+            collection_name,
+            provider,
+            qa_pairs,
+            top_k=config.top_k,
+            verbose=verbose,
         )
 
         # Run HYBRID evaluation (dense + BM25 sparse with RRF fusion)
         logger.info("Running hybrid retrieval evaluation (dense + BM25 RRF)...")
         hybrid_result = _evaluate_hybrid(
-            qdrant, collection_name, provider, qa_pairs,
-            vocab=vocab, idf=idf, avgdl=avgdl,
-            top_k=config.top_k, verbose=verbose,
+            qdrant,
+            collection_name,
+            provider,
+            qa_pairs,
+            vocab=vocab,
+            idf=idf,
+            avgdl=avgdl,
+            top_k=config.top_k,
+            verbose=verbose,
         )
 
     finally:
@@ -470,7 +572,7 @@ def run_hybrid_vs_dense(
             "top_k": config.top_k,
             "config_hash": config.config_hash,
             "code_version": _get_git_version(),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "sparse_method": "BM25 (k1=1.5, b=0.75)",
             "fusion_method": "Reciprocal Rank Fusion (RRF)",
             "vocabulary_size": len(vocab),
@@ -494,6 +596,7 @@ def run_hybrid_vs_dense(
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -519,7 +622,8 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Directory for result JSON files",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Print per-query results to stdout",
     )

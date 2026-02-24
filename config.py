@@ -12,15 +12,15 @@ Usage:
     from config import get_setting
     url = get_setting("SERVICES.mcp_server.url")
 """
-import json
+
 import hashlib
+import json
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import yaml
-
 
 # =============================================================================
 # Path Resolution
@@ -41,30 +41,33 @@ SETTINGS_JSON_PATH = CONFIG_DIR / "settings.json"
 # Placeholder Resolution
 # =============================================================================
 
-def resolve_placeholders(data: Dict[str, Any], context: Dict[str, str] | None = None) -> Dict[str, Any]:
+
+def resolve_placeholders(
+    data: Dict[str, Any], context: Dict[str, str] | None = None
+) -> Dict[str, Any]:
     """
     Rekursiv ${var} Platzhalter in einem Dictionary aufloesen.
-    
+
     Args:
         data: Dictionary mit Platzhaltern
         context: Kontext-Dictionary mit bekannten Variablen
-    
+
     Returns:
         Dictionary mit aufgeloesten Werten
     """
     if context is None:
         context = {}
-    
+
     def resolve_string(s: str) -> str:
         """Loest Platzhalter in einem einzelnen String auf"""
-        pattern = r'\$\{([^}]+)\}'
-        
+        pattern = r"\$\{([^}]+)\}"
+
         def replacer(match: re.Match[str]) -> str:
             var_name = match.group(1)
             if var_name in context:
                 return context[var_name]
             return match.group(0)
-        
+
         result = s
         # Max 5 Iterationen fuer verschachtelte Platzhalter
         for _ in range(5):
@@ -73,7 +76,7 @@ def resolve_placeholders(data: Dict[str, Any], context: Dict[str, str] | None = 
                 break
             result = new_result
         return result
-    
+
     def resolve_value(value: Any) -> Any:
         """Rekursiv einen Wert aufloesen"""
         if isinstance(value, str):
@@ -83,7 +86,7 @@ def resolve_placeholders(data: Dict[str, Any], context: Dict[str, str] | None = 
         elif isinstance(value, list):
             return [resolve_value(item) for item in value]
         return value
-    
+
     # Erster Pass: Kontext aus PATHS aufbauen
     if "PATHS" in data:
         for key, value in data["PATHS"].items():
@@ -91,7 +94,7 @@ def resolve_placeholders(data: Dict[str, Any], context: Dict[str, str] | None = 
                 resolved = resolve_string(value)
                 context[key] = resolved
                 data["PATHS"][key] = resolved
-    
+
     return resolve_value(data)
 
 
@@ -99,38 +102,40 @@ def resolve_placeholders(data: Dict[str, Any], context: Dict[str, str] | None = 
 # Secret Loading
 # =============================================================================
 
+
 def load_secret_file(file_path: str | Path) -> str:
     """
     Laedt ein Secret aus einer Datei.
-    
+
     Args:
         file_path: Pfad zur Secret-Datei
-    
+
     Returns:
         Secret-Inhalt (getrimmt)
     """
     path = Path(file_path)
     if not path.exists():
         return ""
-    
-    with open(path, "r", encoding="utf-8") as f:
+
+    with open(path, encoding="utf-8") as f:
         content = f.read().strip()
-    
+
     # Handle KEY=value Format (aber nicht JWT Tokens die mit = enden koennen)
     if "=" in content and not content.startswith("eyJ"):
         parts = content.split("=", 1)
         if len(parts) == 2 and parts[0].isupper():
             content = parts[1]
-    
+
     return content
 
 
 def load_all_secrets(config: Dict[str, Any]) -> Dict[str, Any]:
     """
     Laedt alle Secrets aus den referenzierten Dateien.
-    
+
     Durchsucht die Config nach *_file Eintraegen und laedt diese.
     """
+
     def process_dict(d: Dict[str, Any]) -> Dict[str, Any]:
         result = {}
         for key, value in d.items():
@@ -146,7 +151,7 @@ def load_all_secrets(config: Dict[str, Any]) -> Dict[str, Any]:
             else:
                 result[key] = value
         return result
-    
+
     return process_dict(config)
 
 
@@ -154,17 +159,18 @@ def load_all_secrets(config: Dict[str, Any]) -> Dict[str, Any]:
 # Config Loading
 # =============================================================================
 
+
 def load_yaml_config(yaml_path: Path) -> Dict[str, Any]:
     """Laedt und parst eine YAML Config Datei"""
     if not yaml_path.exists():
         raise FileNotFoundError(f"Config Datei nicht gefunden: {yaml_path}")
-    
-    with open(yaml_path, "r", encoding="utf-8") as f:
+
+    with open(yaml_path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
-    
+
     if not isinstance(data, dict):
         raise ValueError(f"Ungueltiges Config-Format in {yaml_path}")
-    
+
     return data
 
 
@@ -183,9 +189,9 @@ def save_settings_json(config: Dict[str, Any], config_hash: str) -> None:
         "generated_at": datetime.now().isoformat(),
         "source": "config/env.yaml",
         "hash": config_hash,
-        "version": config.get("APP", {}).get("version", "unknown")
+        "version": config.get("APP", {}).get("version", "unknown"),
     }
-    
+
     # Entferne sensitive Daten aus settings.json (keine Token-Werte!)
     def sanitize(d: Dict[str, Any]) -> Dict[str, Any]:
         result = {}
@@ -198,9 +204,9 @@ def save_settings_json(config: Dict[str, Any], config_hash: str) -> None:
             else:
                 result[key] = value
         return result
-    
+
     sanitized = sanitize(output_config)
-    
+
     SETTINGS_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(SETTINGS_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(sanitized, f, indent=2, ensure_ascii=False)
@@ -213,7 +219,7 @@ def load_config() -> Dict[str, Any]:
     2. Loest Platzhalter auf
     3. Laedt Secrets aus Dateien
     4. Generiert/aktualisiert settings.json
-    
+
     Returns:
         Vollstaendige Config als Dictionary
     """
@@ -229,32 +235,32 @@ def load_config() -> Dict[str, Any]:
             f"Erwartet: {ENV_YAML_PATH}\n"
             f"Kopiere PLACEHOLDER_env.yaml nach env.yaml und passe die Werte an."
         )
-    
+
     # Lade YAML
     raw_config = load_yaml_config(config_path)
-    
+
     # Loese Platzhalter auf
     config = resolve_placeholders(raw_config)
-    
+
     # Lade Secrets
     config = load_all_secrets(config)
-    
+
     # Generiere/aktualisiere settings.json
     config_hash = compute_config_hash(config)
-    
+
     existing_hash = None
     if SETTINGS_JSON_PATH.exists():
         try:
-            with open(SETTINGS_JSON_PATH, "r", encoding="utf-8") as f:
+            with open(SETTINGS_JSON_PATH, encoding="utf-8") as f:
                 existing = json.load(f)
                 existing_hash = existing.get("_meta", {}).get("hash")
         except (json.JSONDecodeError, KeyError):
             pass
-    
+
     if existing_hash != config_hash:
         save_settings_json(config, config_hash)
         print(f"[config] settings.json aktualisiert (hash: {config_hash[:8]})")
-    
+
     return config
 
 
@@ -262,17 +268,18 @@ def load_config() -> Dict[str, Any]:
 # Helper Functions
 # =============================================================================
 
+
 def get_setting(path: str, default: Any = None) -> Any:
     """
     Holt einen verschachtelten Wert per Punkt-separiertem Pfad.
-    
+
     Args:
         path: z.B. "SERVICES.mcp_server.url"
         default: Fallback-Wert
-    
+
     Returns:
         Konfigurationswert oder default
-    
+
     Example:
         url = get_setting("SERVICES.mcp_server.url", "http://localhost:3000")
     """
@@ -291,12 +298,12 @@ def get_setting(path: str, default: Any = None) -> Any:
 def validate_config() -> tuple[bool, List[str]]:
     """
     Validiert dass essentielle Config-Werte vorhanden sind.
-    
+
     Returns:
         Tuple (valid: bool, errors: List[str])
     """
     errors: List[str] = []
-    
+
     # Pflicht-Felder pruefen
     required_paths = [
         "PATHS.root_dir",
@@ -304,21 +311,21 @@ def validate_config() -> tuple[bool, List[str]]:
         "SERVICES.mcp_server.url",
         "SERVICES.qdrant.host",
     ]
-    
+
     for path in required_paths:
         if not get_setting(path):
             errors.append(f"{path} ist nicht konfiguriert")
-    
+
     # Token-Datei pruefen
     token_file = get_setting("SOURCE_WIKI.authentication.token_file")
     if token_file and not Path(token_file).exists():
         errors.append(f"Token-Datei nicht gefunden: {token_file}")
-    
+
     # SSL Zertifikat pruefen
     cert_file = get_setting("SOURCE_WIKI.certificate")
     if cert_file and not Path(cert_file).exists():
         errors.append(f"SSL Zertifikat nicht gefunden: {cert_file}")
-    
+
     return len(errors) == 0, errors
 
 
@@ -393,35 +400,39 @@ if __name__ == "__main__":
     print("=" * 70)
     print("DEV DITO - ZENTRALE KONFIGURATION")
     print("=" * 70)
-    
+
     print(f"\n[Pfade]")
     print(f"  REPO_ROOT:     {REPO_ROOT_DIR}")
     print(f"  CONFIG_DIR:    {CONFIG_DIR_PATH}")
     print(f"  SECRETS_DIR:   {SECRETS_DIR_PATH}")
     print(f"  OUTPUT_DIR:    {OUTPUT_DIR}")
     print(f"  DATA_DIR:      {DATA_DIR}")
-    
+
     print(f"\n[Source Wiki]")
     print(f"  URL:           {SOURCE_WIKI_URL}")
     print(f"  BASE_URL:      {SOURCE_WIKI_BASE_URL}")
-    print(f"  TOKEN:         {'*****' + SOURCE_WIKI_TOKEN[-4:] if SOURCE_WIKI_TOKEN else '(nicht gesetzt)'}")
+    print(
+        f"  TOKEN:         {'*****' + SOURCE_WIKI_TOKEN[-4:] if SOURCE_WIKI_TOKEN else '(nicht gesetzt)'}"
+    )
     print(f"  CERT:          {SOURCE_WIKI_CERT}")
-    
+
     print(f"\n[Services - Externe Verbindungen]")
     print(f"  MCP Server:    {MCP_SERVER_URL} (timeout: {MCP_SERVER_TIMEOUT}s)")
     print(f"  Qdrant:        {QDRANT_HOST}:{QDRANT_PORT} (collection: {QDRANT_COLLECTION})")
     print(f"  OpenAI:        {'*****' + OPENAI_TOKEN[-4:] if OPENAI_TOKEN else '(nicht gesetzt)'}")
     print(f"  Embedding:     {EMBEDDING_MODEL} ({EMBEDDING_DIMENSIONS}d)")
-    
+
     print(f"\n[Pipeline]")
-    print(f"  Fetcher:       timeout={FETCHER_TIMEOUT}s, retries={FETCHER_MAX_RETRIES}, delay={FETCHER_DELAY}s")
+    print(
+        f"  Fetcher:       timeout={FETCHER_TIMEOUT}s, retries={FETCHER_MAX_RETRIES}, delay={FETCHER_DELAY}s"
+    )
     print(f"  Embedder:      chunk={EMBEDDER_CHUNK_SIZE}, overlap={EMBEDDER_CHUNK_OVERLAP}")
-    
+
     print(f"\n[Plugin]")
     print(f"  enabled:       {PLUGIN_ENABLED}")
     print(f"  panel:         {PLUGIN_PANEL_POSITION}")
     print(f"  search_limit:  {PLUGIN_SEARCH_LIMIT}")
-    
+
     # Validierung
     valid, errors = validate_config()
     print(f"\n[Validierung]")
@@ -431,7 +442,7 @@ if __name__ == "__main__":
         print("  [ERROR] Fehler gefunden:")
         for err in errors:
             print(f"    - {err}")
-    
+
     print("\n" + "=" * 70)
     print(f"settings.json: {SETTINGS_JSON_PATH}")
     print("=" * 70)

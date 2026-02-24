@@ -47,7 +47,9 @@ def ragas_scores() -> dict[str, float]:
 class TestReportStructure:
     """T051: Tests for report structure generation."""
 
-    def test_generate_returns_markdown_and_json_paths(self, results_dir: Path, tmp_path: Path) -> None:
+    def test_generate_returns_markdown_and_json_paths(
+        self, results_dir: Path, tmp_path: Path
+    ) -> None:
         from evaluation.reports.generator import ReportGenerator
 
         gen = ReportGenerator(output_dir=tmp_path / "report")

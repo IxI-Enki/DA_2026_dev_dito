@@ -5,7 +5,6 @@
 #
 # Jobs:
 #   lint-python    - ruff + black (Constitution Article IV)
-#   lint-php       - phpcs PSR-12 (Constitution Article IV)
 #   validate-spec  - Spec Kit spec/plan/tasks existence
 #   test-python    - pytest unit + smoke tests (Constitution Article III)
 #   docker-validate - docker-compose.yml syntax validation
@@ -56,26 +55,6 @@ jobs:
 
       - name: Run black (check mode)
         run: black --check --diff .
-
-  # ===========================================================================
-  # PHP Linting (phpcs PSR-12)
-  # ===========================================================================
-  lint-php:
-    name: Lint PHP
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.2"
-          tools: phpcs
-
-      - name: Run phpcs
-        run: phpcs --standard=PSR12 --extensions=php dokuwiki_plugin/
-        continue-on-error: true  # Non-blocking until full PSR-12 compliance
 
   # ===========================================================================
   # Spec Kit Validation

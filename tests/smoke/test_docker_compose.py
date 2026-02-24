@@ -11,14 +11,14 @@ Tests:
 - Required services are defined
 - Network configuration is correct
 """
+
 import re
 from pathlib import Path
 
 import pytest
 import yaml
 
-from tests.conftest import BACKEND_SERVICES_DIR, REPO_ROOT
-
+from tests.conftest import BACKEND_SERVICES_DIR
 
 # =============================================================================
 # Test: docker-compose.yml Syntax
@@ -47,9 +47,9 @@ class TestDockerComposeSyntax:
         assert "services" in compose_data, "docker-compose.yml must have 'services' key"
 
     def test_compose_has_project_name(self, compose_data: dict) -> None:
-        assert compose_data.get("name") == "stack-g-devdito", (
-            "docker-compose.yml must have 'name: stack-g-devdito'"
-        )
+        assert (
+            compose_data.get("name") == "stack-g-devdito"
+        ), "docker-compose.yml must have 'name: stack-g-devdito'"
 
     def test_compose_has_networks(self, compose_data: dict) -> None:
         assert "networks" in compose_data, "docker-compose.yml must define networks"
@@ -99,8 +99,8 @@ class TestDockerfileReferences:
             if not dockerfile_path.exists():
                 missing.append(f"{svc_name}: {dockerfile_path}")
 
-        assert not missing, (
-            f"Missing Dockerfiles for services:\n" + "\n".join(f"  - {m}" for m in missing)
+        assert not missing, f"Missing Dockerfiles for services:\n" + "\n".join(
+            f"  - {m}" for m in missing
         )
 
 
@@ -125,24 +125,24 @@ class TestNoHardcodedSecrets:
         for pattern in self.SECRET_PATTERNS:
             matches = re.findall(pattern, content)
             for match in matches:
-                findings.append(f"{file_path.name}: matched pattern '{pattern}' -> '{match[:20]}...'")
+                findings.append(
+                    f"{file_path.name}: matched pattern '{pattern}' -> '{match[:20]}...'"
+                )
         return findings
 
     def test_no_secrets_in_compose(self) -> None:
         compose_path = BACKEND_SERVICES_DIR / "docker-compose.yml"
         findings = self._scan_file_for_secrets(compose_path)
-        assert not findings, (
-            f"Possible secrets found in docker-compose.yml:\n"
-            + "\n".join(f"  - {f}" for f in findings)
+        assert not findings, f"Possible secrets found in docker-compose.yml:\n" + "\n".join(
+            f"  - {f}" for f in findings
         )
 
     def test_no_secrets_in_dockerfiles(self) -> None:
         findings = []
         for dockerfile in BACKEND_SERVICES_DIR.rglob("Dockerfile"):
             findings.extend(self._scan_file_for_secrets(dockerfile))
-        assert not findings, (
-            f"Possible secrets found in Dockerfiles:\n"
-            + "\n".join(f"  - {f}" for f in findings)
+        assert not findings, f"Possible secrets found in Dockerfiles:\n" + "\n".join(
+            f"  - {f}" for f in findings
         )
 
 
@@ -178,7 +178,6 @@ class TestRequiredServices:
                 continue
             if "container_name" not in svc_config:
                 missing_names.append(svc_name)
-        assert not missing_names, (
-            f"Services without container_name:\n"
-            + "\n".join(f"  - {s}" for s in missing_names)
+        assert not missing_names, f"Services without container_name:\n" + "\n".join(
+            f"  - {s}" for s in missing_names
         )

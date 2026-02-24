@@ -231,17 +231,34 @@ class MediaProcessor:
 
         # Pattern A: 1-2 ALL uppercase + space + lowercase continuation (>= 3 chars)
         text = re.compile(
-            r"\b([A-Z\u00C4\u00D6\u00DC]{1,2})\s+"
-            r"([a-z\u00E4\u00F6\u00FC\u00DF]\w{2,})\b",
+            r"\b([A-Z\u00C4\u00D6\u00DC]{1,2})\s+" r"([a-z\u00E4\u00F6\u00FC\u00DF]\w{2,})\b",
             re.UNICODE,
         ).sub(r"\1\2", text)
 
         # Pattern B: 1 uppercase + 1 lowercase + space + lowercase cont. (>= 5 chars)
         # Exclude common 2-letter German words (Da, Er, Es, Im, In, So, Um, Zu, ...)
-        _COMMON_2 = frozenset([
-            "ab", "am", "an", "da", "du", "er", "es", "im", "in",
-            "ja", "je", "na", "ob", "oh", "so", "um", "wo", "zu",
-        ])
+        _COMMON_2 = frozenset(
+            [
+                "ab",
+                "am",
+                "an",
+                "da",
+                "du",
+                "er",
+                "es",
+                "im",
+                "in",
+                "ja",
+                "je",
+                "na",
+                "ob",
+                "oh",
+                "so",
+                "um",
+                "wo",
+                "zu",
+            ]
+        )
 
         def _pattern_b_replace(m: re.Match[str]) -> str:
             frag = m.group(1)
@@ -482,8 +499,9 @@ class MediaProcessor:
             parts = []
             for page_num in range(len(doc)):
                 pix = doc[page_num].get_pixmap(dpi=300)
-                from PIL import Image
                 import io
+
+                from PIL import Image
 
                 img = Image.open(io.BytesIO(pix.tobytes("png")))
                 parts.append(self._ocr_image_obj(img))

@@ -16,9 +16,8 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-import yaml
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 # Ensure package is importable
 _here = Path(__file__).resolve().parent
@@ -31,22 +30,22 @@ if str(_here) not in sys.path:
 if str(_pipeline_root / "shared") not in sys.path:
     sys.path.insert(0, str(_pipeline_root / "shared"))
 
-from config import get_config, get_latest_fetch_dir
 from cli_utils import enable_windows_ansi, print_help_banner, set_use_color
+from evaluation.report import generate_report
+
+from config import get_config, get_latest_fetch_dir
 from evaluation.metrics import (
     DocumentScore,
     SemanticSimilarityMetric,
-    evaluate_document,
     check_regression,
+    evaluate_document,
     passes_thresholds,
-    REGRESSION_THRESHOLD,
 )
-from evaluation.report import generate_report
 
 logger = logging.getLogger(__name__)
 
 
-def _find_latest_preprocessed(base: Path) -> Optional[Path]:
+def _find_latest_preprocessed(base: Path) -> Path | None:
     """Find the latest preprocessed_at_* directory."""
     if not base.exists():
         return None
@@ -85,11 +84,13 @@ def _pair_documents(
 
         if processed_file.exists():
             page_id = stem.replace("_", ":")
-            pairs.append({
-                "doc_id": page_id,
-                "original_path": original_file,
-                "processed_path": processed_file,
-            })
+            pairs.append(
+                {
+                    "doc_id": page_id,
+                    "original_path": original_file,
+                    "processed_path": processed_file,
+                }
+            )
 
     logger.info("Paired %d documents for evaluation", len(pairs))
     return pairs
@@ -108,7 +109,7 @@ def _extract_body(md_path: Path) -> str:
 def run_evaluation(
     fetched_dir: Path,
     preprocessed_dir: Path,
-    output_dir: Optional[Path] = None,
+    output_dir: Path | None = None,
     *,
     use_embeddings: bool = False,
 ) -> list[DocumentScore]:
@@ -205,16 +206,30 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Preprocessing Evaluation -- 7-Metrik-Suite",
     )
-    parser.add_argument("--fetched-dir", type=Path, default=None,
-                        help="Fetched data directory (auto-detect if omitted)")
-    parser.add_argument("--preprocessed-dir", type=Path, default=None,
-                        help="Preprocessed output directory (auto-detect if omitted)")
-    parser.add_argument("--output-dir", type=Path, default=None,
-                        help="Report output directory (defaults to preprocessed dir)")
-    parser.add_argument("--config", type=Path, default=None,
-                        help="Config file (env.yaml)")
-    parser.add_argument("--use-embeddings", action="store_true",
-                        help="Use sentence-transformers for semantic similarity (slower)")
+    parser.add_argument(
+        "--fetched-dir",
+        type=Path,
+        default=None,
+        help="Fetched data directory (auto-detect if omitted)",
+    )
+    parser.add_argument(
+        "--preprocessed-dir",
+        type=Path,
+        default=None,
+        help="Preprocessed output directory (auto-detect if omitted)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Report output directory (defaults to preprocessed dir)",
+    )
+    parser.add_argument("--config", type=Path, default=None, help="Config file (env.yaml)")
+    parser.add_argument(
+        "--use-embeddings",
+        action="store_true",
+        help="Use sentence-transformers for semantic similarity (slower)",
+    )
     args = parser.parse_args()
 
     cfg = get_config(args.config)

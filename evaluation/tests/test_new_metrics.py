@@ -7,13 +7,12 @@ from __future__ import annotations
 
 import pytest
 
-from evaluation.metrics.recall_at_k import recall_at_k, mean_recall_at_k
+from evaluation.metrics.hit_rate import hit_at_k, hit_rate
 from evaluation.metrics.mean_average_precision import (
     average_precision,
     mean_average_precision,
 )
-from evaluation.metrics.hit_rate import hit_at_k, hit_rate
-
+from evaluation.metrics.recall_at_k import mean_recall_at_k, recall_at_k
 
 # ---- Recall@K ----------------------------------------------------------------
 
@@ -45,9 +44,9 @@ class TestRecallAtK:
 class TestMeanRecallAtK:
     def test_basic_mean_recall(self) -> None:
         queries = [
-            (["a", "b", "c"], {"a", "b"}),   # 2/2 = 1.0
-            (["x", "a", "b"], {"a", "b"}),   # 2/2 = 1.0
-            (["x", "y", "z"], {"a", "b"}),   # 0/2 = 0.0
+            (["a", "b", "c"], {"a", "b"}),  # 2/2 = 1.0
+            (["x", "a", "b"], {"a", "b"}),  # 2/2 = 1.0
+            (["x", "y", "z"], {"a", "b"}),  # 0/2 = 0.0
         ]
         assert mean_recall_at_k(queries, k=3) == pytest.approx(2 / 3)
 
@@ -80,8 +79,8 @@ class TestAveragePrecision:
 class TestMeanAveragePrecision:
     def test_basic_map(self) -> None:
         queries = [
-            (["a", "b"], {"a", "b"}),   # AP = 1.0
-            (["x", "a"], {"a"}),       # AP = 0.5
+            (["a", "b"], {"a", "b"}),  # AP = 1.0
+            (["x", "a"], {"a"}),  # AP = 0.5
         ]
         assert mean_average_precision(queries) == pytest.approx(0.75)
 

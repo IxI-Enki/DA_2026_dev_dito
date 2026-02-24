@@ -7,24 +7,21 @@ from __future__ import annotations
 
 import re
 
-import pytest
-
-
 # DokuWiki-specific syntax patterns that should NOT survive conversion
 _WIKI_PATTERNS = [
-    r"={2,6}\s+.+\s+={2,6}",          # Headings: ====== H1 ======
-    r"(?<!/)//.+?//(?!/)",              # Italic: //text//
-    r"\[\[[^\]]+\]\]",                  # Links: [[page|text]]
-    r"\{\{[^}]+\}\}",                   # Media: {{image.png}}
-    r"^\s{2,}\*\s",                     # Unordered list: "  * item" (wiki uses *)
+    r"={2,6}\s+.+\s+={2,6}",  # Headings: ====== H1 ======
+    r"(?<!/)//.+?//(?!/)",  # Italic: //text//
+    r"\[\[[^\]]+\]\]",  # Links: [[page|text]]
+    r"\{\{[^}]+\}\}",  # Media: {{image.png}}
+    r"^\s{2,}\*\s",  # Unordered list: "  * item" (wiki uses *)
     # Note: "  - item" is NOT checked because markdown nested unordered
     # lists also use "  - item" (valid markdown).
-    r"<code[^>]*>",                     # Code block open
-    r"</code>",                         # Code block close
-    r"~~NOTOC~~",                       # DokuWiki directive
-    r"~~NOCACHE~~",                     # DokuWiki directive
-    r"<del>.+?</del>",                  # Strikethrough (should be ~~text~~)
-    r"\^\s.+?\s\^",                     # Table header ^ Cell ^
+    r"<code[^>]*>",  # Code block open
+    r"</code>",  # Code block close
+    r"~~NOTOC~~",  # DokuWiki directive
+    r"~~NOCACHE~~",  # DokuWiki directive
+    r"<del>.+?</del>",  # Strikethrough (should be ~~text~~)
+    r"\^\s.+?\s\^",  # Table header ^ Cell ^
 ]
 
 

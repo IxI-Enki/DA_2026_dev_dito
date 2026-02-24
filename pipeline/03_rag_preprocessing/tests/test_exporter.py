@@ -99,9 +99,7 @@ class TestExporterExport:
         md_files = list(pages_dir.glob("*.md"))
         assert len(md_files) == len(sample_pages)
 
-    def test_export_creates_media_subdir(
-        self, sample_media: list[dict], tmp_path: Path
-    ) -> None:
+    def test_export_creates_media_subdir(self, sample_media: list[dict], tmp_path: Path) -> None:
         from exporter import Exporter
 
         exp = Exporter()
@@ -157,21 +155,27 @@ class TestPageFrontmatter:
         parts = content.split("---\n", 2)
         return yaml.safe_load(parts[1])
 
-    def test_page_has_all_required_fields(
-        self, sample_pages: list[dict], tmp_path: Path
-    ) -> None:
+    def test_page_has_all_required_fields(self, sample_pages: list[dict], tmp_path: Path) -> None:
         fm = self._get_frontmatter(sample_pages, tmp_path)
         required = {
-            "title", "namespace", "source", "page_id", "access_level",
-            "content_type", "freshness_score", "freshness_category",
-            "chunking_method", "last_modified", "author", "content_hash",
-            "links_to", "linked_from",
+            "title",
+            "namespace",
+            "source",
+            "page_id",
+            "access_level",
+            "content_type",
+            "freshness_score",
+            "freshness_category",
+            "chunking_method",
+            "last_modified",
+            "author",
+            "content_hash",
+            "links_to",
+            "linked_from",
         }
         assert required.issubset(set(fm.keys())), f"Missing: {required - set(fm.keys())}"
 
-    def test_content_hash_is_md5_of_body(
-        self, sample_pages: list[dict], tmp_path: Path
-    ) -> None:
+    def test_content_hash_is_md5_of_body(self, sample_pages: list[dict], tmp_path: Path) -> None:
         from exporter import Exporter
 
         exp = Exporter()
@@ -186,21 +190,15 @@ class TestPageFrontmatter:
         assert fm["content_hash"] == expected
         assert len(fm["content_hash"]) == 32
 
-    def test_freshness_score_is_float(
-        self, sample_pages: list[dict], tmp_path: Path
-    ) -> None:
+    def test_freshness_score_is_float(self, sample_pages: list[dict], tmp_path: Path) -> None:
         fm = self._get_frontmatter(sample_pages, tmp_path)
         assert isinstance(fm["freshness_score"], float)
 
-    def test_links_to_is_list(
-        self, sample_pages: list[dict], tmp_path: Path
-    ) -> None:
+    def test_links_to_is_list(self, sample_pages: list[dict], tmp_path: Path) -> None:
         fm = self._get_frontmatter(sample_pages, tmp_path)
         assert isinstance(fm["links_to"], list)
 
-    def test_linked_from_is_list(
-        self, sample_pages: list[dict], tmp_path: Path
-    ) -> None:
+    def test_linked_from_is_list(self, sample_pages: list[dict], tmp_path: Path) -> None:
         fm = self._get_frontmatter(sample_pages, tmp_path)
         assert isinstance(fm["linked_from"], list)
 
@@ -218,21 +216,27 @@ class TestMediaFrontmatter:
         parts = content.split("---\n", 2)
         return yaml.safe_load(parts[1])
 
-    def test_media_uses_media_id(
-        self, sample_media: list[dict], tmp_path: Path
-    ) -> None:
+    def test_media_uses_media_id(self, sample_media: list[dict], tmp_path: Path) -> None:
         fm = self._get_frontmatter(sample_media, tmp_path)
         assert "media_id" in fm
         assert "page_id" not in fm
 
-    def test_media_has_all_required_fields(
-        self, sample_media: list[dict], tmp_path: Path
-    ) -> None:
+    def test_media_has_all_required_fields(self, sample_media: list[dict], tmp_path: Path) -> None:
         fm = self._get_frontmatter(sample_media, tmp_path)
         required = {
-            "title", "namespace", "source", "media_id", "access_level",
-            "content_type", "freshness_score", "freshness_category",
-            "chunking_method", "last_modified", "author", "content_hash",
-            "links_to", "linked_from",
+            "title",
+            "namespace",
+            "source",
+            "media_id",
+            "access_level",
+            "content_type",
+            "freshness_score",
+            "freshness_category",
+            "chunking_method",
+            "last_modified",
+            "author",
+            "content_hash",
+            "links_to",
+            "linked_from",
         }
         assert required.issubset(set(fm.keys())), f"Missing: {required - set(fm.keys())}"

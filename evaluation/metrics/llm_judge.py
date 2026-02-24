@@ -13,11 +13,11 @@ Uses any OpenAI-compatible LLM endpoint (LM Studio, Ollama, OpenAI API).
 from __future__ import annotations
 
 import json
+import logging
 import re
 import time
-import logging
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import requests
 
@@ -29,12 +29,12 @@ class LLMJudgeResult:
     """Result of LLM-as-Judge evaluation for a single question."""
 
     question_id: str
-    faithfulness: Optional[float] = None
-    answer_relevancy: Optional[float] = None
-    context_precision: Optional[float] = None
-    context_recall: Optional[float] = None
-    answer_correctness: Optional[float] = None
-    error: Optional[str] = None
+    faithfulness: float | None = None
+    answer_relevancy: float | None = None
+    context_precision: float | None = None
+    context_recall: float | None = None
+    answer_correctness: float | None = None
+    error: str | None = None
 
 
 class LLMJudgeMetrics:
@@ -88,7 +88,9 @@ class LLMJudgeMetrics:
                 if r.status_code != 200:
                     logger.warning(
                         "LLM HTTP %d (attempt %d): %s",
-                        r.status_code, attempt + 1, r.text[:200],
+                        r.status_code,
+                        attempt + 1,
+                        r.text[:200],
                     )
                     if attempt < max_retries:
                         time.sleep(1)
@@ -113,7 +115,7 @@ class LLMJudgeMetrics:
                 return f"ERROR: {e}"
         return "ERROR: All retries failed"
 
-    def _parse_score(self, response: str) -> Optional[float]:
+    def _parse_score(self, response: str) -> float | None:
         """Extract a score in [0, 1] from LLM response."""
         if response.startswith("ERROR"):
             logger.debug("LLM error response: %s", response[:100])
@@ -132,7 +134,7 @@ class LLMJudgeMetrics:
             if m:
                 return self._normalize_score(float(m.group(1)))
             # Last resort: any standalone number
-            m = re.search(r'\b([01]\.?\d*)\b', response)
+            m = re.search(r"\b([01]\.?\d*)\b", response)
             if m:
                 return self._normalize_score(float(m.group(1)))
             return None
@@ -141,7 +143,7 @@ class LLMJudgeMetrics:
             return None
 
     @staticmethod
-    def _normalize_score(val: float) -> Optional[float]:
+    def _normalize_score(val: float) -> float | None:
         if val < 0:
             return None
         if 0 <= val <= 1:
@@ -196,7 +198,7 @@ class LLMJudgeMetrics:
         )
         return self._call_llm_generate(prompt)
 
-    def _faithfulness(self, answer: str, contexts: list[str]) -> Optional[float]:
+    def _faithfulness(self, answer: str, contexts: list[str]) -> float | None:
         if not contexts or not answer:
             return None
         context_text = "\n---\n".join(c[:800] for c in contexts[:5])
@@ -208,7 +210,7 @@ class LLMJudgeMetrics:
         )
         return self._parse_score(self._call_llm(prompt))
 
-    def _answer_relevancy(self, question: str, answer: str) -> Optional[float]:
+    def _answer_relevancy(self, question: str, answer: str) -> float | None:
         if not answer:
             return None
         prompt = (
@@ -221,12 +223,10 @@ class LLMJudgeMetrics:
 
     def _context_precision(
         self, question: str, contexts: list[str], ground_truth: str
-    ) -> Optional[float]:
+    ) -> float | None:
         if not contexts:
             return 0.0
-        numbered = "\n".join(
-            f"[{i+1}] {c[:600]}" for i, c in enumerate(contexts[:5])
-        )
+        numbered = "\n".join(f"[{i+1}] {c[:600]}" for i, c in enumerate(contexts[:5]))
         prompt = (
             f"Rate CONTEXT PRECISION: What fraction of retrieved contexts are relevant?\n\n"
             f"QUESTION: {question}\n"
@@ -236,7 +236,7 @@ class LLMJudgeMetrics:
         )
         return self._parse_score(self._call_llm(prompt))
 
-    def _context_recall(self, contexts: list[str], ground_truth: str) -> Optional[float]:
+    def _context_recall(self, contexts: list[str], ground_truth: str) -> float | None:
         if not contexts:
             return 0.0
         context_text = "\n---\n".join(c[:600] for c in contexts[:5])
@@ -249,7 +249,7 @@ class LLMJudgeMetrics:
         )
         return self._parse_score(self._call_llm(prompt))
 
-    def _answer_correctness(self, answer: str, ground_truth: str) -> Optional[float]:
+    def _answer_correctness(self, answer: str, ground_truth: str) -> float | None:
         if not answer or answer == ground_truth:
             return None
         prompt = (
@@ -276,9 +276,7 @@ class LLMJudgeMetrics:
             result.context_precision = self._context_precision(
                 question, contexts or [], ground_truth
             )
-            result.context_recall = self._context_recall(
-                contexts or [], ground_truth
-            )
+            result.context_recall = self._context_recall(contexts or [], ground_truth)
             result.answer_correctness = self._answer_correctness(answer, ground_truth)
         except Exception as e:
             result.error = str(e)
@@ -293,6 +291,7 @@ class LLMJudgeMetrics:
         """Evaluate a list of items. Each item: question_id?, question, answer, contexts, ground_truth."""
         try:
             from tqdm import tqdm
+
             iterator = tqdm(data, desc="LLM-as-Judge") if show_progress else data
         except ImportError:
             iterator = data
@@ -311,10 +310,21 @@ class LLMJudgeMetrics:
     def aggregate(self, results: list[LLMJudgeResult]) -> dict[str, float]:
         """Return mean score per metric (for pipeline compatibility)."""
         out: dict[str, float] = {}
-        for key in ("faithfulness", "answer_relevancy", "context_precision", "context_recall", "answer_correctness"):
+        for key in (
+            "faithfulness",
+            "answer_relevancy",
+            "context_precision",
+            "context_recall",
+            "answer_correctness",
+        ):
             vals = [getattr(r, key) for r in results if getattr(r, key) is not None]
             out[key] = float(sum(vals) / len(vals)) if vals else 0.0
-        valid = [out["faithfulness"], out["answer_relevancy"], out["context_precision"], out["context_recall"]]
+        valid = [
+            out["faithfulness"],
+            out["answer_relevancy"],
+            out["context_precision"],
+            out["context_recall"],
+        ]
         valid = [v for v in valid if v > 0]
         out["ragas_score"] = len(valid) / sum(1 / v for v in valid) if valid else 0.0
         return out

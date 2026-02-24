@@ -44,7 +44,7 @@ import os
 import re
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -127,6 +127,7 @@ def _build_user_prompt(
 # Frontmatter and text helpers
 # ---------------------------------------------------------------------------
 
+
 def _parse_frontmatter(content: str) -> tuple[dict, str]:
     """Split YAML frontmatter and body. Returns (frontmatter_dict, body)."""
     if not content.strip().startswith("---"):
@@ -174,7 +175,12 @@ def _title_from_body(body: str) -> str:
         line = line.strip()
         if line.startswith("# "):
             return line[2:].strip()
-        if line and not line.startswith("|") and not line.startswith("-") and not line.startswith("<!--"):
+        if (
+            line
+            and not line.startswith("|")
+            and not line.startswith("-")
+            and not line.startswith("<!--")
+        ):
             return line[:80].strip() if len(line) > 80 else line
     return "Dokument"
 
@@ -203,6 +209,7 @@ def _is_teacher_namespace(namespace: str) -> bool:
 # ---------------------------------------------------------------------------
 # LLM interaction
 # ---------------------------------------------------------------------------
+
 
 def _create_llm_client(base_url: str | None) -> Any:
     """Create an OpenAI client (works with OpenAI, Ollama, LM Studio)."""
@@ -295,7 +302,7 @@ def _validate_qa(frage: str, antwort: str, suchbegriffe: list, body: str) -> str
     """Validate a generated Q&A pair. Returns error message or None if valid."""
     if not frage or not isinstance(frage, str):
         return "frage is empty or not a string"
-    frage_clean = frage.strip().strip('"\'').strip()
+    frage_clean = frage.strip().strip("\"'").strip()
     if len(frage_clean) < 15:
         return f"frage too short ({len(frage_clean)} chars)"
     if len(frage_clean) > 200:
@@ -312,10 +319,7 @@ def _validate_qa(frage: str, antwort: str, suchbegriffe: list, body: str) -> str
         return "antwort is empty or too short"
 
     body_lower = body.lower()
-    antwort_words = set(
-        w for w in re.findall(r'\b\w+\b', antwort.lower())
-        if len(w) > 4
-    )
+    antwort_words = set(w for w in re.findall(r"\b\w+\b", antwort.lower()) if len(w) > 4)
     overlap = sum(1 for w in antwort_words if w in body_lower)
     if overlap < 2 and len(antwort_words) >= 2:
         return f"antwort shares only {overlap} significant words with document"
@@ -343,6 +347,7 @@ def _template_answer(body: str) -> str:
 # ---------------------------------------------------------------------------
 # Main Q&A builder
 # ---------------------------------------------------------------------------
+
 
 def build_qa_pairs(
     corpus_dir: Path,
@@ -376,15 +381,17 @@ def build_qa_pairs(
             continue
         page_id = _page_id_from_frontmatter(fm, path.name)
         namespace = _namespace_from_doc(fm, page_id)
-        docs.append({
-            "path": path,
-            "fm": fm,
-            "body": body,
-            "page_id": page_id,
-            "namespace": namespace,
-            "title": fm.get("title") or _title_from_body(body),
-            "content_type": fm.get("content_type", "UNKNOWN"),
-        })
+        docs.append(
+            {
+                "path": path,
+                "fm": fm,
+                "body": body,
+                "page_id": page_id,
+                "namespace": namespace,
+                "title": fm.get("title") or _title_from_body(body),
+                "content_type": fm.get("content_type", "UNKNOWN"),
+            }
+        )
 
     if skipped:
         logger.info("Skipped %d documents with <%d chars body text", skipped, MIN_BODY_CHARS)
@@ -434,7 +441,7 @@ def build_qa_pairs(
             parsed = _parse_llm_json(raw)
 
             if parsed:
-                frage = parsed.get("frage", "").strip().strip('"\'')
+                frage = parsed.get("frage", "").strip().strip("\"'")
                 antwort = parsed.get("antwort", "").strip()
                 suchbegriffe = parsed.get("suchbegriffe", [])
                 if not isinstance(suchbegriffe, list):
@@ -447,12 +454,21 @@ def build_qa_pairs(
                     keywords = [str(s) for s in suchbegriffe[:5]]
                     llm_success += 1
                 else:
-                    logger.warning("[VALIDATION FAILED] %s: %s (raw frage: %s)", path.name, err, frage[:60] if frage else "N/A")
+                    logger.warning(
+                        "[VALIDATION FAILED] %s: %s (raw frage: %s)",
+                        path.name,
+                        err,
+                        frage[:60] if frage else "N/A",
+                    )
                     question = _template_question(doc["title"], doc["namespace"])
                     answer = _template_answer(doc["body"])
                     llm_fallback += 1
             else:
-                logger.warning("[PARSE FAILED] %s: could not parse LLM JSON (raw: %s)", path.name, (raw or "")[:80])
+                logger.warning(
+                    "[PARSE FAILED] %s: could not parse LLM JSON (raw: %s)",
+                    path.name,
+                    (raw or "")[:80],
+                )
                 question = _template_question(doc["title"], doc["namespace"])
                 answer = _template_answer(doc["body"])
                 llm_fallback += 1
@@ -463,16 +479,18 @@ def build_qa_pairs(
             question = _template_question(doc["title"], doc["namespace"])
             answer = _template_answer(doc["body"])
 
-        qa_pairs.append({
-            "id": f"tc-{i + 1:03d}",
-            "question": question,
-            "ground_truth": answer,
-            "sources": [doc["page_id"]],
-            "source_file": path.name,
-            "perspective": perspective,
-            "context_keywords": keywords,
-            "difficulty": difficulty,
-        })
+        qa_pairs.append(
+            {
+                "id": f"tc-{i + 1:03d}",
+                "question": question,
+                "ground_truth": answer,
+                "sources": [doc["page_id"]],
+                "source_file": path.name,
+                "perspective": perspective,
+                "context_keywords": keywords,
+                "difficulty": difficulty,
+            }
+        )
 
     if llm_kwargs:
         logger.info("LLM results: %d success, %d fallback to template", llm_success, llm_fallback)
@@ -484,36 +502,50 @@ def build_qa_pairs(
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Generate ground-truth Q&A JSON from test_corpus for retrieval metrics"
     )
     parser.add_argument(
-        "--corpus", type=Path, default=DEFAULT_CORPUS,
+        "--corpus",
+        type=Path,
+        default=DEFAULT_CORPUS,
         help="Directory containing preprocessed .md files (default: evaluation/test_corpus)",
     )
     parser.add_argument(
-        "--output", type=Path, default=DEFAULT_OUTPUT,
+        "--output",
+        type=Path,
+        default=DEFAULT_OUTPUT,
         help="Output JSON path (default: evaluation/ground_truth/test_corpus_qa.json)",
     )
     parser.add_argument(
-        "--max-questions", type=int, default=DEFAULT_MAX_QUESTIONS,
+        "--max-questions",
+        type=int,
+        default=DEFAULT_MAX_QUESTIONS,
         help="Max Q&A pairs (0 = all usable docs). Randomly samples if corpus has more.",
     )
     parser.add_argument(
-        "--seed", type=int, default=20260217,
+        "--seed",
+        type=int,
+        default=20260217,
         help="Random seed for sampling with --max-questions",
     )
     parser.add_argument(
-        "--llm", action="store_true",
+        "--llm",
+        action="store_true",
         help="Use LLM for question+answer generation (requires --llm-base-url or OPENAI_API_KEY)",
     )
     parser.add_argument(
-        "--llm-model", type=str, default=None,
+        "--llm-model",
+        type=str,
+        default=None,
         help="Model name (e.g. qwen2.5-7b-instruct for LM Studio, gpt-4o-mini for OpenAI)",
     )
     parser.add_argument(
-        "--llm-base-url", type=str, default=None,
+        "--llm-base-url",
+        type=str,
+        default=None,
         help="OpenAI-compatible API URL (e.g. http://localhost:1234/v1 for LM Studio)",
     )
     args = parser.parse_args()
@@ -553,7 +585,7 @@ def main() -> int:
     )
     payload = {
         "metadata": {
-            "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "created_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "version": "2.0",
             "description": (
                 "Ground-truth Q&A from evaluation/test_corpus for retrieval metrics "

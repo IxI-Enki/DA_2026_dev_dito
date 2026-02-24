@@ -63,6 +63,7 @@ def main() -> int:
     if preprocessed_dir is None:
         try:
             from config import get_config
+
             cfg = get_config()
             base = Path(cfg.output_dir)
         except Exception:
@@ -109,7 +110,9 @@ def main() -> int:
         print(f"\n--- {m.relative_to(preprocessed_dir)} ---")
         print(_read_frontmatter_summary(m))
 
-    print("\n[OK] Spot-check list printed. Review for linked_from, namespace, links_to, chunking_method.")
+    print(
+        "\n[OK] Spot-check list printed. Review for linked_from, namespace, links_to, chunking_method."
+    )
     return 0
 
 

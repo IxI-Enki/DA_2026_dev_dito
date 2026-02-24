@@ -1,33 +1,35 @@
-"""
-Shared deploy configuration for 05_deploy scripts.
-Loads config.yaml (same dir); used by transfer_to_pi.py and verify_transfer.py.
+"""Shared deploy configuration for 05_deploy scripts.
+
+Loads config.yaml (same dir); used by transfer_to_pi.py, verify_transfer.py,
+and deploy_qdrant.py.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional
 
 try:
     import yaml
 except ImportError:
-    yaml = None
+    yaml = None  # type: ignore[assignment]
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 CONFIG_FILE = SCRIPT_DIR / "config.yaml"
 
 # Fallback when config.yaml is missing
-DEFAULT_CONFIG = {
-    "ssh_host": "raspberry-pi.local",
-    "ssh_user": "pi",
+DEFAULT_CONFIG: dict[str, str | int] = {
+    "ssh_host": "raspi-docker",
+    "ssh_user": "imreo",
     "ssh_port": 22,
-    "remote_embeddings_dir": "/home/pi/qdrant/data/embeddings/",
-    "remote_embeddings_file": "/home/pi/qdrant/data/embeddings/embedded_chunks.jsonl",
+    "remote_embeddings_dir": "~/mcp-diploma-thesis-final/data/incoming/",
+    "remote_embeddings_file": "~/mcp-diploma-thesis-final/data/incoming/embedded_chunks.jsonl",
     "qdrant_host": "localhost",
     "qdrant_port": 6333,
     "collection_name": "wiki_embeddings",
 }
 
 
-def load_config() -> Optional[dict]:
+def load_config() -> dict | None:
     """Load config.yaml from script directory. Returns None if missing or invalid."""
     if not yaml or not CONFIG_FILE.exists():
         return None
@@ -59,9 +61,9 @@ def get_defaults() -> dict:
     return out
 
 
-def find_latest_embeddings_file(base_dir: Path) -> Optional[Path]:
-    """
-    Find embedded_chunks.jsonl in the latest embedded_at_YYYYMMDD_HHMMSS directory.
+def find_latest_embeddings_file(base_dir: Path) -> Path | None:
+    """Find embedded_chunks.jsonl in the latest embedded_at_YYYYMMDD_HHMMSS directory.
+
     Returns path to file or None if none found.
     """
     if not base_dir.is_dir():

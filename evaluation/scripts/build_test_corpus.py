@@ -179,9 +179,7 @@ def stratified_sample(
 
     # Sample pages
     if by_source["pages"] and target_pages > 0:
-        chosen.extend(
-            sample_from_pool(by_source["pages"], target_pages, prefer_diverse=True)
-        )
+        chosen.extend(sample_from_pool(by_source["pages"], target_pages, prefer_diverse=True))
 
     # Sample media (diverse namespaces and extensions)
     if by_source["media"] and target_media > 0:
@@ -194,7 +192,7 @@ def stratified_sample(
         rng.shuffle(strata)
         selected = set()
         # Take one per stratum until we have enough or run out
-        for (ns, ext) in strata:
+        for ns, ext in strata:
             if len(selected) >= target_media:
                 break
             pool = by_ns_ext[(ns, ext)]
@@ -234,7 +232,7 @@ def main() -> int:
         "--target",
         type=int,
         default=DEFAULT_TARGET,
-        help="Target number of files to copy (default %s)" % DEFAULT_TARGET,
+        help=f"Target number of files to copy (default {DEFAULT_TARGET})",
     )
     parser.add_argument(
         "--seed",
@@ -268,10 +266,12 @@ def main() -> int:
         logger.error("No files found in %s or %s", pages_dir, media_dir)
         return 1
 
-    logger.info("Collected %d files (pages: %d, media: %d)",
-                len(files),
-                sum(1 for _, s, _, _ in files if s == "pages"),
-                sum(1 for _, s, _, _ in files if s == "media"))
+    logger.info(
+        "Collected %d files (pages: %d, media: %d)",
+        len(files),
+        sum(1 for _, s, _, _ in files if s == "pages"),
+        sum(1 for _, s, _, _ in files if s == "media"),
+    )
 
     # Mandatory: always-include pages (e.g. current Termine)
     mandatory_paths: list[Path] = []
@@ -286,7 +286,7 @@ def main() -> int:
     # Exclude archive namespace, images (unless --include-images), and mandatory paths
     n_images_skipped = 0
     pool: list[tuple[Path, str, str, str]] = []
-    for (path, source, ns, ext) in files:
+    for path, source, ns, ext in files:
         if ns == EXCLUDE_NAMESPACE:
             continue
         if path in mandatory_paths:
@@ -311,12 +311,16 @@ def main() -> int:
     selected = list(mandatory_paths) + list(sampled)
     rng = random.Random(args.seed)
     rng.shuffle(selected)
-    logger.info("Selected %d files for test corpus (%d mandatory + %d sampled)",
-                len(selected), len(mandatory_paths), len(sampled))
+    logger.info(
+        "Selected %d files for test corpus (%d mandatory + %d sampled)",
+        len(selected),
+        len(mandatory_paths),
+        len(sampled),
+    )
 
     if args.dry_run:
         for p in selected:
-            rel = p.relative_to(preprocessed) if preprocessed in p.parents else p.name
+            p.relative_to(preprocessed) if preprocessed in p.parents else p.name
             logger.info("  [DRY-RUN] %s -> %s", p, out_dir / p.name)
         return 0
 

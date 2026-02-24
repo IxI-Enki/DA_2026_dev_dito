@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import matplotlib
+
 matplotlib.use("Agg")  # non-interactive backend; must be before pyplot import
 
 import matplotlib.pyplot as plt
@@ -29,17 +30,19 @@ def _apply_style() -> None:
     if _STYLE_APPLIED:
         return
     sns.set_theme(style="whitegrid", font="serif")
-    plt.rcParams.update({
-        "axes.labelsize": 12,
-        "axes.titlesize": 14,
-        "xtick.labelsize": 10,
-        "ytick.labelsize": 10,
-        "legend.fontsize": 10,
-        "figure.titlesize": 16,
-        "figure.dpi": 300,
-        "savefig.bbox": "tight",
-        "savefig.pad_inches": 0.1,
-    })
+    plt.rcParams.update(
+        {
+            "axes.labelsize": 12,
+            "axes.titlesize": 14,
+            "xtick.labelsize": 10,
+            "ytick.labelsize": 10,
+            "legend.fontsize": 10,
+            "figure.titlesize": 16,
+            "figure.dpi": 300,
+            "savefig.bbox": "tight",
+            "savefig.pad_inches": 0.1,
+        }
+    )
     _STYLE_APPLIED = True
 
 
@@ -146,7 +149,7 @@ class EvaluationVisualizer:
             meanprops={"marker": "D", "markerfacecolor": "red", "markersize": 6},
         )
         colours = sns.color_palette("pastel", len(labels))
-        for patch, colour in zip(bp["boxes"], colours):
+        for patch, colour in zip(bp["boxes"], colours, strict=False):
             patch.set_facecolor(colour)
         ax.set_ylabel("Score")
         ax.set_title(title, fontweight="bold")
@@ -265,9 +268,9 @@ class EvaluationVisualizer:
         fig, ax = plt.subplots(figsize=(8, 6))
         n = len(model_names)
         if sizes is None:
-            sizes = [80] * n
+            sizes = [80.0] * n
         else:
-            sizes = [80 + s * 40 for s in sizes]
+            sizes = [80.0 + s * 40 for s in sizes]
         colours = sns.color_palette("colorblind", n)
         for i in range(n):
             ax.scatter(
@@ -316,9 +319,7 @@ class EvaluationVisualizer:
         """
         data = np.asarray(hit_matrix)
         n_m, n_q = data.shape
-        fig, ax = plt.subplots(
-            figsize=(max(12, n_q * 0.15), max(5, n_m * 1.2))
-        )
+        fig, ax = plt.subplots(figsize=(max(12, n_q * 0.15), max(5, n_m * 1.2)))
         sns.heatmap(
             data,
             xticklabels=question_ids,
@@ -332,4 +333,148 @@ class EvaluationVisualizer:
         ax.set_title(title, fontweight="bold")
         ax.set_xlabel("Question ID")
         plt.setp(ax.get_xticklabels(), rotation=90, fontsize=8)
+        return self._save(fig, name)
+
+    # ------------------------------------------------------------------
+    # J4: Chunk comparison bar chart (MRR / NDCG@10 by chunk_size)
+    # ------------------------------------------------------------------
+    def chunk_comparison_bar(
+        self,
+        chunk_sizes: list[dict[str, Any]],
+        metrics: list[str] | None = None,
+        title: str = "MRR and NDCG@10 by chunk size",
+        name: str = "j4_chunk_comparison_bar",
+    ) -> Path:
+        """Grouped bar chart: x=chunk_size, bars=MRR and NDCG@10 (and optional metrics).
+
+        Args:
+            chunk_sizes: List of dicts with chunk_size, mrr, ndcg_at_10, etc.
+            metrics: Metric keys to plot (default: mrr, ndcg_at_10).
+            title: Chart title.
+            name: Base filename for save.
+
+        Returns:
+            Path to saved chart file.
+        """
+        if metrics is None:
+            metrics = ["mrr", "ndcg_at_10"]
+        sorted_rows = sorted(chunk_sizes, key=lambda r: r.get("chunk_size", 0))
+        labels = [str(r.get("chunk_size", "")) for r in sorted_rows]
+        x = np.arange(len(labels))
+        width = 0.8 / max(len(metrics), 1)
+        fig, ax = plt.subplots(figsize=(max(6, len(labels) * 2), 5))
+        colours = sns.color_palette("muted", len(metrics))
+        for i, metric in enumerate(metrics):
+            vals = [r.get(metric, 0.0) for r in sorted_rows]
+            offset = (i - len(metrics) / 2 + 0.5) * width
+            ax.bar(
+                x + offset, vals, width, label=metric.replace("_", " ").title(), color=colours[i]
+            )
+        ax.set_ylabel("Score")
+        ax.set_xlabel("Chunk size (chars)")
+        ax.set_title(title, fontweight="bold")
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.set_ylim(0, 1.05)
+        ax.legend()
+        return self._save(fig, name)
+
+    # ------------------------------------------------------------------
+    # J6: Hybrid vs Dense bar chart (Dense vs Hybrid per metric)
+    # ------------------------------------------------------------------
+    def hybrid_vs_dense_bar(
+        self,
+        dense_metrics: dict[str, Any],
+        hybrid_metrics: dict[str, Any],
+        metrics_order: list[str] | None = None,
+        title: str = "Dense vs Hybrid retrieval",
+        name: str = "j6_hybrid_vs_dense_bar",
+    ) -> Path:
+        """Grouped bar chart: Dense vs Hybrid for MRR, NDCG@10, Precision@5, Hit rate.
+
+        Args:
+            dense_metrics: e.g. { "mrr": {"mean": 0.87}, "ndcg_at_10": {"mean": 0.89}, ... }
+            hybrid_metrics: Same shape. Use .get("mean", val) for scalar.
+            metrics_order: Keys to plot in order (default: mrr, ndcg_at_10, precision_at_5, hit_rate).
+            title: Chart title.
+            name: Base filename for save.
+
+        Returns:
+            Path to saved chart file.
+        """
+        if metrics_order is None:
+            metrics_order = ["mrr", "ndcg_at_10", "precision_at_5", "hit_rate"]
+
+        def _val(d: dict[str, Any], k: str) -> float:
+            v = d.get(k)
+            if isinstance(v, dict) and "mean" in v:
+                return float(v["mean"])
+            if isinstance(v, (int, float)):
+                return float(v)
+            return 0.0
+
+        labels = [m.replace("_", " ").title() for m in metrics_order]
+        x = np.arange(len(labels))
+        width = 0.35
+        dense_vals = [_val(dense_metrics, m) for m in metrics_order]
+        hybrid_vals = [_val(hybrid_metrics, m) for m in metrics_order]
+        fig, ax = plt.subplots(figsize=(max(8, len(labels) * 1.5), 5))
+        ax.bar(
+            x - width / 2, dense_vals, width, label="Dense", color=sns.color_palette("muted", 2)[0]
+        )
+        ax.bar(
+            x + width / 2,
+            hybrid_vals,
+            width,
+            label="Hybrid",
+            color=sns.color_palette("muted", 2)[1],
+        )
+        ax.set_ylabel("Score")
+        ax.set_title(title, fontweight="bold")
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, rotation=30, ha="right")
+        ax.set_ylim(0, 1.05)
+        ax.legend()
+        return self._save(fig, name)
+
+    # ------------------------------------------------------------------
+    # J6: Dense-MRR vs Hybrid-MRR scatter with y=x line
+    # ------------------------------------------------------------------
+    def hybrid_vs_dense_scatter(
+        self,
+        dense_rr_by_id: dict[str, float],
+        hybrid_rr_by_id: dict[str, float],
+        title: str = "Dense vs Hybrid MRR per query",
+        name: str = "j6_hybrid_vs_dense_scatter",
+    ) -> Path:
+        """Scatter: x=Dense RR, y=Hybrid RR; y=x reference line. Match by query id.
+
+        Args:
+            dense_rr_by_id: { query_id: rr, ... }
+            hybrid_rr_by_id: { query_id: rr, ... }
+            title: Chart title.
+            name: Base filename for save.
+
+        Returns:
+            Path to saved chart file.
+        """
+        ids = sorted(set(dense_rr_by_id) & set(hybrid_rr_by_id))
+        if not ids:
+            raise ValueError("No common query ids between dense and hybrid per_query data")
+        x_vals = [dense_rr_by_id[q] for q in ids]
+        y_vals = [hybrid_rr_by_id[q] for q in ids]
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.scatter(
+            x_vals, y_vals, alpha=0.7, s=40, color=sns.color_palette("muted", 1)[0], label="Queries"
+        )
+        lim_lo = min(min(x_vals), min(y_vals), 0.0)
+        lim_hi = max(max(x_vals), max(y_vals), 1.0)
+        ax.plot([lim_lo, lim_hi], [lim_lo, lim_hi], "k--", alpha=0.7, label="y = x")
+        ax.set_xlabel("Dense MRR (RR)")
+        ax.set_ylabel("Hybrid MRR (RR)")
+        ax.set_title(title, fontweight="bold")
+        ax.set_aspect("equal", adjustable="box")
+        ax.legend()
+        ax.set_xlim(lim_lo - 0.02, lim_hi + 0.02)
+        ax.set_ylim(lim_lo - 0.02, lim_hi + 0.02)
         return self._save(fig, name)

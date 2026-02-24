@@ -21,14 +21,14 @@ from pathlib import Path
 
 import pytest
 import yaml
-
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
+from evaluation.config import load_experiment_config
+from evaluation.metrics.mrr import mean_reciprocal_rank, reciprocal_rank
+
 # Import from eval_model_comparison to reuse provider setup
 from evaluation.scripts.eval_model_comparison import create_provider
-from evaluation.config import load_experiment_config
-from evaluation.metrics.mrr import reciprocal_rank, mean_reciprocal_rank
 
 EVAL_ROOT = Path(__file__).resolve().parent.parent
 REPO_ROOT = EVAL_ROOT.parent
@@ -37,11 +37,11 @@ REPO_ROOT = EVAL_ROOT.parent
 def _get_test_qdrant_client() -> QdrantClient:
     """Create Qdrant client for tests — prefers test instance (18336), falls back to main (18334)."""
     env_path = REPO_ROOT / "config" / "env.yaml"
-    
+
     # Default: test instance (host ports 18xxx)
     host = "localhost"
     port = 18336
-    
+
     if env_path.exists():
         with open(env_path, encoding="utf-8") as fh:
             raw = yaml.safe_load(fh)
@@ -50,7 +50,7 @@ def _get_test_qdrant_client() -> QdrantClient:
         if test_cfg:
             host = test_cfg.get("host", host)
             port = test_cfg.get("port", port)
-    
+
     # Try test instance first
     try:
         client = QdrantClient(host=host, port=port, timeout=5)
@@ -58,7 +58,7 @@ def _get_test_qdrant_client() -> QdrantClient:
         return client
     except Exception:
         pass
-    
+
     # Fall back to main qdrant (18334)
     raw: dict = {}
     if env_path.exists():
@@ -95,7 +95,9 @@ def _ollama_available() -> bool:
 def qdrant_client() -> QdrantClient:
     """Provide Qdrant client; skip if Qdrant is not available."""
     if not _qdrant_available():
-        pytest.skip("Qdrant not reachable (start: docker compose -p stack-g-devdito --profile test up qdrant-test)")
+        pytest.skip(
+            "Qdrant not reachable (start: docker compose -p stack-g-devdito --profile test up qdrant-test)"
+        )
     return _get_test_qdrant_client()
 
 

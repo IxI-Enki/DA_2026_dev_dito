@@ -121,6 +121,7 @@ class ImageCaptioner:
         """Return image dimensions as 'WxH' or 'unknown'."""
         try:
             from PIL import Image
+
             with Image.open(image_path) as img:
                 w, h = img.size
                 return f"{w}x{h}"
@@ -153,7 +154,9 @@ class ImageCaptioner:
                 w, h = img.size
                 if self.max_image_size > 0 and max(w, h) > self.max_image_size:
                     img = img.copy()
-                    img.thumbnail((self.max_image_size, self.max_image_size), Image.Resampling.LANCZOS)
+                    img.thumbnail(
+                        (self.max_image_size, self.max_image_size), Image.Resampling.LANCZOS
+                    )
                     nw, nh = img.size
                     logger.debug(
                         "Downscaled image %s from %s to %dx%d",

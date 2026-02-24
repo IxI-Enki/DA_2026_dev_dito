@@ -11,14 +11,14 @@ Enthält alle Analyse-Module:
 
 from .content_classifier import ContentClassifier
 from .format_quality_analyzer import FormatQualityAnalyzer
+from .query_generator import QueryGenerator
 from .rag_readiness_checker import RAGReadinessChecker
 from .temporal_analyzer import TemporalAnalyzer
-from .query_generator import QueryGenerator
 
 __all__ = [
-    'ContentClassifier',
-    'FormatQualityAnalyzer',
-    'RAGReadinessChecker',
-    'TemporalAnalyzer',
-    'QueryGenerator'
+    "ContentClassifier",
+    "FormatQualityAnalyzer",
+    "RAGReadinessChecker",
+    "TemporalAnalyzer",
+    "QueryGenerator",
 ]

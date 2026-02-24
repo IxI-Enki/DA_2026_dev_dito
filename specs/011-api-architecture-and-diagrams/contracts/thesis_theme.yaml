@@ -1,0 +1,21 @@
+# Thesis diagram and figure theme contract (00_thesis_default)
+# FR-012, FR-014: All diagrams and evaluation figures MUST use this theme and 300 DPI.
+# Used by: HTML diagram pipeline (dev_prompts_instructions_notes), Matplotlib/Seaborn (dev_dito).
+
+theme_id: "00_thesis_default"
+description: "HTL Leonding Corporate Design - thesis default"
+
+colors:
+  primary: "#2E4F8F"
+  secondary: "#72ADCB"
+  accent: "#F28D2C"
+
+# For Matplotlib/Seaborn (e.g. evaluation/notebooks)
+matplotlib_cycle:
+  - "#2E4F8F"
+  - "#72ADCB"
+  - "#F28D2C"
+
+# Export
+dpi: 300
+print_size: "A4"  # legible at A4

@@ -12,10 +12,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from evaluation.scripts.eval_keyword_baseline import (
-    source_file_to_page_id,
     run_keyword_baseline,
+    source_file_to_page_id,
 )
-
 
 # ---------------------------------------------------------------------------
 # source_file_to_page_id
@@ -26,13 +25,22 @@ class TestSourceFileToPageId:
     """Verify all ground-truth filename patterns map correctly."""
 
     def test_single_namespace(self) -> None:
-        assert source_file_to_page_id("exams_matura-tagesschule-if-it.txt") == "exams:matura-tagesschule-if-it"
+        assert (
+            source_file_to_page_id("exams_matura-tagesschule-if-it.txt")
+            == "exams:matura-tagesschule-if-it"
+        )
 
     def test_double_namespace(self) -> None:
-        assert source_file_to_page_id("archive_exams_semesterpruefungen.txt") == "archive:exams:semesterpruefungen"
+        assert (
+            source_file_to_page_id("archive_exams_semesterpruefungen.txt")
+            == "archive:exams:semesterpruefungen"
+        )
 
     def test_triple_namespace(self) -> None:
-        assert source_file_to_page_id("it_studentmail2023_android_gmail.txt") == "it:studentmail2023:android:gmail"
+        assert (
+            source_file_to_page_id("it_studentmail2023_android_gmail.txt")
+            == "it:studentmail2023:android:gmail"
+        )
 
     def test_no_namespace(self) -> None:
         assert source_file_to_page_id("start.txt") == "start"

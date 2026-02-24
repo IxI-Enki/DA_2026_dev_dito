@@ -79,7 +79,13 @@ def main() -> int:
         default=EVAL_ROOT / "charts",
         help="Output directory for generated charts",
     )
-    parser.add_argument("--format", type=str, default="png", choices=["png", "svg"], help="Chart format (default: png)")
+    parser.add_argument(
+        "--format",
+        type=str,
+        default="png",
+        choices=["png", "svg"],
+        help="Chart format (default: png)",
+    )
     parser.add_argument("--dpi", type=int, default=300, help="DPI for raster charts (default: 300)")
     args = parser.parse_args()
 

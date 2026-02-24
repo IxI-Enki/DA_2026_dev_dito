@@ -5,26 +5,28 @@ Extrahiert Text und nutzt LLMs zur Klassifizierung des Dokumententyps.
 """
 
 import logging
-from pathlib import Path
-from typing import Dict, Any, Optional
 import sys
+from pathlib import Path
+from typing import Any, Dict
 
 # Relative imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from core.llm_client import LLMClient
 from core.file_handler import FileHandler
-from config import get_config, EvaluationConfig
+from core.llm_client import LLMClient
+
+from config import EvaluationConfig, get_config
 
 logger = logging.getLogger(__name__)
+
 
 class DocumentDeepAnalyzer:
     """Führt Deep-Dive Analysen auf Dokumenten durch."""
 
-    def __init__(self, config: Optional[EvaluationConfig] = None):
+    def __init__(self, config: EvaluationConfig | None = None):
         self.config = config or get_config()
         self.llm_client = LLMClient(config=self.config)
         self.file_handler = FileHandler(config=self.config)
-        
+
         self.classification_prompt = """
         Analysiere den Beginn des folgenden Dokuments.
         Klassifiziere es in GENAU EINE der folgenden Kategorien:
@@ -56,23 +58,19 @@ class DocumentDeepAnalyzer:
         """
         # 1. Text Extraction
         content = self.file_handler.get_file_content(file_path)
-        
+
         if content.startswith("[Error") or not content.strip():
-            return {
-                "file_name": file_path.name,
-                "status": "extraction_failed",
-                "error": content
-            }
-            
+            return {"file_name": file_path.name, "status": "extraction_failed", "error": content}
+
         # 2. Semantic Analysis (LLM)
-        snippet = content[:1500] # First 1500 chars usually contain header/title
-        
+        snippet = content[:1500]  # First 1500 chars usually contain header/title
+
         llm_result = {}
         try:
             response = self.llm_client.analyze_text(
                 text=snippet,
                 prompt_template=self.classification_prompt,
-                system_prompt="Du bist ein Dokumenten-Archivar. Antworte in JSON."
+                system_prompt="Du bist ein Dokumenten-Archivar. Antworte in JSON.",
             )
             llm_result = self._parse_llm_json(response)
         except Exception as e:
@@ -83,7 +81,7 @@ class DocumentDeepAnalyzer:
             "file_name": file_path.name,
             "file_type": file_path.suffix,
             "char_count": len(content),
-            "semantic": llm_result
+            "semantic": llm_result,
         }
 
     def _parse_llm_json(self, text: str) -> Dict[str, Any]:
@@ -95,6 +93,7 @@ class DocumentDeepAnalyzer:
             text = text[3:-3]
         try:
             import json
+
             return json.loads(text)
         except Exception:
             return {"type": "UNKNOWN", "raw": text[:50]}

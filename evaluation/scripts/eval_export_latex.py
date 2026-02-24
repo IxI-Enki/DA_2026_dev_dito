@@ -23,7 +23,6 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import sys
 from pathlib import Path
 
 EVAL_ROOT = Path(__file__).resolve().parent.parent
@@ -34,6 +33,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _metric_val(m: dict | float) -> float:
     """Extract mean from metric (dict with mean/std or plain float)."""
@@ -76,6 +76,7 @@ def _short_model_name(model: str) -> str:
 # LaTeX table generators
 # ---------------------------------------------------------------------------
 
+
 def generate_ff1_table(results_dir: Path) -> str | None:
     """FF1: Keyword vs Semantic Search comparison.
 
@@ -99,23 +100,26 @@ def generate_ff1_table(results_dir: Path) -> str | None:
     if kw_full:
         kw = _load_json(kw_full)
         agg = kw["aggregate_metrics"]
-        mode = kw.get("experiment", {}).get("query_mode", "fullquestion")
-        rows.append((
-            "Keyword (full question)",
-            _metric_val(agg["mrr"]),
-            _metric_val(agg["precision_at_5"]),
-            _metric_val(agg.get("hit_rate", 0)),
-        ))
+        rows.append(
+            (
+                "Keyword (full question)",
+                _metric_val(agg["mrr"]),
+                _metric_val(agg["precision_at_5"]),
+                _metric_val(agg.get("hit_rate", 0)),
+            )
+        )
 
     if kw_keywords:
         kw2 = _load_json(kw_keywords)
         agg2 = kw2["aggregate_metrics"]
-        rows.append((
-            "Keyword (optimal keywords)",
-            _metric_val(agg2["mrr"]),
-            _metric_val(agg2["precision_at_5"]),
-            _metric_val(agg2.get("hit_rate", 0)),
-        ))
+        rows.append(
+            (
+                "Keyword (optimal keywords)",
+                _metric_val(agg2["mrr"]),
+                _metric_val(agg2["precision_at_5"]),
+                _metric_val(agg2.get("hit_rate", 0)),
+            )
+        )
 
     # Semantic models (sorted by MRR descending)
     model_rows: list[tuple[str, float, float, float]] = []
@@ -123,12 +127,14 @@ def generate_ff1_table(results_dir: Path) -> str | None:
         data = _load_json(mf)
         agg = data["aggregate_metrics"]
         name = _short_model_name(data["experiment"]["model"])
-        model_rows.append((
-            f"Semantic: {name}",
-            _metric_val(agg["mrr"]),
-            _metric_val(agg.get("precision_at_5", 0)),
-            _metric_val(agg.get("hit_rate", 0)),
-        ))
+        model_rows.append(
+            (
+                f"Semantic: {name}",
+                _metric_val(agg["mrr"]),
+                _metric_val(agg.get("precision_at_5", 0)),
+                _metric_val(agg.get("hit_rate", 0)),
+            )
+        )
     model_rows.sort(key=lambda r: r[1], reverse=True)
     rows.extend(model_rows)
 
@@ -149,15 +155,15 @@ def generate_ff1_table(results_dir: Path) -> str | None:
         mrr_str = f"\\textbf{{{mrr:.4f}}}" if mrr == best_mrr else f"{mrr:.4f}"
         lines.append(f"    {name} & {mrr_str} & {p5:.4f} & {hr:.1%} \\\\")
         # Add midrule between keyword and semantic sections
-        if kw_keywords and i == 1:
+        if kw_keywords and i == 1 or not kw_keywords and kw_full and i == 0:
             lines.append(r"    \midrule")
-        elif not kw_keywords and kw_full and i == 0:
-            lines.append(r"    \midrule")
-    lines.extend([
-        r"    \bottomrule",
-        r"  \end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"    \bottomrule",
+            r"  \end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -179,16 +185,18 @@ def generate_ff3_table(results_dir: Path) -> str | None:
         data = _load_json(mf)
         exp = data["experiment"]
         agg = data["aggregate_metrics"]
-        models.append({
-            "name": _short_model_name(exp["model"]),
-            "dims": exp["dimensions"],
-            "mrr": _metric_val(agg["mrr"]),
-            "mrr_std": _metric_std(agg["mrr"]),
-            "ndcg": _metric_val(agg["ndcg_at_10"]),
-            "p5": _metric_val(agg.get("precision_at_5", 0)),
-            "recall": _metric_val(agg.get("recall_at_10", 0)),
-            "hit_rate": _metric_val(agg.get("hit_rate", 0)),
-        })
+        models.append(
+            {
+                "name": _short_model_name(exp["model"]),
+                "dims": exp["dimensions"],
+                "mrr": _metric_val(agg["mrr"]),
+                "mrr_std": _metric_std(agg["mrr"]),
+                "ndcg": _metric_val(agg["ndcg_at_10"]),
+                "p5": _metric_val(agg.get("precision_at_5", 0)),
+                "recall": _metric_val(agg.get("recall_at_10", 0)),
+                "hit_rate": _metric_val(agg.get("hit_rate", 0)),
+            }
+        )
 
     # Sort by MRR descending
     models.sort(key=lambda m: m["mrr"], reverse=True)
@@ -212,11 +220,13 @@ def generate_ff3_table(results_dir: Path) -> str | None:
             f"& {mrr_str}{std_str} & {m['ndcg']:.4f} "
             f"& {m['p5']:.4f} & {m['recall']:.4f} & {m['hit_rate']:.1%} \\\\"
         )
-    lines.extend([
-        r"    \bottomrule",
-        r"  \end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"    \bottomrule",
+            r"  \end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -265,11 +275,13 @@ def generate_ff3_difficulty_table(results_dir: Path) -> str | None:
             f"& {m['medium_mrr']:.3f} & {m['medium_hit']:.0%} "
             f"& {m['hard_mrr']:.3f} & {m['hard_hit']:.0%} \\\\"
         )
-    lines.extend([
-        r"    \bottomrule",
-        r"  \end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"    \bottomrule",
+            r"  \end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -288,12 +300,14 @@ def generate_ff3_performance_table(results_dir: Path) -> str | None:
         data = _load_json(mf)
         exp = data["experiment"]
         perf = data.get("performance", {})
-        models.append({
-            "name": _short_model_name(exp["model"]),
-            "mrr": _metric_val(data["aggregate_metrics"]["mrr"]),
-            "embed_time": perf.get("embedding_time_seconds", 0),
-            "chunks": perf.get("corpus_chunks", 0),
-        })
+        models.append(
+            {
+                "name": _short_model_name(exp["model"]),
+                "mrr": _metric_val(data["aggregate_metrics"]["mrr"]),
+                "embed_time": perf.get("embedding_time_seconds", 0),
+                "chunks": perf.get("corpus_chunks", 0),
+            }
+        )
 
     models.sort(key=lambda m: m["mrr"], reverse=True)
 
@@ -316,14 +330,14 @@ def generate_ff3_performance_table(results_dir: Path) -> str | None:
         else:
             time_str = "---"
             speed_str = "---"
-        lines.append(
-            f"    {m['name']} & {m['mrr']:.4f} & {time_str} & {speed_str} \\\\"
-        )
-    lines.extend([
-        r"    \bottomrule",
-        r"  \end{tabular}",
-        r"\end{table}",
-    ])
+        lines.append(f"    {m['name']} & {m['mrr']:.4f} & {time_str} & {speed_str} \\\\")
+    lines.extend(
+        [
+            r"    \bottomrule",
+            r"  \end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -356,11 +370,13 @@ def generate_j4_table(results_dir: Path) -> str | None:
             f"& {mrr_str} & {c['ndcg_at_10']:.4f} "
             f"& {c['precision_at_5']:.4f} & {c['hit_rate']:.1%} \\\\"
         )
-    lines.extend([
-        r"    \bottomrule",
-        r"  \end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"    \bottomrule",
+            r"  \end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -407,11 +423,13 @@ def generate_j6_table(results_dir: Path) -> str | None:
             f"& {_metric_val(m['precision_at_5']):.4f} "
             f"& {_metric_val(m['hit_rate']):.1%} \\\\"
         )
-    lines.extend([
-        r"    \bottomrule",
-        r"  \end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"    \bottomrule",
+            r"  \end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -419,11 +437,10 @@ def generate_j6_table(results_dir: Path) -> str | None:
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description=(
-            "LaTeX Table Export -- generate thesis tables from evaluation results."
-        ),
+        description=("LaTeX Table Export -- generate thesis tables from evaluation results."),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
@@ -437,8 +454,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Directory containing result JSON files",
     )
     thesis_tables = (
-        Path(__file__).resolve().parents[3]
-        / "dev_prompts_instructions_notes" / "thesis" / "tables"
+        Path(__file__).resolve().parents[3] / "dev_prompts_instructions_notes" / "thesis" / "tables"
     )
     parser.add_argument(
         "--output-dir",

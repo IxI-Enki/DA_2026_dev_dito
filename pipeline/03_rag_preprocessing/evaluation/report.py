@@ -17,9 +17,9 @@ from pathlib import Path
 from typing import Any
 
 from .metrics import (
-    DocumentScore,
-    THRESHOLDS,
     REGRESSION_THRESHOLD,
+    THRESHOLDS,
+    DocumentScore,
     check_regression,
     passes_thresholds,
 )
@@ -60,10 +60,7 @@ def generate_report(
             "total_documents": len(scores),
             "schema_version": "1.0",
         },
-        "thresholds": {
-            k: {"operator": op, "value": val}
-            for k, (op, val) in THRESHOLDS.items()
-        },
+        "thresholds": {k: {"operator": op, "value": val} for k, (op, val) in THRESHOLDS.items()},
         "aggregate": aggregate,
         "regression": regression,
         "per_document": [asdict(ds) for ds in scores],

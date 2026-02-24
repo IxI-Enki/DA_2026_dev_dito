@@ -2,6 +2,7 @@
 
 Fuehrt die Strategie-Generierung auf Basis der letzten Deep Evaluation aus.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -14,8 +15,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # Shared CLI utilities
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
 from cli_utils import add_no_color_arg, apply_color_from_args, register_sigint, style
-
 from generators.strategy_generator import StrategyGenerator
+
 from config import get_config
 
 
@@ -40,9 +41,9 @@ def main():
         return
 
     eval_dirs = sorted(
-        [d for d in results_root.iterdir()
-         if d.is_dir() and d.name.startswith("deep_eval_")],
-        key=lambda x: x.name, reverse=True,
+        [d for d in results_root.iterdir() if d.is_dir() and d.name.startswith("deep_eval_")],
+        key=lambda x: x.name,
+        reverse=True,
     )
 
     if not eval_dirs:

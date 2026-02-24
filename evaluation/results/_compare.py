@@ -1,4 +1,5 @@
-import json, pathlib
+import json
+import pathlib
 
 results_dir = pathlib.Path(__file__).parent
 files = sorted(results_dir.glob("model_*.json"))
@@ -8,18 +9,20 @@ for f in files:
     d = json.loads(f.read_text(encoding="utf-8"))
     exp = d["experiment"]
     m = d["aggregate_metrics"]
-    rows.append({
-        "name": exp["name"],
-        "model": exp["model"],
-        "dim": exp["dimensions"],
-        "mrr": m["mrr"]["mean"],
-        "ndcg": m["ndcg_at_10"]["mean"],
-        "p5": m["precision_at_5"]["mean"],
-        "r10": m["recall_at_10"]["mean"],
-        "map": m["map"]["mean"],
-        "hit": m["hit_rate"],
-        "chunks": d["performance"]["corpus_chunks"],
-    })
+    rows.append(
+        {
+            "name": exp["name"],
+            "model": exp["model"],
+            "dim": exp["dimensions"],
+            "mrr": m["mrr"]["mean"],
+            "ndcg": m["ndcg_at_10"]["mean"],
+            "p5": m["precision_at_5"]["mean"],
+            "r10": m["recall_at_10"]["mean"],
+            "map": m["map"]["mean"],
+            "hit": m["hit_rate"],
+            "chunks": d["performance"]["corpus_chunks"],
+        }
+    )
 
 rows.sort(key=lambda r: r["mrr"], reverse=True)
 

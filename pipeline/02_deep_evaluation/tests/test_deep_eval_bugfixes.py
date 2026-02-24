@@ -6,13 +6,12 @@ Verifies:
 - YAML list uniqueness: no duplicate page_ids or filenames
 - multiline summary logging: output as cohesive block
 """
+
 from __future__ import annotations
 
 import sys
-import tempfile
-import textwrap
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -25,6 +24,7 @@ if str(_module_root) not in sys.path:
 # -----------------------------------------------------------------------
 # T050: rglob dedup tests
 # -----------------------------------------------------------------------
+
 
 class TestRglobDedup:
     """Verify that file collection uses set-based dedup."""
@@ -73,16 +73,18 @@ class TestRglobDedup:
 # T051: temperature passthrough tests
 # -----------------------------------------------------------------------
 
+
 class TestTemperaturePassthrough:
     """Verify that temperature from env.yaml reaches the LLM payload."""
 
     def test_env_yaml_has_temperature_zero(self):
         """env.yaml LLM.generation.temperature should be 0.0."""
         import yaml
+
         env_path = _module_root / "env.yaml"
         if not env_path.exists():
             pytest.skip("env.yaml not found")
-        with open(env_path, "r", encoding="utf-8") as f:
+        with open(env_path, encoding="utf-8") as f:
             cfg = yaml.safe_load(f)
         temp = cfg.get("LLM", {}).get("generation", {}).get("temperature")
         assert temp == 0.0, f"Expected temperature=0.0, got {temp}"
@@ -116,12 +118,14 @@ class TestTemperaturePassthrough:
 # T052: YAML dedup tests
 # -----------------------------------------------------------------------
 
+
 class TestYamlDedup:
     """Verify strategy generator produces unique lists."""
 
     def _make_generator(self, data: dict):
         """Create a StrategyGenerator with in-memory data."""
         from generators.strategy_generator import StrategyGenerator
+
         # Bypass file loading by patching
         gen = StrategyGenerator.__new__(StrategyGenerator)
         gen.results_path = Path("fake")
@@ -220,6 +224,7 @@ class TestYamlDedup:
 # T052b: multiline summary logging tests
 # -----------------------------------------------------------------------
 
+
 class TestMultilineSummaryLogging:
     """Verify summary is logged as a cohesive block."""
 
@@ -236,9 +241,12 @@ class TestMultilineSummaryLogging:
         # consecutive logger.info() calls for the stats.  Instead it
         # should build a summary string and log/print it once.
         stats_lines = [
-            line.strip() for line in main_source.splitlines()
-            if "Wiki Pages:" in line or "Documents:" in line
-            or "Images:" in line or "Output Dir:" in line
+            line.strip()
+            for line in main_source.splitlines()
+            if "Wiki Pages:" in line
+            or "Documents:" in line
+            or "Images:" in line
+            or "Output Dir:" in line
         ]
         # After fix: these should NOT be individual logger.info() calls
         logger_calls = [l for l in stats_lines if l.startswith("logger.info")]

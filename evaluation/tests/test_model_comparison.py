@@ -7,17 +7,16 @@ with mocked Qdrant and embedding provider.
 from __future__ import annotations
 
 import json
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
 from evaluation.scripts.eval_model_comparison import (
-    simple_chunk,
     calculate_relevance_score,
     load_corpus_for_ground_truth,
     run_model_evaluation,
+    simple_chunk,
 )
-
 
 # ---------------------------------------------------------------------------
 # simple_chunk
@@ -178,7 +177,11 @@ class TestRunModelEvaluation:
         # Mock Qdrant
         mock_qdrant = MagicMock()
         mock_hit = MagicMock()
-        mock_hit.payload = {"page_id": "ns:page-one", "chunk_index": 0, "text": "Content about X is Y."}
+        mock_hit.payload = {
+            "page_id": "ns:page-one",
+            "chunk_index": 0,
+            "text": "Content about X is Y.",
+        }
         mock_qdrant.search.return_value = [mock_hit]
 
         with (

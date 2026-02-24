@@ -16,22 +16,23 @@ import argparse
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 # Ensure parent is importable
 _here = Path(__file__).resolve().parent
 if str(_here) not in sys.path:
     sys.path.insert(0, str(_here))
 
-from config import get_config, get_latest_fetch_dir, get_latest_evaluation
 from exporter import Exporter
 from image_captioner import CAPTIONABLE_EXTENSIONS, ImageCaptioner
 from media_processor import DOCUMENT_EXTENSIONS, MediaProcessor
 from metadata_enricher import MetadataEnricher
 from page_processor import PageProcessor
 from strategy_loader import StrategyLoader
+
+from config import get_config, get_latest_evaluation, get_latest_fetch_dir
 
 # Shared CLI utilities
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
@@ -107,7 +108,7 @@ def _load_media_metadata(input_dir: Path) -> dict[str, dict[str, Any]]:
             last_mod = ""
             if rev is not None:
                 try:
-                    dt = datetime.fromtimestamp(int(rev), tz=timezone.utc)
+                    dt = datetime.fromtimestamp(int(rev), tz=UTC)
                     last_mod = dt.isoformat()
                 except (ValueError, OSError):
                     pass
@@ -147,10 +148,10 @@ def _load_media_usage(input_dir: Path) -> dict[str, list[str]]:
 
 
 def run(
-    input_dir: Optional[Path] = None,
-    evaluated_dir: Optional[Path] = None,
-    output_base: Optional[Path] = None,
-    config_path: Optional[Path] = None,
+    input_dir: Path | None = None,
+    evaluated_dir: Path | None = None,
+    output_base: Path | None = None,
+    config_path: Path | None = None,
 ) -> dict[str, Any]:
     """Execute the full preprocessing pipeline.
 
@@ -269,7 +270,9 @@ def run(
 
             # Links
             links_to: list[str] = []
-            links_file = page_links_dir / f"{f.stem}_links.json" if page_links_dir.exists() else None
+            links_file = (
+                page_links_dir / f"{f.stem}_links.json" if page_links_dir.exists() else None
+            )
             if links_file and links_file.exists():
                 try:
                     links_data = json.loads(links_file.read_text(encoding="utf-8"))
@@ -291,22 +294,24 @@ def run(
 
             # Build page dict with Qdrant-schema fields
             # Strategy provides content_type and chunking_method (US4)
-            pages.append({
-                "page_id": page_id,
-                "title": title,
-                "namespace": namespace,
-                "source": f"{cfg.wiki_base_url}{page_id.replace('_', ':')}",
-                "access_level": access,
-                "content_type": strategy.content_type.value,
-                "freshness_score": freshness.score if freshness else 0.5,
-                "freshness_category": freshness.category if freshness else "unknown",
-                "chunking_method": strategy.chunking_method,
-                "last_modified": last_mod,
-                "author": author,
-                "links_to": links_to,
-                "linked_from": linked_from,
-                "content": result.get("markdown", ""),
-            })
+            pages.append(
+                {
+                    "page_id": page_id,
+                    "title": title,
+                    "namespace": namespace,
+                    "source": f"{cfg.wiki_base_url}{page_id.replace('_', ':')}",
+                    "access_level": access,
+                    "content_type": strategy.content_type.value,
+                    "freshness_score": freshness.score if freshness else 0.5,
+                    "freshness_category": freshness.category if freshness else "unknown",
+                    "chunking_method": strategy.chunking_method,
+                    "last_modified": last_mod,
+                    "author": author,
+                    "links_to": links_to,
+                    "linked_from": linked_from,
+                    "content": result.get("markdown", ""),
+                }
+            )
             stats["pages_ok"] += 1
 
     stats["pages_fail"] = stats["pages_total"] - stats["pages_ok"]
@@ -332,7 +337,9 @@ def run(
             last_mod = (meta.get("last_modified", "") or "") if meta else ""
             author = (meta.get("author", "") or "") if meta else ""
             media_namespace = meta_key.split(":")[0] if ":" in meta_key else ""
-            freshness = meta_enricher.calculate_freshness(last_mod, media_namespace) if last_mod else None
+            freshness = (
+                meta_enricher.calculate_freshness(last_mod, media_namespace) if last_mod else None
+            )
             freshness_score = freshness.score if freshness else 0.5
             freshness_category = freshness.category if freshness else "recent"
             linked_from = media_usage_lookup.get(meta_key) or media_usage_lookup.get(f.name) or []
@@ -347,22 +354,28 @@ def run(
                 if ms.action == "caption_and_index" and captioner_available:
                     description = captioner.caption(f)
                     if description:
-                        media.append({
-                            "media_id": media_id,
-                            "title": f.stem.replace("_", " ").title(),
-                            "namespace": media_id.rsplit(":", 1)[0] if ":" in media_id else "",
-                            "source": f"{cfg.wiki_base_url}lib/exe/fetch.php?media={media_id}" if cfg.wiki_base_url else "",
-                            "access_level": "public",
-                            "content_type": "IMAGE",
-                            "freshness_score": freshness_score,
-                            "freshness_category": freshness_category,
-                            "chunking_method": "metadata_only",
-                            "last_modified": last_mod,
-                            "author": author,
-                            "links_to": [],
-                            "linked_from": linked_from,
-                            "content": description,
-                        })
+                        media.append(
+                            {
+                                "media_id": media_id,
+                                "title": f.stem.replace("_", " ").title(),
+                                "namespace": media_id.rsplit(":", 1)[0] if ":" in media_id else "",
+                                "source": (
+                                    f"{cfg.wiki_base_url}lib/exe/fetch.php?media={media_id}"
+                                    if cfg.wiki_base_url
+                                    else ""
+                                ),
+                                "access_level": "public",
+                                "content_type": "IMAGE",
+                                "freshness_score": freshness_score,
+                                "freshness_category": freshness_category,
+                                "chunking_method": "metadata_only",
+                                "last_modified": last_mod,
+                                "author": author,
+                                "links_to": [],
+                                "linked_from": linked_from,
+                                "content": description,
+                            }
+                        )
                         stats["images_captioned"] += 1
                 continue  # images are either captioned or skipped
 
@@ -379,29 +392,37 @@ def run(
             elif ext not in DOCUMENT_EXTENSIONS:
                 continue
 
-            media.append({
-                "media_id": media_id,
-                "title": f.stem.replace("_", " ").title(),
-                "namespace": media_id.rsplit(":", 1)[0] if ":" in media_id else "",
-                "source": f"{cfg.wiki_base_url}lib/exe/fetch.php?media={media_id}" if cfg.wiki_base_url else "",
-                "access_level": "public",
-                "content_type": ms.content_type,
-                "freshness_score": freshness_score,
-                "freshness_category": freshness_category,
-                "chunking_method": ms.parser if ms.parser != "image" else "metadata_only",
-                "last_modified": last_mod,
-                "author": author,
-                "links_to": [],
-                "linked_from": linked_from,
-                "content": text,
-            })
+            media.append(
+                {
+                    "media_id": media_id,
+                    "title": f.stem.replace("_", " ").title(),
+                    "namespace": media_id.rsplit(":", 1)[0] if ":" in media_id else "",
+                    "source": (
+                        f"{cfg.wiki_base_url}lib/exe/fetch.php?media={media_id}"
+                        if cfg.wiki_base_url
+                        else ""
+                    ),
+                    "access_level": "public",
+                    "content_type": ms.content_type,
+                    "freshness_score": freshness_score,
+                    "freshness_category": freshness_category,
+                    "chunking_method": ms.parser if ms.parser != "image" else "metadata_only",
+                    "last_modified": last_mod,
+                    "author": author,
+                    "links_to": [],
+                    "linked_from": linked_from,
+                    "content": text,
+                }
+            )
         stats["media_processed"] = len(media)
 
     # T011d: Export with new API (NFR-005: manifest has timestamp, config_hash, code_version)
     code_version = "1.0.0"
     config_hash = "n/a"
     out_dir = exporter.export(
-        pages, media, output_base,
+        pages,
+        media,
+        output_base,
         config_hash=config_hash,
         code_version=code_version,
     )

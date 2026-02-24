@@ -20,7 +20,7 @@ import json
 import logging
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -67,7 +67,7 @@ class EvaluationPipeline:
         Returns:
             Path to the results output directory.
         """
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         safe_name = self.config.name.replace(" ", "_").lower()
         self.results_dir = EVAL_ROOT / "results" / f"{safe_name}_{timestamp}"
         self.results_dir.mkdir(parents=True, exist_ok=True)
@@ -118,9 +118,7 @@ class EvaluationPipeline:
         """
         logger.info("[Step 1/6] Qdrant Retrieval")
         self._retrieved_contexts = []
-        gt = load_ground_truth(
-            EVAL_ROOT / self.config.ground_truth_file
-        )
+        gt = load_ground_truth(EVAL_ROOT / self.config.ground_truth_file)
         qa_pairs = gt.get("qa_pairs", [])
         logger.info("  Ground truth queries: %d", len(qa_pairs))
 
@@ -132,9 +130,7 @@ class EvaluationPipeline:
             provider = create_provider(self.config)
             host = "192.168.8.3"
             client = QdrantClient(host=host, port=6333, timeout=10)
-            collection = (
-                f"{self.config.collection_prefix}{self.config.model.replace('/', '_')}"
-            )
+            collection = f"{self.config.collection_prefix}{self.config.model.replace('/', '_')}"
 
             retrieved: list[dict] = []
             for idx, qa in enumerate(qa_pairs):
@@ -168,20 +164,20 @@ class EvaluationPipeline:
                         return
                     hits = []
                     self._retrieved_contexts.append([])
-                retrieved.append({
-                    "question": query,
-                    "retrieved": hits,
-                    "expected_sources": expected_sources,
-                    "difficulty": qa.get("difficulty", "medium"),
-                })
+                retrieved.append(
+                    {
+                        "question": query,
+                        "retrieved": hits,
+                        "expected_sources": expected_sources,
+                        "difficulty": qa.get("difficulty", "medium"),
+                    }
+                )
 
             self._per_query = retrieved
             logger.info("  Retrieved results for %d queries", len(retrieved))
 
         except ImportError as e:
-            logger.warning(
-                "  Embedding or Qdrant not available (%s) - using mock retrieval", e
-            )
+            logger.warning("  Embedding or Qdrant not available (%s) - using mock retrieval", e)
             self._mock_retrieval(qa_pairs)
         except Exception as e:
             logger.warning("  Qdrant retrieval failed (%s) - using mock retrieval", e)
@@ -193,14 +189,19 @@ class EvaluationPipeline:
         for qa in qa_pairs:
             sources = _expected_sources_for_qa(qa)
             hits = [{"page_id": s, "score": 1.0 / (i + 1)} for i, s in enumerate(sources)]
-            retrieved.append({
-                "question": qa.get("question", ""),
-                "expected_sources": sources,
-                "retrieved": hits,
-                "difficulty": qa.get("difficulty", "medium"),
-            })
+            retrieved.append(
+                {
+                    "question": qa.get("question", ""),
+                    "expected_sources": sources,
+                    "retrieved": hits,
+                    "difficulty": qa.get("difficulty", "medium"),
+                }
+            )
         self._per_query = retrieved
-        answer = lambda q: q.get("answer", q.get("ground_truth", ""))
+
+        def answer(q):
+            return q.get("answer", q.get("ground_truth", ""))
+
         self._retrieved_contexts = [[answer(qa)] for qa in qa_pairs]
 
     # ------------------------------------------------------------------
@@ -210,11 +211,11 @@ class EvaluationPipeline:
     def _step_custom_metrics(self) -> None:
         """Calculate MRR, NDCG, P@K, MAP, Recall@K."""
         logger.info("[Step 2/6] Custom Metrics")
-        from evaluation.metrics.mrr import reciprocal_rank
-        from evaluation.metrics.precision_at_k import precision_at_k
-        from evaluation.metrics.ndcg import ndcg_at_k
-        from evaluation.metrics.recall_at_k import recall_at_k
         from evaluation.metrics.mean_average_precision import average_precision
+        from evaluation.metrics.mrr import reciprocal_rank
+        from evaluation.metrics.ndcg import ndcg_at_k
+        from evaluation.metrics.precision_at_k import precision_at_k
+        from evaluation.metrics.recall_at_k import recall_at_k
 
         per_query_scores: list[dict] = []
         for item in self._per_query:
@@ -230,16 +231,18 @@ class EvaluationPipeline:
             ap = average_precision(retrieved_ids, expected)
             hit = 1.0 if rr > 0 else 0.0
 
-            per_query_scores.append({
-                "question": item.get("question", ""),
-                "rr": rr,
-                "p_at_5": p5,
-                "ndcg_at_10": ndcg10,
-                "recall_at_10": rec_k,
-                "average_precision": ap,
-                "hit_in_top_k": bool(hit),
-                "difficulty": difficulty,
-            })
+            per_query_scores.append(
+                {
+                    "question": item.get("question", ""),
+                    "rr": rr,
+                    "p_at_5": p5,
+                    "ndcg_at_10": ndcg10,
+                    "recall_at_10": rec_k,
+                    "average_precision": ap,
+                    "hit_in_top_k": bool(hit),
+                    "difficulty": difficulty,
+                }
+            )
 
         self._per_query = per_query_scores  # enrich with scores
 
@@ -252,10 +255,14 @@ class EvaluationPipeline:
         self._scores["map"] = sum(d["average_precision"] for d in per_query_scores) / n
         self._scores["hit_rate"] = sum(1 for d in per_query_scores if d["hit_in_top_k"]) / n
 
-        logger.info("  MRR=%.4f  P@5=%.4f  NDCG@10=%.4f  MAP=%.4f  HitRate=%.4f",
-                     self._scores["mrr"], self._scores["mean_p_at_5"],
-                     self._scores["mean_ndcg_at_10"], self._scores["map"],
-                     self._scores["hit_rate"])
+        logger.info(
+            "  MRR=%.4f  P@5=%.4f  NDCG@10=%.4f  MAP=%.4f  HitRate=%.4f",
+            self._scores["mrr"],
+            self._scores["mean_p_at_5"],
+            self._scores["mean_ndcg_at_10"],
+            self._scores["map"],
+            self._scores["hit_rate"],
+        )
 
     # ------------------------------------------------------------------
     # Step 3: RAGAS Metrics (T095)
@@ -285,24 +292,22 @@ class EvaluationPipeline:
             ragas_data: list[dict[str, Any]] = []
             logger.info("  Generating answers from contexts for %d queries...", len(qa_pairs))
             for i, qa in enumerate(qa_pairs):
-                contexts = (
-                    self._retrieved_contexts[i]
-                    if i < len(self._retrieved_contexts)
-                    else []
-                )
+                contexts = self._retrieved_contexts[i] if i < len(self._retrieved_contexts) else []
                 question = qa.get("question", "")
                 ground_truth = qa.get("ground_truth", "")
 
                 # Generate answer from retrieved contexts via LLM
                 generated_answer = judge.generate_answer(question, contexts)
 
-                ragas_data.append({
-                    "question_id": qa.get("id", f"q{i}"),
-                    "question": question,
-                    "answer": generated_answer,
-                    "ground_truth": ground_truth,
-                    "contexts": contexts,
-                })
+                ragas_data.append(
+                    {
+                        "question_id": qa.get("id", f"q{i}"),
+                        "question": question,
+                        "answer": generated_answer,
+                        "ground_truth": ground_truth,
+                        "contexts": contexts,
+                    }
+                )
 
             logger.info("  Evaluating with LLM-as-Judge...")
             results = judge.evaluate_batch(ragas_data, show_progress=True)
@@ -342,8 +347,9 @@ class EvaluationPipeline:
                     "descriptive": desc,
                     "bootstrap_ci": {"lower": ci.ci_lower, "upper": ci.ci_upper, "mean": ci.mean},
                 }
-                logger.info("  %s: mean=%.4f CI=[%.4f, %.4f]",
-                            metric, ci.mean, ci.ci_lower, ci.ci_upper)
+                logger.info(
+                    "  %s: mean=%.4f CI=[%.4f, %.4f]", metric, ci.mean, ci.ci_lower, ci.ci_upper
+                )
 
             stats_path = self.results_dir / "statistics.json"
             with open(stats_path, "w", encoding="utf-8") as f:
@@ -493,11 +499,15 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="Unified Evaluation Pipeline")
     parser.add_argument(
-        "--config", type=Path, required=True,
+        "--config",
+        type=Path,
+        required=True,
         help="Experiment YAML config file",
     )
     parser.add_argument(
-        "--skip", nargs="*", default=[],
+        "--skip",
+        nargs="*",
+        default=[],
         help="Steps to skip (e.g. 'ragas')",
     )
     args = parser.parse_args()

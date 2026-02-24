@@ -20,8 +20,7 @@ import json
 import logging
 import subprocess
 import sys
-import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import requests
@@ -48,6 +47,7 @@ logger = logging.getLogger(__name__)
 # Source-file → page-ID mapping
 # ---------------------------------------------------------------------------
 
+
 def source_file_to_page_id(source_file: str) -> str:
     """Convert ground-truth ``source_file`` to a DokuWiki page ID.
 
@@ -73,6 +73,7 @@ def source_file_to_page_id(source_file: str) -> str:
 # ---------------------------------------------------------------------------
 # Lightweight DokuWiki search client
 # ---------------------------------------------------------------------------
+
 
 class WikiSearchClient:
     """Minimal DokuWiki JSON-RPC client for ``core.searchPages``.
@@ -129,10 +130,12 @@ class WikiSearchClient:
         cert_path = cert_path.replace("${root_dir}", root_dir)
 
         self._session = requests.Session()
-        self._session.headers.update({
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {token}",
-        })
+        self._session.headers.update(
+            {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {token}",
+            }
+        )
         cert_p = Path(cert_path)
         self._session.verify = str(cert_p) if cert_p.exists() else True
         self._request_id = 0
@@ -162,9 +165,7 @@ class WikiSearchClient:
 
         if "error" in data:
             err = data["error"]
-            raise RuntimeError(
-                f"JSON-RPC error {err.get('code')}: {err.get('message')}"
-            )
+            raise RuntimeError(f"JSON-RPC error {err.get('code')}: {err.get('message')}")
 
         return data.get("result", [])
 
@@ -172,6 +173,7 @@ class WikiSearchClient:
 # ---------------------------------------------------------------------------
 # Evaluation runner
 # ---------------------------------------------------------------------------
+
 
 def _get_git_version() -> str:
     """Return short git hash or 'unknown'."""
@@ -255,16 +257,18 @@ def run_keyword_baseline(
             search_results = client.search_pages(query)
         except requests.RequestException as exc:
             logger.error("Query %d failed: %s", i + 1, exc)
-            per_query_results.append({
-                "id": qa["id"],
-                "question": question,
-                "query_sent": query,
-                "expected_sources": expected_pages,
-                "error": str(exc),
-                "ranked_pages": [],
-                "rr": 0.0,
-                "p_at_5": 0.0,
-            })
+            per_query_results.append(
+                {
+                    "id": qa["id"],
+                    "question": question,
+                    "query_sent": query,
+                    "expected_sources": expected_pages,
+                    "error": str(exc),
+                    "ranked_pages": [],
+                    "rr": 0.0,
+                    "p_at_5": 0.0,
+                }
+            )
             mrr_inputs.append(([], relevant))
             p_at_5_inputs.append(([], relevant))
             continue
@@ -309,7 +313,7 @@ def run_keyword_baseline(
             "thesis_id": config.thesis_id,
             "config_hash": config.config_hash,
             "code_version": _get_git_version(),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "top_k": k,
             "query_mode": query_mode,
         },
@@ -333,6 +337,7 @@ def run_keyword_baseline(
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -375,7 +380,8 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Print per-query results to stdout",
     )
@@ -407,9 +413,7 @@ def main() -> None:
         logger.error("File not found: %s", exc)
         sys.exit(1)
     except requests.ConnectionError as exc:
-        logger.error(
-            "Cannot connect to DokuWiki API. Is the wiki reachable?\n  %s", exc
-        )
+        logger.error("Cannot connect to DokuWiki API. Is the wiki reachable?\n  %s", exc)
         sys.exit(2)
     except RuntimeError as exc:
         logger.error("API error: %s", exc)
@@ -438,8 +442,10 @@ def main() -> None:
     print(f"  MRR:          {agg['mrr']:.4f}")
     print(f"  Precision@5:  {agg['precision_at_5']:.4f}")
     print(f"  Hit Rate:     {agg['hit_rate']:.1%}")
-    print(f"  Queries:      {summary['total_queries']} total, "
-          f"{summary['hits']} hits, {summary['errors']} errors")
+    print(
+        f"  Queries:      {summary['total_queries']} total, "
+        f"{summary['hits']} hits, {summary['errors']} errors"
+    )
     print(f"  Output:       {output_file}")
     print("=" * 50)
 

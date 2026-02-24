@@ -13,8 +13,10 @@ Environment:
     OPENAI_API_KEY: Required - OpenAI API key for embeddings
 """
 
-import sys
+from __future__ import annotations
+
 import argparse
+import sys
 from pathlib import Path
 
 # Add script directory to path for imports
@@ -32,7 +34,7 @@ from cli_utils import (
     style,
 )
 
-from config import get_config, reload_config, ConfigError
+from config import ConfigError, get_config, reload_config
 from pipeline import EmbeddingPipeline
 
 
@@ -65,16 +67,20 @@ def main() -> int:
         )
         sys.exit(0)
 
-    parser = argparse.ArgumentParser(description="Create Qdrant embeddings from preprocessed documents")
+    parser = argparse.ArgumentParser(
+        description="Create Qdrant embeddings from preprocessed documents"
+    )
     parser.add_argument(
-        "--limit", "-l",
+        "--limit",
+        "-l",
         type=int,
         default=None,
         help="Limit number of documents to process (for testing)",
     )
 
     parser.add_argument(
-        "--config", "-c",
+        "--config",
+        "-c",
         type=str,
         default=None,
         help="Path to custom configuration file",

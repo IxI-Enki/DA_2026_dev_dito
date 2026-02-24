@@ -8,27 +8,26 @@ Analysiert:
 - Seiteninhalt-Qualität
 """
 
-import os
-import json
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from collections import defaultdict
 import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List
 
 # Relative import für config
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import get_config, EvaluationConfig
+from config import EvaluationConfig, get_config
 
 # Optional imports - graceful fallback
 try:
     import fitz  # PyMuPDF
+
     HAS_PYMUPDF = True
 except ImportError:
     HAS_PYMUPDF = False
 
 try:
     from PIL import Image
+
     HAS_PIL = True
 except ImportError:
     HAS_PIL = False
@@ -37,6 +36,7 @@ except ImportError:
 @dataclass
 class FileQuality:
     """Qualitätsbewertung einer einzelnen Datei."""
+
     file_path: str
     file_name: str
     file_type: str
@@ -50,6 +50,7 @@ class FileQuality:
 @dataclass
 class PDFQuality(FileQuality):
     """Spezifische Qualitätsbewertung für PDFs."""
+
     page_count: int = 0
     has_text_layer: bool = False
     text_char_count: int = 0
@@ -63,6 +64,7 @@ class PDFQuality(FileQuality):
 @dataclass
 class ImageQuality(FileQuality):
     """Spezifische Qualitätsbewertung für Bilder."""
+
     width: int = 0
     height: int = 0
     resolution: int = 0
@@ -74,6 +76,7 @@ class ImageQuality(FileQuality):
 @dataclass
 class QualityAnalysisResult:
     """Gesamtergebnis der Qualitätsanalyse."""
+
     total_files: int = 0
     total_size_mb: float = 0.0
     files_by_type: Dict[str, int] = field(default_factory=dict)
@@ -90,7 +93,7 @@ class QualityAnalysisResult:
 class FormatQualityAnalyzer:
     """Analysiert die Qualität verschiedener Dateiformate."""
 
-    def __init__(self, config: Optional[EvaluationConfig] = None):
+    def __init__(self, config: EvaluationConfig | None = None):
         """
         Initialisiert den FormatQualityAnalyzer.
 
@@ -101,13 +104,13 @@ class FormatQualityAnalyzer:
         self.raw_config = self.config.raw_config
 
         # Load format settings
-        format_cfg = self.raw_config.get('FORMAT_ANALYSIS', {})
-        self.supported_formats = format_cfg.get('supported_formats', {})
-        self.quality_thresholds = format_cfg.get('quality_thresholds', {})
+        format_cfg = self.raw_config.get("FORMAT_ANALYSIS", {})
+        self.supported_formats = format_cfg.get("supported_formats", {})
+        self.quality_thresholds = format_cfg.get("quality_thresholds", {})
 
         # Diploma thesis files
-        diploma_cfg = self.raw_config.get('DIPLOMA_THESIS', {})
-        self.diploma_thesis_files = set(diploma_cfg.get('files', []))
+        diploma_cfg = self.raw_config.get("DIPLOMA_THESIS", {})
+        self.diploma_thesis_files = set(diploma_cfg.get("files", []))
 
         # Results
         self.result = QualityAnalysisResult()
@@ -150,50 +153,50 @@ class FormatQualityAnalyzer:
             return
 
         page_stats = {
-            'total': 0,
-            'empty': 0,
-            'tiny': 0,  # < min_chars
-            'small': 0,  # < 1KB
-            'medium': 0,  # 1-5KB
-            'large': 0,  # > 5KB
-            'total_chars': 0,
-            'total_words': 0,
-            'with_media': 0,
-            'issues': []
+            "total": 0,
+            "empty": 0,
+            "tiny": 0,  # < min_chars
+            "small": 0,  # < 1KB
+            "medium": 0,  # 1-5KB
+            "large": 0,  # > 5KB
+            "total_chars": 0,
+            "total_words": 0,
+            "with_media": 0,
+            "issues": [],
         }
 
-        min_chars = self.quality_thresholds.get('page_content', {}).get('min_chars', 50)
+        min_chars = self.quality_thresholds.get("page_content", {}).get("min_chars", 50)
 
         for content_file in content_dir.glob("*.txt"):
-            page_stats['total'] += 1
+            page_stats["total"] += 1
 
             try:
-                content = content_file.read_text(encoding='utf-8')
+                content = content_file.read_text(encoding="utf-8")
                 char_count = len(content)
                 word_count = len(content.split())
 
-                page_stats['total_chars'] += char_count
-                page_stats['total_words'] += word_count
+                page_stats["total_chars"] += char_count
+                page_stats["total_words"] += word_count
 
                 # Size classification
                 if char_count == 0:
-                    page_stats['empty'] += 1
-                    page_stats['issues'].append(f"{content_file.stem}: Leer")
+                    page_stats["empty"] += 1
+                    page_stats["issues"].append(f"{content_file.stem}: Leer")
                 elif char_count < min_chars:
-                    page_stats['tiny'] += 1
+                    page_stats["tiny"] += 1
                 elif char_count < 1000:
-                    page_stats['small'] += 1
+                    page_stats["small"] += 1
                 elif char_count < 5000:
-                    page_stats['medium'] += 1
+                    page_stats["medium"] += 1
                 else:
-                    page_stats['large'] += 1
+                    page_stats["large"] += 1
 
                 # Check for media references
-                if '{{' in content and '}}' in content:
-                    page_stats['with_media'] += 1
+                if "{{" in content and "}}" in content:
+                    page_stats["with_media"] += 1
 
             except Exception as e:
-                page_stats['issues'].append(f"{content_file.stem}: {str(e)}")
+                page_stats["issues"].append(f"{content_file.stem}: {str(e)}")
 
         self.result.pages_analysis = page_stats
 
@@ -209,20 +212,20 @@ class FormatQualityAnalyzer:
                 continue
 
             # Skip metadata files
-            if 'metadata' in str(file_path).lower():
+            if "metadata" in str(file_path).lower():
                 continue
 
             ext = file_path.suffix.lower()
             file_name = file_path.name
 
             # Analyze by type
-            if ext == '.pdf':
+            if ext == ".pdf":
                 quality = self._analyze_pdf(file_path)
-            elif ext in ['.jpg', '.jpeg', '.png']:
+            elif ext in [".jpg", ".jpeg", ".png"]:
                 quality = self._analyze_image(file_path)
-            elif ext in ['.docx', '.xlsx', '.pptx', '.odt']:
+            elif ext in [".docx", ".xlsx", ".pptx", ".odt"]:
                 quality = self._analyze_office(file_path)
-            elif ext == '.svg':
+            elif ext == ".svg":
                 quality = self._analyze_svg(file_path)
             else:
                 quality = self._analyze_generic(file_path)
@@ -240,7 +243,9 @@ class FormatQualityAnalyzer:
 
             file_type = quality.file_type
             self.result.files_by_type[file_type] = self.result.files_by_type.get(file_type, 0) + 1
-            self.result.size_by_type[file_type] = self.result.size_by_type.get(file_type, 0) + file_size_mb
+            self.result.size_by_type[file_type] = (
+                self.result.size_by_type.get(file_type, 0) + file_size_mb
+            )
 
             if quality.issues:
                 self.result.files_with_issues += 1
@@ -252,9 +257,9 @@ class FormatQualityAnalyzer:
         quality = PDFQuality(
             file_path=str(file_path),
             file_name=file_path.name,
-            file_type='pdf',
+            file_type="pdf",
             file_size_kb=file_size_kb,
-            quality_score=0.5  # Default
+            quality_score=0.5,  # Default
         )
 
         if not HAS_PYMUPDF:
@@ -291,7 +296,7 @@ class FormatQualityAnalyzer:
                 quality.avg_chars_per_page = quality.text_char_count / quality.page_count
 
             # Determine if OCR is needed
-            min_text = self.quality_thresholds.get('pdf', {}).get('min_text_chars', 100)
+            min_text = self.quality_thresholds.get("pdf", {}).get("min_text_chars", 100)
             if quality.text_char_count < min_text and has_images:
                 quality.needs_ocr = True
                 quality.is_scanned = True
@@ -310,9 +315,9 @@ class FormatQualityAnalyzer:
                 quality.quality_score = 0.5
 
             quality.metadata = {
-                'page_count': quality.page_count,
-                'avg_chars_per_page': quality.avg_chars_per_page,
-                'is_scanned': quality.is_scanned
+                "page_count": quality.page_count,
+                "avg_chars_per_page": quality.avg_chars_per_page,
+                "is_scanned": quality.is_scanned,
             }
 
         except Exception as e:
@@ -328,10 +333,10 @@ class FormatQualityAnalyzer:
         quality = ImageQuality(
             file_path=str(file_path),
             file_name=file_path.name,
-            file_type='image',
+            file_type="image",
             file_size_kb=file_size_kb,
             quality_score=0.5,
-            format=file_path.suffix.lower()
+            format=file_path.suffix.lower(),
         )
 
         if not HAS_PIL:
@@ -345,8 +350,16 @@ class FormatQualityAnalyzer:
                 quality.resolution = min(quality.width, quality.height)
 
                 # Check OCR candidacy
-                min_width = self.supported_formats.get('images', {}).get('ocr_candidates', {}).get('min_width', 200)
-                min_height = self.supported_formats.get('images', {}).get('ocr_candidates', {}).get('min_height', 100)
+                min_width = (
+                    self.supported_formats.get("images", {})
+                    .get("ocr_candidates", {})
+                    .get("min_width", 200)
+                )
+                min_height = (
+                    self.supported_formats.get("images", {})
+                    .get("ocr_candidates", {})
+                    .get("min_height", 100)
+                )
 
                 if quality.width >= min_width and quality.height >= min_height:
                     quality.is_ocr_candidate = True
@@ -363,9 +376,9 @@ class FormatQualityAnalyzer:
                     quality.issues.append("Niedrige Auflösung")
 
                 quality.metadata = {
-                    'width': quality.width,
-                    'height': quality.height,
-                    'is_ocr_candidate': quality.is_ocr_candidate
+                    "width": quality.width,
+                    "height": quality.height,
+                    "is_ocr_candidate": quality.is_ocr_candidate,
                 }
 
         except Exception as e:
@@ -379,19 +392,14 @@ class FormatQualityAnalyzer:
         file_size_kb = file_path.stat().st_size / 1024
         ext = file_path.suffix.lower()
 
-        file_type_map = {
-            '.docx': 'word',
-            '.xlsx': 'excel',
-            '.pptx': 'powerpoint',
-            '.odt': 'odt'
-        }
+        file_type_map = {".docx": "word", ".xlsx": "excel", ".pptx": "powerpoint", ".odt": "odt"}
 
         quality = FileQuality(
             file_path=str(file_path),
             file_name=file_path.name,
-            file_type=file_type_map.get(ext, 'office'),
+            file_type=file_type_map.get(ext, "office"),
             file_size_kb=file_size_kb,
-            quality_score=0.7  # Office files generally good
+            quality_score=0.7,  # Office files generally good
         )
 
         # Size-based quality assessment
@@ -403,8 +411,8 @@ class FormatQualityAnalyzer:
             quality.recommendations.append("Prüfen ob Chunking-Strategie angepasst werden muss")
 
         quality.metadata = {
-            'format': ext,
-            'estimated_complexity': 'high' if file_size_kb > 5000 else 'normal'
+            "format": ext,
+            "estimated_complexity": "high" if file_size_kb > 5000 else "normal",
         }
 
         return quality
@@ -416,9 +424,9 @@ class FormatQualityAnalyzer:
         quality = FileQuality(
             file_path=str(file_path),
             file_name=file_path.name,
-            file_type='svg',
+            file_type="svg",
             file_size_kb=file_size_kb,
-            quality_score=0.8  # SVGs are generally good
+            quality_score=0.8,  # SVGs are generally good
         )
 
         # SVGs are vector graphics - usually diagrams
@@ -433,9 +441,9 @@ class FormatQualityAnalyzer:
         return FileQuality(
             file_path=str(file_path),
             file_name=file_path.name,
-            file_type=file_path.suffix.lower().lstrip('.') or 'unknown',
+            file_type=file_path.suffix.lower().lstrip(".") or "unknown",
             file_size_kb=file_size_kb,
-            quality_score=0.5
+            quality_score=0.5,
         )
 
     def _calculate_summary(self):
@@ -449,47 +457,49 @@ class FormatQualityAnalyzer:
         # Quality distribution
         for f in all_files:
             if f.quality_score >= 0.7:
-                bucket = 'high'
+                bucket = "high"
             elif f.quality_score >= 0.4:
-                bucket = 'medium'
+                bucket = "medium"
             else:
-                bucket = 'low'
-            self.result.quality_distribution[bucket] = \
+                bucket = "low"
+            self.result.quality_distribution[bucket] = (
                 self.result.quality_distribution.get(bucket, 0) + 1
+            )
 
     def to_dict(self) -> Dict[str, Any]:
         """Konvertiert Ergebnisse zu Dictionary für JSON-Export."""
         return {
-            'summary': {
-                'total_files': self.result.total_files,
-                'total_size_mb': round(self.result.total_size_mb, 2),
-                'avg_quality_score': round(self.result.avg_quality_score, 2),
-                'files_needing_ocr': self.result.files_needing_ocr,
-                'files_with_issues': self.result.files_with_issues
+            "summary": {
+                "total_files": self.result.total_files,
+                "total_size_mb": round(self.result.total_size_mb, 2),
+                "avg_quality_score": round(self.result.avg_quality_score, 2),
+                "files_needing_ocr": self.result.files_needing_ocr,
+                "files_with_issues": self.result.files_with_issues,
             },
-            'by_type': self.result.files_by_type,
-            'size_by_type_mb': {k: round(v, 2) for k, v in self.result.size_by_type.items()},
-            'quality_distribution': self.result.quality_distribution,
-            'pages_analysis': self.result.pages_analysis,
-            'diploma_thesis': [
+            "by_type": self.result.files_by_type,
+            "size_by_type_mb": {k: round(v, 2) for k, v in self.result.size_by_type.items()},
+            "quality_distribution": self.result.quality_distribution,
+            "pages_analysis": self.result.pages_analysis,
+            "diploma_thesis": [
                 {
-                    'file_name': f.file_name,
-                    'size_mb': round(f.file_size_kb / 1024, 2),
-                    'quality_score': round(f.quality_score, 2),
-                    'issues': f.issues,
-                    'metadata': f.metadata
+                    "file_name": f.file_name,
+                    "size_mb": round(f.file_size_kb / 1024, 2),
+                    "quality_score": round(f.quality_score, 2),
+                    "issues": f.issues,
+                    "metadata": f.metadata,
                 }
                 for f in self.result.diploma_thesis_files
             ],
-            'files_with_issues': [
+            "files_with_issues": [
                 {
-                    'file_name': f.file_name,
-                    'file_type': f.file_type,
-                    'issues': f.issues,
-                    'recommendations': f.recommendations
+                    "file_name": f.file_name,
+                    "file_type": f.file_type,
+                    "issues": f.issues,
+                    "recommendations": f.recommendations,
                 }
-                for f in self.result.all_files if f.issues
-            ]
+                for f in self.result.all_files
+                if f.issues
+            ],
         }
 
 

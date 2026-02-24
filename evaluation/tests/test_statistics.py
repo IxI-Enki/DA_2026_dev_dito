@@ -14,7 +14,6 @@ from evaluation.statistics.statistical_analysis import (
     StatisticalAnalyzer,
 )
 
-
 # ---- bootstrap_ci -----------------------------------------------------------
 
 
@@ -146,6 +145,5 @@ class TestCompareConfigurations:
 
     def test_missing_file_raises(self) -> None:
         analyzer = StatisticalAnalyzer()
-        with tempfile.TemporaryDirectory() as tmp:
-            with pytest.raises((FileNotFoundError, OSError)):
-                analyzer.compare_configurations(Path(tmp) / "none.json", Path(tmp) / "other.json")
+        with tempfile.TemporaryDirectory() as tmp, pytest.raises((FileNotFoundError, OSError)):
+            analyzer.compare_configurations(Path(tmp) / "none.json", Path(tmp) / "other.json")

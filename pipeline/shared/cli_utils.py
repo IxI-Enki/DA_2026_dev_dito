@@ -6,12 +6,13 @@ Provides:
 - 8-section help banner template
 - Windows ANSI escape sequence enablement
 """
+
 from __future__ import annotations
 
 import os
 import signal
 import sys
-from typing import Callable, Optional
+from typing import Callable
 
 # ---------------------------------------------------------------------------
 # Colour / styling
@@ -21,21 +22,21 @@ _use_color: bool = True
 
 # ANSI escape codes (subset: keeps it portable and simple)
 _COLORS = {
-    "reset": "\033[0m",
-    "bold": "\033[1m",
     "dim": "\033[2m",
+    "bold": "\033[1m",
     "red": "\033[31m",
-    "green": "\033[32m",
-    "yellow": "\033[33m",
+    "reset": "\033[0m",
     "blue": "\033[34m",
-    "magenta": "\033[35m",
     "cyan": "\033[36m",
     "white": "\033[37m",
+    "green": "\033[32m",
+    "yellow": "\033[33m",
+    "magenta": "\033[35m",
     "bright_red": "\033[91m",
-    "bright_green": "\033[92m",
-    "bright_yellow": "\033[93m",
     "bright_blue": "\033[94m",
     "bright_cyan": "\033[96m",
+    "bright_green": "\033[92m",
+    "bright_yellow": "\033[93m",
 }
 
 
@@ -50,6 +51,7 @@ def enable_windows_ansi() -> None:
         return
     try:
         import ctypes
+
         kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
         # STD_OUTPUT_HANDLE = -11
         handle = kernel32.GetStdHandle(-11)
@@ -94,9 +96,10 @@ def style(text: str, *codes: str) -> str:
 # Signal handling
 # ---------------------------------------------------------------------------
 
+
 def create_sigint_handler(
     script_name: str = "",
-    callback: Optional[Callable[[], None]] = None,
+    callback: Callable[[], None] | None = None,
 ) -> Callable:
     """Return a SIGINT handler that prints an abort banner and exits 130.
 
@@ -129,7 +132,7 @@ def create_sigint_handler(
 
 def register_sigint(
     script_name: str = "",
-    callback: Optional[Callable[[], None]] = None,
+    callback: Callable[[], None] | None = None,
 ) -> None:
     """Convenience: create and register the SIGINT handler in one call."""
     signal.signal(signal.SIGINT, create_sigint_handler(script_name, callback))
@@ -138,6 +141,7 @@ def register_sigint(
 # ---------------------------------------------------------------------------
 # Help banner
 # ---------------------------------------------------------------------------
+
 
 def print_help_banner(
     *,
@@ -176,6 +180,7 @@ def print_help_banner(
 # ---------------------------------------------------------------------------
 # Argument-parser helper
 # ---------------------------------------------------------------------------
+
 
 def add_no_color_arg(parser: object) -> None:
     """Add ``--no-color`` flag to an argparse parser.

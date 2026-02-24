@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import json
-import shutil
 from pathlib import Path
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -16,15 +15,19 @@ def sample_jsonl(tmp_path: Path) -> Path:
     f = tmp_path / "embedded_chunks.jsonl"
     lines = []
     for i in range(5):
-        lines.append(json.dumps({
-            "id": f"point_{i}",
-            "vector": [0.1 * i] * 384,
-            "payload": {
-                "text": f"Sample chunk text {i}",
-                "page_id": f"ns:page_{i}",
-                "chunk_index": i,
-            },
-        }))
+        lines.append(
+            json.dumps(
+                {
+                    "id": f"point_{i}",
+                    "vector": [0.1 * i] * 384,
+                    "payload": {
+                        "text": f"Sample chunk text {i}",
+                        "page_id": f"ns:page_{i}",
+                        "chunk_index": i,
+                    },
+                }
+            )
+        )
     f.write_text("\n".join(lines), encoding="utf-8")
     return f
 
@@ -78,9 +81,7 @@ class TestDirectUpload:
         deployer.deploy_direct(sample_jsonl, "new_collection")
         assert mock_qdrant_client.create_collection.called
 
-    def test_deploy_direct_empty_file(
-        self, tmp_path: Path, mock_qdrant_client: MagicMock
-    ) -> None:
+    def test_deploy_direct_empty_file(self, tmp_path: Path, mock_qdrant_client: MagicMock) -> None:
         from deploy_qdrant import QdrantDeployer
 
         empty = tmp_path / "empty.jsonl"
@@ -94,9 +95,7 @@ class TestDirectUpload:
 class TestWatchdogMode:
     """T083: Tests for watchdog mode (file copy)."""
 
-    def test_deploy_watchdog_returns_path(
-        self, sample_jsonl: Path, tmp_path: Path
-    ) -> None:
+    def test_deploy_watchdog_returns_path(self, sample_jsonl: Path, tmp_path: Path) -> None:
         from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)
@@ -106,9 +105,7 @@ class TestWatchdogMode:
         assert isinstance(result, Path)
         assert result.exists()
 
-    def test_deploy_watchdog_copies_file(
-        self, sample_jsonl: Path, tmp_path: Path
-    ) -> None:
+    def test_deploy_watchdog_copies_file(self, sample_jsonl: Path, tmp_path: Path) -> None:
         from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)
@@ -117,9 +114,7 @@ class TestWatchdogMode:
         result = deployer.deploy_watchdog(sample_jsonl, out_dir)
         assert result.read_text(encoding="utf-8") == sample_jsonl.read_text(encoding="utf-8")
 
-    def test_deploy_watchdog_creates_output_dir(
-        self, sample_jsonl: Path, tmp_path: Path
-    ) -> None:
+    def test_deploy_watchdog_creates_output_dir(self, sample_jsonl: Path, tmp_path: Path) -> None:
         from deploy_qdrant import QdrantDeployer
 
         deployer = QdrantDeployer.__new__(QdrantDeployer)

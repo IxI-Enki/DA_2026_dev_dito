@@ -23,7 +23,12 @@ from typing import Any
 _deploy_dir = Path(__file__).resolve().parent
 if str(_deploy_dir.parent / "shared") not in sys.path:
     sys.path.insert(0, str(_deploy_dir.parent / "shared"))
-from cli_utils import enable_windows_ansi, style
+from cli_utils import (
+    add_no_color_arg,
+    apply_color_from_args,
+    register_sigint,
+    style,
+)
 
 logger = logging.getLogger(__name__)
 SEP_LEN = 60
@@ -81,7 +86,7 @@ class QdrantDeployer:
         port: Qdrant REST port (default 6333).
     """
 
-    def __init__(self, host: str = "192.168.8.3", port: int = 6333) -> None:
+    def __init__(self, host: str = "localhost", port: int = 6333) -> None:
         try:
             from qdrant_client import QdrantClient
 
@@ -126,12 +131,18 @@ class QdrantDeployer:
         vec_dim = len(first_vec)
         logger.info(
             "Loaded %d records (vector_dim=%d) from %s",
-            len(records), vec_dim, jsonl_path.name,
+            len(records),
+            vec_dim,
+            jsonl_path.name,
         )
 
         if dry_run:
-            logger.info("[DRY-RUN] Would upload %d points to '%s' (dim=%d)",
-                        len(records), collection_name, vec_dim)
+            logger.info(
+                "[DRY-RUN] Would upload %d points to '%s' (dim=%d)",
+                len(records),
+                collection_name,
+                vec_dim,
+            )
             return len(records)
 
         if self.client is None:
@@ -140,10 +151,7 @@ class QdrantDeployer:
             )
 
         # Collection management (T089)
-        existing = {
-            c.name
-            for c in self.client.get_collections().collections
-        }
+        existing = {c.name for c in self.client.get_collections().collections}
 
         if recreate and collection_name in existing:
             logger.info("Recreating collection '%s'", collection_name)
@@ -151,7 +159,7 @@ class QdrantDeployer:
             existing.discard(collection_name)
 
         if collection_name not in existing:
-            from qdrant_client.models import VectorParams, Distance
+            from qdrant_client.models import Distance, VectorParams
 
             self.client.create_collection(
                 collection_name=collection_name,
@@ -217,22 +225,42 @@ def _point_id(record: dict[str, Any]) -> str | int:
 
 def main() -> int:
     """CLI entry point."""
-    enable_windows_ansi()
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
+    from deploy_config import get_defaults
+
+    defaults = get_defaults()
+
     parser = argparse.ArgumentParser(description="Deploy embeddings to Qdrant")
     parser.add_argument("--mode", choices=["direct", "watchdog"], default="direct")
     parser.add_argument("--jsonl", type=Path, required=True, help="Embeddings JSONL file")
-    parser.add_argument("--collection", default="leowiki", help="Qdrant collection name")
-    parser.add_argument("--host", default="192.168.8.3", help="Qdrant host")
-    parser.add_argument("--port", type=int, default=6333, help="Qdrant port")
+    parser.add_argument(
+        "--collection",
+        default=defaults["collection_name"],
+        help=f"Qdrant collection name (default: {defaults['collection_name']})",
+    )
+    parser.add_argument(
+        "--host",
+        default=defaults["qdrant_host"],
+        help=f"Qdrant host (default: {defaults['qdrant_host']})",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=defaults["qdrant_port"],
+        help=f"Qdrant port (default: {defaults['qdrant_port']})",
+    )
     parser.add_argument("--output-dir", type=Path, default=None, help="Watchdog output dir")
     parser.add_argument("--recreate", action="store_true", help="Delete and recreate collection")
     parser.add_argument("--dry-run", action="store_true", help="Validate without uploading")
+    add_no_color_arg(parser)
+
     args = parser.parse_args()
+    apply_color_from_args(args)
+    register_sigint("deploy_qdrant")
 
     sep = "=" * SEP_LEN
     print(style(sep, "cyan"))
@@ -248,10 +276,17 @@ def main() -> int:
 
         if args.mode == "direct":
             count = deployer.deploy_direct(
-                args.jsonl, args.collection,
-                recreate=args.recreate, dry_run=args.dry_run,
+                args.jsonl,
+                args.collection,
+                recreate=args.recreate,
+                dry_run=args.dry_run,
             )
-            print(style(f"[OK] {count} points {'validated' if args.dry_run else 'uploaded'}", "bright_green"))
+            print(
+                style(
+                    f"[OK] {count} points {'validated' if args.dry_run else 'uploaded'}",
+                    "bright_green",
+                )
+            )
         else:
             if args.output_dir is None:
                 logger.error("--output-dir required for watchdog mode")
