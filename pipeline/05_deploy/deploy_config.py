@@ -1,25 +1,28 @@
+"""Shared deploy configuration for 05_deploy scripts.
+
+Loads config.yaml (same dir); used by transfer_to_pi.py, verify_transfer.py,
+and deploy_qdrant.py.
 """
-Shared deploy configuration for 05_deploy scripts.
-Loads config.yaml (same dir); used by transfer_to_pi.py and verify_transfer.py.
-"""
+
+from __future__ import annotations
 
 from pathlib import Path
 
 try:
     import yaml
 except ImportError:
-    yaml = None
+    yaml = None  # type: ignore[assignment]
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 CONFIG_FILE = SCRIPT_DIR / "config.yaml"
 
 # Fallback when config.yaml is missing
-DEFAULT_CONFIG = {
-    "ssh_host": "raspberry-pi.local",
-    "ssh_user": "pi",
+DEFAULT_CONFIG: dict[str, str | int] = {
+    "ssh_host": "raspi-docker",
+    "ssh_user": "imreo",
     "ssh_port": 22,
-    "remote_embeddings_dir": "/home/pi/qdrant/data/embeddings/",
-    "remote_embeddings_file": "/home/pi/qdrant/data/embeddings/embedded_chunks.jsonl",
+    "remote_embeddings_dir": "~/mcp-diploma-thesis-final/data/incoming/",
+    "remote_embeddings_file": "~/mcp-diploma-thesis-final/data/incoming/embedded_chunks.jsonl",
     "qdrant_host": "localhost",
     "qdrant_port": 6333,
     "collection_name": "wiki_embeddings",
@@ -54,19 +57,25 @@ def get_defaults() -> dict:
     if "qdrant" in cfg:
         out["qdrant_host"] = cfg["qdrant"].get("host", out["qdrant_host"])
         out["qdrant_port"] = cfg["qdrant"].get("port", out["qdrant_port"])
-        out["collection_name"] = cfg["qdrant"].get("collection_name", out["collection_name"])
+        out["collection_name"] = cfg["qdrant"].get(
+            "collection_name", out["collection_name"]
+        )
     return out
 
 
 def find_latest_embeddings_file(base_dir: Path) -> Path | None:
-    """
-    Find embedded_chunks.jsonl in the latest embedded_at_YYYYMMDD_HHMMSS directory.
+    """Find embedded_chunks.jsonl in the latest embedded_at_YYYYMMDD_HHMMSS directory.
+
     Returns path to file or None if none found.
     """
     if not base_dir.is_dir():
         return None
     run_dirs = sorted(
-        (p for p in base_dir.iterdir() if p.is_dir() and p.name.startswith("embedded_at_")),
+        (
+            p
+            for p in base_dir.iterdir()
+            if p.is_dir() and p.name.startswith("embedded_at_")
+        ),
         key=lambda p: p.name,
         reverse=True,
     )
