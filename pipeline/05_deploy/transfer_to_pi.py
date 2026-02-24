@@ -64,9 +64,7 @@ def get_file_size(filepath: Path) -> str:
     return f"{size:.2f} TB"
 
 
-def test_ssh_connection(
-    host: str, user: str, port: int, key_path: str | None = None
-) -> bool:
+def test_ssh_connection(host: str, user: str, port: int, key_path: str | None = None) -> bool:
     """Test SSH connection to remote host."""
     print(f"[INFO] Testing SSH connection to {user}@{host}:{port}...")
 
@@ -208,9 +206,7 @@ def main() -> int:
         action="store_true",
         help="Show what would be done without actually transferring",
     )
-    parser.add_argument(
-        "--skip-test", action="store_true", help="Skip SSH connection test"
-    )
+    parser.add_argument("--skip-test", action="store_true", help="Skip SSH connection test")
     add_no_color_arg(parser)
 
     args = parser.parse_args()

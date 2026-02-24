@@ -57,9 +57,7 @@ def get_defaults() -> dict:
     if "qdrant" in cfg:
         out["qdrant_host"] = cfg["qdrant"].get("host", out["qdrant_host"])
         out["qdrant_port"] = cfg["qdrant"].get("port", out["qdrant_port"])
-        out["collection_name"] = cfg["qdrant"].get(
-            "collection_name", out["collection_name"]
-        )
+        out["collection_name"] = cfg["qdrant"].get("collection_name", out["collection_name"])
     return out
 
 
@@ -71,11 +69,7 @@ def find_latest_embeddings_file(base_dir: Path) -> Path | None:
     if not base_dir.is_dir():
         return None
     run_dirs = sorted(
-        (
-            p
-            for p in base_dir.iterdir()
-            if p.is_dir() and p.name.startswith("embedded_at_")
-        ),
+        (p for p in base_dir.iterdir() if p.is_dir() and p.name.startswith("embedded_at_")),
         key=lambda p: p.name,
         reverse=True,
     )

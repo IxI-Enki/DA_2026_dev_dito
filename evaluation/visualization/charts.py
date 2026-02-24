@@ -367,7 +367,9 @@ class EvaluationVisualizer:
         for i, metric in enumerate(metrics):
             vals = [r.get(metric, 0.0) for r in sorted_rows]
             offset = (i - len(metrics) / 2 + 0.5) * width
-            ax.bar(x + offset, vals, width, label=metric.replace("_", " ").title(), color=colours[i])
+            ax.bar(
+                x + offset, vals, width, label=metric.replace("_", " ").title(), color=colours[i]
+            )
         ax.set_ylabel("Score")
         ax.set_xlabel("Chunk size (chars)")
         ax.set_title(title, fontweight="bold")
@@ -417,8 +419,16 @@ class EvaluationVisualizer:
         dense_vals = [_val(dense_metrics, m) for m in metrics_order]
         hybrid_vals = [_val(hybrid_metrics, m) for m in metrics_order]
         fig, ax = plt.subplots(figsize=(max(8, len(labels) * 1.5), 5))
-        ax.bar(x - width / 2, dense_vals, width, label="Dense", color=sns.color_palette("muted", 2)[0])
-        ax.bar(x + width / 2, hybrid_vals, width, label="Hybrid", color=sns.color_palette("muted", 2)[1])
+        ax.bar(
+            x - width / 2, dense_vals, width, label="Dense", color=sns.color_palette("muted", 2)[0]
+        )
+        ax.bar(
+            x + width / 2,
+            hybrid_vals,
+            width,
+            label="Hybrid",
+            color=sns.color_palette("muted", 2)[1],
+        )
         ax.set_ylabel("Score")
         ax.set_title(title, fontweight="bold")
         ax.set_xticks(x)
@@ -454,7 +464,9 @@ class EvaluationVisualizer:
         x_vals = [dense_rr_by_id[q] for q in ids]
         y_vals = [hybrid_rr_by_id[q] for q in ids]
         fig, ax = plt.subplots(figsize=(6, 6))
-        ax.scatter(x_vals, y_vals, alpha=0.7, s=40, color=sns.color_palette("muted", 1)[0], label="Queries")
+        ax.scatter(
+            x_vals, y_vals, alpha=0.7, s=40, color=sns.color_palette("muted", 1)[0], label="Queries"
+        )
         lim_lo = min(min(x_vals), min(y_vals), 0.0)
         lim_hi = max(max(x_vals), max(y_vals), 1.0)
         ax.plot([lim_lo, lim_hi], [lim_lo, lim_hi], "k--", alpha=0.7, label="y = x")

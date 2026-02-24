@@ -150,9 +150,7 @@ def main() -> int:
     parser.add_argument("--host", "-H", default=defaults["ssh_host"])
     parser.add_argument("--user", "-u", default=defaults["ssh_user"])
     parser.add_argument("--port", "-p", type=int, default=defaults["ssh_port"])
-    parser.add_argument(
-        "--remote-path", "-r", default=defaults["remote_embeddings_file"]
-    )
+    parser.add_argument("--remote-path", "-r", default=defaults["remote_embeddings_file"])
     parser.add_argument(
         "--local-file",
         "-f",
@@ -207,9 +205,7 @@ def main() -> int:
     print("\n[2/3] Getting remote file hash...")
     print(f"      Host: {args.user}@{args.host}:{args.port}")
     print(f"      Path: {args.remote_path}")
-    remote_hash = get_remote_hash(
-        args.host, args.user, args.port, args.remote_path, args.key
-    )
+    remote_hash = get_remote_hash(args.host, args.user, args.port, args.remote_path, args.key)
     if remote_hash:
         print(f"      MD5:  {remote_hash}")
     else:
@@ -247,9 +243,7 @@ def main() -> int:
             key_path=args.key,
         )
         if qdrant_status["status"] == "ok":
-            print(
-                style("        [OK] Qdrant collection accessible", "bright_green")
-            )
+            print(style("        [OK] Qdrant collection accessible", "bright_green"))
             if "points_count" in qdrant_status:
                 print(f"        Points: {qdrant_status['points_count']}")
         else:

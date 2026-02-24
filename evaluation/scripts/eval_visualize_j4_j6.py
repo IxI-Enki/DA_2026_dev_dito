@@ -112,8 +112,16 @@ def main() -> int:
     parser.add_argument("--dpi", type=int, default=300, help="DPI for PNG (default 300)")
     args = parser.parse_args()
 
-    results_dir = args.results_dir if args.results_dir.is_absolute() else (Path.cwd() / args.results_dir).resolve()
-    output_dir = args.output_dir if args.output_dir.is_absolute() else (Path.cwd() / args.output_dir).resolve()
+    results_dir = (
+        args.results_dir
+        if args.results_dir.is_absolute()
+        else (Path.cwd() / args.results_dir).resolve()
+    )
+    output_dir = (
+        args.output_dir
+        if args.output_dir.is_absolute()
+        else (Path.cwd() / args.output_dir).resolve()
+    )
 
     if not results_dir.exists():
         logger.error("Results directory not found: %s", results_dir)
