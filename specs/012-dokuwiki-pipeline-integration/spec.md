@@ -88,7 +88,7 @@ A developer or administrator can run each pipeline stage directly from the comma
 
 **Why this priority**: CLI execution is the development and fallback mode. The pipeline must be the single source of truth — the extension is just a trigger, not a requirement.
 
-**Independent Test**: Run each stage's entry point (`run_preprocessing.py`, `run_embeddings.py`, `run_deploy.py transfer`) directly and verify `data/logs/pipeline_runs.json` is updated with correct stage/status/stats fields.
+**Independent Test**: Run each stage's entry point (`run_preprocessing.py`, `run_embeddings.py`, `run_deploy.py qdrant`) directly and verify `data/logs/pipeline_runs.json` is updated with correct stage/status/stats fields.
 
 **Acceptance Scenarios**:
 
