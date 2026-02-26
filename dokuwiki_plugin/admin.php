@@ -187,10 +187,8 @@ class admin_plugin_devdito extends AdminPlugin
                 $result = ServiceTester::testMcp($url);
                 return array_merge($result, ['ok' => $result['success']]);
             case 'qdrant':
-                // ConfigLoader reads from settings.json (FR-011)
-                $host = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
-                $port = (int) ConfigLoader::get('SERVICES.qdrant.port', 6333);
-                $result = ServiceTester::testQdrant($host, $port);
+                $endpoint = ServiceTester::resolveQdrantEndpoint();
+                $result = ServiceTester::testQdrant($endpoint['host'], $endpoint['port']);
                 return array_merge($result, ['ok' => $result['success']]);
             default:
                 return ['ok' => false, 'latency_ms' => 0, 'error' => 'Unknown service'];

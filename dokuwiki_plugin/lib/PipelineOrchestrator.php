@@ -62,9 +62,8 @@ class PipelineOrchestrator
     {
         $this->statusManager = new JobStatusManager();
         
-        // Get Orchestrator URL from config
-        // Default uses host.docker.internal for Docker container → Host communication
-        $this->orchestratorUrl = ConfigLoader::get(
+        // Orchestrator URL: env (Docker same-network) overrides config (host dev)
+        $this->orchestratorUrl = getenv('DEVDITO_ORCHESTRATOR_URL') ?: ConfigLoader::get(
             'PIPELINE_ORCHESTRATION.orchestrator.url',
             'http://host.docker.internal:18089'
         );
@@ -77,9 +76,18 @@ class PipelineOrchestrator
      */
     public function getStatus(): array
     {
+        // #region agent log
+        $__dbg = function(string $msg, array $data = []): void { $f = '/config/dokuwiki/lib/plugins/devdito/debug_agent.log'; @file_put_contents($f, json_encode(['ts'=>date('c'),'msg'=>$msg,'data'=>$data])."\n", FILE_APPEND); };
+        $__dbg('getStatus:enter', ['orchestratorUrl'=>$this->orchestratorUrl, 'envOrchUrl'=>getenv('DEVDITO_ORCHESTRATOR_URL')?:null, 'envQdrantHost'=>getenv('DEVDITO_QDRANT_HOST')?:null, 'envQdrantPort'=>getenv('DEVDITO_QDRANT_PORT')?:null]);
+        // #endregion
+
         // Try to get status from Orchestrator API first
         $apiStatus = $this->callOrchestratorApi('GET', '/status');
         
+        // #region agent log
+        $__dbg('getStatus:apiStatus', ['isNull'=>$apiStatus===null, 'hasStages'=>isset($apiStatus['stages']), 'stageCount'=>isset($apiStatus['stages'])?count($apiStatus['stages']):0, 'firstStageStatus'=>$apiStatus['stages'][0]['status']??'N/A']);
+        // #endregion
+
         if ($apiStatus && isset($apiStatus['stages'])) {
             // Orchestrator is running - use its status
             $apiStatus['orchestrator_status'] = 'running';
@@ -278,14 +286,14 @@ class PipelineOrchestrator
      */
     private function getQdrantInfo(): array
     {
-        $qdrantHost = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
-        $qdrantPort = ConfigLoader::get('SERVICES.qdrant.port', 6333);
+        $endpoint = ServiceTester::resolveQdrantEndpoint();
         $collection = ConfigLoader::get('SERVICES.qdrant.collection', 'wiki_embeddings');
+        $url = 'http://' . $endpoint['host'] . ':' . $endpoint['port'] . '/collections/' . $collection;
 
-        // For local Docker network, use localhost if running from outside Docker
-        // In production, this would be the Docker network hostname
-        $host = ($qdrantHost === 'qdrant_db') ? 'localhost' : $qdrantHost;
-        $url = "http://$host:$qdrantPort/collections/$collection";
+        // #region agent log
+        $__dbg = function(string $msg, array $data = []): void { $f = '/config/dokuwiki/lib/plugins/devdito/debug_agent.log'; @file_put_contents($f, json_encode(['ts'=>date('c'),'msg'=>$msg,'data'=>$data])."\n", FILE_APPEND); };
+        $__dbg('getQdrantInfo', ['host'=>$endpoint['host'], 'port'=>$endpoint['port'], 'collection'=>$collection, 'url'=>$url]);
+        // #endregion
 
         try {
             $context = stream_context_create([

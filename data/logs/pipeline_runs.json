@@ -1,0 +1,44 @@
+[
+  {
+    "job_id": "fetch_20260216_174539",
+    "stage": "fetch",
+    "status": "success",
+    "started_at": "2026-02-16T17:45:39",
+    "finished_at": "2026-02-16T17:45:39",
+    "updated_at": "2026-02-16T17:45:39",
+    "output_dir": "fetched/fetched_at_20260216_174539"
+  },
+  {
+    "job_id": "fetch_20260225_232419",
+    "stage": "fetch",
+    "status": "success",
+    "started_at": "2026-02-25T23:24:19",
+    "finished_at": "2026-02-25T23:24:19",
+    "updated_at": "2026-02-25T23:24:19",
+    "output_dir": "fetched/fetched_at_20260225_232419"
+  },
+  {
+    "job_id": "evaluate_20260225_234900",
+    "stage": "evaluate",
+    "status": "success",
+    "started_at": "2026-02-25T23:49:00",
+    "finished_at": "2026-02-25T23:49:00",
+    "updated_at": "2026-02-25T23:49:00"
+  },
+  {
+    "job_id": "preprocess_20260226_133804",
+    "stage": "preprocess",
+    "status": "success",
+    "started_at": "2026-02-26T13:38:04",
+    "finished_at": "2026-02-26T13:38:04",
+    "updated_at": "2026-02-26T13:38:04"
+  },
+  {
+    "job_id": "embed_20260226_142012",
+    "stage": "embed",
+    "status": "success",
+    "started_at": "2026-02-26T14:20:12",
+    "finished_at": "2026-02-26T14:20:12",
+    "updated_at": "2026-02-26T14:20:12"
+  }
+]

@@ -287,9 +287,8 @@ class action_plugin_devdito extends ActionPlugin
                 $result['ok'] = $result['success'];
                 break;
             case 'qdrant':
-                $host = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
-                $port = (int) ConfigLoader::get('SERVICES.qdrant.port', 6333);
-                $result = ServiceTester::testQdrant($host, $port);
+                $endpoint = ServiceTester::resolveQdrantEndpoint();
+                $result = ServiceTester::testQdrant($endpoint['host'], $endpoint['port']);
                 $result['ok'] = $result['success'];
                 break;
             case 'config':
@@ -310,11 +309,10 @@ class action_plugin_devdito extends ActionPlugin
     private function handleStatusCheck(): void
     {
         $mcpUrl = $this->getMcpUrl() ?? '';
-        $qdrantHost = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
-        $qdrantPort = (int) ConfigLoader::get('SERVICES.qdrant.port', 6333);
+        $qdrantEndpoint = ServiceTester::resolveQdrantEndpoint();
 
         $mcpResult = ServiceTester::testMcp($mcpUrl, $this->getMcpTimeout());
-        $qdrantResult = ServiceTester::testQdrant($qdrantHost, $qdrantPort);
+        $qdrantResult = ServiceTester::testQdrant($qdrantEndpoint['host'], $qdrantEndpoint['port']);
 
         $this->sendJsonResponse([
             'ok' => true,

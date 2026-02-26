@@ -36,6 +36,9 @@ services:
       - PGID=${PGID:-1000}
       - TZ=${TZ:-Europe/Vienna}
       - DEVDITO_MCP_URL=http://semantic-search-wiki-core:3000
+      - DEVDITO_QDRANT_HOST=dev-dito-qdrant
+      - DEVDITO_QDRANT_PORT=6333
+      - DEVDITO_ORCHESTRATOR_URL=http://dev-dito-orchestrator:8089
     volumes:
       - ${WIKI_ROOT}/config:/config
       - ${WIKI_ROOT}/data:/data

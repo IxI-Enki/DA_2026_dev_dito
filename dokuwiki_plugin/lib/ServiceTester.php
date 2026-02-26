@@ -17,6 +17,19 @@ namespace dokuwiki\plugin\devdito\lib;
 class ServiceTester
 {
     /**
+     * Resolve Qdrant host and port: env vars override settings.json (Docker container context).
+     *
+     * @return array{host: string, port: int}
+     */
+    public static function resolveQdrantEndpoint(): array
+    {
+        return [
+            'host' => getenv('DEVDITO_QDRANT_HOST') ?: ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db'),
+            'port' => (int) (getenv('DEVDITO_QDRANT_PORT') ?: ConfigLoader::get('SERVICES.qdrant.port', 6333)),
+        ];
+    }
+
+    /**
      * Test the MCP server by sending a JSON-RPC 2.0 ping request.
      *
      * @param string $url     Full URL of the MCP server endpoint

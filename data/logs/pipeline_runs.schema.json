@@ -9,12 +9,12 @@
     "properties": {
       "job_id": {
         "type": "string",
-        "pattern": "^(fetch|evaluate|embed|deploy)_\\d{8}_\\d{6}$",
+        "pattern": "^(fetch|evaluate|preprocess|embed|deploy)_\\d{8}_\\d{6}$",
         "description": "Unique job identifier: {stage}_{YYYYMMDD}_{HHMMSS}"
       },
       "stage": {
         "type": "string",
-        "enum": ["fetch", "evaluate", "embed", "deploy"],
+        "enum": ["fetch", "evaluate", "preprocess", "embed", "deploy"],
         "description": "Pipeline stage identifier"
       },
       "status": {
