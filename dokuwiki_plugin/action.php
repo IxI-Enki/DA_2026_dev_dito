@@ -25,10 +25,12 @@ use dokuwiki\Extension\EventHandler;
 require_once __DIR__ . '/lib/ConfigLoader.php';
 require_once __DIR__ . '/lib/JobStatusManager.php';
 require_once __DIR__ . '/lib/PipelineOrchestrator.php';
+require_once __DIR__ . '/lib/ServiceTester.php';
 
 use dokuwiki\plugin\devdito\lib\ConfigLoader;
 use dokuwiki\plugin\devdito\lib\JobStatusManager;
 use dokuwiki\plugin\devdito\lib\PipelineOrchestrator;
+use dokuwiki\plugin\devdito\lib\ServiceTester;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -280,10 +282,15 @@ class action_plugin_devdito extends ActionPlugin
 
         switch ($service) {
             case 'mcp':
-                $result = $this->testMcpServer();
+                $mcpUrl = $this->getMcpUrl() ?? '';
+                $result = ServiceTester::testMcp($mcpUrl, $this->getMcpTimeout());
+                $result['ok'] = $result['success'];
                 break;
             case 'qdrant':
-                $result = $this->testQdrant();
+                $host = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
+                $port = (int) ConfigLoader::get('SERVICES.qdrant.port', 6333);
+                $result = ServiceTester::testQdrant($host, $port);
+                $result['ok'] = $result['success'];
                 break;
             case 'config':
                 $result = $this->testConfig();
@@ -302,109 +309,22 @@ class action_plugin_devdito extends ActionPlugin
      */
     private function handleStatusCheck(): void
     {
+        $mcpUrl = $this->getMcpUrl() ?? '';
+        $qdrantHost = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
+        $qdrantPort = (int) ConfigLoader::get('SERVICES.qdrant.port', 6333);
+
+        $mcpResult = ServiceTester::testMcp($mcpUrl, $this->getMcpTimeout());
+        $qdrantResult = ServiceTester::testQdrant($qdrantHost, $qdrantPort);
+
         $this->sendJsonResponse([
             'ok' => true,
             'services' => [
-                'mcp' => $this->testMcpServer(),
-                'qdrant' => $this->testQdrant(),
+                'mcp' => array_merge($mcpResult, ['ok' => $mcpResult['success']]),
+                'qdrant' => array_merge($qdrantResult, ['ok' => $qdrantResult['success']]),
                 'config' => $this->testConfig(),
             ],
             'timestamp' => date('c'),
         ]);
-    }
-
-    /**
-     * Test MCP server connection.
-     *
-     * @return array{ok: bool, message: string, latency_ms?: int}
-     */
-    private function testMcpServer(): array
-    {
-        $mcpUrl = $this->getMcpUrl();
-        if (empty($mcpUrl)) {
-            return ['ok' => false, 'message' => 'MCP URL not configured'];
-        }
-
-        $startTime = microtime(true);
-        $timeout = $this->getMcpTimeout();
-
-        $payload = json_encode([
-            'jsonrpc' => '2.0',
-            'id'      => 'devdito_admin_ping',
-            'method'  => 'ping',
-        ], JSON_THROW_ON_ERROR);
-
-        $context = stream_context_create([
-            'http' => [
-                'timeout'       => $timeout,
-                'ignore_errors' => true,
-                'method'        => 'POST',
-                'header'        => "Content-Type: application/json\r\n",
-                'content'       => $payload,
-            ],
-        ]);
-
-        $result = @file_get_contents(rtrim($mcpUrl, '/'), false, $context);
-        $latencyMs = (int) ((microtime(true) - $startTime) * 1000);
-
-        if ($result === false) {
-            return [
-                'ok'         => false,
-                'message'    => 'Connection failed',
-                'latency_ms' => $latencyMs,
-            ];
-        }
-
-        $decoded = json_decode($result, true);
-        $isOk = is_array($decoded) && isset($decoded['result']['ok']) && $decoded['result']['ok'] === true;
-
-        return [
-            'ok'         => $isOk,
-            'message'    => $isOk ? 'Connected' : 'Invalid response',
-            'latency_ms' => $latencyMs,
-        ];
-    }
-
-    /**
-     * Test Qdrant connection.
-     *
-     * @return array{ok: bool, message: string, latency_ms?: int}
-     */
-    private function testQdrant(): array
-    {
-        $qdrantHost = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
-        $qdrantPort = ConfigLoader::get('SERVICES.qdrant.port', 6333);
-        $qdrantUrl = 'http://' . $qdrantHost . ':' . $qdrantPort . '/collections';
-
-        $startTime = microtime(true);
-
-        $context = stream_context_create([
-            'http' => [
-                'timeout'       => 5,
-                'ignore_errors' => true,
-                'method'        => 'GET',
-            ],
-        ]);
-
-        $result = @file_get_contents($qdrantUrl, false, $context);
-        $latencyMs = (int) ((microtime(true) - $startTime) * 1000);
-
-        if ($result === false) {
-            return [
-                'ok'         => false,
-                'message'    => 'Connection failed (expected from browser)',
-                'latency_ms' => $latencyMs,
-            ];
-        }
-
-        $decoded = json_decode($result, true);
-        $isOk = is_array($decoded) && isset($decoded['result']);
-
-        return [
-            'ok'         => $isOk,
-            'message'    => $isOk ? 'Connected' : 'Invalid response',
-            'latency_ms' => $latencyMs,
-        ];
     }
 
     /**

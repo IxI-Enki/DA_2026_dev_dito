@@ -143,8 +143,8 @@ class PipelineOrchestrator
             ];
         }
 
-        // Call Orchestrator API to run the stage
-        $result = $this->callOrchestratorApi('POST', "/run/$stage");
+        // Call Orchestrator API — forward options so mode:incremental reaches the container (FR-001)
+        $result = $this->callOrchestratorApi('POST', "/run/$stage", ['options' => $options]);
         
         if ($result === null) {
             return [

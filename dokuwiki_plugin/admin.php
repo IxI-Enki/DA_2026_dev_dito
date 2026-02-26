@@ -16,9 +16,11 @@ declare(strict_types=1);
 
 use dokuwiki\Extension\AdminPlugin;
 
-// Load ConfigLoader for centralized configuration (Constitution Article II-B)
+// Load library classes (Constitution Article II-B)
 require_once __DIR__ . '/lib/ConfigLoader.php';
+require_once __DIR__ . '/lib/ServiceTester.php';
 use dokuwiki\plugin\devdito\lib\ConfigLoader;
+use dokuwiki\plugin\devdito\lib\ServiceTester;
 
 if (!defined('DOKU_INC')) {
     die();
@@ -171,110 +173,28 @@ class admin_plugin_devdito extends AdminPlugin
      * @param string $service Service identifier
      * @return array{ok: bool, message: string, latency_ms?: int}
      */
+    /**
+     * Test a specific service connection using shared ServiceTester (FR-012).
+     *
+     * @param string $service Service identifier (mcp, qdrant)
+     * @return array{ok: bool, latency_ms: int, error: string|null}
+     */
     private function testService(string $service): array
     {
         switch ($service) {
             case 'mcp':
-                return $this->testMcpServer();
+                $url = $this->getMcpUrl() ?? '';
+                $result = ServiceTester::testMcp($url);
+                return array_merge($result, ['ok' => $result['success']]);
             case 'qdrant':
-                return $this->testQdrant();
+                // ConfigLoader reads from settings.json (FR-011)
+                $host = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
+                $port = (int) ConfigLoader::get('SERVICES.qdrant.port', 6333);
+                $result = ServiceTester::testQdrant($host, $port);
+                return array_merge($result, ['ok' => $result['success']]);
             default:
-                return ['ok' => false, 'message' => 'Unknown service'];
+                return ['ok' => false, 'latency_ms' => 0, 'error' => 'Unknown service'];
         }
-    }
-
-    /**
-     * Test MCP server connection.
-     *
-     * @return array{ok: bool, message: string, latency_ms?: int}
-     */
-    private function testMcpServer(): array
-    {
-        $mcpUrl = $this->getMcpUrl();
-        if (empty($mcpUrl)) {
-            return ['ok' => false, 'message' => 'MCP URL not configured'];
-        }
-
-        $startTime = microtime(true);
-
-        $payload = json_encode([
-            'jsonrpc' => '2.0',
-            'id'      => 'admin_ping',
-            'method'  => 'ping',
-        ], JSON_THROW_ON_ERROR);
-
-        $context = stream_context_create([
-            'http' => [
-                'timeout'       => 5,
-                'ignore_errors' => true,
-                'method'        => 'POST',
-                'header'        => "Content-Type: application/json\r\n",
-                'content'       => $payload,
-            ],
-        ]);
-
-        $result = @file_get_contents(rtrim($mcpUrl, '/'), false, $context);
-        $latencyMs = (int) ((microtime(true) - $startTime) * 1000);
-
-        if ($result === false) {
-            return [
-                'ok'         => false,
-                'message'    => 'Connection failed',
-                'latency_ms' => $latencyMs,
-            ];
-        }
-
-        $decoded = json_decode($result, true);
-        $isOk = is_array($decoded) && isset($decoded['result']['ok']) && $decoded['result']['ok'] === true;
-
-        return [
-            'ok'         => $isOk,
-            'message'    => $isOk ? 'Connected' : 'Invalid response',
-            'latency_ms' => $latencyMs,
-        ];
-    }
-
-    /**
-     * Test Qdrant connection.
-     *
-     * @return array{ok: bool, message: string, latency_ms?: int}
-     */
-    private function testQdrant(): array
-    {
-        // Get Qdrant URL from central config (Constitution Article II-B)
-        $qdrantHost = ConfigLoader::get('SERVICES.qdrant.host', 'qdrant_db');
-        $qdrantPort = ConfigLoader::get('SERVICES.qdrant.port', 6333);
-        $qdrantUrl = 'http://' . $qdrantHost . ':' . $qdrantPort . '/collections';
-
-        $startTime = microtime(true);
-
-        $context = stream_context_create([
-            'http' => [
-                'timeout'       => 5,
-                'ignore_errors' => true,
-                'method'        => 'GET',
-            ],
-        ]);
-
-        $result = @file_get_contents($qdrantUrl, false, $context);
-        $latencyMs = (int) ((microtime(true) - $startTime) * 1000);
-
-        if ($result === false) {
-            return [
-                'ok'         => false,
-                'message'    => 'Connection failed (expected in browser)',
-                'latency_ms' => $latencyMs,
-            ];
-        }
-
-        $decoded = json_decode($result, true);
-        $isOk = is_array($decoded) && isset($decoded['result']);
-
-        return [
-            'ok'         => $isOk,
-            'message'    => $isOk ? 'Connected' : 'Invalid response',
-            'latency_ms' => $latencyMs,
-        ];
     }
 
     /**
@@ -444,27 +364,28 @@ class admin_plugin_devdito extends AdminPlugin
      */
     private function renderConfigurationSection(): void
     {
-        // Central config info
+        // All values read from ConfigLoader (settings.json) — FR-011: no hardcoded display values
+        $sentinel = '[not configured]';
         $configValid = ConfigLoader::isValid();
-        $appVersion = ConfigLoader::get('APP.version', 'unknown');
-        
-        // Service settings
-        $qdrantHost = ConfigLoader::get('SERVICES.qdrant.host', 'localhost');
-        $qdrantPort = ConfigLoader::get('SERVICES.qdrant.port', 6333);
-        $qdrantCollection = ConfigLoader::get('SERVICES.qdrant.collection', 'wiki_embeddings');
-        $mcpUrl = ConfigLoader::get('SERVICES.mcp_server.url', 'Not configured');
-        
+        $appVersion = ConfigLoader::get('APP.version', $sentinel);
+
+        // Service settings — ConfigLoader reads from settings.json
+        $qdrantHost = ConfigLoader::get('SERVICES.qdrant.host', $sentinel);
+        $qdrantPort = ConfigLoader::get('SERVICES.qdrant.port', $sentinel);
+        $qdrantCollection = ConfigLoader::get('SERVICES.qdrant.collection', $sentinel);
+        $mcpUrl = ConfigLoader::get('SERVICES.mcp_server.url', $sentinel);
+
         // Source Wiki settings
-        $sourceWikiUrl = ConfigLoader::get('SOURCE_WIKI.api.url', 'Not configured');
-        $sourceWikiName = ConfigLoader::get('SOURCE_WIKI.name', 'Unknown');
-        
+        $sourceWikiUrl = ConfigLoader::get('SOURCE_WIKI.api.url', $sentinel);
+        $sourceWikiName = ConfigLoader::get('SOURCE_WIKI.name', $sentinel);
+
         // Pipeline settings
-        $fetcherTimeout = ConfigLoader::get('PIPELINE.fetcher.timeout', 30);
-        $embedderModel = ConfigLoader::get('SERVICES.openai.embedding_model', 'text-embedding-3-large');
-        
+        $fetcherTimeout = ConfigLoader::get('PIPELINE.fetcher.timeout', $sentinel);
+        $embedderModel = ConfigLoader::get('SERVICES.openai.embedding_model', $sentinel);
+
         // Paths
-        $rootDir = ConfigLoader::get('PATHS.root_dir', 'Unknown');
-        $dataDir = ConfigLoader::get('PATHS.data_dir', 'Unknown');
+        $rootDir = ConfigLoader::get('PATHS.root_dir', $sentinel);
+        $dataDir = ConfigLoader::get('PATHS.data_dir', $sentinel);
 
         // Available config files
         $configFiles = $this->getAvailableConfigFiles();

@@ -530,9 +530,12 @@ const DevDitoPipeline = {
         // Disable all run buttons during request
         document.querySelectorAll('.devdito-btn-run').forEach(btn => btn.disabled = true);
 
+        // FR-001: options are nested under the 'options' key, not flattened.
+        // fetch is the only stage with options in v0.12.0; the dict is
+        // forwarded generically so future stages work without further JS changes.
         const body = { stage: stageId };
-        if (options) {
-            Object.assign(body, options);
+        if (options && Object.keys(options).length > 0) {
+            body.options = options;
         }
 
         fetch(url, {

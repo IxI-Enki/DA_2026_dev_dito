@@ -172,6 +172,10 @@ PIPELINE_ORCHESTRATION:
       container: dev-dito-module-evaluator
       timeout_seconds: 7200      # 2 Stunden max
       description: "LLM-gestuetzte Inhaltsanalyse"
+    preprocess:
+      container: dev-dito-module-preprocessor
+      timeout_seconds: 1800      # 30 Minuten max
+      description: "Konvertiert Wiki-Syntax zu Markdown mit Frontmatter"
     embed:
       container: dev-dito-module-embedder
       timeout_seconds: 3600

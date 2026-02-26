@@ -170,7 +170,7 @@ class JobStatusManager
      */
     public function getStatusSummary(): array
     {
-        $stages = ['fetch', 'evaluate', 'embed', 'deploy'];
+        $stages = ['fetch', 'evaluate', 'preprocess', 'embed', 'deploy'];
         $summary = [];
 
         foreach ($stages as $stage) {
@@ -186,6 +186,73 @@ class JobStatusManager
         }
 
         return $summary;
+    }
+
+    /**
+     * Update specific fields of an existing job in the status file.
+     *
+     * Only the whitelisted keys (status, finished_at, error) are written.
+     * Immutable fields (job_id, stage, started_at, stats, output_dir) are
+     * silently ignored even if present in $updates.
+     *
+     * Uses LOCK_EX to prevent race conditions with Python writers.
+     *
+     * @param string $jobId   Job identifier to find and update
+     * @param array  $updates Key-value pairs to apply (only whitelisted keys applied)
+     * @return void
+     */
+    public function updateJobStatus(string $jobId, array $updates): void
+    {
+        $allowed = ['status', 'finished_at', 'error'];
+        $runs = $this->getAllRuns();
+        $found = false;
+
+        foreach ($runs as &$run) {
+            if (($run['job_id'] ?? '') === $jobId) {
+                foreach ($allowed as $key) {
+                    if (array_key_exists($key, $updates)) {
+                        $run[$key] = $updates[$key];
+                    }
+                }
+                $found = true;
+                break;
+            }
+        }
+        unset($run);
+
+        if ($found) {
+            $this->writeRuns($runs);
+            $this->cachedRuns = null;
+        }
+    }
+
+    /**
+     * Write pipeline runs array to the status file with exclusive lock.
+     *
+     * @param array $runs Runs array to persist
+     * @return void
+     */
+    private function writeRuns(array $runs): void
+    {
+        $dir = dirname($this->statusFile);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $fp = fopen($this->statusFile, 'w');
+        if ($fp === false) {
+            error_log("[DevDito] Could not open status file for writing: " . $this->statusFile);
+            return;
+        }
+
+        if (flock($fp, LOCK_EX)) {
+            fwrite($fp, json_encode($runs, JSON_PRETTY_PRINT));
+            flock($fp, LOCK_UN);
+        } else {
+            error_log("[DevDito] Could not acquire lock on status file: " . $this->statusFile);
+        }
+
+        fclose($fp);
     }
 
     /**
