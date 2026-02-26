@@ -141,6 +141,8 @@ class ContentAwareChunker:
             raw_chunks = self._chunk_semantic(text, config)
         elif method == "naive":
             raw_chunks = self._chunk_naive(text, config)
+        elif method in ("table_aware", "table_row", "markdown_table"):
+            raw_chunks = self._chunk_table_aware(text, config)
         elif method in ("metadata_only", "parent_context", "index_as_context_only"):
             # For these methods, create a single "metadata" chunk
             raw_chunks = [text[: config.get("max_chunk_size", 500)]]
@@ -326,6 +328,90 @@ class ContentAwareChunker:
 
         # Fall back to fixed-size if no sentences
         return self._chunk_naive(text, {"max_chunk_size": max_size, "chunk_overlap": overlap})
+
+    def _chunk_table_aware(self, text: str, config: dict[str, Any]) -> list[str]:
+        """
+        Table-aware chunking that keeps Markdown table rows intact.
+
+        Strategy:
+        - Non-table sections fall back to _chunk_semantic.
+        - Each contiguous table block is kept as one chunk if within max_chunk_size.
+        - Oversized tables are split by rows with the header row repeated in each
+          sub-chunk so context (column names) is never lost.
+        """
+        max_size = config.get("max_chunk_size", 2048)
+
+        TABLE_LINE = re.compile(r"^\s*\|")
+        SEP_LINE = re.compile(r"^\s*\|[\s\-:|]+\|")
+
+        lines = text.split("\n")
+        chunks: list[str] = []
+
+        non_table_buf: list[str] = []
+        table_buf: list[str] = []
+        in_table = False
+
+        def flush_non_table() -> None:
+            block = "\n".join(non_table_buf).strip()
+            non_table_buf.clear()
+            if block:
+                chunks.extend(self._chunk_semantic(block, config))
+
+        def flush_table() -> None:
+            if not table_buf:
+                return
+
+            # Identify header lines: first line is column headers, second is separator
+            header_lines: list[str] = []
+            data_lines: list[str] = []
+            for i, line in enumerate(table_buf):
+                if i == 0:
+                    header_lines.append(line)
+                elif i == 1 and SEP_LINE.match(line):
+                    header_lines.append(line)
+                else:
+                    data_lines.append(line)
+
+            full = "\n".join(table_buf)
+            if len(full) <= max_size:
+                chunks.append(full)
+            else:
+                header_text = "\n".join(header_lines)
+                current: list[str] = list(header_lines)
+                current_size = len(header_text)
+
+                for row in data_lines:
+                    row_size = len(row) + 1  # +1 for newline
+                    if current_size + row_size > max_size and len(current) > len(header_lines):
+                        chunks.append("\n".join(current))
+                        current = list(header_lines)
+                        current_size = len(header_text)
+                    current.append(row)
+                    current_size += row_size
+
+                if len(current) > len(header_lines):
+                    chunks.append("\n".join(current))
+
+            table_buf.clear()
+
+        for line in lines:
+            if TABLE_LINE.match(line):
+                if not in_table:
+                    flush_non_table()
+                    in_table = True
+                table_buf.append(line)
+            else:
+                if in_table:
+                    flush_table()
+                    in_table = False
+                non_table_buf.append(line)
+
+        if in_table:
+            flush_table()
+        else:
+            flush_non_table()
+
+        return chunks if chunks else [text]
 
     def chunk_all(self, documents: list[Document]) -> list[Chunk]:
         """

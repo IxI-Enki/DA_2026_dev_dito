@@ -30,6 +30,7 @@ class ContentType(Enum):
     FORM = "FORM"
     ARCHIVED = "ARCHIVED"
     IGNORED = "IGNORED"
+    TABLE_DATA = "TABLE_DATA"
 
 
 @dataclass(frozen=True)
@@ -60,7 +61,7 @@ _WIKI_CATEGORY_MAP: dict[str, tuple[ContentType, str, str]] = {
     "portals": (ContentType.PORTAL, "parent_context", "process"),
     "forms": (ContentType.FORM, "table_row", "process"),
     "news": (ContentType.NEWS, "naive", "process"),
-    "table_data": (ContentType.KNOWLEDGE, "table_row", "process"),
+    "table_data": (ContentType.TABLE_DATA, "table_aware", "process"),
     "ignored": (ContentType.IGNORED, "none", "skip"),
 }
 
