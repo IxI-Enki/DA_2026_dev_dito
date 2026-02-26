@@ -155,7 +155,7 @@ function Invoke-DevDito {
         Docker stack control, pipeline execution, and status monitoring.
 
         Part of the HTL Leonding multi-stack ecosystem:
-          Stack-A  wiki-sandbox       (port 18090)
+          Stack-A  wiki-sandbox       (port 8090)
           Stack-B  wiki-core          (Keycloak, port 8081)
           Stack-D  ai-core            (Qdrant, port 6333)
           Stack-G  devdito            (Orchestrator 18089, Wiki 18080, Qdrant 18334)
@@ -251,7 +251,7 @@ function Invoke-DevDito {
 
         # Check sandbox
         if (Test-ContainerRunning 'wiki-sandbox') {
-            Write-Host "  [OK] Sandbox running (port 18090)" -ForegroundColor Green
+            Write-Host "  [OK] Sandbox running (port 8090)" -ForegroundColor Green
         }
 
         Write-Host ""
@@ -690,7 +690,7 @@ function Test-DevDitoHealth {
         @{ Name = 'Orchestrator';  Url = 'http://localhost:18089/health';  Stack = 'Stack-G' },
         @{ Name = 'DokuWiki';      Url = 'http://localhost:18080';         Stack = 'Stack-G' },
         @{ Name = 'Qdrant';        Url = 'http://localhost:18334/healthz'; Stack = 'Stack-G' },
-        @{ Name = 'Wiki Sandbox';  Url = 'http://localhost:18090';         Stack = 'Stack-A' }
+        @{ Name = 'Wiki Sandbox';  Url = 'http://localhost:8090';          Stack = 'Stack-A' }
     )
 
     foreach ($ep in $endpoints) {
@@ -714,7 +714,7 @@ function Open-DevDitoWeb {
         'admin'   { 'http://localhost:18080/?do=admin&page=devdito' }
         'api'     { 'http://localhost:18089' }
         'qdrant'  { 'http://localhost:18334/dashboard' }
-        'sandbox' { 'http://localhost:18090' }
+        'sandbox' { 'http://localhost:8090' }
         default   { 'http://localhost:18080' }
     }
 
@@ -778,7 +778,7 @@ function Invoke-SandboxUp {
 
     if (Test-ContainerRunning 'wiki-sandbox') {
         Write-Host "[OK] Wiki sandbox already running" -ForegroundColor Green
-        Write-Host "     http://localhost:18090" -ForegroundColor DarkGray
+        Write-Host "     http://localhost:8090" -ForegroundColor DarkGray
         return
     }
 
@@ -796,7 +796,7 @@ function Invoke-SandboxUp {
             docker compose up -d
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "[OK] Wiki sandbox started" -ForegroundColor Green
-                Write-Host "     http://localhost:18090" -ForegroundColor DarkGray
+                Write-Host "     http://localhost:8090" -ForegroundColor DarkGray
             }
             else {
                 Write-Host "[ERROR] Failed to start sandbox" -ForegroundColor Red
@@ -813,7 +813,7 @@ function Invoke-SandboxUp {
             docker start wiki-sandbox 2>$null | Out-Null
             if (Test-ContainerRunning 'wiki-sandbox') {
                 Write-Host "[OK] Wiki sandbox started (existing container)" -ForegroundColor Green
-                Write-Host "     http://localhost:18090" -ForegroundColor DarkGray
+                Write-Host "     http://localhost:8090" -ForegroundColor DarkGray
             }
             else {
                 Write-Host "[ERROR] Failed to start sandbox container" -ForegroundColor Red
@@ -865,7 +865,7 @@ function Get-SandboxStatus {
     }
 
     Write-Host ""
-    Write-Host "  URL: http://localhost:18090" -ForegroundColor DarkGray
+    Write-Host "  URL: http://localhost:8090" -ForegroundColor DarkGray
     Write-Host ""
 }
 
@@ -906,7 +906,7 @@ function Show-DevDitoHelp {
 
     # --- Sandbox ---
     Write-Host "SANDBOX (Stack-A):" -ForegroundColor Yellow
-    Write-Host "  sandbox-up      Start wiki-sandbox DokuWiki instance (port 18090)"
+    Write-Host "  sandbox-up      Start wiki-sandbox DokuWiki instance (port 8090)"
     Write-Host "  sandbox-down    Stop wiki-sandbox"
     Write-Host "  sandbox-status  Show sandbox container status"
     Write-Host "  sandbox-open    Open sandbox in browser"
@@ -989,7 +989,7 @@ function Show-DevDitoHelp {
 
     # --- Stack Overview ---
     Write-Host "STACK OVERVIEW:" -ForegroundColor Yellow
-    Write-Host "  Stack-A  wiki-sandbox       http://localhost:18090     DokuWiki test instance"
+    Write-Host "  Stack-A  wiki-sandbox       http://localhost:8090      DokuWiki test instance"
     Write-Host "  Stack-B  wiki-core          http://localhost:8081     Keycloak SSO"
     Write-Host "  Stack-D  ai-core            http://localhost:6333     Qdrant (main)"
     Write-Host "  Stack-G  devdito            http://localhost:18080     DokuWiki + Pipeline"

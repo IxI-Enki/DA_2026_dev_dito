@@ -67,7 +67,7 @@ _WIKI_CATEGORY_MAP: dict[str, tuple[ContentType, str, str]] = {
 
 # Document category -> (content_type_str, default_parser, default_action) mapping
 _DOC_CATEGORY_MAP: dict[str, tuple[str, str, str]] = {
-    "theses": ("KNOWLEDGE", "pdf_scientific", "process"),
+    "theses": ("KNOWLEDGE", "pdf_scientific", "skip"),
     "forms": ("FORM", "pdf_form_fields", "index_metadata_only"),
     "standard_docs": ("DOCUMENT", "pdf_standard", "process"),
     "presentations": ("DOCUMENT", "pptx_slide", "summarize_slides"),

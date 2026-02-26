@@ -105,6 +105,19 @@ class ContentAwareChunker:
 
         return text
 
+    # #region agent log helpers
+    @staticmethod
+    def _dbg_write(payload: dict) -> None:
+        import json, time
+        payload.setdefault("timestamp", int(time.time() * 1000))
+        log_path = r"d:\_Repositories\_Diploma_Thesis_Repositories\dev_dito\.cursor\debug.log"
+        try:
+            with open(log_path, "a", encoding="utf-8") as _f:
+                _f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
+    # #endregion
+
     def chunk_document(self, document: Document) -> list[Chunk]:
         """
         Chunk a document based on its content type.
@@ -143,11 +156,39 @@ class ContentAwareChunker:
             raw_chunks = self._chunk_naive(text, config)
         elif method in ("table_aware", "table_row", "markdown_table"):
             raw_chunks = self._chunk_table_aware(text, config)
+            # #region agent log – H1/H2/H4/H5
+            if document.page_id == "org:termine-2026":
+                for _ci, _ct in enumerate(raw_chunks):
+                    _tbl_lines = sum(1 for _l in _ct.split("\n") if _l.strip().startswith("|"))
+                    _has_prefix = _ct.startswith("## ")
+                    _has_hitm = "AHITM" in _ct or "BHITM" in _ct
+                    _has_muendlich = "ndliche" in _ct  # covers ü and mojibake ?
+                    _umlaut_ok = "ü" in _ct or "ö" in _ct or "ä" in _ct
+                    ContentAwareChunker._dbg_write({
+                        "hypothesisId": "H1-H2-H4", "location": "content_aware_chunker.py:chunk_document",
+                        "message": f"table_chunk {_ci}/{len(raw_chunks)-1}",
+                        "data": {"page_id": document.page_id, "chunk_idx": _ci,
+                                 "total_chunks": len(raw_chunks), "char_len": len(_ct),
+                                 "table_lines": _tbl_lines, "has_header_prefix": _has_prefix,
+                                 "has_hitm": _has_hitm, "has_muendlich": _has_muendlich,
+                                 "umlaut_ok": _umlaut_ok,
+                                 "preview_start": _ct[:120].replace("\n", " "),
+                                 "preview_end": _ct[-80:].replace("\n", " ")}})
+            # #endregion
         elif method in ("metadata_only", "parent_context", "index_as_context_only"):
             # For these methods, create a single "metadata" chunk
             raw_chunks = [text[: config.get("max_chunk_size", 500)]]
         else:
             raw_chunks = self._chunk_semantic(text, config)
+
+        # #region agent log – H5
+        if document.page_id == "org:termine-2026":
+            ContentAwareChunker._dbg_write({
+                "hypothesisId": "H5", "location": "content_aware_chunker.py:chunk_document",
+                "message": "access_level check for org:termine-2026",
+                "data": {"access_level": document.access_level, "content_type": document.content_type,
+                         "method": method, "total_raw_chunks": len(raw_chunks)}})
+        # #endregion
 
         # Create Chunk objects
         total_chunks = len(raw_chunks)
@@ -334,15 +375,20 @@ class ContentAwareChunker:
         Table-aware chunking that keeps Markdown table rows intact.
 
         Strategy:
-        - Non-table sections fall back to _chunk_semantic.
+        - Non-table sections that consist only of headings are NOT emitted as
+          standalone chunks. Instead they are saved as section_context and
+          prepended to every table chunk that follows (including split sub-chunks).
+          This ensures "## Juni 2026" never gets lost as an isolated 12-char chunk.
+        - Non-table sections with real content are emitted via _chunk_semantic.
         - Each contiguous table block is kept as one chunk if within max_chunk_size.
-        - Oversized tables are split by rows with the header row repeated in each
-          sub-chunk so context (column names) is never lost.
+        - Oversized tables are split by rows with the column header row AND the
+          section heading repeated in each sub-chunk so context is never lost.
         """
         max_size = config.get("max_chunk_size", 2048)
 
         TABLE_LINE = re.compile(r"^\s*\|")
         SEP_LINE = re.compile(r"^\s*\|[\s\-:|]+\|")
+        HEADING_LINE = re.compile(r"^#{1,6}\s+.+$|^={2,}\s*.+\s*={2,}$")
 
         lines = text.split("\n")
         chunks: list[str] = []
@@ -350,18 +396,33 @@ class ContentAwareChunker:
         non_table_buf: list[str] = []
         table_buf: list[str] = []
         in_table = False
+        section_context: str = ""  # last section heading, prepended to table chunks
 
         def flush_non_table() -> None:
-            block = "\n".join(non_table_buf).strip()
+            nonlocal section_context
+            content_lines = [l for l in non_table_buf if l.strip()]
             non_table_buf.clear()
-            if block:
-                chunks.extend(self._chunk_semantic(block, config))
+            if not content_lines:
+                return
+
+            # Pure heading block -> save as context prefix, skip standalone emission
+            if all(HEADING_LINE.match(l.strip()) for l in content_lines):
+                section_context = "\n".join(l.strip() for l in content_lines)
+                return
+
+            # Real content block: emit as chunk, update section_context from last heading
+            block = "\n".join(content_lines).strip()
+            for l in content_lines:
+                if HEADING_LINE.match(l.strip()):
+                    section_context = l.strip()
+            chunks.extend(self._chunk_semantic(block, config))
 
         def flush_table() -> None:
+            nonlocal section_context
             if not table_buf:
                 return
 
-            # Identify header lines: first line is column headers, second is separator
+            # Identify column-header lines (row 0) and separator (row 1 if it matches)
             header_lines: list[str] = []
             data_lines: list[str] = []
             for i, line in enumerate(table_buf):
@@ -372,26 +433,31 @@ class ContentAwareChunker:
                 else:
                     data_lines.append(line)
 
-            full = "\n".join(table_buf)
+            # Section prefix prepended to every chunk for retrieval context
+            prefix = (section_context + "\n") if section_context else ""
+            col_header = "\n".join(header_lines)
+
+            full = prefix + "\n".join(table_buf)
             if len(full) <= max_size:
                 chunks.append(full)
             else:
-                header_text = "\n".join(header_lines)
+                base_size = len(prefix) + len(col_header)
                 current: list[str] = list(header_lines)
-                current_size = len(header_text)
+                current_size = base_size
 
                 for row in data_lines:
                     row_size = len(row) + 1  # +1 for newline
                     if current_size + row_size > max_size and len(current) > len(header_lines):
-                        chunks.append("\n".join(current))
+                        chunks.append(prefix + "\n".join(current))
                         current = list(header_lines)
-                        current_size = len(header_text)
+                        current_size = base_size
                     current.append(row)
                     current_size += row_size
 
                 if len(current) > len(header_lines):
-                    chunks.append("\n".join(current))
+                    chunks.append(prefix + "\n".join(current))
 
+            section_context = ""
             table_buf.clear()
 
         for line in lines:
