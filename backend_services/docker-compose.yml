@@ -148,6 +148,7 @@ services:
       - ../config:/config:ro
       - ../data:/data
       - ../pipeline/01_wiki_fetcher:/pipeline/01_wiki_fetcher:ro
+      - ../pipeline/shared:/pipeline/shared:ro
       - ../config.py:/app/config.py:ro
     environment:
       - CONFIG_PATH=/config/env.yaml

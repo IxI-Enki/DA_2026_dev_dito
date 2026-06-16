@@ -243,6 +243,10 @@ def _build_docker_run(
         host_pipeline = f"{repo}{sep}pipeline{sep}{pipeline_dir}"
         cmd.extend(["-v", f"{host_pipeline}:/pipeline/{pipeline_dir}:ro"])
 
+    # Shared pipeline utilities (cli_utils, etc.)
+    host_shared = f"{repo}{sep}pipeline{sep}shared"
+    cmd.extend(["-v", f"{host_shared}:/pipeline/shared:ro"])
+
     # Extra host-relative volume mounts
     for ev in stage_cfg.get("extra_host_volumes", []):
         host_rel, rest = ev.split(":", 1)
@@ -550,6 +554,14 @@ async def run_stage(stage: str, request: RunRequest = _DEFAULT_RUN_REQUEST) -> J
         cmd, cwd = build_run_cmd(stage, container, job_id, request.options)
 
         print(f"[ORCHESTRATOR] Running: {' '.join(cmd)}")
+
+        # #region agent log
+        import json as _djson
+        _dlog_path = DATA_DIR / "logs" / "debug_agent.log"
+        _dlog_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(_dlog_path, "a") as _f:
+            _f.write(_djson.dumps({"timestamp": datetime.now().isoformat(), "location": "server.py:run_stage", "message": "docker_cmd", "data": {"cmd": cmd, "cwd": cwd, "stage": stage, "job_id": job_id, "in_container": _IN_CONTAINER}, "hypothesisId": "H1-H4"}) + "\n")
+        # #endregion
 
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
 

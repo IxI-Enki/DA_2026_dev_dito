@@ -188,6 +188,29 @@ def main():
         update_status(job_id, "error", error=f"Config not found: {CONFIG_PATH}")
         sys.exit(1)
     
+    # #region agent log
+    import json as _djson
+    _dlog = DATA_PATH / "logs" / "debug_agent.log"
+    def _dl(msg, data=None):
+        _dlog.parent.mkdir(parents=True, exist_ok=True)
+        with open(_dlog, "a", encoding="utf-8") as _f:
+            _f.write(_djson.dumps({"timestamp": datetime.now().isoformat(), "location": "entrypoint.py", "message": msg, "data": data or {}, "hypothesisId": "H1-H3"}) + "\n")
+    _shared_path = PIPELINE_PATH.parent / "shared"
+    _shared_cli = _shared_path / "cli_utils.py"
+    _pipeline_parent_contents = list(PIPELINE_PATH.parent.iterdir()) if PIPELINE_PATH.parent.exists() else []
+    _dl("path_check", {
+        "PIPELINE_PATH": str(PIPELINE_PATH),
+        "shared_path": str(_shared_path),
+        "shared_exists": _shared_path.exists(),
+        "cli_utils_exists": _shared_cli.exists(),
+        "pipeline_parent": str(PIPELINE_PATH.parent),
+        "pipeline_parent_exists": PIPELINE_PATH.parent.exists(),
+        "pipeline_parent_contents": [str(p.name) for p in _pipeline_parent_contents],
+        "PYTHONPATH": os.environ.get("PYTHONPATH", "NOT_SET"),
+        "sys_path_insert_target": str(Path(str(PIPELINE_PATH)).resolve().parent.parent / "shared"),
+    })
+    # #endregion
+    
     # Mark as running
     update_status(job_id, "running")
     
