@@ -377,7 +377,7 @@ class MediaMetadataEnricher:
             f"{self.wiki_base_url}lib/exe/fetch.php?media={media_id}" if self.wiki_base_url else ""
         )
         fm["media_id"] = media_id
-        fm["access_level"] = "public"
+        fm["access_level"] = self._determine_access_from_media_id(media_id)
         fm["content_type"] = content_type or self._classify_media_type(file_path.suffix.lower())
         fm["freshness_score"] = freshness_score
         fm["freshness_category"] = freshness_category
@@ -397,6 +397,14 @@ class MediaMetadataEnricher:
         )
 
         return f"---\n{yaml_content}---\n"
+
+    @staticmethod
+    def _determine_access_from_media_id(media_id: str) -> str:
+        """Derive access level from namespace embedded in media_id."""
+        ns = media_id.split(":")[0].lower() if ":" in media_id else ""
+        if ns in ("teacher", "lehrer"):
+            return "teacher_only"
+        return "public"
 
     def _classify_media_type(self, extension: str) -> str:
         """Classify media type based on file extension."""

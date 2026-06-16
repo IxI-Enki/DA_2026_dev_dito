@@ -364,7 +364,7 @@ def run(
                                     if cfg.wiki_base_url
                                     else ""
                                 ),
-                                "access_level": "public",
+                                "access_level": meta_enricher.determine_access_level(media_namespace),
                                 "content_type": "IMAGE",
                                 "freshness_score": freshness_score,
                                 "freshness_category": freshness_category,
@@ -402,7 +402,7 @@ def run(
                         if cfg.wiki_base_url
                         else ""
                     ),
-                    "access_level": "public",
+                    "access_level": meta_enricher.determine_access_level(media_namespace),
                     "content_type": ms.content_type,
                     "freshness_score": freshness_score,
                     "freshness_category": freshness_category,

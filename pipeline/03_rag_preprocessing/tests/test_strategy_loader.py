@@ -318,6 +318,6 @@ class TestContentType:
     def test_all_types_exist(self) -> None:
         from strategy_loader import ContentType
 
-        expected = {"KNOWLEDGE", "NEWS", "PORTAL", "FORM", "ARCHIVED", "IGNORED"}
+        expected = {"KNOWLEDGE", "NEWS", "PORTAL", "FORM", "ARCHIVED", "IGNORED", "TABLE_DATA"}
         actual = {ct.value for ct in ContentType}
         assert expected == actual

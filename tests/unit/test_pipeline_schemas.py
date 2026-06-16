@@ -59,7 +59,7 @@ class TestPipelineRunsSchema:
         items = schema.get("items", {})
         stage_prop = items.get("properties", {}).get("stage", {})
         assert "enum" in stage_prop, "stage must have enum constraint"
-        expected_stages = ["fetch", "evaluate", "embed", "deploy"]
+        expected_stages = ["fetch", "evaluate", "preprocess", "embed", "deploy"]
         assert set(stage_prop["enum"]) == set(expected_stages)
 
     def test_schema_status_enum(self, schema: dict) -> None:
