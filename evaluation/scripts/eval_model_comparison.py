@@ -247,6 +247,17 @@ def _find_preprocessed_dir() -> Path:
     return candidates[0]
 
 
+def _find_fetched_dir() -> Path:
+    """Find the most recent fetched data directory."""
+    base = REPO_ROOT / "data" / "fetched"
+    if not base.exists():
+        raise FileNotFoundError(f"Fetched data not found: {base}")
+    candidates = sorted(base.glob("fetched_at_*"), reverse=True)
+    if not candidates:
+        raise FileNotFoundError(f"No fetched_at_* dirs in {base}")
+    return candidates[0]
+
+
 def load_corpus(
     corpus_source: str = "test_corpus",
     chunk_size: int = 512,
@@ -293,6 +304,52 @@ def load_corpus(
         len(all_chunks),
         doc_count,
         corpus_source,
+    )
+    return all_chunks
+
+
+def load_corpus_for_ground_truth(
+    ground_truth: dict,
+    chunk_size: int = 512,
+    chunk_overlap: int = 50,
+) -> list[dict]:
+    """Load and chunk only the documents referenced in the ground truth.
+
+    Loads plain-text files from ``data/fetched/fetched_at_*/page_content/``
+    using the ``source_file`` fields from the ground-truth QA pairs.
+
+    Args:
+        ground_truth: Ground truth dict with a ``qa_pairs`` list, each entry
+            containing a ``source_file`` field.
+        chunk_size: Target chunk size in characters.
+        chunk_overlap: Overlap between chunks.
+
+    Returns:
+        List of dicts with ``page_id``, ``chunk_index``, ``text`` keys.
+    """
+    qa_pairs = ground_truth.get("qa_pairs", [])
+    source_files = sorted({qa["source_file"] for qa in qa_pairs if qa.get("source_file")})
+
+    fetched_dir = _find_fetched_dir()
+    content_dir = fetched_dir / "page_content"
+
+    all_chunks: list[dict] = []
+    for source_file in source_files:
+        file_path = content_dir / source_file
+        if not file_path.exists():
+            logger.warning("Source file not found in fetched corpus: %s", file_path)
+            continue
+        text = file_path.read_text(encoding="utf-8")
+        stem = source_file.rsplit(".", 1)[0] if "." in source_file else source_file
+        page_id = stem.replace("_", ":", 1)
+        for i, chunk_text in enumerate(simple_chunk(text, chunk_size=chunk_size, overlap=chunk_overlap)):
+            all_chunks.append({"page_id": page_id, "chunk_index": i, "text": chunk_text})
+
+    doc_count = len({c["page_id"] for c in all_chunks})
+    logger.info(
+        "Corpus loaded: %d chunks from %d documents (ground-truth sources)",
+        len(all_chunks),
+        doc_count,
     )
     return all_chunks
 
@@ -411,7 +468,7 @@ def _expected_sources(qa: dict) -> list[str]:
         return list(sources)
     sf = qa.get("source_file", "")
     if sf:
-        stem = sf.rsplit(".", 1)[0] if sf.endswith(".md") else sf
+        stem = sf.rsplit(".", 1)[0] if "." in sf else sf
         return [stem.replace("_", ":", 1)]
     return []
 
@@ -448,8 +505,8 @@ def run_model_evaluation(
     gt_data = load_ground_truth(gt_path)
     qa_pairs = gt_data["qa_pairs"]
 
-    corpus_chunks = load_corpus(
-        corpus_source=corpus_source,
+    corpus_chunks = load_corpus_for_ground_truth(
+        gt_data,
         chunk_size=config.chunk_size,
         chunk_overlap=config.chunk_overlap,
     )
