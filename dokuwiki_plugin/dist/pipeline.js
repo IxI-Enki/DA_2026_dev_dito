@@ -75,7 +75,7 @@ const DevDitoPipeline = {
             .then(data => {
                 if (data.status === 'running' || data.progress) {
                     this.updateProgressDisplay(data);
-                } else if (data.status === 'success' || data.status === 'error' || data.status === 'not_found' || data.status === 'orchestrator_offline') {
+                } else if (data.status === 'success' || data.status === 'error' || data.status === 'not_found' || data.status === 'orchestrator_offline' || data.status === 'no_progress') {
                     // Job completed or not found - clear display and stop polling
                     this.lastProgressData = null;
                     this.activeJobId = null;
@@ -545,17 +545,33 @@ const DevDitoPipeline = {
             },
             body: JSON.stringify(body)
         })
-        .then(response => response.json())
+        .then(response => {
+            // #region agent log
+            console.log('[DevDito][DEBUG] runStage response status:', response.status, response.statusText);
+            // #endregion
+            return response.json();
+        })
         .then(data => {
+            // #region agent log
+            console.log('[DevDito][DEBUG] runStage data:', JSON.stringify(data));
+            // #endregion
             if (data.success) {
                 this.showNotification('success', data.message);
                 // Immediately reload status
                 this.loadStatus();
             } else {
-                this.showNotification('error', 'Fehler: ' + (data.message || 'Unbekannter Fehler'));
+                // Ensure message is always a string
+                var errMsg = data.message;
+                if (typeof errMsg !== 'string') {
+                    errMsg = JSON.stringify(errMsg);
+                }
+                this.showNotification('error', 'Fehler: ' + (errMsg || 'Unbekannter Fehler'));
             }
         })
         .catch(error => {
+            // #region agent log
+            console.log('[DevDito][DEBUG] runStage catch:', error);
+            // #endregion
             this.showNotification('error', 'Request fehlgeschlagen: ' + error.message);
         })
         .finally(() => {

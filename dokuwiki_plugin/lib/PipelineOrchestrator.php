@@ -154,6 +154,11 @@ class PipelineOrchestrator
         // Call Orchestrator API — forward options so mode:incremental reaches the container (FR-001)
         $result = $this->callOrchestratorApi('POST', "/run/$stage", ['options' => $options]);
         
+        // #region agent log
+        $__dbg = function(string $msg, array $data = []): void { $f = '/config/dokuwiki/lib/plugins/devdito/debug_agent.log'; @file_put_contents($f, json_encode(['ts'=>date('c'),'msg'=>$msg,'data'=>$data])."\n", FILE_APPEND); };
+        $__dbg('runStage:result', ['stage'=>$stage, 'options'=>$options, 'resultIsNull'=>$result===null, 'result'=>$result, 'orchestratorUrl'=>$this->orchestratorUrl, 'sentBody'=>json_encode(['options'=>$options])]);
+        // #endregion
+        
         if ($result === null) {
             return [
                 'success' => false,
