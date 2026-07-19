@@ -68,6 +68,15 @@ def resolve_variables(config: Dict[str, Any]) -> Dict[str, Any]:
     return resolve_value(config, context)
 
 
+def _apply_root_dir_fallback(config: Dict[str, Any]) -> Dict[str, Any]:
+    """Resolve a missing/`AUTO` PATHS.root_dir to the repo root."""
+    paths = config.get("PATHS") or {}
+    if str(paths.get("root_dir", "")).strip() in ("", "AUTO"):
+        paths["root_dir"] = str(Path(__file__).resolve().parents[2])
+        config["PATHS"] = paths
+    return config
+
+
 @dataclass
 class PreprocessingConfig:
     """Configuration for RAG Preprocessing Pipeline."""
@@ -113,6 +122,7 @@ class PreprocessingConfig:
                 config_path = base / "env.yaml"
 
         raw_config = load_yaml(config_path)
+        raw_config = _apply_root_dir_fallback(raw_config)
         config = resolve_variables(raw_config)
 
         paths = config.get("PATHS", {})
