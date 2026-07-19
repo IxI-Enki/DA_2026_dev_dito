@@ -33,7 +33,7 @@ todos:
     content: Git initialisieren und GitHub Repository IxI-Enki/DA_2026_dev_dito (privat) erstellen
     status: pending
   - id: cleanup-internal-leonidas
-    content: 02_dev_dito aus internal_leonidas entfernen, docker-compose.yml anpassen
+    content: 02_dev_dito aus legacy-wiki-repo entfernen, docker-compose.yml anpassen
     status: pending
 ---
 
@@ -145,7 +145,7 @@ dev_dito/
 └── planning/                          # Planung & Archiv
     ├── dev_dito_pipeline_manager.md   # Von .cursor/plans/
     └── archive/
-        └── 02_dev_dito_original/      # Backup von internal_leonidas
+        └── 02_dev_dito_original/      # Backup von legacy-wiki-repo
 ```
 
 ---
@@ -249,16 +249,16 @@ volumes:
 
 ---
 
-## Beziehung zu internal_leonidas
+## Beziehung zu legacy-wiki-repo
 
 Nach der Auslagerung:
 
 - **dev_dito Repository**: Eigenstaendiges Projekt
-- **internal_leonidas**: Behaelt nur `leonidas` Plugin + Themes
+- **legacy-wiki-repo**: Behaelt nur `leonidas` Plugin + Themes
 - **Verbindung**: Gemeinsames Docker Network wenn beide laufen
 - **Kein Submodule**: Komplett getrennte Repositories
 
-### In internal_leonidas zu aendern
+### In legacy-wiki-repo zu aendern
 
 1. `docker-compose.yml`: Dev Dito Services entfernen (werden separat gestartet)
 2. `02_dev_dito/`: Verzeichnis entfernen oder durch README mit Link ersetzen
@@ -290,6 +290,6 @@ Nach der Auslagerung:
    gh repo create IxI-Enki/DA_2026_dev_dito --private --source=. --push
    ```
 
-5. **internal_leonidas bereinigen**
+5. **legacy-wiki-repo bereinigen**
    - `02_dev_dito/` entfernen
    - `docker-compose.yml` anpassen

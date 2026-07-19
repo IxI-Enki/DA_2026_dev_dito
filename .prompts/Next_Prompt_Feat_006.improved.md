@@ -23,7 +23,7 @@ Language: English for code and comments. German only where explicitly marked.
 - stack-a-wiki-sandbox
 </installed_stacks>
 
-<legacy_stack_path>D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/stacks</legacy_stack_path>
+<legacy_stack_path>/path/to/legacy-stack/stacks</legacy_stack_path>
 
 <running_containers>
 
