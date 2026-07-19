@@ -24,7 +24,7 @@ APP:
 # =============================================================================
 PATHS:
   # Repository-Root (anpassen fuer deine Umgebung!)
-  root_dir: D:/_Repositories/_Diploma_Thesis_Repositories/dev_dito
+  root_dir: AUTO   # leave as AUTO; resolved to the repo root at runtime
   
   # Abgeleitete Pfade
   config_dir: ${root_dir}/config
