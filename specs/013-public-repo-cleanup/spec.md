@@ -40,6 +40,9 @@ It will be linked from the author's portfolio. Two forces are in tension:
 4. **License:** none for now (all rights reserved); may add later.
 5. **Sample location:** samples live **inside `data/`** (mirroring the pipeline's own output layout, e.g. `data/fetched/samples/…`, `data/embeddings/samples/…`), whitelisted via targeted `.gitignore` negations — not a separate top-level `samples/` tree.
 6. **Tooling:** `gitleaks` as the local pre-publication gate (installed 2026-07-20, v8.30.1); a `.pre-commit-config.yaml` wiring gitleaks + an email/PII regex hook for ongoing prevention. Work happens on branch `013-public-repo-cleanup`.
+7. **`config/sources.yaml`:** **remove entirely** (`git rm`). It is a dead ~150-line manifest of absolute paths into a private repo, read by no code, and it exposes internal naming. Discoverable via history, absent from the published tree.
+8. **Name/internal-structure scrub (`leonie` / `internal_leonidas` / `SYP_2025_26`):** this token — a real first name plus internal course/repo structure — appears in ~5 tracked files including portfolio-visible `docs/architecture.md` and `backend_services/.env.template`. **Exception to decision 3:** scrub *this specific token* to a neutral placeholder in **all** tracked files (docs, `.prompts/`, `.env.template`, `docs/.archive/`). The harmless `dev_dito` path stays in historical files as decided.
+9. **`root_dir` sanitization:** the pipeline loaders read `root_dir` directly. Add a small loader fallback so a missing/placeholder `root_dir` resolves to `Path(__file__).parent` — the repo then runs out-of-the-box after cloning. Covered by a test.
 
 ---
 
@@ -68,12 +71,14 @@ It will be linked from the author's portfolio. Two forces are in tension:
 - Remove the contradictory `.cursor/` line from `.gitignore` (files are intentionally tracked).
 - **Verify:** `git ls-files` still lists all these dirs; `.gitignore` no longer ignores tracked-and-intended paths.
 
-### B — Sanitize active configs
-- Files: `pipeline/03_rag_preprocessing/env.yaml`, `pipeline/04_embeddings_creator/env.yaml`, `config/*.yaml` (those containing `D:/`).
-- Replace absolute `D:/_Repositories/.../dev_dito` with `${root_dir}` / relative paths consistent with existing `${var}` resolution.
-- Replace LAN IP `192.168.8.3` with `localhost` or a `${VISION_LLM_HOST}` placeholder.
-- **Do not touch** `specs/` and `docs/` occurrences.
-- **Verify:** `git grep 'D:/_Repositories' -- pipeline config` returns nothing; the two env.yaml still parse and resolve paths.
+### B — Sanitize active configs & remove dead manifest
+- `git rm config/sources.yaml` (decision 7) — dead, exposes internal naming.
+- **Loader fallback (decision 9):** in `pipeline/03_rag_preprocessing/config.py` and `pipeline/04_embeddings_creator/config.py`, when `PATHS.root_dir` is absent or equals the placeholder, resolve it to `Path(__file__).parent`. Covered by a unit test each.
+- In `pipeline/03_rag_preprocessing/env.yaml`, `pipeline/04_embeddings_creator/env.yaml`, `config/env.development.yaml`, `config/env.minimal.yaml`, `config/PLACEHOLDER_env.yaml`: replace the absolute `root_dir` value with a neutral placeholder the loader now tolerates.
+- Replace LAN IP `192.168.8.3` in `pipeline/03_rag_preprocessing/env.yaml:129` with `localhost`.
+- **Name scrub (decision 8):** replace the literal `D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas` (and its backslash variant) with a neutral placeholder in **all** tracked files.
+- Leave the harmless `dev_dito` absolute path in `specs/`/`docs/` historical files untouched.
+- **Verify:** `git grep -iE 'leonie|internal_leonidas|SYP_2025|192\.168\.' -- ':!specs/013*'` returns nothing; both pipeline test suites still pass.
 
 ### C — Redaction script + curated samples
 - Build a small, documented script (e.g. `scripts/redact_sample.py`) that, given a fetched artifact, replaces:
