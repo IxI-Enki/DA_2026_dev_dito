@@ -47,12 +47,12 @@ Deployed das Plugin zum lokalen Test-Wiki.
 
 Das Standard-Ziel-Wiki ist:
 ```path
-D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\development\first_own_dokuwiki
+C:\path\to\legacy-stack\development\first_own_dokuwiki
 ```
 
 Das Wiki muss laufen damit Änderungen sichtbar werden:
 ```powershell
-cd "D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\development\first_own_dokuwiki"
+cd "C:\path\to\legacy-stack\development\first_own_dokuwiki"
 .\scripts\start.ps1
 ```
 

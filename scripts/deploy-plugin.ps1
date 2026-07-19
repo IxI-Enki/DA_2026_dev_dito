@@ -27,7 +27,7 @@
 
 [CmdletBinding()]
 param(
-    [string]$TargetWiki = "D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\development\first_own_dokuwiki",
+    [string]$TargetWiki = "C:\path\to\legacy-stack\development\first_own_dokuwiki",
     [switch]$SkipSyntaxCheck,
     [switch]$Help
 )
