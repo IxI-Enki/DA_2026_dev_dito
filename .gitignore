@@ -52,8 +52,7 @@ env/
 .pydevproject
 .settings/
 
-# Cursor IDE
-.cursor/
+# .cursor/ is intentionally tracked (Spec-Kit command artifacts)
 
 # =============================================================================
 # Environment & Secrets (Constitution Article II-B, VI)
@@ -100,12 +99,21 @@ pipeline/**/env.yaml
 # Pipeline output directories (contents ignored, structure kept)
 data/fetched/*
 !data/fetched/.gitkeep
+# Curated, redacted samples (Spec 013) — explicitly published
+!data/fetched/samples/
+!data/fetched/samples/**
 data/evaluated/*
 !data/evaluated/.gitkeep
+# Curated, redacted samples (Spec 013) — explicitly published
+!data/evaluated/samples/
+!data/evaluated/samples/**
 data/preprocessed/*
 !data/preprocessed/.gitkeep
 data/embeddings/*
 !data/embeddings/.gitkeep
+# Curated, redacted samples (Spec 013) — explicitly published
+!data/embeddings/samples/
+!data/embeddings/samples/**
 
 # Archive / backup folders inside data/
 data/**/.old_*
