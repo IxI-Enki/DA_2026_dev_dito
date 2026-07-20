@@ -475,7 +475,7 @@ auf dem Pi, Gateway auf Laptop).
 
 **References**:
 - Docker Compose Networking: https://docs.docker.com/compose/networking/
-- Multi-Stack Architecture: `README_ARCHITECTURE.md`
+- Multi-Stack Architecture: `docs/architecture.md`
 
 ---
 
@@ -495,7 +495,7 @@ Bevor eine Spezifikation genehmigt wird, muss sie enthalten:
 Bevor ein Plan genehmigt wird, muss er nachweisen:
 - [ ] Keine Verletzung von Article I (Schicht-Trennung)
 - [ ] Keine neuen Abstraktionsschichten ohne Begruendung (Article VII, VIII)
-- [ ] Betroffene Docker-Services sind in `README_ARCHITECTURE.md` dokumentiert
+- [ ] Betroffene Docker-Services sind in `docs/architecture.md` dokumentiert
 - [ ] Keine neuen Secrets ohne Placeholder-Dateien (Article VI)
 - [ ] **NEU**: Resource Limits (Article XII) fuer neue Services definiert
 - [ ] **NEU**: Inter-Stack-Dependencies (Article XIV) dokumentiert
