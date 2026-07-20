@@ -207,3 +207,7 @@ pipeline/01_wiki_fetcher/api_method_test_results.json
 # Misc
 # =============================================================================
 tstex_modules/_api.ts
+
+# .cursor: portfolio artifacts tracked; working plans + runtime state excluded (Spec 013)
+.cursor/plans/
+.cursor/hooks/
