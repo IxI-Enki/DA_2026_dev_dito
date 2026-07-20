@@ -6,7 +6,7 @@ author:
   github: 'https://github.com/IxI-Enki'
 version: 2.0.0
 created: 2026-02-13
-updated: 2026-02-23
+updated: 2026-07-20
 tags: [pipeline, rag, evaluation, dokuwiki, qdrant, embeddings, diploma-thesis, stack-g]
 ---
 
@@ -111,6 +111,10 @@ python pipeline/01_wiki_fetcher/fetch_full_wiki_extended.py
 # Without media download (faster)
 python pipeline/01_wiki_fetcher/fetch_full_wiki_extended.py --no-media
 ```
+
+<div align="center">
+  <img src="assets/img/_001_fetch__Screenshot_2026-02-14_154254.png" alt="fetcher_screenshot" width="80%">
+</div>
 
 **Output:** `data/fetched/fetched_at_YYYYMMDD_HHMMSS/`
 
@@ -248,7 +252,7 @@ qdrant:
 
 Framework for thesis deliverables. All scripts run from the repo root; results go to `evaluation/results/`.
 
-### FF1 — Keyword search baseline
+### Keyword search baseline (${\tiny{\texttt{\underline{FF1}\ in\ Thesis}}}$)
 
 Runs ground-truth questions against DokuWiki `core.searchPages`, outputs MRR and P@5.
 
@@ -261,7 +265,7 @@ python -m evaluation.scripts.eval_keyword_baseline --top-k 20 --verbose
 
 ---
 
-### FF3 — Embedding model comparison
+### Embedding model comparison (${\tiny{\texttt{\underline{FF3}\ in\ Thesis}}}$)
 
 Compares embedding models (Ollama + OpenAI) on the same ground truth. Needs Qdrant + provider.
 
@@ -277,7 +281,7 @@ python -m evaluation.scripts.eval_model_comparison --compare-all --verbose
 
 ---
 
-### J4 — Chunk size impact
+### Chunk size impact (${\tiny{\texttt{\underline{J4}\ in\ Thesis}}}$)
 
 Compares chunk sizes 256 / 512 / 1024 on MRR, P@5, NDCG@10.
 
@@ -293,7 +297,7 @@ python -m evaluation.scripts.eval_chunk_size --compare
 
 ---
 
-### J6 — Hybrid vs dense retrieval
+### Hybrid vs dense retrieval (${\tiny{\texttt{\underline{J6}\ in\ Thesis}}}$)
 
 Compares dense-only vs hybrid retrieval on one collection.
 
@@ -308,7 +312,7 @@ python -m evaluation.scripts.eval_hybrid_vs_dense --verbose
 
 ---
 
-### Visualizations (J4, J6)
+### Visualizations (${\tiny{\texttt{\underline{J4}\ and\ \underline{J6}\ in\ Thesis}}}$)
 
 Generates figures for the thesis (saved as 300 DPI PNG to `evaluation/figures/`).
 
@@ -320,7 +324,7 @@ python -m evaluation.scripts.eval_visualize_j4_j6
 
 ### LaTeX export
 
-Generates `.tex` tables from existing result JSONs. Auto-discovers latest files per pattern.
+Generates `.tex` tables from existing result JSONs. Auto-discovers latest files per pattern.x
 
 ```powershell
 python -m evaluation.scripts.eval_export_latex
