@@ -42,6 +42,22 @@ Stage 04  Embeddings Creator    vectors (JSONL)    ->  data/embeddings/
 Stage 05  Deploy                SCP / Qdrant       ->  Raspberry Pi / Qdrant
 ```
 
+### Pipeline Launcher (TUI)
+
+Optional PowerShell TUI (`scripts/glass.ps1`): animated MCP logo (gradient shift) on the left, step menu / live log on the right. Pick a pipeline stage or run the full stack; output streams into the Live Log panel.
+
+```powershell
+pwsh scripts/glass.ps1
+```
+
+<div align="center">
+  <img src="assets/img/_000_tui-launcher__Screenshot_2026-02-28_174555.png" alt="tui_pipeline_launcher" width="80%">
+</div>
+
+<div align="center">
+  <img src="assets/img/_000_tui-live-log__Screenshot_2026-02-28_170312.png" alt="tui_live_log" width="80%">
+</div>
+
 ---
 
 ## Setup
@@ -116,6 +132,12 @@ python pipeline/01_wiki_fetcher/fetch_full_wiki_extended.py --no-media
   <img src="assets/img/_001_fetch__Screenshot_2026-02-14_154254.png" alt="fetcher_screenshot" width="80%">
 </div>
 
+After a successful run the CLI prints a compact summary (pages, media, namespaces, links, ACL, timing):
+
+<div align="center">
+  <img src="assets/img/_001_fetch-result__Screenshot_2026-02-16_140901.png" alt="fetcher_result_summary" width="80%">
+</div>
+
 **Output:** `data/fetched/fetched_at_YYYYMMDD_HHMMSS/`
 
 ```tree
@@ -142,28 +164,47 @@ Key config options (`FETCH` section in `env.yaml`):
 | `media.max_file_size_mb`    | 50      | Skip files larger than this (0 = all)    |
 | `filter.exclude_namespaces` | []      | Skip these namespaces                    |
 
+
 ---
 
 ## Stage 02 — Deep Evaluation
 
-Analyzes fetched wiki content and generates preprocessing strategy recommendations.
+Analyzes fetched wiki content (pages, documents, images) via a local vision-language model in [LM Studio](https://lmstudio.ai/) and generates preprocessing strategy recommendations.
 
 ```powershell
-# From pipeline/02_deep_evaluation/
-python run_deep_evaluation.py
+# From repo root (or pipeline/02_deep_evaluation/)
+python pipeline/02_deep_evaluation/run_deep_evaluation.py
 
 # Show current config
-python run_deep_evaluation.py --show-config
+python pipeline/02_deep_evaluation/run_deep_evaluation.py --show-config
 ```
 
+DeepEval first validates the fetch output paths (`page_content`, `media`); missing dirs abort early:
+
+<div align="center">
+  <img src="assets/img/_002_deep-eval__Screenshot_2026-02-16_141023.png" alt="deep_eval_start" width="80%">
+</div>
+
+With a valid fetch and LM Studio serving a vision model (e.g. `qwen2.5-vl-7b`), documents **and** images are analyzed locally — DOCX, PDF, JPG, PNG, etc.:
+
+<div align="center">
+  <img src="assets/img/_002_deep-eval-analyze__Screenshot_2026-02-15_131730.png" alt="deep_eval_lm_studio_analyze" width="80%">
+</div>
+
+On completion the CLI prints a summary and writes JSON results, preprocessing strategies, and a Markdown report:
+
+<div align="center">
+  <img src="assets/img/_002_deep-eval-result__Screenshot_2026-02-15_154019.png" alt="deep_eval_result_summary" width="80%">
+</div>
+
 **Input:** `data/fetched/fetched_at_*/`  
-**Output:** `data/evaluated/` — strategy reports per page/namespace
+**Output:** `data/evaluated/` — strategy reports per page/namespace (`deep_analysis_results.json`, `preprocessing_strategies.yaml`, `ANALYSIS_REPORT_*.md`)
 
 ---
 
 ## Stage 03 — RAG Preprocessing
 
-Converts fetched DokuWiki content to Markdown with YAML frontmatter, applying deep-evaluation strategies.
+Converts fetched DokuWiki content to Markdown with YAML frontmatter, applying deep-evaluation strategies. Media is processed as well (e.g. image captions).
 
 ```powershell
 # Auto-discovers latest fetched data
@@ -174,6 +215,12 @@ python pipeline/03_rag_preprocessing/run_preprocessing.py \
   --input-dir data/fetched/fetched_at_20260201 \
   --evaluated-dir data/evaluated
 ```
+
+On completion the CLI prints a summary (pages OK/failed, media processed, images captioned):
+
+<div align="center">
+  <img src="assets/img/_003_preprocess-result__Screenshot_2026-02-16_143429.png" alt="preprocess_result_summary" width="80%">
+</div>
 
 **Output:** `data/preprocessed/preprocessed_at_YYYYMMDD_HHMMSS/`  
 Each page → `{page_id}.md` with frontmatter (`source`, `namespace`, `difficulty`, `chunk_strategy`, …)
@@ -215,7 +262,7 @@ Each line in the JSONL:
 
 ## Stage 05 — Deploy
 
-Transfers embeddings to a Raspberry Pi via SCP or uploads directly to a Qdrant instance.
+Transfers embeddings to a Raspberry Pi via SCP or uploads directly to a Qdrant instance. After SCP, MD5 checksums can verify local vs. remote integrity:
 
 ```powershell
 # Transfer to Raspberry Pi (SCP)
@@ -229,7 +276,13 @@ python pipeline/05_deploy/run_deploy.py qdrant
 
 # Verify a previous transfer (MD5 checksum)
 python pipeline/05_deploy/run_deploy.py verify --check-qdrant
+# or:
+python pipeline/05_deploy/verify_transfer.py --host raspi-docker
 ```
+
+<div align="center">
+  <img src="assets/img/_005_upload-raspi__Screenshot_2026-02-26_142531.png" alt="deploy_transfer_verify_raspi" width="80%">
+</div>
 
 **Configuration:** `pipeline/05_deploy/config.yaml`
 
