@@ -115,7 +115,7 @@ It will be linked from the author's portfolio. Two forces are in tension:
 - [x] Full git history contains zero secret files (`gitleaks git .` exits clean — 165 commits, 0 leaks, re-run 2026-07-20 after final changes).
 - [x] `.pre-commit-config.yaml` present and `pre-commit run --all-files` passes (gitleaks + email guard).
 - [x] Every published sample artifact passed the redaction script and manual review (PII-free, verified).
-- [ ] `.claude/ .cursor/ .specify/ .github/ .prompts/ specs/` visible and coherent. *(Ignore/track contradiction fixed — `.cursor/` un-ignored; `config/secrets/.gitkeep`+`README.md` now published. OPEN: removing the `.cursor/` ignore surfaced untracked `.cursor/{agents,hooks,plans,rules,skills,settings.json}` — user decision pending on adding these as portfolio artifacts.)*
+- [x] `.claude/ .cursor/ .specify/ .github/ .prompts/ specs/` visible and coherent. *(Ignore/track contradiction fixed; `config/secrets/.gitkeep`+`README.md` published. `.cursor/` vetted: `agents/skills/rules/settings.json` committed as portfolio artifacts; `plans/` (private thesis-repo refs, collaborator names, professor feedback) and `hooks/` (runtime state) excluded via scoped ignore.)*
 - [x] README communicates the portfolio story; `PRIVACY.md` explains data handling.
 - [ ] Repo can be flipped to public with the author confident no secret or personal datum is exposed. *(Tracked surface is clean and gated; pending the author's final visibility flip + the `.cursor/` decision above.)*
 
@@ -136,6 +136,6 @@ It will be linked from the author's portfolio. Two forces are in tension:
 
 These do not expose any secret or third-party PII (the tracked surface is verified clean) — they are hardening/decision items for the author before/after the visibility flip:
 
-1. **`.cursor/` untracked artifacts** — removing the blanket ignore surfaced `.cursor/{agents,hooks,plans,rules,skills,settings.json}` as untracked. Decide: review + commit them as portfolio artifacts, or add a scoped ignore back. Until decided, a broad `git add -A` could publish un-vetted local agent config — review `settings.json` first.
+1. ~~`.cursor/` untracked artifacts~~ **RESOLVED:** vetted and `agents/skills/rules/settings.json` committed (gitleaks-clean, no PII/paths); `plans/` + `hooks/` excluded via scoped ignore.
 2. **`--check` email guard skips all `.md`** (`scripts/redact_sample.py`) — the pre-commit PII guard currently excludes Markdown, so a real email later pasted into a doc/spec would not be caught by *this* hook (gitleaks still catches structured secrets; it does not catch plain PII emails). Tightening requires migrating two synthetic literals in historical `.md` (`foo@bar.at` in `specs/008`, `a@b.co` in `specs/013`) to `example.*` domains first.
 3. **Stage 03 has no sample** — `data/preprocessed/samples/` is intentionally absent (no clean preprocessed source at cleanup time); README wording was corrected to name only the stages that do ship a sample.
