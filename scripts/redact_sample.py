@@ -17,9 +17,20 @@ _PLACEHOLDER_PATTERNS = (
     "nachname",
     "your_",
     "ihr_",
-    "example",
     "noreply",
     "@v1",
+)
+
+# RFC 2606 reserved domains: safe to use in documentation/examples and never
+# routable as real third-party addresses. Matched on the domain exactly (not
+# as a bare substring), so a real address on a lookalike domain containing
+# the word "example" is NOT wrongly allowlisted.
+_RESERVED_EXAMPLE_DOMAINS = frozenset(
+    {
+        "example.com",
+        "example.org",
+        "example.net",
+    }
 )
 
 # Known, deliberately-published maintainer/author contact addresses (GPL
@@ -33,8 +44,11 @@ _KNOWN_AUTHOR_EMAILS = frozenset(
     }
 )
 
-# Path prefixes excluded from the --check scan.
-_EXCLUDED_PATH_PARTS = ("tests/",)
+# Individual files excluded from the --check scan. Kept to the single file
+# whose entire purpose is demonstrating email redaction with literal
+# example addresses; other test fixtures (e.g. pipeline/*/tests/) must still
+# be scanned for real PII.
+_EXCLUDED_PATHS = frozenset({"tests/test_redact_sample.py"})
 
 
 def scan_for_emails(text: str) -> list[str]:
@@ -59,16 +73,16 @@ def _is_excluded_path(path: str) -> bool:
                 return True
         except (ValueError, IndexError):
             pass
-    for prefix in _EXCLUDED_PATH_PARTS:
-        if path.startswith(prefix) or f"/{prefix}" in path:
-            return True
-    return False
+    return path in _EXCLUDED_PATHS
 
 
 def _is_placeholder_match(match: str) -> bool:
     if match == _SAFE_TOKEN:
         return True
     if match in _KNOWN_AUTHOR_EMAILS:
+        return True
+    domain = match.rsplit("@", 1)[-1].lower()
+    if domain in _RESERVED_EXAMPLE_DOMAINS:
         return True
     lowered = match.lower()
     return any(pattern in lowered for pattern in _PLACEHOLDER_PATTERNS)
