@@ -109,6 +109,11 @@ def load_config(config_path: str | None = None) -> dict[str, Any]:
     if config is None:
         raise ConfigError(f"Empty configuration file: {resolved_path}")
 
+    paths = config.get("PATHS") or {}
+    if str(paths.get("root_dir", "")).strip() in ("", "AUTO"):
+        paths["root_dir"] = str(Path(__file__).resolve().parent)
+        config["PATHS"] = paths
+
     config = resolve_variables(config)
     return config
 

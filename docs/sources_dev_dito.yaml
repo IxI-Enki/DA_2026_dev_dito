@@ -261,10 +261,10 @@ full_paths:
       # --- Qdrant Collection Init (Docker Service) ---
       collection_init:
         scripts:
-          - init_collection: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/init_collection.py
-        dockerfile: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/Dockerfile
-        requirements: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/requirements.txt
-        readme: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/README.md
+          - init_collection: /path/to/legacy-stack/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/init_collection.py
+        dockerfile: /path/to/legacy-stack/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/Dockerfile
+        requirements: /path/to/legacy-stack/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/requirements.txt
+        readme: /path/to/legacy-stack/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db/README.md
         # Runs as qdrant_init service in Docker, populates wiki_embeddings collection
 
       # --- RAG Preprocessing Output (Input for Embeddings Creator) ---
@@ -291,7 +291,7 @@ full_paths:
       # --- Research / Planning Documents ---
       research_documents:
         - qdrant_embeddings_improvement: D:/_Repositories/_Diploma_Thesis_Repositories/research/techstack/qdrant/qdrant_embeddings_improvement.md
-        - pipeline_manager_plan: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/.cursor/plans/dev_dito_pipeline_manager_6f2b3d9b.plan.md
+        - pipeline_manager_plan: /path/to/legacy-stack/.cursor/plans/dev_dito_pipeline_manager_6f2b3d9b.plan.md
 
   # ==========================================================================
   # 5. RAGFLOW RAG PREPROCESSING (Wiki -> Markdown/Plaintext)

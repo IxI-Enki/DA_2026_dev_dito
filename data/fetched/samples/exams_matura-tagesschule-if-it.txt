@@ -1,0 +1,81 @@
+====== Reife- und Diplomprüfungen der Tagesschule Informatik und IT Medientechnik ======
+===== Überblick =====
+Die Reife- und Diplomprüfungen bestehen aus folgenden 3 Säulen
+  - Diplomarbeiten
+  - Klausurarbeiten (die schriftlichen Prüfungen)
+  - Mündliche Prüfungen
+
+Der Themenbereich der Diplomarbeiten wird [[exams:da-inf-it|auf einer eigenen Seite]] abgehandelt.
+
+Bei den schriftlichen Prüfungen sind Angewandte Mathematik und [[matura-tagesschule-if-it#fachtheorie| Fachtheorie]] Fixstarter. Dazu kann noch Deutsch oder Englisch oder beide Sprachen kommen.
+
+Bei den mündlichen Prüfungen sind das [[matura-tagesschule-if-it#schwerpunktfach|Schwerpunktfach]] und das [[matura-tagesschule-if-it#wahlfach| Wahlfach]] Fixstarter. Dazu kann noch Deutsch oder Englisch kommen, je nach Wahl bei den Klausurarbeiten (siehe nächsten Abschnitt).
+
+===== Klausurarbeiten =====
+Neben den Fixstarter-Gegenständen können die Schüler*innen wählen, in welcher Sprache sie schriftlich maturieren möchten. Daraus ergeben sich folgende drei Szenarien.
+
+==== Deutsch schriftlich ====
+  * Angewandte Mathematik
+  * Fachtheorie
+  * Deutsch
+
+==== Englisch schriftlich ====
+  * Angewandte Mathematik
+  * Fachtheorie
+  * Englisch
+
+==== Beide Sprachen schriftlich ====
+  * Angewandte Mathematik
+  * Fachtheorie
+  * Englisch
+  * Deutsch
+
+==== Fachtheorie ====
+Fachtheorie bezeichnet den Gegenstand, der für eine Abteilung spezifisch bei den **Klausurarbeiten** absolviert werden muss. In der **Informatik** ist das **Programmieren und Software-Entwicklung (POSE)** und in der **Medientechnik** ist das **Software-Entwicklung (SEW)**.
+
+==== Kompensationsprüfungen ====
+Wenn eine oder mehrere Klausuren mit einem Nicht genügend beurteilt wurden, haben die Kandidat:innen die Möglichkeit, diese im Rahmen einer Kompensationsprüfung auszubessern.
+
+===== Mündliche Prüfungen =====
+==== Schwerpunktfach ====
+Das Schwerpunktfach wird zu Beginn des 5. Jahrgangs (Oktober) verlost. Dazu wird aus dem Pool der möglichen Schwerpunktfächer jede:r Schüler:in ein Fach zufällig zugeordnet. Die Pools sind folgendermaßen definiert.
+
+=== Informatik ===
+  * Betriebswirtschaft und Management (BWM)
+  * Datenbank- und Informationssysteme (DBI)
+  * Netzwerke und verteilte Systeme (NVS)
+  * Systemplanung und Projektentwicklung (SYP)
+
+=== IT Medientechnik ===
+  * Informationssysteme (INSY)
+  * IT Projekte (ITP)
+  * Medientechnik (MEDT)
+  * Medientechnik Vertiefung (VERT)
+==== Wahlfach ====
+Aus einem Pool an möglichen Wahlfächern können sich die Schüler*innen ein Fach aussuchen, welches sie als weitere Prüfungsfach zur mündlichen Prüfung absolvieren möchten. Da die Schwerpunktfächer auch aus diesem Pool kommen, ist nur die Wahl eines Fachs erlaubt, welches dem/der Schüler*in nicht als Schwerpunktfach zugeteilt wurde. Im Pool sind sowohl allgemeinbildende als auch fachtheoretische Gegenstände enthalten.
+
+=== Allgemeinbildend Fächer ===
+  * Naturwissenschaften (Nawi)
+  * Geographie, Geschichte und politische Bildung (GGP)
+  * Religion oder Ethik (je nachdem, was gewählt wurde. Wichtig ist, dass das Fach über alle 5 Jahre gewählt werden musste)
+
+=== Fachtheoretische Fächer Informatik ===
+  * Betriebswirtschaft und Management (BWM)
+  * Datenbank- und Informationssysteme (DBI)
+  * Netzwerke und verteilte Systeme (NVS)
+  * Systemplanung und Projektentwicklung (SYP)
+
+
+=== Fachtheoretische Fächer IT Medientechnik ===
+  * Informationssysteme (INSY)
+  * IT Projekte (ITP)
+  * Medientechnik (MEDT)
+  * Wirtschaft und Recht (WR)
+  * Medientechnik Vertiefung (VERT)
+
+==== Vorgezogene Reife- und Diplomprüfung ====
+Da die Gegenstände Nawi und GGP bereits im 4. Jahrgang abgeschlossen werden, gibt es vom Gesetzgeber die Möglichkeit, dass Schüler*innen, welche einen dieser Gegenstände als mündliches Prüfungsfach wählen, diese Prüfung bereits zu Beginn des 5. Jahrgangs ablegen dürfen. Dies bedarf eines Beschlusses des Schulgemeinschaftsausschusses (SGA). Aktuell ist die Entscheidung für das nächste Schuljahr noch nicht gefallen. Dies wird spätestens mit Mitte Mai geschehen. Dann werden hier genauere Informationen dazu zu finden sein.
+
+==== Änderungen ab Schuljahr 2025/26 ====
+  * Zusätzliches Schwerpunktfach Medientechnik Vertiefung
+  * Zusätzliches Wahlfach Medientechnik Vertiefung

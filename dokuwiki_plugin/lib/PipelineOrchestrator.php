@@ -15,7 +15,7 @@ namespace dokuwiki\plugin\devdito\lib;
  * Constitution Article VII: Thin wrappers only
  *
  * @license    GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author     Jan Ritt <j.ritt@htl-leonding.ac.at>
+ * @author     Jan Ritt <janritt.office@gmail.com>
  * @package    DokuWiki\Plugin\DevDito\Lib
  */
 class PipelineOrchestrator

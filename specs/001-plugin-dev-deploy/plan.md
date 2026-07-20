@@ -116,7 +116,7 @@ dev_dito/
 │   └── README.md                       # Script-Dokumentation ✅
 │
 └── [Target Wiki - NICHT im Repo]
-    D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\
+    C:\path\to\legacy-stack\
     └── development\first_own_dokuwiki\
         └── plugins_dev\devdito\        # Deployment-Ziel
 ```

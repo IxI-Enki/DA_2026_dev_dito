@@ -111,7 +111,7 @@ class TestEntityPreservationMetric:
         from evaluation.metrics import EntityPreservationMetric
 
         m = EntityPreservationMetric()
-        text = "Meeting am 2026-01-15 in Raum A3.04, email: test@htl.at, see https://htl.at"
+        text = "Meeting am 2026-01-15 in Raum A3.04, email: test@example.org, see https://htl.at"
         s = m.score(text, text)
         assert s == pytest.approx(1.0)
 
@@ -119,7 +119,7 @@ class TestEntityPreservationMetric:
         from evaluation.metrics import EntityPreservationMetric
 
         m = EntityPreservationMetric()
-        original = "Meeting am 2026-01-15, email: test@htl.at, URL: https://htl.at"
+        original = "Meeting am 2026-01-15, email: test@example.org, URL: https://htl.at"
         processed = "Meeting am 2026-01-15, URL: https://htl.at"
         s = m.score(original, processed)
         assert s < 1.0

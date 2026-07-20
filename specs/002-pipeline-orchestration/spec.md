@@ -456,5 +456,5 @@ extension-dev-dito-services (Stack-G)
 
 - [sources_dev_dito.yaml](D:/_Repositories/00_Die_Bibliothek/Prompts/sources_dev_dito.yaml) - Pipeline Overview
 - [Constitution v1.2.0](../../.specify/memory/constitution.md) - Article II-B (Centralized Config)
-- [Enterprise Plan](D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/_ENTERPRISE__PLAN_/Prompt.md) - Stack-G Requirements
+- [Enterprise Plan](/path/to/legacy-stack/_ENTERPRISE__PLAN_/Prompt.md) - Stack-G Requirements
 - [DokuWiki AJAX](https://www.dokuwiki.org/devel:ajax) - AJAX-Endpoint Development

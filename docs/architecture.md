@@ -109,7 +109,7 @@ Dev Dito stellt die Backend-Infrastruktur bereit UND bietet ein interaktives Adm
 
 ## Repository Struktur
 
-<directory name="internal_leonidas" description="Hauptrepository fuer Leonidas DokuWiki Extension">
+<directory name="legacy-wiki-repo" description="Hauptrepository fuer Leonidas DokuWiki Extension">
   <directory name="02_dev_dito" description="Dev Dito - Service Addon mit eigenen Wiki-Seiten">
     <file name="architecture_dev_dito.md" description="Diese Architekturdokumentation"/>
     <file name="dev_dito_icon.png" description="Plugin Icon"/>
@@ -220,11 +220,11 @@ services:
     container_name: dokuwiki
     volumes:
       # Leonidas Plugin (Frontend - AI Chat)
-      - D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/development/first_own_dokuwiki/plugins_dev/leonidas:/config/dokuwiki/lib/plugins/leonidas
+      - /path/to/legacy-stack/development/first_own_dokuwiki/plugins_dev/leonidas:/config/dokuwiki/lib/plugins/leonidas
       # Dev Dito Plugin (Service Addon)
-      - D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/development/first_own_dokuwiki/plugins_dev/devdito:/config/dokuwiki/lib/plugins/devdito
+      - /path/to/legacy-stack/development/first_own_dokuwiki/plugins_dev/devdito:/config/dokuwiki/lib/plugins/devdito
       # Theme Settings
-      - D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/development/first_own_dokuwiki/plugins_dev/htlthemesettings:/config/dokuwiki/lib/plugins/htlthemesettings
+      - /path/to/legacy-stack/development/first_own_dokuwiki/plugins_dev/htlthemesettings:/config/dokuwiki/lib/plugins/htlthemesettings
     ports:
       - "${PORT}:80"  # Default: 8080
 
@@ -243,19 +243,19 @@ services:
   # Qdrant Init - Einmaliger Embedding-Import
   qdrant_init:
     build:
-      context: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db
+      context: /path/to/legacy-stack/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db
     container_name: qdrant_init
     environment:
       - QDRANT_HOST=qdrant_db
       - COLLECTION_NAME=wiki_embeddings
       - EMBEDDINGS_FILE=/data/embeddings/embedded_chunks.jsonl
     volumes:
-      - D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/embeddings:/data/embeddings:ro
+      - /path/to/legacy-stack/02_dev_dito/_development_of_dev_dito/backend_services/embeddings:/data/embeddings:ro
 
   # MCP Server - Stellt Tools fuer Leonidas bereit
   wiki_dev_mcp_server:
     build:
-      context: D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/wiki_dev_mcp_server
+      context: /path/to/legacy-stack/02_dev_dito/_development_of_dev_dito/backend_services/wiki_dev_mcp_server
     container_name: wiki_dev_mcp_server
     environment:
       - QDRANT_HOST=qdrant_db
@@ -286,7 +286,7 @@ volumes:
 ```text
 base    devdito
 author  Jan Ritt (IxI-Enki)
-email   jan.ritt@htl-leonding.ac.at
+email   janritt.office@gmail.com
 name    Dev Dito - Service Gateway Extension
 desc    Service Gateway for AI services (Ollama, LMStudio, Qdrant).
         Manages connections, API keys, health checks, metrics visualization,

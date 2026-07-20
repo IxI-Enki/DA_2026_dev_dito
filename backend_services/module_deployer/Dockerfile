@@ -10,7 +10,7 @@
 
 FROM python:3.11-slim
 
-LABEL maintainer="Jan Ritt <j.ritt@htl-leonding.ac.at>"
+LABEL maintainer="Jan Ritt <janritt.office@gmail.com>"
 LABEL description="Dev Dito Qdrant Deployer Module"
 LABEL version="0.1.0"
 

@@ -13,7 +13,7 @@ Dev Dito ist eine DokuWiki Extension (Plugin) die:
 - Admin-Dashboard fuer Service-Monitoring bietet
 
 **Source**: `D:\_Repositories\_Diploma_Thesis_Repositories\dev_dito\dokuwiki_plugin\`  
-**Target Wiki**: `D:\_Repositories\year_2025_26\SYP_2025_26\leonie\internal_leonidas\development\first_own_dokuwiki`  
+**Target Wiki**: `C:\path\to\legacy-stack\development\first_own_dokuwiki`  
 **Target Path**: `plugins_dev\devdito\`
 
 ## User Scenarios & Testing *(mandatory)*

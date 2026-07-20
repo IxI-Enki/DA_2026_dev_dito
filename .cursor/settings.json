@@ -1,0 +1,7 @@
+{
+  "plugins": {
+    "claude-code-plugins/frontend-design": {
+      "enabled": true
+    }
+  }
+}

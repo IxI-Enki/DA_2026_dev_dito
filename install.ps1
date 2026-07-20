@@ -285,7 +285,7 @@ function Step-Env {
 
     # Try to detect DokuWiki installation automatically
     $leonidasWiki = Join-Path (Split-Path -Parent (Split-Path -Parent $script:PROJECT_ROOT)) `
-        "year_2025_26\SYP_2025_26\leonie\internal_leonidas\development\first_own_dokuwiki"
+        "path\to\legacy-stack\development\first_own_dokuwiki"
 
     if (Test-Path $leonidasWiki) {
         Write-Host "[INFO] Detected DokuWiki at: $leonidasWiki" -ForegroundColor Cyan
@@ -388,7 +388,7 @@ function Step-Start {
 
         # Strategy C: leonidas stacks compose
         $leonidasCompose = Join-Path (Split-Path -Parent (Split-Path -Parent $script:PROJECT_ROOT)) `
-            "year_2025_26\SYP_2025_26\leonie\internal_leonidas\stacks\stack-g-devdito\docker-compose.yml"
+            "path\to\legacy-stack\stacks\stack-g-devdito\docker-compose.yml"
         if (Test-Path $leonidasCompose) {
             $leonidasDir = Split-Path -Parent $leonidasCompose
             Write-Host "[INFO] Starting DokuWiki from leonidas stacks..." -ForegroundColor Cyan

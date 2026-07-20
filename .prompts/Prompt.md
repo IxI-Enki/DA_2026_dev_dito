@@ -509,7 +509,7 @@
         Attempt at MCP server implementation - not fully functional.
         Running in Docker Desktop as "wiki_dev_mcp_server".
       </FILE-DESCRIPTION>
-      <FULL-PATH-TO-FILE>D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/wiki_dev_mcp_server</FULL-PATH-TO-FILE>
+      <FULL-PATH-TO-FILE>/path/to/legacy-stack/02_dev_dito/_development_of_dev_dito/backend_services/wiki_dev_mcp_server</FULL-PATH-TO-FILE>
     </FILE-1>
     <FILE-2>
       <FILE-NAME>MCPQdrantLeoWiki (.NET SDK implementation)</FILE-NAME>
@@ -517,15 +517,15 @@
         A .NET SDK version with both tools, partially working in Claude Desktop. Can be used for inspiration.
         NOTE: Python SDK for MCP Server is preferred!
       </FILE-DESCRIPTION>
-      <FULL-PATH-TO-FILE>D:/_Repositories/year_2025_26/POSE_2025_26/SEeMCPQdrantLeoWiki/MCPQdrantLeoWiki</FULL-PATH-TO-FILE>
+      <FULL-PATH-TO-FILE>/path/to/legacy-stack/SEeMCPQdrantLeoWiki/MCPQdrantLeoWiki</FULL-PATH-TO-FILE>
     </FILE-2>
     <FILE-3>
-      <FILE-NAME>internal_leonidas (existing project base)</FILE-NAME>
+      <FILE-NAME>legacy-wiki-repo (existing project base)</FILE-NAME>
       <FILE-DESCRIPTION>
         Existing project files and previous attempts/developments. Many are already very good, some not yet complete.
         WARNING: DO NOT MODIFY FILES IN THIS DIRECTORY!
       </FILE-DESCRIPTION>
-      <FULL-PATH-TO-FILE>D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas</FULL-PATH-TO-FILE>
+      <FULL-PATH-TO-FILE>/path/to/legacy-stack</FULL-PATH-TO-FILE>
     </FILE-3>
     <FILE-4>
       <FILE-NAME>Dev Dito DokuWiki Plugin</FILE-NAME>
@@ -533,21 +533,21 @@
         DokuWiki Plugin for semantic search UI. Has Admin Settings, Panel UI, MCP Server integration.
         Status: Functional, needs refactoring for Enterprise-Ready state.
       </FILE-DESCRIPTION>
-      <FULL-PATH-TO-FILE>D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/devdito</FULL-PATH-TO-FILE>
+      <FULL-PATH-TO-FILE>/path/to/legacy-stack/02_dev_dito/_development_of_dev_dito/devdito</FULL-PATH-TO-FILE>
     </FILE-4>
     <FILE-5>
       <FILE-NAME>Qdrant Init Script</FILE-NAME>
       <FILE-DESCRIPTION>
         Python script to initialize Qdrant collection with embeddings from JSONL file.
       </FILE-DESCRIPTION>
-      <FULL-PATH-TO-FILE>D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db</FULL-PATH-TO-FILE>
+      <FULL-PATH-TO-FILE>/path/to/legacy-stack/02_dev_dito/_development_of_dev_dito/backend_services/qdrant_db</FULL-PATH-TO-FILE>
     </FILE-5>
     <FILE-6>
       <FILE-NAME>Docker Compose (Development)</FILE-NAME>
       <FILE-DESCRIPTION>
         Main development docker-compose with DokuWiki, Keycloak, Qdrant, MCP Server.
       </FILE-DESCRIPTION>
-      <FULL-PATH-TO-FILE>D:/_Repositories/year_2025_26/SYP_2025_26/leonie/internal_leonidas/development/first_own_dokuwiki/docker-compose.yml</FULL-PATH-TO-FILE>
+      <FULL-PATH-TO-FILE>/path/to/legacy-stack/development/first_own_dokuwiki/docker-compose.yml</FULL-PATH-TO-FILE>
     </FILE-6>
   </LOCAL-FILES>
 

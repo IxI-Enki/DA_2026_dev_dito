@@ -1,0 +1,32 @@
+# dev_dito Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-02-18
+
+## Active Technologies
+- Python 3.11+ (orchestrator/server.py), PHP 8.1+ (DokuWiki plugin), JavaScript ES2020 (pipeline.js, no framework) + FastAPI + uvicorn + Pydantic v2 (orchestrator), DokuWiki Extension API + PSR-12 (plugin), Docker CLI / Docker Compose (stage execution) (012-dokuwiki-pipeline-integration)
+- `data/logs/pipeline_runs.json` (shared PHP/Python status file), `data/logs/pipeline_progress.json` (live progress) (012-dokuwiki-pipeline-integration)
+
+- Python 3.11+ (evaluation notebooks, visualization scripts), JavaScript/Node (diagram generator in companion-notes-repo), Markdown/HTML (content). + Matplotlib, Seaborn (dev_dito); diagram pipeline per `diagram_catalog.prompt.md` and theme-loader (companion-notes-repo); Puppeteer for HTML→PNG. (011-api-architecture-and-diagrams)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+cd src; pytest; ruff check .
+
+## Code Style
+
+Python 3.11+ (evaluation notebooks, visualization scripts), JavaScript/Node (diagram generator in companion-notes-repo), Markdown/HTML (content).: Follow standard conventions
+
+## Recent Changes
+- 012-dokuwiki-pipeline-integration: Added Python 3.11+ (orchestrator/server.py), PHP 8.1+ (DokuWiki plugin), JavaScript ES2020 (pipeline.js, no framework) + FastAPI + uvicorn + Pydantic v2 (orchestrator), DokuWiki Extension API + PSR-12 (plugin), Docker CLI / Docker Compose (stage execution)
+
+- 011-api-architecture-and-diagrams: Added Python 3.11+ (evaluation notebooks, visualization scripts), JavaScript/Node (diagram generator in companion-notes-repo), Markdown/HTML (content). + Matplotlib, Seaborn (dev_dito); diagram pipeline per `diagram_catalog.prompt.md` and theme-loader (companion-notes-repo); Puppeteer for HTML→PNG.
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

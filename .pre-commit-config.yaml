@@ -1,0 +1,15 @@
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+  - repo: local
+    hooks:
+      - id: no-real-emails
+        name: block real email addresses
+        entry: python scripts/redact_sample.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        args: ["--check"]
