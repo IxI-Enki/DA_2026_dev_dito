@@ -17,6 +17,20 @@ Fetches a DokuWiki, preprocesses and embeds the content, deploys to Qdrant, and 
 
 ---
 
+## What this demonstrates
+
+- **RAG pipeline** — a 5-stage DokuWiki → embeddings → Qdrant flow.
+- **Spec-Driven Development** — 13 numbered feature specs under `specs/`,
+  a project constitution under `.specify/`, and CI that turns specs into issues.
+- **Agentic orchestration** — reproducible Claude / Cursor / Spec-Kit command
+  sets under `.claude/`, `.cursor/`, and `.prompts/`.
+- **Evaluation** — a RAGAS + custom-metric framework under `evaluation/`.
+
+Real source data is **not** published; each stage ships a small, redacted
+sample under `data/<stage>/samples/`. See [PRIVACY.md](PRIVACY.md).
+
+---
+
 ## Pipeline Overview
 
 ```sketch
