@@ -1,6 +1,6 @@
 base    devdito
 author  Jan Ritt (IxI-Enki)
-email   j.ritt@htl-leonding.ac.at
+email   janritt.office@gmail.com
 date    2026-01-31
 name    Dev Dito - Pipeline Manager & Service Gateway
 desc    Wiki Embedding Pipeline orchestration: Fetch, Evaluate, Embed, Deploy. Monitors external services (MCP, Qdrant). Does NOT provide search UI (see Leonidas extension).

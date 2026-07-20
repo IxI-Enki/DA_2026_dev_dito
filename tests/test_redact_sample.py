@@ -2,7 +2,7 @@
 from scripts.redact_sample import redact_text
 
 def test_redacts_email():
-    assert redact_text("mail g.schubert@htl-leonding.ac.at now") == \
+    assert redact_text("mail a.teacher@example.org now") == \
         "mail redacted@example.org now"
 
 def test_keeps_placeholder_untouched_shape():

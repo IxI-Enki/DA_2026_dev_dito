@@ -286,7 +286,7 @@ volumes:
 ```text
 base    devdito
 author  Jan Ritt (IxI-Enki)
-email   jan.ritt@htl-leonding.ac.at
+email   janritt.office@gmail.com
 name    Dev Dito - Service Gateway Extension
 desc    Service Gateway for AI services (Ollama, LMStudio, Qdrant).
         Manages connections, API keys, health checks, metrics visualization,

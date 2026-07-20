@@ -4,7 +4,7 @@
  * Handles pipeline stage execution and status polling.
  *
  * @license    GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author     Jan Ritt <j.ritt@htl-leonding.ac.at>
+ * @author     Jan Ritt <janritt.office@gmail.com>
  * @version    0.1.0
  */
 

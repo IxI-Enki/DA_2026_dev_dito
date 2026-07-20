@@ -28,7 +28,7 @@ _PLACEHOLDER_PATTERNS = (
 # scraped from the wiki, so it is intentionally allowed through the guard.
 _KNOWN_AUTHOR_EMAILS = frozenset(
     {
-        "j.ritt@htl-leonding.ac.at",
+        "janritt.office@gmail.com",
         "dev@htl-leonding.ac.at",
     }
 )
