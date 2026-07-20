@@ -450,7 +450,17 @@ try {
 } catch {}
 
 $running = $true
-[Console]::CancelKeyPress += { param($s,$e) $e.Cancel=$true; $script:running=$false }
+# Ctrl+C stops the TUI loop without killing the host.
+# Cursor/VS Code integrated terminals often lack CancelKeyPress — Q still quits.
+try {
+    [Console]::add_CancelKeyPress({
+        param($s, $e)
+        $e.Cancel = $true
+        $script:running = $false
+    })
+} catch {
+    # Host has no CancelKeyPress event; ignore.
+}
 
 while ($running) {
     # ── Drain process output ──────────────────────────────────────────────────
