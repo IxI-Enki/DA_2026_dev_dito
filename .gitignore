@@ -88,7 +88,7 @@ pipeline/*/config/*.cert
 *.key
 *.cert
 *.token
-secrets/
+/secrets/
 
 # Pipeline env files (local overrides)
 pipeline/**/env.yaml

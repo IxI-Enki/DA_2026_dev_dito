@@ -111,13 +111,13 @@ It will be linked from the author's portfolio. Two forces are in tension:
 
 ## 5. Success Criteria
 
-- [ ] `git grep` finds zero real email addresses, zero `D:/` paths, zero `192.168.*` in the tracked, published surface.
-- [ ] Full git history contains zero secret files (`gitleaks git .` exits clean).
-- [ ] `.pre-commit-config.yaml` present and `pre-commit run --all-files` passes.
-- [ ] Every published sample artifact has passed the redaction script and a manual review.
-- [ ] `.claude/ .cursor/ .specify/ .github/ .prompts/ specs/` are visible and coherent (no ignore/track contradictions).
-- [ ] README communicates the portfolio story; `PRIVACY.md` explains data handling.
-- [ ] Repo can be flipped to public with the author confident no secret or personal datum is exposed.
+- [x] Zero **un-intended** real emails and zero `D:/` paths / `192.168.*` in **active configs**. *(Intentional & decided: author's official contact `janritt.office@gmail.com`, the plugin org address `dev@htl-leonding.ac.at`, and synthetic test fixtures remain; harmless machine paths — `D:/…/dev_dito` and `D:/…/research/…` — stay in historical `docs/`/`specs/` per decision 3; the only `192.168.*` left is a `192.168.x.x` doc placeholder.)*
+- [x] Full git history contains zero secret files (`gitleaks git .` exits clean — 165 commits, 0 leaks, re-run 2026-07-20 after final changes).
+- [x] `.pre-commit-config.yaml` present and `pre-commit run --all-files` passes (gitleaks + email guard).
+- [x] Every published sample artifact passed the redaction script and manual review (PII-free, verified).
+- [ ] `.claude/ .cursor/ .specify/ .github/ .prompts/ specs/` visible and coherent. *(Ignore/track contradiction fixed — `.cursor/` un-ignored; `config/secrets/.gitkeep`+`README.md` now published. OPEN: removing the `.cursor/` ignore surfaced untracked `.cursor/{agents,hooks,plans,rules,skills,settings.json}` — user decision pending on adding these as portfolio artifacts.)*
+- [x] README communicates the portfolio story; `PRIVACY.md` explains data handling.
+- [ ] Repo can be flipped to public with the author confident no secret or personal datum is exposed. *(Tracked surface is clean and gated; pending the author's final visibility flip + the `.cursor/` decision above.)*
 
 ---
 
