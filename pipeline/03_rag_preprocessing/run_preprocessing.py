@@ -202,7 +202,7 @@ def run(
     # US6: Vision-LLM Image Captioner
     vlm_cfg = cfg.vision_llm
     captioner = ImageCaptioner(
-        api_base=vlm_cfg.get("api_base", "http://192.168.8.3:1234/v1"),
+        api_base=vlm_cfg.get("api_base", "http://localhost:1234/v1"),
         model=vlm_cfg.get("model", "qwen2.5-vl"),
         timeout=vlm_cfg.get("timeout", 60),
         max_image_size=vlm_cfg.get("max_image_size", 1024),

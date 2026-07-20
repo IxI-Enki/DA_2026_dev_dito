@@ -59,7 +59,7 @@ class ExperimentConfig:
     torch_dtype: str = "float32"
     config_hash: str = ""
     # RAGAS (LLM-as-Judge) - optional
-    llm_base_url: str = "http://192.168.8.3:11434/v1"
+    llm_base_url: str = "http://localhost:11434/v1"
     llm_model: str = "llama3.2"
     ragas_temperature: float = 0.0
     # Report and visualization
@@ -113,7 +113,7 @@ def load_experiment_config(config_path: str | Path) -> ExperimentConfig:
         ground_truth_file=ground_truth.get("file", "ground_truth/leowiki_qa_50_verified.json"),
         metrics=tuple(metrics_list),
         config_hash=f"sha256:{config_hash}",
-        llm_base_url=ragas.get("llm_base_url", "http://192.168.8.3:11434/v1"),
+        llm_base_url=ragas.get("llm_base_url", "http://localhost:11434/v1"),
         llm_model=ragas.get("model", "llama3.2"),
         ragas_temperature=float(ragas.get("temperature", 0.0)),
         output_format=report.get("output_format", "markdown"),

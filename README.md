@@ -26,8 +26,9 @@ Fetches a DokuWiki, preprocesses and embeds the content, deploys to Qdrant, and 
   sets under `.claude/`, `.cursor/`, and `.prompts/`.
 - **Evaluation** — a RAGAS + custom-metric framework under `evaluation/`.
 
-Real source data is **not** published; each stage ships a small, redacted
-sample under `data/<stage>/samples/`. See [PRIVACY.md](PRIVACY.md).
+Real source data is **not** published; selected pipeline stages ship a small,
+redacted sample under `data/<stage>/samples/` (fetched pages, embeddings,
+evaluation report). See [PRIVACY.md](PRIVACY.md).
 
 ---
 

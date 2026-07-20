@@ -111,7 +111,7 @@ It will be linked from the author's portfolio. Two forces are in tension:
 
 ## 5. Success Criteria
 
-- [x] Zero **un-intended** real emails and zero `D:/` paths / `192.168.*` in **active configs**. *(Intentional & decided: author's official contact `janritt.office@gmail.com`, the plugin org address `dev@htl-leonding.ac.at`, and synthetic test fixtures remain; harmless machine paths — `D:/…/dev_dito` and `D:/…/research/…` — stay in historical `docs/`/`specs/` per decision 3; the only `192.168.*` left is a `192.168.x.x` doc placeholder.)*
+- [x] Zero **un-intended** real emails and zero `D:/` paths / `192.168.*` in **active configs**. *(Intentional & decided: author's official contact `janritt.office@gmail.com`, the plugin org address `dev@htl-leonding.ac.at`, and synthetic test fixtures remain; harmless machine paths — `D:/…/dev_dito` and `D:/…/research/…` — stay in historical `docs/`/`specs/` per decision 3; the LAN IP `192.168.8.3` was scrubbed from active configs **and** active code defaults (`evaluation/config.py`, `evaluation/scripts/eval_pipeline.py`, `pipeline/03_rag_preprocessing/run_preprocessing.py`) → `localhost`; remaining `192.168.*` occurrences are only in historical `specs/008`/`009` and a `192.168.x.x` doc placeholder.)*
 - [x] Full git history contains zero secret files (`gitleaks git .` exits clean — 165 commits, 0 leaks, re-run 2026-07-20 after final changes).
 - [x] `.pre-commit-config.yaml` present and `pre-commit run --all-files` passes (gitleaks + email guard).
 - [x] Every published sample artifact passed the redaction script and manual review (PII-free, verified).
@@ -129,3 +129,13 @@ It will be linked from the author's portfolio. Two forces are in tension:
 | Rewriting active configs breaks path resolution | Keep `${var}` semantics; smoke-test that each edited env.yaml still resolves. |
 | Over-cleaning erases authentic process history | Explicit decision to leave `specs/`/`docs/` untouched. |
 | Future fetched data re-introduces PII | `data/` stays gitignored by default; only redacted samples are ever whitelisted. |
+
+---
+
+## 7. Known follow-ups (post whole-branch review, non-blocking)
+
+These do not expose any secret or third-party PII (the tracked surface is verified clean) — they are hardening/decision items for the author before/after the visibility flip:
+
+1. **`.cursor/` untracked artifacts** — removing the blanket ignore surfaced `.cursor/{agents,hooks,plans,rules,skills,settings.json}` as untracked. Decide: review + commit them as portfolio artifacts, or add a scoped ignore back. Until decided, a broad `git add -A` could publish un-vetted local agent config — review `settings.json` first.
+2. **`--check` email guard skips all `.md`** (`scripts/redact_sample.py`) — the pre-commit PII guard currently excludes Markdown, so a real email later pasted into a doc/spec would not be caught by *this* hook (gitleaks still catches structured secrets; it does not catch plain PII emails). Tightening requires migrating two synthetic literals in historical `.md` (`foo@bar.at` in `specs/008`, `a@b.co` in `specs/013`) to `example.*` domains first.
+3. **Stage 03 has no sample** — `data/preprocessed/samples/` is intentionally absent (no clean preprocessed source at cleanup time); README wording was corrected to name only the stages that do ship a sample.

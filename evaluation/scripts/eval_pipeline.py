@@ -128,7 +128,7 @@ class EvaluationPipeline:
             from evaluation.scripts.eval_model_comparison import create_provider
 
             provider = create_provider(self.config)
-            host = "192.168.8.3"
+            host = "localhost"
             client = QdrantClient(host=host, port=6333, timeout=10)
             collection = f"{self.config.collection_prefix}{self.config.model.replace('/', '_')}"
 
