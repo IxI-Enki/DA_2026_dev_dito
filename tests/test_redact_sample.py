@@ -11,3 +11,8 @@ def test_keeps_placeholder_untouched_shape():
 
 def test_no_email_unchanged():
     assert redact_text("no address here") == "no address here"
+
+def test_check_mode_passes_on_clean_text(tmp_path):
+    from scripts.redact_sample import scan_for_emails
+    assert scan_for_emails("no pii here") == []
+    assert scan_for_emails("a@b.co") == ["a@b.co"]
