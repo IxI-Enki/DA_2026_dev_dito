@@ -85,6 +85,7 @@ $PIX = @(
 
 # ── STDIN → CONCURRENT QUEUE (background thread) ─────────────────────────────
 # ── PROCESS OUTPUT QUEUE ─────────────────────────────────────────────────────
+if (-not ('ProcQ' -as [type])) {
 Add-Type -TypeDefinition @"
 using System;
 using System.Collections.Concurrent;
@@ -95,6 +96,7 @@ public static class ProcQ {
     public static readonly ConcurrentQueue<string> Lines
         = new ConcurrentQueue<string>();
     public static volatile bool Running = false;
+    public static volatile int  ExitCode = 0;
     private static Process _proc = null;
 
     public static void Drain() {
@@ -104,8 +106,9 @@ public static class ProcQ {
 
     public static void StartProcess(string fileName, string arguments, string workDir) {
         Drain();
-        Running = true;
-        _proc   = null;
+        Running  = true;
+        ExitCode = 0;
+        _proc    = null;
         var psi = new ProcessStartInfo {
             FileName               = fileName,
             Arguments              = arguments,
@@ -121,7 +124,8 @@ public static class ProcQ {
         new Thread(() => {
             try { string ln; while ((ln = p.StandardOutput.ReadLine()) != null) Lines.Enqueue(ln); }
             catch {}
-            try { p.WaitForExit(60000); } catch {}
+            try { p.WaitForExit(); } catch {}
+            try { ExitCode = p.HasExited ? p.ExitCode : 1; } catch { ExitCode = 1; }
             Running = false;
         }) { IsBackground = true }.Start();
         new Thread(() => {
@@ -133,10 +137,12 @@ public static class ProcQ {
     public static void Kill() {
         var p = _proc;
         try { if (p != null && !p.HasExited) p.Kill(); } catch {}
+        ExitCode = -1;
         Running = false;
     }
 }
 "@
+}
 
 # ── MENU ITEMS + STATE ────────────────────────────────────────────────────────
 $DD_ROOT = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } `
@@ -160,13 +166,15 @@ $_msEnc  = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($_msCmd))
 # ── LM STUDIO AUTO-START ──────────────────────────────────────────────────────
 # Steps 2 & 3 require LM Studio to be running with the correct model loaded.
 # New-LmsArg builds a pwsh -EncodedCommand wrapper that:
-#   1. Checks if LM Studio server is up  (GET /v1/models)
-#   2. If offline  → runs: lms server start   (then polls until ready)
-#   3. If model missing → runs: lms load <model>  (then polls until loaded)
+#   1. Checks if LM Studio server is up  (GET /v1/models or /api/v1/models → 200/401)
+#   2. If offline  → launches LM Studio app / lms server start  (then polls until ready)
+#   3. If model not loaded → runs: lms load <model>  (polls /api/v1/models loaded_instances)
 #   4. Finally runs the Python pipeline script via python -u
 # All output (Write-Host + stdout + stderr) is captured by ProcQ via 6>&1.
+# Note: OpenAI /v1/models often returns {"data":[]} even when models exist; native
+# /api/v1/models is authoritative for catalog + load state (key / loaded_instances).
 $_lmsUrl   = 'http://127.0.0.1:1234/v1'
-$_lmsModel = 'qwen2.5-vl-7b'
+$_lmsModel = 'qwen/qwen2.5-vl-7b'
 
 function New-LmsArg ([string]$lmsUrl, [string]$lmsModel, [string]$pyExe, [string]$pyScript) {
     # Build the inner command as a here-string, then Base64-encode it for
@@ -178,16 +186,72 @@ function New-LmsArg ([string]$lmsUrl, [string]$lmsModel, [string]$pyExe, [string
 `$PSStyle.OutputRendering = 'ANSI'
 `$lmsUrl   = '$lmsUrl'
 `$lmsModel = '$lmsModel'
+`$lmsBase  = (`$lmsUrl -replace '/v1/?$','').TrimEnd('/')
+`$lmsPort  = 1234
+if (`$lmsUrl -match ':(\d+)') { `$lmsPort = [int]`$Matches[1] }
 
+function Get-LmsHeaders {
+    `$h = @{}
+    `$tok = `$env:LM_API_TOKEN
+    if (-not `$tok) { `$tok = `$env:LMS_API_TOKEN }
+    if (`$tok) { `$h['Authorization'] = "Bearer `$tok" }
+    return `$h
+}
+function Test-LmsHttpReady ([string]`$url) {
+    # Any reachable LMS HTTP response means the server is up.
+    # 200 = usable; 401 = auth required but listening (do NOT treat as offline).
+    try {
+        `$r = Invoke-WebRequest -Uri `$url -Headers (Get-LmsHeaders) -TimeoutSec 5 -SkipHttpErrorCheck
+        `$code = [int]`$r.StatusCode
+        if (`$code -eq 200 -or `$code -eq 401) { return `$true }
+    } catch {}
+    return `$false
+}
 function Test-LmsServer {
-    try   { `$null = Invoke-RestMethod "`$lmsUrl/models" -TimeoutSec 5 -EA Stop; return `$true }
-    catch { return `$false }
+    if (Test-LmsHttpReady "`$lmsUrl/models") { return `$true }
+    if (Test-LmsHttpReady "`$lmsBase/api/v1/models") { return `$true }
+    # TCP fallback: port open => app/server process is accepting connections
+    try {
+        `$client = [System.Net.Sockets.TcpClient]::new()
+        `$iar = `$client.BeginConnect('127.0.0.1', `$lmsPort, `$null, `$null)
+        `$ok = `$iar.AsyncWaitHandle.WaitOne(1500, `$false)
+        if (`$ok -and `$client.Connected) { `$client.Close(); return `$true }
+        `$client.Close()
+    } catch {}
+    return `$false
 }
 function Test-LmsModel {
+    `$hdr = Get-LmsHeaders
+    # Prefer native /api/v1/models — OpenAI /v1/models often returns empty data:[]
+    # even when the catalog has dozens of models. Shape: { models: [{ key, loaded_instances, ... }] }
     try {
-        `$r = Invoke-RestMethod "`$lmsUrl/models" -TimeoutSec 5 -EA Stop
-        return (`$r.data | Where-Object { `$_.id -like "*`$lmsModel*" }).Count -gt 0
-    } catch { return `$false }
+        `$r2 = Invoke-WebRequest -Uri "`$lmsBase/api/v1/models" -Headers `$hdr -TimeoutSec 5 -SkipHttpErrorCheck
+        if ([int]`$r2.StatusCode -eq 200 -and `$r2.Content) {
+            `$j2 = `$r2.Content | ConvertFrom-Json
+            `$models = @()
+            if (`$j2.models) { `$models = @(`$j2.models) }
+            elseif (`$j2.data) { `$models = @(`$j2.data) }
+            foreach (`$m in `$models) {
+                `$id = if (`$m.key) { [string]`$m.key } elseif (`$m.id) { [string]`$m.id } else { '' }
+                if (-not `$id -or `$id -notlike "*`$lmsModel*") { continue }
+                # Non-empty loaded_instances => model is in memory and ready
+                `$loaded = @(`$m.loaded_instances | Where-Object { `$_ })
+                if (`$loaded.Count -gt 0) { return `$true }
+            }
+        }
+    } catch {}
+    # Fallback: OpenAI /v1/models only when it actually lists models (ignore empty data:[])
+    try {
+        `$r = Invoke-WebRequest -Uri "`$lmsUrl/models" -Headers `$hdr -TimeoutSec 5 -SkipHttpErrorCheck
+        if ([int]`$r.StatusCode -eq 200 -and `$r.Content -and (`$r.Content -notmatch 'Unexpected endpoint')) {
+            `$j = `$r.Content | ConvertFrom-Json
+            `$data = @(`$j.data | Where-Object { `$_ })
+            if (`$data.Count -gt 0 -and (`$data | Where-Object { `$_.id -like "*`$lmsModel*" }).Count -gt 0) {
+                return `$true
+            }
+        }
+    } catch {}
+    return `$false
 }
 function Wait-For ([scriptblock]`$test, [int]`$stepSec, [int]`$maxSec, [string]`$msg) {
     `$waited = 0
@@ -201,6 +265,9 @@ function Wait-For ([scriptblock]`$test, [int]`$stepSec, [int]`$maxSec, [string]`
 }
 
 Write-Host "[LMS] Checking LM Studio at `$lmsUrl ..."
+if (-not `$env:LM_API_TOKEN -and -not `$env:LMS_API_TOKEN) {
+    Write-Host "[WARN] LM_API_TOKEN not set - LMS may return 401 if auth is enabled."
+}
 if (-not (Test-LmsServer)) {
     # lms server start is a thin CLI wrapper that requires the LM Studio app to
     # already be running.  Launch the full application directly instead.
@@ -222,13 +289,16 @@ if (-not (Test-LmsServer)) {
     if (-not (Wait-For { Test-LmsServer } 3 90 '[LMS] Waiting for server...')) {
         Write-Host "[ERROR] LM Studio server did not become available within 90 s."
         Write-Host "[ERROR] Please open LM Studio and enable the API server on port 1234."
+        Write-Host "[ERROR] If auth is enabled, set LM_API_TOKEN to your LMS API token."
         exit 1
     }
     Write-Host "[LMS] Server is up."
+} else {
+    Write-Host "[LMS] Server already reachable."
 }
 if (-not (Test-LmsModel)) {
     Write-Host "[LMS] Model '`$lmsModel' not loaded - loading via lms CLI ..."
-    Start-Process 'cmd.exe' -ArgumentList '/c',"lms load `$lmsModel" -WindowStyle Hidden
+    Start-Process 'cmd.exe' -ArgumentList '/c',"lms load `$lmsModel -y" -WindowStyle Hidden
     if (-not (Wait-For { Test-LmsModel } 3 120 '[LMS] Loading model...')) {
         Write-Host "[ERROR] Model '`$lmsModel' did not load within 120 s."
         Write-Host "[ERROR] Try loading it manually in LM Studio first."
@@ -238,6 +308,7 @@ if (-not (Test-LmsModel)) {
 }
 Write-Host "[LMS] LM Studio ready - launching pipeline step."
 & '$pyExe' -u '$pyScript'
+exit `$LASTEXITCODE
 "@
     $enc = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($inner))
     return "-NoProfile -NonInteractive -OutputFormat Text -EncodedCommand $enc"
@@ -368,9 +439,14 @@ function Render([float]$t) {
             } elseif ([ProcQ]::Running) {
                 $ts  = " [M] Menu   [K] Kill   ► $runLabel   $now "
                 $tsc = $CW
-            } else {
+            } elseif ([ProcQ]::ExitCode -eq 0) {
                 $ts  = " [M] Menu   ✓ done: $runLabel   $now "
                 $tsc = $COK
+            } else {
+                $ec  = [ProcQ]::ExitCode
+                if ($null -eq $ec) { $ec = '?' }
+                $ts  = " [M] Menu   ✗ failed (exit $ec): $runLabel   $now "
+                $tsc = $CE
             }
             $pad   = [Math]::Max(0, $PANEL_W + 2 - $ts.Length)
             $null  = $buf.Append("${CB}║${tsc}$(' '*[int]($pad/2))${ts}$(' '*($pad-[int]($pad/2)))${CB}║$RST$BBLK")
@@ -467,9 +543,17 @@ while ($running) {
     if (-not $menuMode) {
         $ln = $null
         while ([ProcQ]::Lines.TryDequeue([ref]$ln)) { Add-Line $ln }
-        # Detect process completion and add a visual separator
+        # Detect process completion and add a visual separator (respect exit code)
         $nowRunning = [ProcQ]::Running
-        if ($wasRunning -and -not $nowRunning) { Add-Line "── done: $runLabel ──" }
+        if ($wasRunning -and -not $nowRunning) {
+            if ([ProcQ]::ExitCode -eq 0) {
+                Add-Line "── done: $runLabel ──"
+            } else {
+                $ec = [ProcQ]::ExitCode
+                if ($null -eq $ec) { $ec = '?' }
+                Add-Line "── failed (exit $ec): $runLabel ──"
+            }
+        }
         $wasRunning = $nowRunning
     }
 

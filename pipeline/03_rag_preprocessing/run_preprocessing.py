@@ -173,6 +173,22 @@ def run(
             raise FileNotFoundError(f"No fetched data found in {cfg.fetched_dir}")
     logger.info("Input:    %s", input_dir)
 
+    # Fail fast on empty/missing fetch (do not report COMPLETE with 0 pages)
+    page_content_dir = input_dir / "page_content"
+    if not page_content_dir.is_dir():
+        raise FileNotFoundError(
+            f"No page_content/ in {input_dir}. Re-run Step 1 (Wiki Fetcher) "
+            f"or pass --input-dir to a complete fetch (e.g. fetched_at_* with *.txt pages)."
+        )
+    page_txts = sorted(page_content_dir.glob("*.txt"))
+    if not page_txts:
+        raise FileNotFoundError(
+            f"No page *.txt files in {page_content_dir} (fetch is empty). "
+            f"Latest auto-detected fetch may be incomplete - re-run Step 1, "
+            f"or pass --input-dir to a fetch that contains pages "
+            f"(e.g. data/fetched/fetched_at_20260228_180953)."
+        )
+
     # Resolve evaluation directory
     if evaluated_dir is None:
         eval_result = get_latest_evaluation(cfg.evaluated_dir)
@@ -202,10 +218,11 @@ def run(
     # US6: Vision-LLM Image Captioner
     vlm_cfg = cfg.vision_llm
     captioner = ImageCaptioner(
-        api_base=vlm_cfg.get("api_base", "http://localhost:1234/v1"),
-        model=vlm_cfg.get("model", "qwen2.5-vl"),
+        api_base=vlm_cfg.get("api_base", "http://127.0.0.1:1234/v1"),
+        model=vlm_cfg.get("model", "qwen/qwen2.5-vl-7b"),
         timeout=vlm_cfg.get("timeout", 60),
         max_image_size=vlm_cfg.get("max_image_size", 1024),
+        api_key=vlm_cfg.get("api_key") or None,
     )
     captioner_available = captioner.is_available()
     if captioner_available:
@@ -220,8 +237,7 @@ def run(
     # Load media usage for linked_from (which pages reference each media)
     media_usage_lookup = _load_media_usage(input_dir)
 
-    # Process pages
-    page_content_dir = input_dir / "page_content"
+    # Process pages (page_content_dir validated above)
     raw_json_dir = input_dir / "raw_json"
     page_links_dir = input_dir / "page_links"
 
@@ -230,8 +246,8 @@ def run(
     stats = {"pages_total": 0, "pages_ok": 0, "pages_fail": 0, "media_processed": 0}
 
     # T011b: Process pages with full Qdrant-schema metadata
-    if page_content_dir.exists():
-        for f in sorted(page_content_dir.glob("*.txt")):
+    if page_txts:
+        for f in page_txts:
             stats["pages_total"] += 1
             page_id = f.stem.replace("_", ":")
             wiki = f.read_text(encoding="utf-8", errors="replace")

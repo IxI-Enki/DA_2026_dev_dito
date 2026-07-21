@@ -87,19 +87,46 @@ class TestImageCaptionerAvailability:
         assert captioner.is_available() is False
 
     def test_is_available_returns_true_when_reachable(self) -> None:
-        """is_available() returns True when endpoint responds."""
+        """is_available() returns True when native LMS API reports model loaded."""
         from image_captioner import ImageCaptioner
 
         captioner = ImageCaptioner(
-            api_base="http://192.168.8.3:1234/v1",
-            model="qwen2.5-vl",
+            api_base="http://127.0.0.1:1234/v1",
+            model="qwen/qwen2.5-vl-7b",
         )
 
-        mock_client = MagicMock()
-        mock_client.models.list.return_value = MagicMock()
-
-        with patch.object(captioner, "_get_client", return_value=mock_client):
+        with patch.object(captioner, "_model_loaded_via_native_api", return_value=True):
             assert captioner.is_available() is True
+
+    def test_is_available_ignores_empty_openai_models_list(self) -> None:
+        """Empty OpenAI /v1/models must not disable Vision-LLM when native API is up."""
+        from image_captioner import ImageCaptioner
+
+        captioner = ImageCaptioner(
+            api_base="http://127.0.0.1:1234/v1",
+            model="qwen/qwen2.5-vl-7b",
+        )
+        mock_client = MagicMock()
+        mock_listed = MagicMock()
+        mock_listed.data = []
+        mock_client.models.list.return_value = mock_listed
+
+        with (
+            patch.object(captioner, "_model_loaded_via_native_api", return_value=None),
+            patch.object(captioner, "_get_client", return_value=mock_client),
+        ):
+            assert captioner.is_available() is True
+
+    def test_is_available_false_when_native_says_not_loaded(self) -> None:
+        """Native catalog reachable but model not loaded => unavailable."""
+        from image_captioner import ImageCaptioner
+
+        captioner = ImageCaptioner(
+            api_base="http://127.0.0.1:1234/v1",
+            model="qwen/qwen2.5-vl-7b",
+        )
+        with patch.object(captioner, "_model_loaded_via_native_api", return_value=False):
+            assert captioner.is_available() is False
 
 
 class TestImageCaptionerBase64:

@@ -282,11 +282,20 @@ class Config:
         return value
 
     def get_api_key(self) -> str:
-        """Get OpenAI API key from environment."""
-        key = os.environ.get(self.openai.api_key_env)
-        if not key:
-            raise ConfigError(f"Environment variable {self.openai.api_key_env} not set")
-        return key
+        """Get OpenAI API key from environment or config/secrets/openai.token."""
+        key = os.environ.get(self.openai.api_key_env, "").strip()
+        if key:
+            return key
+        # Project convention (same as orchestrator / evaluation): fall back to token file
+        token_path = Path(__file__).resolve().parents[2] / "config" / "secrets" / "openai.token"
+        if token_path.is_file():
+            file_key = token_path.read_text(encoding="utf-8").strip()
+            if file_key:
+                return file_key
+        raise ConfigError(
+            f"Environment variable {self.openai.api_key_env} not set "
+            f"and token file missing: {token_path}"
+        )
 
 
 # Global config instance (lazy loaded)

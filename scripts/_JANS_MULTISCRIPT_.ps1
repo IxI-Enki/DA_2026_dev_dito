@@ -5,7 +5,9 @@ if ($PSScriptRoot) {
     if (Test-Path $snippet) { . $snippet }
 }
 
-Clear-Host
+# Clear-Host sets RawUI.CursorPosition; skip when no interactive console
+# (e.g. glass.ps1 ProcQ redirects stdout / CreateNoWindow → invalid handle).
+try { Clear-Host } catch { }
 
 # Check:
 #   - Health
