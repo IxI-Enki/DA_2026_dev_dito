@@ -1,8 +1,8 @@
 """
-LLM Client - Kommunikation mit LM Studio
+LLM Client - communication with LM Studio
 
-Handled Text- und Bild-Anfragen an lokale LLMs.
-Alle Einstellungen werden aus config/env.yaml geladen - KEINE hardcoded Werte!
+Handles text and image requests to local LLMs.
+All settings are loaded from config/env.yaml - NO hardcoded values!
 """
 
 import base64
@@ -32,26 +32,26 @@ logger = logging.getLogger(__name__)
 
 class LLMClient:
     """
-    Client für LM Studio API (OpenAI-kompatibel) mit Image-Optimierung.
+    Client for the LM Studio API (OpenAI-compatible) with image optimization.
 
-    Alle Einstellungen werden aus config/env.yaml geladen.
+    All settings are loaded from config/env.yaml.
     """
 
     def __init__(self, config: Any | None = None):
         """
-        Initialisiert den LLMClient.
+        Initializes the LLMClient.
 
         Args:
-            config: EvaluationConfig Instanz (optional, wird bei Bedarf geladen)
+            config: EvaluationConfig instance (optional, loaded on demand if not given)
         """
-        # Lazy import um circular dependencies zu vermeiden
+        # Lazy import to avoid circular dependencies
         if config is None:
             config = get_config()
 
         self.config = config
         self.llm_cfg = self.config.raw_config.get("LLM", {})
 
-        # KEINE hardcoded Defaults - muss aus env.yaml kommen
+        # NO hardcoded defaults - must come from env.yaml
         base_url = self.llm_cfg.get("base_url")
         if not base_url:
             raise ValueError("LLM base_url missing in env.yaml (LLM.base_url)")
@@ -67,7 +67,7 @@ class LLMClient:
 
         self.vision_model = self.llm_cfg.get("vision_model", self.classification_model)
 
-        # Generation parameters - KEINE Defaults, muss aus config kommen
+        # Generation parameters - NO defaults, must come from config
         gen_cfg = self.llm_cfg.get("generation", {})
         if not gen_cfg:
             raise ValueError("LLM generation parameters missing in env.yaml (LLM.generation)")
@@ -86,17 +86,17 @@ class LLMClient:
         if self.gen_params["top_p"] is None:
             raise ValueError("LLM generation.top_p missing in env.yaml")
 
-        # Timeout - muss aus config kommen
+        # Timeout - must come from config
         self.timeout = self.llm_cfg.get("timeout")
         if not self.timeout:
             raise ValueError("LLM timeout missing in env.yaml (LLM.timeout)")
 
-        # Image optimization settings - aus config oder sensible defaults
+        # Image optimization settings - from config or sensible defaults
         image_cfg = self.llm_cfg.get("image_optimization", {})
         self.image_max_size = image_cfg.get("max_size", 1024)
         self.image_quality = image_cfg.get("jpeg_quality", 85)
 
-        # System prompt - aus config
+        # System prompt - from config
         self.default_system_prompt = self.llm_cfg.get(
             "system_prompt", "Du bist ein hilfreicher Assistent."
         )
@@ -105,15 +105,15 @@ class LLMClient:
         self, text: str, prompt_template: str, system_prompt: str | None = None
     ) -> str:
         """
-        Analysiert Text mit dem LLM.
+        Analyzes text with the LLM.
 
         Args:
-            text: Der zu analysierende Text
-            prompt_template: Prompt-Template mit {text} Platzhalter
-            system_prompt: System-Prompt (None = aus config)
+            text: The text to analyze
+            prompt_template: Prompt template with a {text} placeholder
+            system_prompt: System prompt (None = from config)
 
         Returns:
-            LLM-Antwort oder Fehlermeldung
+            LLM response or error message
         """
         if system_prompt is None:
             system_prompt = self.default_system_prompt
@@ -127,15 +127,15 @@ class LLMClient:
 
     def _optimize_image(self, image_path: Path, max_size: int | None = None) -> bytes:
         """
-        Lädt ein Bild, skaliert es falls nötig und gibt es als JPEG-Bytes zurück.
-        Reduziert die Payload-Größe drastisch.
+        Loads an image, resizes it if needed, and returns it as JPEG bytes.
+        Drastically reduces the payload size.
 
         Args:
-            image_path: Pfad zum Bild
-            max_size: Maximale Größe (None = aus config)
+            image_path: Path to the image
+            max_size: Maximum size (None = from config)
 
         Returns:
-            Optimierte Bilddaten als JPEG-Bytes
+            Optimized image data as JPEG bytes
         """
         if not HAS_PIL or Image is None:
             raise ImportError("PIL/Pillow not installed - required for image optimization")
@@ -144,7 +144,7 @@ class LLMClient:
             max_size = self.image_max_size
 
         if max_size is None:
-            max_size = 1024  # Fallback wenn nicht in config
+            max_size = 1024  # Fallback if not in config
 
         img = Image.open(image_path)
         try:
@@ -169,14 +169,14 @@ class LLMClient:
 
     def analyze_image(self, image_path: Path, prompt: str) -> str:
         """
-        Analysiert ein Bild mit Vision AI.
+        Analyzes an image with vision AI.
 
         Args:
-            image_path: Pfad zum Bild
-            prompt: Prompt für die Bildanalyse
+            image_path: Path to the image
+            prompt: Prompt for the image analysis
 
         Returns:
-            LLM-Antwort oder Fehlermeldung
+            LLM response or error message
         """
         if not image_path.exists():
             return "Error: Image not found"
@@ -213,14 +213,14 @@ class LLMClient:
 
     def _chat_completion(self, messages: List[Dict[str, Any]], model: str) -> str:
         """
-        Führt den API Request durch.
+        Executes the API request.
 
         Args:
-            messages: Liste von Message-Dicts
-            model: Modell-Name
+            messages: List of message dicts
+            model: Model name
 
         Returns:
-            LLM-Antwort oder Fehlermeldung
+            LLM response or error message
         """
         url = f"{self.base_url}/chat/completions"
 

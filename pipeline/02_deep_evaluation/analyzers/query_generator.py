@@ -1,10 +1,10 @@
 """
-Query Generator - LLM-basierte Test-Query-Generierung
+Query Generator - LLM-based test query generation
 
-Generiert:
-- Synthetische Faktenfragen
-- How-to / Prozess-Fragen
-- RAGAS-kompatible Test-Sets
+Generates:
+- Synthetic factual questions
+- How-to / procedural questions
+- RAGAS-compatible test sets
 """
 
 import random
@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List
 
-# Relative import für config
+# Relative import for config
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import EvaluationConfig, get_config
 
@@ -28,7 +28,7 @@ except ImportError:
 
 @dataclass
 class GeneratedQuery:
-    """Eine generierte Test-Query."""
+    """A generated test query."""
 
     question: str
     source_page: str
@@ -41,7 +41,7 @@ class GeneratedQuery:
 
 @dataclass
 class QueryGenerationResult:
-    """Gesamtergebnis der Query-Generierung."""
+    """Overall result of the query generation."""
 
     total_queries: int = 0
     queries_by_type: Dict[str, int] = field(default_factory=dict)
@@ -52,14 +52,14 @@ class QueryGenerationResult:
 
 
 class QueryGenerator:
-    """Generiert synthetische Test-Queries mit LLM."""
+    """Generates synthetic test queries using an LLM."""
 
     def __init__(self, config: EvaluationConfig | None = None):
         """
-        Initialisiert den QueryGenerator.
+        Initializes the QueryGenerator.
 
         Args:
-            config: EvaluationConfig Instanz
+            config: EvaluationConfig instance
         """
         self.config = config or get_config()
         self.raw_config = self.config.raw_config
@@ -118,13 +118,13 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
 
     def generate(self, sample_size: int | None = None) -> QueryGenerationResult:
         """
-        Generiert Test-Queries aus den Wiki-Inhalten.
+        Generates test queries from the wiki content.
 
         Args:
-            sample_size: Optionale Begrenzung der generierten Queries
+            sample_size: Optional limit on the number of generated queries
 
         Returns:
-            QueryGenerationResult mit allen Queries
+            QueryGenerationResult with all queries
         """
         print("\n[QueryGenerator] Starte Generierung...")
 
@@ -162,7 +162,7 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
         return self.result
 
     def _load_pages_by_namespace(self) -> Dict[str, List[Dict]]:
-        """Lädt alle Seiten gruppiert nach Namespace."""
+        """Loads all pages grouped by namespace."""
         pages_by_ns = {}
         content_dir = self.config.page_content_dir
 
@@ -197,24 +197,24 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
         return pages_by_ns
 
     def _sample_pages(self, pages: List[Dict], n: int) -> List[Dict]:
-        """Wählt zufällig n Seiten aus."""
+        """Randomly selects n pages."""
         if len(pages) <= n:
             return pages
         return random.sample(pages, n)
 
     def _generate_queries_for_page(self, page_data: Dict, namespace: str):
         """
-        Generiert Queries für eine Seite.
+        Generates queries for a page.
 
-        Gemäß Microsoft RAG Guide:
-        - Query: Die Frage
-        - Context: Collection der tatsächlichen Textstellen (hier: der Chunk)
-        - Answer: Gültige Antwort (optional, kann später generiert werden)
+        Per the Microsoft RAG Guide:
+        - Query: the question
+        - Context: collection of the actual text passages (here: the chunk)
+        - Answer: valid answer (optional, can be generated later)
         """
         page_id = page_data["page_id"]
         content = page_data["content"]
 
-        # Split into chunks (one-off chunking für Query-Generierung, nicht für finale Lösung)
+        # Split into chunks (one-off chunking for query generation, not for the final solution)
         chunks = self._chunk_content(content)
 
         # Sample chunks
@@ -224,15 +224,15 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
             # Generate factual query
             factual_q = self._generate_query(chunk, "factual")
             if factual_q:
-                # Context: Der tatsächliche Text der die Query beantwortet (Microsoft Guide)
+                # Context: the actual text that answers the query (Microsoft Guide)
                 query = GeneratedQuery(
                     question=factual_q,
                     source_page=page_id,
                     source_chunk=chunk[:500],
                     query_type="factual",
                     namespace=namespace,
-                    context=chunk,  # Context gemäß Microsoft Guide
-                    expected_answer=None,  # Kann später mit LLM generiert werden
+                    context=chunk,  # Context per Microsoft Guide
+                    expected_answer=None,  # Can be generated later with an LLM
                 )
                 self._add_query(query)
 
@@ -246,13 +246,13 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
                         source_chunk=chunk[:500],
                         query_type="procedural",
                         namespace=namespace,
-                        context=chunk,  # Context gemäß Microsoft Guide
-                        expected_answer=None,  # Kann später mit LLM generiert werden
+                        context=chunk,  # Context per Microsoft Guide
+                        expected_answer=None,  # Can be generated later with an LLM
                     )
                     self._add_query(query)
 
     def _chunk_content(self, content: str) -> List[str]:
-        """Teilt Inhalt in Chunks auf."""
+        """Splits content into chunks."""
         # Simple paragraph-based chunking
         paragraphs = content.split("\n\n")
 
@@ -277,7 +277,7 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
         return chunks
 
     def _is_procedural_candidate(self, page_id: str, chunk: str) -> bool:
-        """Prüft ob ein Chunk für Prozess-Fragen geeignet ist."""
+        """Checks whether a chunk is suitable for procedural questions."""
         indicators = [
             "schritt",
             "anleitung",
@@ -297,7 +297,7 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
         return any(indicator in page_lower or indicator in chunk_lower for indicator in indicators)
 
     def _generate_query(self, chunk: str, query_type: str) -> str | None:
-        """Generiert eine Query mit LLM."""
+        """Generates a query using an LLM."""
         if not self.client:
             return None
 
@@ -335,7 +335,7 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
             return None
 
     def _add_query(self, query: GeneratedQuery):
-        """Fügt eine Query zu den Ergebnissen hinzu."""
+        """Adds a query to the results."""
         self.result.queries.append(query)
         self.result.total_queries += 1
 
@@ -349,7 +349,7 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        """Konvertiert Ergebnisse zu Dictionary für JSON-Export."""
+        """Converts results to a dictionary for JSON export."""
         return {
             "summary": {
                 "total_queries": self.result.total_queries,
@@ -372,24 +372,24 @@ Antworte NUR mit der Frage, ohne weitere Erklärung."""
 
     def to_ragas_format(self) -> List[Dict[str, Any]]:
         """
-        Exportiert Queries im RAGAS-kompatiblen Format.
+        Exports queries in a RAGAS-compatible format.
 
-        Format entspricht Microsoft RAG Guide:
-        - Query: Die Frage
-        - Context: Collection der tatsächlichen Textstellen (hier: contexts array)
-        - Answer: Gültige Antwort (hier: ground_truth, optional)
+        Format follows the Microsoft RAG Guide:
+        - Query: the question
+        - Context: collection of the actual text passages (here: contexts array)
+        - Answer: valid answer (here: ground_truth, optional)
 
         Returns:
-            Liste von Dicts mit question, contexts, ground_truth
+            List of dicts with question, contexts, ground_truth
         """
         ragas_data = []
 
         for query in self.result.queries:
-            # Microsoft Guide Format: Query + Context + Answer
+            # Microsoft Guide format: Query + Context + Answer
             ragas_data.append(
                 {
                     "question": query.question,  # Query
-                    "contexts": [query.context] if query.context else [],  # Context (Collection)
+                    "contexts": [query.context] if query.context else [],  # Context (collection)
                     "ground_truth": query.expected_answer or "",  # Answer (optional)
                     "metadata": {
                         "source_page": query.source_page,

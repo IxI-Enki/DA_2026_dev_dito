@@ -1,7 +1,7 @@
 """
-Wiki Deep Analyzer - Tiefgehende Inhaltsanalyse von Wiki-Seiten
+Wiki Deep Analyzer - in-depth content analysis of wiki pages
 
-Nutzt LLMs zur semantischen Klassifizierung und analysiert Struktur.
+Uses LLMs for semantic classification and analyzes structure.
 """
 
 import logging
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class WikiDeepAnalyzer:
-    """Führt Deep-Dive Analysen auf Wiki-Seiten durch."""
+    """Runs deep-dive analyses on wiki pages."""
 
     def __init__(self, config: EvaluationConfig | None = None):
         self.config = config or get_config()
@@ -53,7 +53,7 @@ class WikiDeepAnalyzer:
 
     def analyze_page(self, page_id: str, content: str) -> Dict[str, Any]:
         """
-        Analysiert eine einzelne Wiki-Seite tiefgehend.
+        Performs an in-depth analysis of a single wiki page.
         """
         # 1. Structural Analysis
         structure_stats = self._analyze_structure(content)
@@ -83,7 +83,7 @@ class WikiDeepAnalyzer:
         return {"page_id": page_id, "structure": structure_stats, "semantic": llm_result}
 
     def _analyze_structure(self, content: str) -> Dict[str, Any]:
-        """Analysiert strukturelle Merkmale ohne LLM."""
+        """Analyzes structural features without an LLM."""
         return {
             "link_density": self._calculate_link_density(content),
             "has_tables": bool(re.search(r"^\|.*\|$", content, re.MULTILINE)),
@@ -93,7 +93,7 @@ class WikiDeepAnalyzer:
         }
 
     def _calculate_link_density(self, content: str) -> float:
-        """Berechnet das Verhältnis von Link-Text zu Gesamttext."""
+        """Calculates the ratio of link text to total text."""
         if not content:
             return 0.0
 
@@ -103,7 +103,7 @@ class WikiDeepAnalyzer:
         return link_chars / len(content)
 
     def _parse_llm_json(self, text: str) -> Dict[str, Any]:
-        """Versucht JSON aus der LLM-Antwort zu extrahieren."""
+        """Attempts to extract JSON from the LLM response."""
         text = text.strip()
         # Remove markdown code blocks if present
         if text.startswith("```json"):

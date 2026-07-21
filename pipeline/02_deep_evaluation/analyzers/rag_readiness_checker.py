@@ -1,11 +1,11 @@
 """
-RAG Readiness Checker - Eignung für RAG-Pipeline
+RAG Readiness Checker - suitability for the RAG pipeline
 
-Prüft:
-- Chunking-Eignung (Struktur, Länge)
-- Noise-Level (Wiki-Syntax, Boilerplate)
-- Metadaten-Qualität
-- Link-Integrität
+Checks:
+- Chunking suitability (structure, length)
+- Noise level (wiki syntax, boilerplate)
+- Metadata quality
+- Link integrity
 """
 
 import json
@@ -15,14 +15,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-# Relative import für config
+# Relative import for config
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import EvaluationConfig, get_config
 
 
 @dataclass
 class PageRAGReadiness:
-    """RAG-Eignung einer einzelnen Seite."""
+    """RAG suitability of a single page."""
 
     page_id: str
     readiness_score: float  # 0.0 - 1.0
@@ -37,7 +37,7 @@ class PageRAGReadiness:
 
 @dataclass
 class RAGReadinessResult:
-    """Gesamtergebnis der RAG-Readiness-Analyse."""
+    """Overall result of the RAG readiness analysis."""
 
     total_pages: int = 0
     avg_readiness_score: float = 0.0
@@ -50,14 +50,14 @@ class RAGReadinessResult:
 
 
 class RAGReadinessChecker:
-    """Prüft die Eignung von Inhalten für RAG-Pipelines."""
+    """Checks the suitability of content for RAG pipelines."""
 
     def __init__(self, config: EvaluationConfig | None = None):
         """
-        Initialisiert den RAGReadinessChecker.
+        Initializes the RAGReadinessChecker.
 
         Args:
-            config: EvaluationConfig Instanz
+            config: EvaluationConfig instance
         """
         self.config = config or get_config()
         self.raw_config = self.config.raw_config
@@ -76,7 +76,7 @@ class RAGReadinessChecker:
         self.result = RAGReadinessResult()
 
     def _compile_patterns(self):
-        """Kompiliert Regex-Patterns für Performance."""
+        """Compiles regex patterns for performance."""
         # Removable syntax patterns
         removable = self.noise_cfg.get("removable_syntax", [])
         self.removable_patterns = [re.compile(p, re.IGNORECASE) for p in removable]
@@ -95,10 +95,10 @@ class RAGReadinessChecker:
 
     def analyze(self) -> RAGReadinessResult:
         """
-        Führt die vollständige RAG-Readiness-Analyse durch.
+        Runs the full RAG readiness analysis.
 
         Returns:
-            RAGReadinessResult mit allen Analysen
+            RAGReadinessResult with all analyses
         """
         print("\n[RAGReadinessChecker] Starte Analyse...")
 
@@ -124,7 +124,7 @@ class RAGReadinessChecker:
         return self.result
 
     def _load_pages(self) -> List[Dict[str, Any]]:
-        """Lädt alle Seiten für die Analyse."""
+        """Loads all pages for the analysis."""
         pages = []
         content_dir = self.config.page_content_dir
         metadata_dir = self.config.page_metadata_dir
@@ -159,13 +159,13 @@ class RAGReadinessChecker:
 
     def _analyze_page(self, page_data: Dict[str, Any]) -> PageRAGReadiness:
         """
-        Analysiert die RAG-Eignung einer Seite.
+        Analyzes the RAG suitability of a page.
 
         Args:
-            page_data: Dict mit page_id, content, metadata
+            page_data: Dict with page_id, content, metadata
 
         Returns:
-            PageRAGReadiness Objekt
+            PageRAGReadiness object
         """
         page_id = page_data["page_id"]
         content = page_data["content"]
@@ -225,7 +225,7 @@ class RAGReadinessChecker:
         )
 
     def _analyze_structure(self, content: str) -> Tuple[float, Dict]:
-        """Analysiert die Struktur des Inhalts."""
+        """Analyzes the structure of the content."""
         stats = {
             "headlines": len(self.headline_pattern.findall(content)),
             "lists": len(self.list_pattern.findall(content)),
@@ -264,7 +264,7 @@ class RAGReadinessChecker:
         return min(score, 1.0), stats
 
     def _analyze_noise(self, content: str) -> Tuple[float, Dict]:
-        """Analysiert den Noise-Anteil im Inhalt."""
+        """Analyzes the noise ratio in the content."""
         stats = {
             "removable_matches": 0,
             "boilerplate_matches": 0,
@@ -326,7 +326,7 @@ class RAGReadinessChecker:
         return min(noise_score, 1.0), stats
 
     def _analyze_chunking(self, content: str, structure_stats: Dict) -> Tuple[float, Dict]:
-        """Analysiert die Chunking-Eignung."""
+        """Analyzes chunking suitability."""
         ideal_min = self.chunking_cfg.get("ideal_paragraph_length", {}).get("min", 100)
         ideal_max = self.chunking_cfg.get("ideal_paragraph_length", {}).get("max", 500)
 
@@ -375,7 +375,7 @@ class RAGReadinessChecker:
         return min(score, 1.0), stats
 
     def _analyze_metadata(self, metadata: Dict) -> Tuple[float, List[str]]:
-        """Analysiert die Metadaten-Qualität."""
+        """Analyzes the metadata quality."""
         required = self.metadata_cfg.get("required", ["title", "namespace", "last_modified"])
         optional = self.metadata_cfg.get("optional", ["author", "revision"])
 
@@ -401,7 +401,7 @@ class RAGReadinessChecker:
         return score, issues
 
     def _update_stats(self, readiness: PageRAGReadiness):
-        """Aktualisiert globale Statistiken."""
+        """Updates global statistics."""
         self.result.total_pages += 1
 
         # Track common issues
@@ -411,7 +411,7 @@ class RAGReadinessChecker:
             self.result.common_issues[simplified] = self.result.common_issues.get(simplified, 0) + 1
 
     def _calculate_summary(self):
-        """Berechnet Zusammenfassungsstatistiken."""
+        """Calculates summary statistics."""
         if not self.result.pages:
             return
 
@@ -449,7 +449,7 @@ class RAGReadinessChecker:
         }
 
     def _generate_recommendations(self):
-        """Generiert globale Preprocessing-Empfehlungen."""
+        """Generates global preprocessing recommendations."""
         recommendations = []
 
         # Noise recommendations
@@ -476,7 +476,7 @@ class RAGReadinessChecker:
         self.result.preprocessing_recommendations = recommendations
 
     def to_dict(self) -> Dict[str, Any]:
-        """Konvertiert Ergebnisse zu Dictionary für JSON-Export."""
+        """Converts results to a dictionary for JSON export."""
         return {
             "summary": {
                 "total_pages": self.result.total_pages,

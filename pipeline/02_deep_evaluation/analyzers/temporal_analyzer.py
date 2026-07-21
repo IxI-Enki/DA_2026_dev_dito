@@ -1,11 +1,11 @@
 """
-Temporal Analyzer - Zeitliche Aspekte und Aktualität
+Temporal Analyzer - temporal aspects and freshness
 
-Analysiert:
-- Aktualität der Inhalte (Freshness)
-- Archivierte Inhalte
-- Jahreszahlen-Referenzen
-- Zeitkritische Inhalte
+Analyzes:
+- Content freshness
+- Archived content
+- Year-number references
+- Time-sensitive content
 """
 
 import json
@@ -16,14 +16,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-# Relative import für config
+# Relative import for config
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import EvaluationConfig, get_config
 
 
 @dataclass
 class PageTemporalInfo:
-    """Zeitliche Informationen einer Seite."""
+    """Temporal information for a page."""
 
     page_id: str
     last_modified: datetime | None
@@ -35,12 +35,12 @@ class PageTemporalInfo:
     oldest_year_ref: int | None
     newest_year_ref: int | None
     has_outdated_refs: bool
-    rag_weight: float  # Empfohlene Gewichtung für RAG
+    rag_weight: float  # Recommended weighting for RAG
 
 
 @dataclass
 class TemporalAnalysisResult:
-    """Gesamtergebnis der zeitlichen Analyse."""
+    """Overall result of the temporal analysis."""
 
     total_pages: int = 0
     analysis_date: datetime = field(default_factory=datetime.now)
@@ -55,14 +55,14 @@ class TemporalAnalysisResult:
 
 
 class TemporalAnalyzer:
-    """Analysiert zeitliche Aspekte von Wiki-Inhalten."""
+    """Analyzes temporal aspects of wiki content."""
 
     def __init__(self, config: EvaluationConfig | None = None):
         """
-        Initialisiert den TemporalAnalyzer.
+        Initializes the TemporalAnalyzer.
 
         Args:
-            config: EvaluationConfig Instanz
+            config: EvaluationConfig instance
         """
         self.config = config or get_config()
         self.raw_config = self.config.raw_config
@@ -106,10 +106,10 @@ class TemporalAnalyzer:
 
     def analyze(self) -> TemporalAnalysisResult:
         """
-        Führt die vollständige zeitliche Analyse durch.
+        Runs the full temporal analysis.
 
         Returns:
-            TemporalAnalysisResult mit allen Analysen
+            TemporalAnalysisResult with all analyses
         """
         print("\n[TemporalAnalyzer] Starte Analyse...")
 
@@ -136,7 +136,7 @@ class TemporalAnalyzer:
         return self.result
 
     def _load_pages(self) -> List[Dict[str, Any]]:
-        """Lädt alle Seiten mit Metadaten und Inhalt."""
+        """Loads all pages with metadata and content."""
         pages = []
         content_dir = self.config.page_content_dir
         metadata_dir = self.config.page_metadata_dir
@@ -171,13 +171,13 @@ class TemporalAnalyzer:
 
     def _analyze_page(self, page_data: Dict[str, Any]) -> PageTemporalInfo:
         """
-        Analysiert die zeitlichen Aspekte einer Seite.
+        Analyzes the temporal aspects of a page.
 
         Args:
-            page_data: Dict mit page_id, content, metadata
+            page_data: Dict with page_id, content, metadata
 
         Returns:
-            PageTemporalInfo Objekt
+            PageTemporalInfo object
         """
         page_id = page_data["page_id"]
         content = page_data["content"]
@@ -223,7 +223,7 @@ class TemporalAnalyzer:
         )
 
     def _parse_last_modified(self, metadata: Dict) -> datetime | None:
-        """Parst das Änderungsdatum aus den Metadaten."""
+        """Parses the modification date from the metadata."""
         # Try different field names
         for field_name in ["last_modified", "lastModified", "modified", "date"]:
             if field_name in metadata:
@@ -244,12 +244,12 @@ class TemporalAnalyzer:
         return None
 
     def _is_archived(self, page_id: str) -> bool:
-        """Prüft ob eine Seite archiviert ist."""
+        """Checks whether a page is archived."""
         archive_namespace = self.archive_cfg.get("namespace", "archive")
         return page_id.startswith(f"{archive_namespace}:")
 
     def _is_time_sensitive(self, page_id: str, content: str) -> bool:
-        """Prüft ob eine Seite zeitkritische Inhalte hat."""
+        """Checks whether a page has time-sensitive content."""
         # Check page_id
         page_id_lower = page_id.lower()
         for pattern in self.time_sensitive_patterns:
@@ -261,7 +261,7 @@ class TemporalAnalyzer:
         return any(pattern.search(content_start) for pattern in self.time_sensitive_patterns)
 
     def _find_year_references(self, content: str) -> List[int]:
-        """Findet alle Jahreszahlen im Inhalt."""
+        """Finds all year numbers in the content."""
         years = set()
 
         for pattern in self.year_patterns:
@@ -284,7 +284,7 @@ class TemporalAnalyzer:
         return sorted(years)
 
     def _has_outdated_references(self, years: List[int]) -> bool:
-        """Prüft ob veraltete Jahresreferenzen vorhanden sind."""
+        """Checks whether outdated year references are present."""
         if not years:
             return False
 
@@ -296,7 +296,7 @@ class TemporalAnalyzer:
     def _calculate_freshness(
         self, last_modified: datetime | None, is_archived: bool, year_refs: List[int]
     ) -> Tuple[str, float]:
-        """Berechnet Freshness-Kategorie und Score."""
+        """Calculates the freshness category and score."""
         now = datetime.now()
 
         # Archived content
@@ -342,7 +342,7 @@ class TemporalAnalyzer:
     def _calculate_rag_weight(
         self, freshness_category: str, is_archived: bool, has_outdated_refs: bool
     ) -> float:
-        """Berechnet die empfohlene RAG-Gewichtung."""
+        """Calculates the recommended RAG weighting."""
         base_weight = self.rag_weights.get(freshness_category, 0.5)
 
         # Reduce weight for archived content
@@ -356,7 +356,7 @@ class TemporalAnalyzer:
         return round(base_weight, 2)
 
     def _update_stats(self, info: PageTemporalInfo):
-        """Aktualisiert globale Statistiken."""
+        """Updates global statistics."""
         self.result.total_pages += 1
 
         # Freshness distribution
@@ -380,7 +380,7 @@ class TemporalAnalyzer:
             self.result.year_distribution[year] = self.result.year_distribution.get(year, 0) + 1
 
     def _calculate_summary(self):
-        """Berechnet Zusammenfassungsstatistiken."""
+        """Calculates summary statistics."""
         if not self.result.pages:
             return
 
@@ -389,7 +389,7 @@ class TemporalAnalyzer:
         self.result.avg_freshness_score = total_score / len(self.result.pages)
 
     def _generate_recommendations(self):
-        """Generiert Empfehlungen basierend auf der Analyse."""
+        """Generates recommendations based on the analysis."""
         recommendations = []
 
         # Archived content
@@ -426,7 +426,7 @@ class TemporalAnalyzer:
         self.result.recommendations = recommendations
 
     def to_dict(self) -> Dict[str, Any]:
-        """Konvertiert Ergebnisse zu Dictionary für JSON-Export."""
+        """Converts results to a dictionary for JSON export."""
         return {
             "summary": {
                 "total_pages": self.result.total_pages,

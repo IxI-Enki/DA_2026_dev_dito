@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Deep Evaluation Runner - Orchestriert die Tiefenanalyse
+Deep Evaluation Runner - orchestrates the in-depth analysis
 
-Führt sequenziell Wiki-, Dokumenten- und Medien-Analyse durch und generiert den Strategie-Report.
-Alle Einstellungen werden aus config/env.yaml geladen - KEINE hardcoded Werte!
+Sequentially runs wiki, document, and media analysis and generates the strategy report.
+All settings are loaded from config/env.yaml - NO hardcoded values!
 
 Usage:
-    python run_deep_evaluation.py               # Vollständige Deep Evaluation
-    python run_deep_evaluation.py --show-config # Zeigt aktuelle Konfiguration
+    python run_deep_evaluation.py               # Full deep evaluation
+    python run_deep_evaluation.py --show-config # Shows the current configuration
 """
 
 import json
@@ -42,13 +42,13 @@ from config import EvaluationConfig, get_config
 
 def setup_logging(config: EvaluationConfig) -> logging.Logger:
     """
-    Konfiguriert Logging basierend auf env.yaml.
+    Configures logging based on env.yaml.
 
     Args:
-        config: EvaluationConfig Instanz
+        config: EvaluationConfig instance
 
     Returns:
-        Konfigurierter Logger
+        Configured logger
     """
     log_cfg = config.raw_config.get("LOGGING", {})
 
@@ -93,13 +93,13 @@ def setup_logging(config: EvaluationConfig) -> logging.Logger:
 
 def get_file_extensions_from_config(config: EvaluationConfig) -> dict:
     """
-    Lädt Dateiendungen aus config/env.yaml.
+    Loads file extensions from config/env.yaml.
 
     Args:
-        config: EvaluationConfig Instanz
+        config: EvaluationConfig instance
 
     Returns:
-        Dictionary mit extensions für pages, documents, images
+        Dictionary with extensions for pages, documents, images
     """
     format_cfg = config.raw_config.get("FORMAT_ANALYSIS", {}).get("supported_formats", {})
 
@@ -126,14 +126,14 @@ def get_file_extensions_from_config(config: EvaluationConfig) -> dict:
 
 def validate_paths(config: EvaluationConfig, logger: logging.Logger) -> bool:
     """
-    Validiert dass alle benötigten Pfade existieren.
+    Validates that all required paths exist.
 
     Args:
-        config: EvaluationConfig Instanz
-        logger: Logger Instanz
+        config: EvaluationConfig instance
+        logger: Logger instance
 
     Returns:
-        True wenn alle Pfade gültig sind, False sonst
+        True if all paths are valid, False otherwise
     """
     errors = []
 
@@ -161,16 +161,16 @@ def analyze_wiki_pages(
     logger: logging.Logger,
 ) -> List[dict]:
     """
-    Analysiert alle Wiki-Seiten.
+    Analyzes all wiki pages.
 
     Args:
-        config: EvaluationConfig Instanz
-        wiki_analyzer: WikiDeepAnalyzer Instanz
-        extensions: Set von Dateiendungen
-        logger: Logger Instanz
+        config: EvaluationConfig instance
+        wiki_analyzer: WikiDeepAnalyzer instance
+        extensions: Set of file extensions
+        logger: Logger instance
 
     Returns:
-        Liste von Analyse-Ergebnissen
+        List of analysis results
     """
     results = []
     content_dir = config.page_content_dir
@@ -222,16 +222,16 @@ def analyze_documents(
     logger: logging.Logger,
 ) -> List[dict]:
     """
-    Analysiert alle Dokumente (PDF, Office) in Media-Ordnern.
+    Analyzes all documents (PDF, Office) in the media folders.
 
     Args:
-        config: EvaluationConfig Instanz
-        doc_analyzer: DocumentDeepAnalyzer Instanz
-        extensions: Set von Dateiendungen
-        logger: Logger Instanz
+        config: EvaluationConfig instance
+        doc_analyzer: DocumentDeepAnalyzer instance
+        extensions: Set of file extensions
+        logger: Logger instance
 
     Returns:
-        Liste von Analyse-Ergebnissen
+        List of analysis results
     """
     results = []
     media_dir = config.media_dir
@@ -284,16 +284,16 @@ def analyze_images(
     logger: logging.Logger,
 ) -> List[dict]:
     """
-    Analysiert alle Bilder mit Vision AI.
+    Analyzes all images with vision AI.
 
     Args:
-        config: EvaluationConfig Instanz
-        media_analyzer: MediaDeepAnalyzer Instanz
-        extensions: Set von Dateiendungen
-        logger: Logger Instanz
+        config: EvaluationConfig instance
+        media_analyzer: MediaDeepAnalyzer instance
+        extensions: Set of file extensions
+        logger: Logger instance
 
     Returns:
-        Liste von Analyse-Ergebnissen
+        List of analysis results
     """
     results = []
     media_dir = config.media_dir
@@ -340,7 +340,7 @@ def analyze_images(
 
 
 def main():
-    """Hauptfunktion für Deep Evaluation."""
+    """Main entry point for the deep evaluation."""
     import argparse
 
     if "-h" in sys.argv or "--help" in sys.argv:
@@ -395,7 +395,7 @@ def main():
     doc_analyzer = DocumentDeepAnalyzer(config)
     media_analyzer = MediaDeepAnalyzer(config)
 
-    # Timestamp für diesen Run (vollständig: YYYYMMDD_HHMMSS)
+    # Timestamp for this run (full: YYYYMMDD_HHMMSS)
     now = datetime.now()
     timestamp_full = now.strftime("%Y%m%d_%H%M%S")
 
