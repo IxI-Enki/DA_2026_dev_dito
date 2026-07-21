@@ -216,4 +216,4 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true  # Non-blocking initially; tighten later
+        # Blocking: local scan of 180 commits found no leaks (2026-07-21).

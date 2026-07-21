@@ -342,7 +342,9 @@ def load_corpus_for_ground_truth(
         text = file_path.read_text(encoding="utf-8")
         stem = source_file.rsplit(".", 1)[0] if "." in source_file else source_file
         page_id = stem.replace("_", ":", 1)
-        for i, chunk_text in enumerate(simple_chunk(text, chunk_size=chunk_size, overlap=chunk_overlap)):
+        for i, chunk_text in enumerate(
+            simple_chunk(text, chunk_size=chunk_size, overlap=chunk_overlap)
+        ):
             all_chunks.append({"page_id": page_id, "chunk_index": i, "text": chunk_text})
 
     doc_count = len({c["page_id"] for c in all_chunks})

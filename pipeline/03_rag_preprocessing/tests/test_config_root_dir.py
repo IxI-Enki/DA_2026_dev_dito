@@ -1,6 +1,8 @@
 # pipeline/03_rag_preprocessing/tests/test_config_root_dir.py
 from pathlib import Path
+
 import config as cfg
+
 
 def test_root_dir_auto_resolves_to_repo_root(tmp_path, monkeypatch):
     env = tmp_path / "env.yaml"

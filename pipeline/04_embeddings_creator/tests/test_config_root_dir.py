@@ -1,6 +1,8 @@
 # pipeline/04_embeddings_creator/tests/test_config_root_dir.py
 from pathlib import Path
+
 import config as cfg  # module under test lives in the package dir
+
 
 def test_root_dir_auto_resolves_to_module_dir(tmp_path):
     env = tmp_path / "env.yaml"
