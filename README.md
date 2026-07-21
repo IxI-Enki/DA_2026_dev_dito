@@ -42,7 +42,7 @@ Stage 04  Embeddings Creator    vectors (JSONL)    ->  data/embeddings/
 Stage 05  Deploy                SCP / Qdrant       ->  Raspberry Pi / Qdrant
 ```
 
-### PowerShell Pipeline Launcher (TUI)
+### PowerShell Pipeline Launcher
 
 > [!TIP]  
 > <sup>Optional</sup>
@@ -54,22 +54,25 @@ Stage 05  Deploy                SCP / Qdrant       ->  Raspberry Pi / Qdrant
 > &nbsp; &nbsp; &nbsp; <i>Pick a pipeline stage or run the full stack; output streams into the Live Log panel.</i>  
 >
 > </summary>
->  
-> - **In your PowerShell**:  
->   <table><tr><td width="250px">
 >
+> - **In your PowerShell**:
 >   ```pwsh
 >   scripts/glass.ps1 
 >   ```
 >
->   </td></tr></table>
->
 > <div align="center">
->   <img src="assets/img/_000_tui-launcher__Screenshot_2026-02-28_174555.png" alt="tui_pipeline_launcher" width="80%">
+>  
+> <table><td width="600px">
+>
+> https://github.com/user-attachments/assets/f93f9e94-14d6-42c9-a2ba-ea63ad158907
+>
+> </td></table>
+> <!--
+>   <img src="assets/img/_000_tui-launcher__Screenshot_2026-02-28_174555.png" alt="tui_pipeline_launcher" width="80%"> 
 > </div>
 >
 > <div align="center">
->   <img src="assets/img/_000_tui-live-log__Screenshot_2026-02-28_170312.png" alt="tui_live_log" width="80%">
+>   <img src="assets/img/_000_tui-live-log__Screenshot_2026-02-28_170312.png" alt="tui_live_log" width="80%"> -->
 > </div>
 >
 > </details>
@@ -78,54 +81,69 @@ Stage 05  Deploy                SCP / Qdrant       ->  Raspberry Pi / Qdrant
 
 ## Setup
 
-### 1. Python environment
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r evaluation/requirements.txt
-pip install -e .
-```
-
-### 2. Configuration
-
-Copy the placeholder config and fill in your values:
-
-```powershell
-Copy-Item config/PLACEHOLDER_env.yaml config/env.yaml
-```
-
-Key sections in `config/env.yaml`:
-
-| Section          | Purpose                                                   |
-| :--------------- | :-------------------------------------------------------- |
-| `SOURCE_WIKI`    | DokuWiki API URL, token path, SSL cert                    |
-| `FETCH`          | Timeout, retries, media options, namespace depth          |
-| `SERVICES.qdrant`| Host and port for Qdrant (default `localhost:18334`)      |
-| `EMBEDDINGS`     | Provider (Ollama / OpenAI), model, chunk size             |
-
-Secrets go in `config/secrets/` (gitignored):
-
-| File                         | Used by                        |
-| :--------------------------- | :----------------------------- |
-| `config/secrets/api.token`   | DokuWiki JSON-RPC bearer token |
-| `config/secrets/ssl.cert`    | DokuWiki SSL certificate       |
-| `config/secrets/openai.token`| OpenAI embeddings (optional)   |
-
-### 3. Services
-
-Start Qdrant (and optionally DokuWiki) via Docker:
-
-```powershell
-# Qdrant only
-docker compose -p stack-g-devdito up qdrant -d
-
-# Full stack (DokuWiki + Qdrant)
-docker compose -p stack-g-devdito --profile wiki up -d
-
-# Isolated Qdrant for tests (port 18336)
-docker compose -p stack-g-devdito --profile test up qdrant-test -d
-```
+> [!NOTE]  
+> <sup>Development</sup>
+>
+> <details>
+> <summary><b><kbd>click to view</kbd></b> 👈🏻 <mark>&nbsp;&nbsp;venv, config, services&nbsp;&nbsp;</mark><br>  
+>  
+> </summary>
+>
+> ### 1. Python environment
+>
+> - **In your PowerShell**:
+>   ```pwsh
+>   python -m venv .venv
+>   .venv\Scripts\Activate.ps1
+>   pip install -r evaluation/requirements.txt
+>   pip install -e .
+>   ```
+>
+> ### 2. Configuration
+>
+> &nbsp; &nbsp; &nbsp; <i>Copy the</i> <mark>&nbsp;&nbsp;placeholder config and fill in your values&nbsp;&nbsp;</mark>
+>
+> - **In your PowerShell**:
+>   ```pwsh
+>   Copy-Item config/PLACEHOLDER_env.yaml config/env.yaml
+>   ```
+>
+> - <i>Key sections</i> in <code>config/env.yaml</code>:  
+>
+>   <table>
+>   <tr><td><h3> Section </h3></td><td><h3> Purpose </h3></td></tr>
+>   <tr><td><code>SOURCE_WIKI</code></td><td> DokuWiki API URL, token path, SSL cert </td></tr>
+>   <tr><td><code>FETCH</code></td><td> Timeout, retries, media options, namespace depth </td></tr>
+>   <tr><td><code>SERVICES.qdrant</code></td><td> Host and port for Qdrant (default `localhost:18334`) </td></tr>
+>   <tr><td><code>EMBEDDINGS</code></td><td> Provider (Ollama / OpenAI), model, chunk size </td></tr>
+>   </table>
+>
+> - <mark>&nbsp;&nbsp;Secrets&nbsp;&nbsp;</mark> go in <code>config/secrets/</code> (gitignored):  
+>
+>   <table>
+>   <tr><td><h3> File </h3></td><td><h3> Used by </h3></td></tr>
+>   <tr><td><code>config/secrets/api.token</code></td><td> DokuWiki JSON-RPC bearer token </td></tr>
+>   <tr><td><code>config/secrets/ssl.cert</code></td><td> DokuWiki SSL certificate </td></tr>
+>   <tr><td><code>config/secrets/openai.token</code></td><td> OpenAI embeddings (optional) </td></tr>
+>   </table>
+>
+> ### 3. Services
+>
+> &nbsp; &nbsp; &nbsp; <i>Start</i> <mark>&nbsp;&nbsp;Qdrant&nbsp;&nbsp;</mark> (<i>and optionally DokuWiki</i>) via <b>Docker</b>:
+>
+> - **In your PowerShell**:  
+>   ```powershell
+>   # Qdrant only
+>   docker compose -p stack-g-devdito up qdrant -d
+>   
+>   # Full stack (DokuWiki + Qdrant)
+>   docker compose -p stack-g-devdito --profile wiki up -d
+>   
+>   # Isolated Qdrant for tests (port 18336)
+>   docker compose -p stack-g-devdito --profile test up qdrant-test -d
+>   ```
+>
+> </details>
 
 ---
 
