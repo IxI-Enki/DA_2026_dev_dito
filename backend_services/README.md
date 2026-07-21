@@ -14,6 +14,13 @@ tags: [docker, backend-services, qdrant, orchestrator, pipeline, stack-g]
 
 Docker-based backend infrastructure for the Dev Dito pipeline (Stack-G in the HTL Wiki multi-stack ecosystem).
 
+This is the **integration/deployment layer**. The core wiki→embedding pipeline in
+[`pipeline/`](../pipeline/) is independent of it: the pipeline code has no
+`backend_services` imports, and references DokuWiki only via one cosmetic URL
+string. Everything here (Docker Compose services, the orchestrator API) is an
+optional way to run and expose that pipeline — not a dependency of it. See
+[docs/architecture.md](../docs/architecture.md) §4 for the full boundary.
+
 ## Architecture
 
 ```

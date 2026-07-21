@@ -1,9 +1,9 @@
 """
-Report Generator - Generiert Evaluierungsberichte
+Report Generator - generates evaluation reports
 
-Ausgabeformate:
-- Markdown Report
-- JSON Summary
+Output formats:
+- Markdown report
+- JSON summary
 - HTML (optional)
 """
 
@@ -16,17 +16,17 @@ from config import EvaluationConfig, get_config
 
 
 class ReportGenerator:
-    """Generiert Evaluierungsberichte in verschiedenen Formaten."""
+    """Generates evaluation reports in various formats."""
 
     def __init__(
         self, config: EvaluationConfig | None = None, results: Dict[str, Any] | None = None
     ):
         """
-        Initialisiert den ReportGenerator.
+        Initializes the ReportGenerator.
 
         Args:
-            config: EvaluationConfig Instanz
-            results: Dictionary mit Evaluierungsergebnissen
+            config: EvaluationConfig instance
+            results: Dictionary with evaluation results
         """
         self.config = config or get_config()
         self.results = results or {}
@@ -37,13 +37,13 @@ class ReportGenerator:
 
     def generate(self, output_dir: Path) -> Path:
         """
-        Generiert alle konfigurierten Reports.
+        Generates all configured reports.
 
         Args:
-            output_dir: Ausgabeverzeichnis
+            output_dir: Output directory
 
         Returns:
-            Pfad zum Haupt-Report
+            Path to the main report
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -59,16 +59,16 @@ class ReportGenerator:
         return md_path if self.config.reports.generate_markdown else output_dir
 
     def _generate_markdown(self, output_dir: Path) -> Path:
-        """Generiert den Markdown-Report."""
+        """Generates the Markdown report."""
         run_name = self.results.get("run_name", "evaluation")
-        # Timestamp im Format YYYYMMDD_HHMMSS (konsistent)
+        # Timestamp in the format YYYYMMDD_HHMMSS (consistent)
         timestamp = self.results.get("timestamp")
         if not timestamp:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        elif len(timestamp) == 8:  # Nur Datum, füge Zeit hinzu
+        elif len(timestamp) == 8:  # Date only, add time
             timestamp = f"{timestamp}_{datetime.now().strftime('%H%M%S')}"
 
-        # Parse timestamp für schöne Anzeige
+        # Parse timestamp for nice display
         try:
             if "_" in timestamp:
                 date_part, time_part = timestamp.split("_", 1)
@@ -128,7 +128,7 @@ class ReportGenerator:
         return md_path
 
     def _section_summary(self) -> list:
-        """Generiert die Zusammenfassung."""
+        """Generates the summary."""
         summary = self.results.get("summary", {})
 
         lines = [
@@ -151,7 +151,7 @@ class ReportGenerator:
         return lines
 
     def _section_content_classification(self) -> list:
-        """Generiert die Content-Klassifizierung."""
+        """Generates the content classification section."""
         cc = self.results.get("content_classification", {})
         summary = cc.get("summary", {})
         by_namespace = cc.get("by_namespace", {})
@@ -193,7 +193,7 @@ class ReportGenerator:
         return lines
 
     def _section_format_quality(self) -> list:
-        """Generiert die Format-Qualitäts-Sektion."""
+        """Generates the format & quality section."""
         fq = self.results.get("format_quality", {})
         summary = fq.get("summary", {})
         by_type = fq.get("by_type", {})
@@ -236,7 +236,7 @@ class ReportGenerator:
         return lines
 
     def _section_rag_readiness(self) -> list:
-        """Generiert die RAG-Readiness-Sektion."""
+        """Generates the RAG readiness section."""
         rr = self.results.get("rag_readiness", {})
         summary = rr.get("summary", {})
         common_issues = rr.get("common_issues", {})
@@ -286,7 +286,7 @@ class ReportGenerator:
         return lines
 
     def _section_temporal(self) -> list:
-        """Generiert die zeitliche Analyse-Sektion."""
+        """Generates the temporal analysis section."""
         ta = self.results.get("temporal_analysis", {})
         summary = ta.get("summary", {})
         freshness_dist = ta.get("freshness_distribution", {})
@@ -316,7 +316,7 @@ class ReportGenerator:
         return lines
 
     def _section_queries(self) -> list:
-        """Generiert die Query-Generierung-Sektion."""
+        """Generates the query generation section."""
         qg = self.results.get("query_generation", {})
         summary = qg.get("summary", {})
         by_type = qg.get("by_type", {})
@@ -357,7 +357,7 @@ class ReportGenerator:
         return lines
 
     def _section_diploma_thesis(self) -> list:
-        """Generiert die Diplomarbeits-Sektion."""
+        """Generates the diploma thesis section."""
         fq = self.results.get("format_quality", {})
         thesis_files = fq.get("diploma_thesis", [])
 
@@ -391,7 +391,7 @@ class ReportGenerator:
         return lines
 
     def _section_recommendations(self) -> list:
-        """Generiert die Empfehlungs-Sektion."""
+        """Generates the recommendations section."""
         recommendations = self.results.get("recommendations", [])
 
         lines = [
@@ -424,20 +424,20 @@ class ReportGenerator:
 
     def generate_deep_analysis_report(self, output_dir: Path, deep_results: Dict[str, Any]) -> Path:
         """
-        Generiert einen umfassenden Deep Analysis Report gemäß Microsoft RAG Guide.
+        Generates a comprehensive deep analysis report per the Microsoft RAG Guide.
 
         Args:
-            output_dir: Ausgabeverzeichnis
-            deep_results: Dictionary mit deep_analysis_results.json Inhalt
+            output_dir: Output directory
+            deep_results: Dictionary with deep_analysis_results.json content
 
         Returns:
-            Pfad zum generierten Report
+            Path to the generated report
         """
         timestamp = deep_results.get("timestamp", datetime.now().strftime("%Y%m%d_%H%M%S"))
-        if len(timestamp) == 8:  # Nur Datum
+        if len(timestamp) == 8:  # Date only
             timestamp = f"{timestamp}_{datetime.now().strftime('%H%M%S')}"
 
-        # Parse timestamp für Anzeige
+        # Parse timestamp for display
         try:
             if "_" in timestamp:
                 date_part, time_part = timestamp.split("_", 1)
@@ -513,7 +513,7 @@ class ReportGenerator:
         return report_path
 
     def _section_solution_domain(self) -> list:
-        """Solution Domain Definition gemäß Microsoft Guide."""
+        """Solution domain definition per the Microsoft Guide."""
         return [
             "## 1. Solution Domain Definition",
             "",
@@ -538,7 +538,7 @@ class ReportGenerator:
         ]
 
     def _section_deep_executive_summary(self, results: Dict[str, Any]) -> list:
-        """Executive Summary für Deep Analysis."""
+        """Executive summary for the deep analysis."""
         results.get("wiki_pages", [])
         results.get("documents", [])
         results.get("media", [])
@@ -560,7 +560,7 @@ class ReportGenerator:
         ]
 
     def _section_security_constraints(self, results: Dict[str, Any]) -> list:
-        """Security Constraints Analysis - explizite Dokumentation."""
+        """Security constraints analysis - explicit documentation."""
         config = self.config
         teacher_ns = config.teacher_namespaces
         public_ns = config.public_namespaces
@@ -714,7 +714,7 @@ class ReportGenerator:
         ]
 
     def _section_preprocessing_requirements(self, results: Dict[str, Any]) -> list:
-        """Preprocessing Requirements gemäß Microsoft Guide."""
+        """Preprocessing requirements per the Microsoft Guide."""
         return [
             "## 7. Preprocessing Requirements (Microsoft RAG Guide)",
             "",
@@ -794,7 +794,7 @@ class ReportGenerator:
         ]
 
     def _generate_json_summary(self, output_dir: Path):
-        """Generiert die JSON-Zusammenfassung."""
+        """Generates the JSON summary."""
         run_name = self.results.get("run_name", "evaluation")
 
         summary = {

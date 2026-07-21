@@ -105,19 +105,6 @@ class ContentAwareChunker:
 
         return text
 
-    # #region agent log helpers
-    @staticmethod
-    def _dbg_write(payload: dict) -> None:
-        import json, time
-        payload.setdefault("timestamp", int(time.time() * 1000))
-        log_path = r"d:\_Repositories\_Diploma_Thesis_Repositories\dev_dito\.cursor\debug.log"
-        try:
-            with open(log_path, "a", encoding="utf-8") as _f:
-                _f.write(json.dumps(payload, ensure_ascii=False) + "\n")
-        except Exception:
-            pass
-    # #endregion
-
     def chunk_document(self, document: Document) -> list[Chunk]:
         """
         Chunk a document based on its content type.
@@ -156,39 +143,11 @@ class ContentAwareChunker:
             raw_chunks = self._chunk_naive(text, config)
         elif method in ("table_aware", "table_row", "markdown_table"):
             raw_chunks = self._chunk_table_aware(text, config)
-            # #region agent log – H1/H2/H4/H5
-            if document.page_id == "org:termine-2026":
-                for _ci, _ct in enumerate(raw_chunks):
-                    _tbl_lines = sum(1 for _l in _ct.split("\n") if _l.strip().startswith("|"))
-                    _has_prefix = _ct.startswith("## ")
-                    _has_hitm = "AHITM" in _ct or "BHITM" in _ct
-                    _has_muendlich = "ndliche" in _ct  # covers ü and mojibake ?
-                    _umlaut_ok = "ü" in _ct or "ö" in _ct or "ä" in _ct
-                    ContentAwareChunker._dbg_write({
-                        "hypothesisId": "H1-H2-H4", "location": "content_aware_chunker.py:chunk_document",
-                        "message": f"table_chunk {_ci}/{len(raw_chunks)-1}",
-                        "data": {"page_id": document.page_id, "chunk_idx": _ci,
-                                 "total_chunks": len(raw_chunks), "char_len": len(_ct),
-                                 "table_lines": _tbl_lines, "has_header_prefix": _has_prefix,
-                                 "has_hitm": _has_hitm, "has_muendlich": _has_muendlich,
-                                 "umlaut_ok": _umlaut_ok,
-                                 "preview_start": _ct[:120].replace("\n", " "),
-                                 "preview_end": _ct[-80:].replace("\n", " ")}})
-            # #endregion
         elif method in ("metadata_only", "parent_context", "index_as_context_only"):
             # For these methods, create a single "metadata" chunk
             raw_chunks = [text[: config.get("max_chunk_size", 500)]]
         else:
             raw_chunks = self._chunk_semantic(text, config)
-
-        # #region agent log – H5
-        if document.page_id == "org:termine-2026":
-            ContentAwareChunker._dbg_write({
-                "hypothesisId": "H5", "location": "content_aware_chunker.py:chunk_document",
-                "message": "access_level check for org:termine-2026",
-                "data": {"access_level": document.access_level, "content_type": document.content_type,
-                         "method": method, "total_raw_chunks": len(raw_chunks)}})
-        # #endregion
 
         # Create Chunk objects
         total_chunks = len(raw_chunks)
@@ -426,9 +385,7 @@ class ContentAwareChunker:
             header_lines: list[str] = []
             data_lines: list[str] = []
             for i, line in enumerate(table_buf):
-                if i == 0:
-                    header_lines.append(line)
-                elif i == 1 and SEP_LINE.match(line):
+                if i == 0 or (i == 1 and SEP_LINE.match(line)):
                     header_lines.append(line)
                 else:
                     data_lines.append(line)

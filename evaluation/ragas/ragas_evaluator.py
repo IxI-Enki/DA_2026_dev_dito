@@ -5,6 +5,7 @@ local LLMs can be used as the judge for context precision, faithfulness, etc.
 
 Constitution Article X+XI: Evaluation-First + Thesis Alignment.
 """
+
 from __future__ import annotations
 
 import logging

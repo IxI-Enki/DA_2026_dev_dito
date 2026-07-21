@@ -1,11 +1,11 @@
 """
-Format & Quality Analyzer - Qualitätsanalyse der Dateiformate
+Format & Quality Analyzer - quality analysis of file formats
 
-Analysiert:
-- PDF-Textqualität (Text-Layer, OCR-Eignung)
-- Bildauflösung und OCR-Eignung
-- Office-Dokumente (Struktur, Tabellen)
-- Seiteninhalt-Qualität
+Analyzes:
+- PDF text quality (text layer, OCR suitability)
+- Image resolution and OCR suitability
+- Office documents (structure, tables)
+- Page content quality
 """
 
 import sys
@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List
 
-# Relative import für config
+# Relative import for config
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import EvaluationConfig, get_config
 
@@ -35,7 +35,7 @@ except ImportError:
 
 @dataclass
 class FileQuality:
-    """Qualitätsbewertung einer einzelnen Datei."""
+    """Quality assessment of a single file."""
 
     file_path: str
     file_name: str
@@ -49,7 +49,7 @@ class FileQuality:
 
 @dataclass
 class PDFQuality(FileQuality):
-    """Spezifische Qualitätsbewertung für PDFs."""
+    """PDF-specific quality assessment."""
 
     page_count: int = 0
     has_text_layer: bool = False
@@ -63,7 +63,7 @@ class PDFQuality(FileQuality):
 
 @dataclass
 class ImageQuality(FileQuality):
-    """Spezifische Qualitätsbewertung für Bilder."""
+    """Image-specific quality assessment."""
 
     width: int = 0
     height: int = 0
@@ -75,7 +75,7 @@ class ImageQuality(FileQuality):
 
 @dataclass
 class QualityAnalysisResult:
-    """Gesamtergebnis der Qualitätsanalyse."""
+    """Overall result of the quality analysis."""
 
     total_files: int = 0
     total_size_mb: float = 0.0
@@ -91,14 +91,14 @@ class QualityAnalysisResult:
 
 
 class FormatQualityAnalyzer:
-    """Analysiert die Qualität verschiedener Dateiformate."""
+    """Analyzes the quality of various file formats."""
 
     def __init__(self, config: EvaluationConfig | None = None):
         """
-        Initialisiert den FormatQualityAnalyzer.
+        Initializes the FormatQualityAnalyzer.
 
         Args:
-            config: EvaluationConfig Instanz
+            config: EvaluationConfig instance
         """
         self.config = config or get_config()
         self.raw_config = self.config.raw_config
@@ -123,10 +123,10 @@ class FormatQualityAnalyzer:
 
     def analyze(self) -> QualityAnalysisResult:
         """
-        Führt die vollständige Qualitätsanalyse durch.
+        Runs the full quality analysis.
 
         Returns:
-            QualityAnalysisResult mit allen Analysen
+            QualityAnalysisResult with all analyses
         """
         print("\n[FormatQualityAnalyzer] Starte Analyse...")
 
@@ -147,7 +147,7 @@ class FormatQualityAnalyzer:
         return self.result
 
     def _analyze_pages(self):
-        """Analysiert die Wiki-Seiten."""
+        """Analyzes the wiki pages."""
         content_dir = self.config.page_content_dir
         if not content_dir or not content_dir.exists():
             return
@@ -201,7 +201,7 @@ class FormatQualityAnalyzer:
         self.result.pages_analysis = page_stats
 
     def _analyze_media(self):
-        """Analysiert alle Media-Dateien."""
+        """Analyzes all media files."""
         media_dir = self.config.media_dir
         if not media_dir or not media_dir.exists():
             return
@@ -251,7 +251,7 @@ class FormatQualityAnalyzer:
                 self.result.files_with_issues += 1
 
     def _analyze_pdf(self, file_path: Path) -> PDFQuality:
-        """Analysiert eine PDF-Datei."""
+        """Analyzes a PDF file."""
         file_size_kb = file_path.stat().st_size / 1024
 
         quality = PDFQuality(
@@ -327,7 +327,7 @@ class FormatQualityAnalyzer:
         return quality
 
     def _analyze_image(self, file_path: Path) -> ImageQuality:
-        """Analysiert eine Bilddatei."""
+        """Analyzes an image file."""
         file_size_kb = file_path.stat().st_size / 1024
 
         quality = ImageQuality(
@@ -388,7 +388,7 @@ class FormatQualityAnalyzer:
         return quality
 
     def _analyze_office(self, file_path: Path) -> FileQuality:
-        """Analysiert ein Office-Dokument."""
+        """Analyzes an Office document."""
         file_size_kb = file_path.stat().st_size / 1024
         ext = file_path.suffix.lower()
 
@@ -418,7 +418,7 @@ class FormatQualityAnalyzer:
         return quality
 
     def _analyze_svg(self, file_path: Path) -> FileQuality:
-        """Analysiert eine SVG-Datei."""
+        """Analyzes an SVG file."""
         file_size_kb = file_path.stat().st_size / 1024
 
         quality = FileQuality(
@@ -435,7 +435,7 @@ class FormatQualityAnalyzer:
         return quality
 
     def _analyze_generic(self, file_path: Path) -> FileQuality:
-        """Analysiert eine generische Datei."""
+        """Analyzes a generic file."""
         file_size_kb = file_path.stat().st_size / 1024
 
         return FileQuality(
@@ -447,7 +447,7 @@ class FormatQualityAnalyzer:
         )
 
     def _calculate_summary(self):
-        """Berechnet Zusammenfassungsstatistiken."""
+        """Calculates summary statistics."""
         all_files = self.result.all_files + self.result.diploma_thesis_files
 
         if all_files:
@@ -467,7 +467,7 @@ class FormatQualityAnalyzer:
             )
 
     def to_dict(self) -> Dict[str, Any]:
-        """Konvertiert Ergebnisse zu Dictionary für JSON-Export."""
+        """Converts results to a dictionary for JSON export."""
         return {
             "summary": {
                 "total_files": self.result.total_files,

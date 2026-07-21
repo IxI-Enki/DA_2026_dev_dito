@@ -1,7 +1,7 @@
 """
-Document Deep Analyzer - Analyse von PDF/Office Dokumenten
+Document Deep Analyzer - analysis of PDF/Office documents
 
-Extrahiert Text und nutzt LLMs zur Klassifizierung des Dokumententyps.
+Extracts text and uses LLMs to classify the document type.
 """
 
 import logging
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class DocumentDeepAnalyzer:
-    """Führt Deep-Dive Analysen auf Dokumenten durch."""
+    """Runs deep-dive analyses on documents."""
 
     def __init__(self, config: EvaluationConfig | None = None):
         self.config = config or get_config()
@@ -54,7 +54,7 @@ class DocumentDeepAnalyzer:
 
     def analyze_document(self, file_path: Path) -> Dict[str, Any]:
         """
-        Analysiert ein Dokument (PDF, DOCX, etc.).
+        Analyzes a document (PDF, DOCX, etc.).
         """
         # 1. Text Extraction
         content = self.file_handler.get_file_content(file_path)

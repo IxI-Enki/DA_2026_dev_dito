@@ -144,9 +144,8 @@ FETCH:
 ### 1. Vollständiger Fetch (empfohlen)
 
 ```powershell
-cd D:\_Repositories\_Diploma_Thesis_Repositories\research\techstack\dokuwiki\fetcher_json_rpc_api\script;
-$timestamp = Get-Date -Format 'yyyyMMdd_HHmmss';
-python fetch_full_wiki_extended.py "fetched_at_$timestamp"
+# From the repository root:
+python pipeline/01_wiki_fetcher/fetch_full_wiki_extended.py
 ```
 
 **Features:**

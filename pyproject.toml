@@ -70,8 +70,8 @@ select = [
 ]
 ignore = [
     "E501",  # line too long (handled by formatter)
-    "W293",  # blank line contains whitespace (cosmetic, auto-fixable)
-    "W291",  # trailing whitespace (cosmetic, auto-fixable)
+    "W293",  # blank line contains whitespace (intentional inside LLM prompt templates)
+    "W291",  # trailing whitespace (intentional inside LLM prompt templates)
     "E402",  # module-level import not at top (pipeline modules do conditional imports)
     "UP035", # deprecated typing imports (widespread, non-breaking)
     "UP006", # non-PEP585 annotation e.g. List -> list (widespread, non-breaking)
@@ -79,7 +79,6 @@ ignore = [
     "F541",  # f-string without placeholders (many are intentional format strings)
     "N999",  # invalid module name (pipeline dirs like 01_wiki_fetcher)
     "N806",  # non-lowercase variable in function (common for constants)
-    "UP038", # non-PEP604 isinstance (isinstance(x, int | str) -- widespread)
     "SIM108", # ternary instead of if-else (readability preference)
     "SIM105", # contextlib.suppress instead of try-except-pass (readability)
     "B005",  # strip with multi-char string (intentional usage)

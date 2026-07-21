@@ -23,12 +23,15 @@ Fetches a DokuWiki, preprocesses and embeds the content, deploys to Qdrant, and 
 - **Spec-Driven Development** — 13 numbered feature specs under `specs/`,
   a project constitution under `.specify/`, and CI that turns specs into issues.
 - **Agentic orchestration** — reproducible Claude / Cursor / Spec-Kit command
-  sets under `.claude/`, `.cursor/`, and `.prompts/`.
+  sets under `.claude/` and `.cursor/`.
 - **Evaluation** — a RAGAS + custom-metric framework under `evaluation/`.
 
 Real source data is **not** published; selected pipeline stages ship a small,
 redacted sample under `data/<stage>/samples/` (fetched pages, embeddings,
 evaluation report). See [PRIVACY.md](PRIVACY.md).
+
+See [docs/architecture.md](docs/architecture.md) for the full architecture and
+the two-layer evaluation model.
 
 ---
 
@@ -431,3 +434,10 @@ Reusable YAML configs under `evaluation/experiments/`:
 | `chunk_256.yaml`      | Chunk size 256 tokens              |
 | `chunk_512.yaml`      | Chunk size 512 tokens              |
 | `chunk_1024.yaml`     | Chunk size 1024 tokens             |
+
+---
+
+## Related subsystems
+
+- [`dokuwiki_plugin/`](dokuwiki_plugin/) — the DokuWiki PHP plugin (integration surface). The pipeline runs without it.
+- [`backend_services/`](backend_services/) — the Dockerized deployment layer. The pipeline runs standalone.

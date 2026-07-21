@@ -1,7 +1,7 @@
 """
-Konfiguration für die Fetched Data Evaluation.
+Configuration for the fetched data evaluation.
 
-Lädt alle Einstellungen aus config/env.yaml - KEINE hardcoded Werte!
+Loads all settings from config/env.yaml - NO hardcoded values!
 """
 
 import re
@@ -34,13 +34,13 @@ def resolve_variables(value: Any, variables: Dict[str, str]) -> Any:
 
 def load_env_yaml(config_path: Path | None = None) -> Dict[str, Any]:
     """
-    Lädt env.yaml und löst Variablen auf.
+    Loads env.yaml and resolves variables.
 
     Args:
-        config_path: Pfad zur env.yaml (default: config/env.yaml)
+        config_path: Path to env.yaml (default: config/env.yaml)
 
     Returns:
-        Dictionary mit allen Konfigurationen
+        Dictionary with all configurations
     """
     if config_path is None:
         script_dir = Path(__file__).parent
@@ -106,10 +106,10 @@ def get_latest_fetch_dir(fetched_base: Path) -> Path | None:
 
 @dataclass
 class LLMConfig:
-    """LLM Konfiguration für Query-Generierung."""
+    """LLM configuration for query generation."""
 
     provider: str = "LM-Studio"
-    base_url: str = ""  # Muss aus env.yaml geladen werden
+    base_url: str = ""  # Must be loaded from env.yaml
     model: str = ""
     api_key: str = "not-needed"
     temperature: float = 0.3
@@ -119,7 +119,7 @@ class LLMConfig:
 
 @dataclass
 class QueryGenerationConfig:
-    """Konfiguration für Query-Generierung."""
+    """Configuration for query generation."""
 
     enabled: bool = True
     llm: LLMConfig = field(default_factory=LLMConfig)
@@ -133,7 +133,7 @@ class QueryGenerationConfig:
 
 @dataclass
 class DiplomaThesisConfig:
-    """Konfiguration für Diplomarbeits-Behandlung."""
+    """Configuration for diploma-thesis handling."""
 
     enabled: bool = True
     separate_analysis: bool = True
@@ -142,7 +142,7 @@ class DiplomaThesisConfig:
 
 @dataclass
 class ReportsConfig:
-    """Report-Konfiguration."""
+    """Report configuration."""
 
     author: str = "Jan Ritt"
     institution: str = "HTL Leonding"
@@ -153,16 +153,16 @@ class ReportsConfig:
 
 @dataclass
 class EvaluationConfig:
-    """Haupt-Konfiguration für die Evaluation."""
+    """Main configuration for the evaluation."""
 
-    # Pfade
+    # Paths
     root_dir: Path | None = None
     config_dir: Path | None = None
     script_dir: Path | None = None
     results_dir: Path | None = None
     fetched_data_dir: Path | None = None
 
-    # Spezifische Pfade
+    # Specific paths
     page_content_dir: Path | None = None
     page_metadata_dir: Path | None = None
     page_html_dir: Path | None = None
@@ -170,7 +170,7 @@ class EvaluationConfig:
     media_dir: Path | None = None
     wiki_analysis_report: Path | None = None
 
-    # Sub-Konfigurationen
+    # Sub-configurations
     query_generation: QueryGenerationConfig = field(default_factory=QueryGenerationConfig)
     diploma_thesis: DiplomaThesisConfig = field(default_factory=DiplomaThesisConfig)
     reports: ReportsConfig = field(default_factory=ReportsConfig)
@@ -217,10 +217,10 @@ class EvaluationConfig:
     @classmethod
     def from_yaml(cls, config_path: Path | None = None) -> "EvaluationConfig":
         """
-        Erstellt Konfiguration aus env.yaml.
+        Creates the configuration from env.yaml.
 
         Args:
-            config_path: Pfad zur env.yaml
+            config_path: Path to env.yaml
         """
         env = load_env_yaml(config_path)
 
@@ -255,7 +255,7 @@ class EvaluationConfig:
         format_cfg = env.get("FORMAT_ANALYSIS", {})
         processing_cfg = env.get("PROCESSING", {})
 
-        # LLM Config - KEINE Defaults, muss aus env.yaml kommen
+        # LLM config - NO defaults, must come from env.yaml
         llm_cfg = env.get("LLM", {})
         if not llm_cfg:
             raise ValueError("LLM configuration missing in env.yaml")
@@ -348,7 +348,7 @@ class EvaluationConfig:
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        """Konvertiert Konfiguration zu Dictionary."""
+        """Converts the configuration to a dictionary."""
         return {
             "root_dir": str(self.root_dir),
             "fetched_data_dir": str(self.fetched_data_dir),
@@ -374,10 +374,10 @@ _config_instance: EvaluationConfig | None = None
 
 def get_config(reload: bool = False) -> EvaluationConfig:
     """
-    Gibt die globale Konfiguration zurück (Singleton).
+    Returns the global configuration (singleton).
 
     Args:
-        reload: Wenn True, wird die Konfiguration neu geladen
+        reload: If True, the configuration is reloaded
     """
     global _config_instance
     if _config_instance is None or reload:
@@ -386,7 +386,7 @@ def get_config(reload: bool = False) -> EvaluationConfig:
 
 
 def get_env() -> Dict[str, Any]:
-    """Gibt das rohe env.yaml Dictionary zurück."""
+    """Returns the raw env.yaml dictionary."""
     return load_env_yaml()
 
 

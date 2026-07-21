@@ -3,23 +3,23 @@
 Fetched Data Evaluation Pipeline - CLI Runner
 ==============================================
 
-Führt eine vollständige Evaluierung der gefetchten DokuWiki-Daten durch.
-Alle Einstellungen werden aus config/env.yaml geladen.
+Runs a full evaluation of the fetched DokuWiki data.
+All settings are loaded from config/env.yaml.
 
 Usage:
-    python run_evaluation.py                    # Vollständige Evaluation
-    python run_evaluation.py --quick            # Schnelltest ohne LLM-Queries
-    python run_evaluation.py --show-config      # Zeigt aktuelle Konfiguration
-    python run_evaluation.py --no-queries       # Ohne Query-Generierung
+    python run_evaluation.py                    # Full evaluation
+    python run_evaluation.py --quick            # Quick test without LLM queries
+    python run_evaluation.py --show-config      # Shows the current configuration
+    python run_evaluation.py --no-queries       # Without query generation
 
 Examples:
-    # Vollständige Evaluation
+    # Full evaluation
     python run_evaluation.py
 
-    # Nur Content- und Format-Analyse (schnell)
+    # Content and format analysis only (fast)
     python run_evaluation.py --quick
 
-    # Mit benutzerdefiniertem Output-Verzeichnis
+    # With a custom output directory
     python run_evaluation.py --output-dir ../results/custom_eval
 """
 
@@ -94,7 +94,7 @@ def parse_args():
 
 
 def show_config(config: EvaluationConfig):
-    """Zeigt die aktuelle Konfiguration."""
+    """Shows the current configuration."""
     print("=" * 70)
     print("  CURRENT CONFIGURATION")
     print("=" * 70)

@@ -1,10 +1,10 @@
 """
-Content Classifier - Kategorisierung der Wiki-Inhalte
+Content Classifier - categorization of wiki content
 
-Analysiert und klassifiziert:
+Analyzes and classifies:
 - Namespaces (teacher/public)
-- Inhaltstypen (organizational, educational, etc.)
-- Seitentypen (form, procedure, reference, news)
+- Content types (organizational, educational, etc.)
+- Page types (form, procedure, reference, news)
 """
 
 import json
@@ -14,14 +14,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List
 
-# Relative import für config
+# Relative import for config
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import EvaluationConfig, get_config
 
 
 @dataclass
 class PageClassification:
-    """Klassifizierung einer einzelnen Seite."""
+    """Classification of a single page."""
 
     page_id: str
     namespace: str
@@ -38,7 +38,7 @@ class PageClassification:
 
 @dataclass
 class ClassificationResult:
-    """Gesamtergebnis der Content-Klassifizierung."""
+    """Overall result of the content classification."""
 
     total_pages: int = 0
     pages_by_namespace: Dict[str, int] = field(default_factory=dict)
@@ -52,14 +52,14 @@ class ClassificationResult:
 
 
 class ContentClassifier:
-    """Klassifiziert Wiki-Inhalte nach verschiedenen Kriterien."""
+    """Classifies wiki content according to various criteria."""
 
     def __init__(self, config: EvaluationConfig | None = None):
         """
-        Initialisiert den ContentClassifier.
+        Initializes the ContentClassifier.
 
         Args:
-            config: EvaluationConfig Instanz
+            config: EvaluationConfig instance
         """
         self.config = config or get_config()
         self.raw_config = self.config.raw_config
@@ -78,10 +78,10 @@ class ContentClassifier:
 
     def analyze(self) -> ClassificationResult:
         """
-        Führt die vollständige Content-Klassifizierung durch.
+        Runs the full content classification.
 
         Returns:
-            ClassificationResult mit allen Klassifizierungen
+            ClassificationResult with all classifications
         """
         print("\n[ContentClassifier] Starte Analyse...")
 
@@ -102,7 +102,7 @@ class ContentClassifier:
         return self.result
 
     def _load_pages(self) -> List[Dict[str, Any]]:
-        """Lädt alle Seiten mit Content und Metadaten."""
+        """Loads all pages with content and metadata."""
         pages = []
 
         content_dir = self.config.page_content_dir
@@ -159,13 +159,13 @@ class ContentClassifier:
 
     def _classify_page(self, page_data: Dict[str, Any]) -> PageClassification:
         """
-        Klassifiziert eine einzelne Seite.
+        Classifies a single page.
 
         Args:
-            page_data: Dict mit page_id, content, metadata, links
+            page_data: Dict with page_id, content, metadata, links
 
         Returns:
-            PageClassification Objekt
+            PageClassification object
         """
         page_id = page_data["page_id"]
         content = page_data["content"]
@@ -209,7 +209,7 @@ class ContentClassifier:
         )
 
     def _extract_namespace(self, page_id: str) -> str:
-        """Extrahiert den Top-Level Namespace aus der Page-ID."""
+        """Extracts the top-level namespace from the page ID."""
         # Handle different formats:
         # "namespace:page" -> "namespace"
         # "namespace:subns:page" -> "namespace"
@@ -220,16 +220,16 @@ class ContentClassifier:
         return "root"
 
     def _determine_content_type(self, namespace: str) -> str:
-        """Bestimmt den Inhaltstyp basierend auf dem Namespace."""
+        """Determines the content type based on the namespace."""
         for content_type, namespaces in self.content_types.items():
             if namespace in namespaces:
                 return content_type
         return "other"
 
     def _determine_page_type(self, page_id: str, content: str) -> str:
-        """Bestimmt den Seitentyp basierend auf Patterns."""
+        """Determines the page type based on patterns."""
         page_id_lower = page_id.lower()
-        content_lower = content[:1000].lower()  # Nur Anfang prüfen
+        content_lower = content[:1000].lower()  # Only check the beginning
 
         for page_type, config in self.page_type_patterns.items():
             patterns = config.get("patterns", [])
@@ -240,14 +240,14 @@ class ContentClassifier:
         return "general"
 
     def _count_media_refs(self, content: str) -> int:
-        """Zählt Media-Referenzen im Content."""
+        """Counts media references in the content."""
         # DokuWiki media syntax: {{media:file.ext}} or {{:media:file.ext}}
         pattern = r"\{\{[^}]+\}\}"
         matches = re.findall(pattern, content)
         return len(matches)
 
     def _update_stats(self, classification: PageClassification):
-        """Aktualisiert die Statistiken mit einer neuen Klassifizierung."""
+        """Updates the statistics with a new classification."""
         self.result.total_pages += 1
         self.result.pages.append(classification)
 
@@ -292,7 +292,7 @@ class ContentClassifier:
         details["avg_chars"] = details["total_chars"] // details["page_count"]
 
     def to_dict(self) -> Dict[str, Any]:
-        """Konvertiert Ergebnisse zu Dictionary für JSON-Export."""
+        """Converts results to a dictionary for JSON export."""
         return {
             "summary": {
                 "total_pages": self.result.total_pages,

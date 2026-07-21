@@ -1,5 +1,7 @@
 """Redact PII (email addresses) from a fetched-content file for public samples."""
+
 from __future__ import annotations
+
 import re
 import subprocess
 import sys

@@ -1,7 +1,7 @@
 """
-Media Deep Analyzer - Analyse von Bildern
+Media Deep Analyzer - analysis of images
 
-Nutzt Vision-LLMs um Bildinhalte zu verstehen.
+Uses vision LLMs to understand image content.
 """
 
 import logging
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class MediaDeepAnalyzer:
-    """Führt Analysen auf Bilddateien durch."""
+    """Runs analyses on image files."""
 
     def __init__(self, config: EvaluationConfig | None = None):
         self.config = config or get_config()
@@ -43,7 +43,7 @@ class MediaDeepAnalyzer:
 
     def analyze_image(self, file_path: Path) -> Dict[str, Any]:
         """
-        Analysiert ein Bild mit Vision AI.
+        Analyzes an image with vision AI.
         """
         # Skip tiny files (icons, spacers)
         if file_path.stat().st_size < 5000:

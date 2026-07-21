@@ -201,13 +201,14 @@ evaluation/results/**/*.tex
 # Pipeline (local artifacts)
 # =============================================================================
 pipeline/01_wiki_fetcher/api_method_test_results.json
-.prompts/Full_test_run_I_omitted_only_lines_which_200_ok_for_breivity_here.txt
-
-# =============================================================================
-# Misc
-# =============================================================================
-tstex_modules/_api.ts
+.prompts/
 
 # .cursor: portfolio artifacts tracked; working plans + runtime state excluded (Spec 013)
 .cursor/plans/
 .cursor/hooks/
+
+# =============================================================================
+# Portfolio-cleanup (014): local-only archive + stray generated modules
+# =============================================================================
+_archive/
+tstex_modules/

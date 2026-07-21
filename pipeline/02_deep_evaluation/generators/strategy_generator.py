@@ -1,8 +1,8 @@
 """
-Strategy Generator - Erstellt Preprocessing-Konfigurationen
+Strategy Generator - creates preprocessing configurations
 
-Analysiert die Ergebnisse der Deep Evaluation und erstellt
-validierte YAML-Konfigurations-Snippets für die RAG-Pipeline.
+Analyzes the results of the deep evaluation and creates
+validated YAML configuration snippets for the RAG pipeline.
 """
 
 import json
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class StrategyGenerator:
-    """Generiert Preprocessing-Strategien aus Analyse-Ergebnissen."""
+    """Generates preprocessing strategies from analysis results."""
 
     def __init__(self, results_path: Path):
         self.results_path = results_path
@@ -24,7 +24,7 @@ class StrategyGenerator:
             self.data = json.load(f)
 
     def generate_strategies(self, output_dir: Path):
-        """Hauptfunktion zur Generierung der Strategien."""
+        """Main entry point for generating the strategies."""
 
         strategies = {
             "PIPELINE_STRATEGIES": {
@@ -43,7 +43,7 @@ class StrategyGenerator:
         return yaml_path
 
     def _derive_wiki_strategies(self) -> Dict[str, Any]:
-        """Leitet Strategien für Wiki-Seiten ab."""
+        """Derives strategies for wiki pages."""
         pages = self.data.get("wiki_pages", [])
 
         # Structural override: if page is table-heavy but LLM did not say TABLE_DATA, override
@@ -106,7 +106,7 @@ class StrategyGenerator:
         }
 
     def _derive_document_strategies(self) -> Dict[str, Any]:
-        """Leitet Strategien für Dokumente ab."""
+        """Derives strategies for documents."""
         docs = self.data.get("documents", [])
 
         # Group by type
@@ -146,7 +146,7 @@ class StrategyGenerator:
         }
 
     def _derive_media_strategies(self) -> Dict[str, Any]:
-        """Leitet Strategien für Bilder ab."""
+        """Derives strategies for images."""
         media = self.data.get("media", [])
 
         # Filter useful images
