@@ -23,7 +23,7 @@ Fetches a DokuWiki, preprocesses and embeds the content, deploys to Qdrant, and 
 - **Spec-Driven Development** — 13 numbered feature specs under `specs/`,
   a project constitution under `.specify/`, and CI that turns specs into issues.
 - **Agentic orchestration** — reproducible Claude / Cursor / Spec-Kit command
-  sets under `.claude/`, `.cursor/`, and `.prompts/`.
+  sets under `.claude/` and `.cursor/`.
 - **Evaluation** — a RAGAS + custom-metric framework under `evaluation/`.
 
 Real source data is **not** published; selected pipeline stages ship a small,
