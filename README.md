@@ -1,18 +1,19 @@
 ---
 title: Dev Dito
-description: 5-stage RAG pipeline and evaluation framework for the diploma thesis (Stack-G).
+description: 5-stage RAG pipeline and evaluation framework for the diploma thesis.
 author:
   name: Jan Ritt
-  github: 'https://github.com/IxI-Enki'
+  github: https://github.com/IxI-Enki
 version: 2.0.0
 created: 2026-02-13
-updated: 2026-07-20
-tags: [pipeline, rag, evaluation, dokuwiki, qdrant, embeddings, diploma-thesis, stack-g]
+updated: 2026-07-21
+tags: [pipeline, rag, evaluation, dokuwiki, qdrant, embeddings, diploma-thesis]
 ---
 
 # Dev Dito
 
-RAG pipeline (5 stages) and evaluation framework for the diploma thesis (Stack-G).  
+RAG pipeline (5 stages) and evaluation framework for the diploma thesis.
+
 Fetches a DokuWiki, preprocesses and embeds the content, deploys to Qdrant, and evaluates retrieval quality.
 
 ---
@@ -20,18 +21,14 @@ Fetches a DokuWiki, preprocesses and embeds the content, deploys to Qdrant, and 
 ## What this demonstrates
 
 - **RAG pipeline** — a 5-stage DokuWiki → embeddings → Qdrant flow.
-- **Spec-Driven Development** — 13 numbered feature specs under `specs/`,
-  a project constitution under `.specify/`, and CI that turns specs into issues.
-- **Agentic orchestration** — reproducible Claude / Cursor / Spec-Kit command
-  sets under `.claude/` and `.cursor/`.
+- **Spec-Driven Development** — 14 numbered feature specs under `specs/`, a project constitution under `.specify/`, and CI that turns specs into issues.
+- **Agentic orchestration** — reproducible Claude / Cursor / Spec-Kit command sets under `.claude/` and `.cursor/`.
 - **Evaluation** — a RAGAS + custom-metric framework under `evaluation/`.
 
-Real source data is **not** published; selected pipeline stages ship a small,
-redacted sample under `data/<stage>/samples/` (fetched pages, embeddings,
-evaluation report). See [PRIVACY.md](PRIVACY.md).
+See [docs/architecture.md](docs/architecture.md) for the full architecture and the two-layer evaluation model.
 
-See [docs/architecture.md](docs/architecture.md) for the full architecture and
-the two-layer evaluation model.
+> Real source data is **not** published; selected pipeline stages ship a small, redacted sample under `data/<stage>/samples/` (fetched pages, embeddings, evaluation report).
+> See [PRIVACY.md](PRIVACY.md).
 
 ---
 
@@ -45,21 +42,37 @@ Stage 04  Embeddings Creator    vectors (JSONL)    ->  data/embeddings/
 Stage 05  Deploy                SCP / Qdrant       ->  Raspberry Pi / Qdrant
 ```
 
-### Pipeline Launcher (TUI)
+### PowerShell Pipeline Launcher (TUI)
 
-Optional PowerShell TUI (`scripts/glass.ps1`): animated MCP logo (gradient shift) on the left, step menu / live log on the right. Pick a pipeline stage or run the full stack; output streams into the Live Log panel.
-
-```powershell
-pwsh scripts/glass.ps1
-```
-
-<div align="center">
-  <img src="assets/img/_000_tui-launcher__Screenshot_2026-02-28_174555.png" alt="tui_pipeline_launcher" width="80%">
-</div>
-
-<div align="center">
-  <img src="assets/img/_000_tui-live-log__Screenshot_2026-02-28_170312.png" alt="tui_live_log" width="80%">
-</div>
+> [!TIP]  
+> <sup>Optional</sup>
+>
+> <details>
+> <summary><b><kbd>click to view</kbd></b> 👈🏻 <mark>&nbsp;&nbsp;TUI&nbsp;&nbsp;</mark>
+>
+> &nbsp; &nbsp; &nbsp; <i><b>Animated MCP logo (gradient shift)</b> on the left, step menu / live log on the right.</i>  
+> &nbsp; &nbsp; &nbsp; <i>Pick a pipeline stage or run the full stack; output streams into the Live Log panel.</i>  
+>
+> </summary>
+>  
+> - **In your PowerShell**:  
+>   <table><tr><td width="250px">
+>
+>   ```pwsh
+>   scripts/glass.ps1 
+>   ```
+>
+>   </td></tr></table>
+>
+> <div align="center">
+>   <img src="assets/img/_000_tui-launcher__Screenshot_2026-02-28_174555.png" alt="tui_pipeline_launcher" width="80%">
+> </div>
+>
+> <div align="center">
+>   <img src="assets/img/_000_tui-live-log__Screenshot_2026-02-28_170312.png" alt="tui_live_log" width="80%">
+> </div>
+>
+> </details>
 
 ---
 
