@@ -339,7 +339,7 @@ qdrant:
 
 Framework for thesis deliverables. All scripts run from the repo root; results go to `evaluation/results/`.
 
-### Keyword search baseline (${\tiny{\texttt{\underline{FF1}\ in\ Thesis}}}$)
+### Keyword search baseline (${\tiny{\texttt{FF1\ in\ Thesis}}}$)
 
 Runs ground-truth questions against DokuWiki `core.searchPages`, outputs MRR and P@5.
 
@@ -352,7 +352,7 @@ python -m evaluation.scripts.eval_keyword_baseline --top-k 20 --verbose
 
 ---
 
-### Embedding model comparison (${\tiny{\texttt{\underline{FF3}\ in\ Thesis}}}$)
+### Embedding model comparison
 
 Compares embedding models (Ollama + OpenAI) on the same ground truth. Needs Qdrant + provider.
 
@@ -368,7 +368,7 @@ python -m evaluation.scripts.eval_model_comparison --compare-all --verbose
 
 ---
 
-### Chunk size impact (${\tiny{\texttt{\underline{J4}\ in\ Thesis}}}$)
+### Chunk size impact
 
 Compares chunk sizes 256 / 512 / 1024 on MRR, P@5, NDCG@10.
 
@@ -384,7 +384,7 @@ python -m evaluation.scripts.eval_chunk_size --compare
 
 ---
 
-### Hybrid vs dense retrieval (${\tiny{\texttt{\underline{J6}\ in\ Thesis}}}$)
+### Hybrid vs dense retrieval
 
 Compares dense-only vs hybrid retrieval on one collection.
 
@@ -399,7 +399,7 @@ python -m evaluation.scripts.eval_hybrid_vs_dense --verbose
 
 ---
 
-### Visualizations (${\tiny{\texttt{\underline{J4}\ and\ \underline{J6}\ in\ Thesis}}}$)
+### Visualizations
 
 Generates figures for the thesis (saved as 300 DPI PNG to `evaluation/figures/`).
 
