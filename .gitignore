@@ -207,6 +207,10 @@ pipeline/01_wiki_fetcher/api_method_test_results.json
 .cursor/plans/
 .cursor/hooks/
 
+# .claude: shared commands + settings tracked; local dev-server config excluded
+# (launch.json holds machine-specific absolute paths)
+.claude/launch.json
+
 # =============================================================================
 # Portfolio-cleanup (014): local-only archive + stray generated modules
 # =============================================================================
